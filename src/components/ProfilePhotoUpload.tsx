@@ -58,7 +58,7 @@ export default function ProfilePhotoUpload() {
             return;
           }
 
-          // Upload directly
+          // Upload to storage
           await handleUpload(base64Data);
           setIsCompressing(false);
         });
@@ -76,46 +76,89 @@ export default function ProfilePhotoUpload() {
     }
   };
 
-  const handleUpload = async (photoURL: string) => {
+  const handleUpload = async (base64Data: string) => {
     if (!user) return;
 
     try {
       setIsUploading(true);
       setUploadError(null);
 
+      // Convert base64 to blob for upload
+      const response = await fetch(base64Data);
+      const blob = await response.blob();
+      const fileName = `profile-${Date.now()}.jpg`;
+
       try {
-        const { error } = await supabase
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
+          .from('user-uploads')
+          .upload(`users/${user.id}/${fileName}`, blob, {
+            contentType: 'image/jpeg',
+            upsert: true
+          });
+
+        if (uploadError) throw uploadError;
+
+        // Get public URL
+        const { data: urlData } = supabase.storage
+          .from('user-uploads')
+          .getPublicUrl(`users/${user.id}/${fileName}`);
+
+        const publicUrl = urlData.publicUrl;
+
+        // Update user profile in database
+        const { error: dbError } = await supabase
           .from('users')
-          .update({ photoURL })
+          .update({ photoURL: publicUrl })
           .eq('uid', user.id);
 
-        if (error) throw error;
-      } catch (err: any) {
-        console.error("Failed to update database:", err);
-        if (err.message?.includes('permission') || err.code === 'PGRST301') {
-          setUploadError("Permission denied. Your account may not have permission to update this profile.");
-          toast.error("Permission denied.");
-        } else if (err.message?.includes('network') || err.message?.includes('fetch')) {
-          setUploadError("Network error. Please check your connection and try again.");
-          toast.error("Network error.");
-        } else {
-          setUploadError(`Database error: ${err.message || 'Failed to save photo'}`);
-          toast.error("Failed to save photo.");
+        if (dbError) throw dbError;
+
+        // Update local profile
+        try {
+          await updateUserProfile({ photoURL: publicUrl });
+        } catch (err: any) {
+          console.warn("Failed to update local profile, but photo was saved:", err);
         }
-        return;
-      }
 
-      try {
-        await updateUserProfile({ photoURL });
-      } catch (err: any) {
-        console.warn("Failed to update local profile, but photo was saved to database:", err);
-      }
+        toast.success('Profile photo updated successfully!');
+      } catch (storageError: any) {
+        console.error("Storage upload failed:", storageError);
 
-      toast.success('Profile photo updated successfully!');
+        // Fallback: Store base64 directly in database
+        console.info("Falling back to database storage");
+        try {
+          const { error: dbError } = await supabase
+            .from('users')
+            .update({ photoURL: base64Data })
+            .eq('uid', user.id);
+
+          if (dbError) throw dbError;
+
+          try {
+            await updateUserProfile({ photoURL: base64Data });
+          } catch (err: any) {
+            console.warn("Failed to update local profile:", err);
+          }
+
+          toast.success('Profile photo updated! (Using database storage)');
+        } catch (dbFallbackError: any) {
+          console.error("Database fallback also failed:", dbFallbackError);
+          throw dbFallbackError;
+        }
+      }
     } catch (error: any) {
       console.error('Error uploading image:', error);
-      setUploadError(error.message || "An error occurred while processing the image.");
-      toast.error(error.message || "Processing error.");
+      if (error.message?.includes('permission') || error.code === 'PGRST301') {
+        setUploadError("Permission denied. Your account may not have permission to update this profile.");
+        toast.error("Permission denied.");
+      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
+        setUploadError("Network error. Please check your connection and try again.");
+        toast.error("Network error.");
+      } else {
+        setUploadError(error.message || "An error occurred while processing the image.");
+        toast.error(error.message || "Processing error.");
+      }
     } finally {
       setIsUploading(false);
     }

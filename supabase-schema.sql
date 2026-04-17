@@ -1,5 +1,6 @@
 -- Supabase Database Schema (with IF NOT EXISTS)
--- Run this SQL in your Supabase SQL Editor to create the tables
+-- Run this SQL in your Supabase SQL Editor to create the tables and storage
+-- Note: Storage bucket creation requires running additional SQL after table creation
 
 -- Note: Supabase automatically handles JWT secrets and RLS
 
@@ -154,6 +155,19 @@ CREATE TABLE IF NOT EXISTS private_config (
   id TEXT PRIMARY KEY,
   data JSONB NOT NULL
 );
+
+-- Supabase Storage Configuration
+-- Note: Run these commands in Supabase SQL Editor to create storage buckets
+
+-- Create storage bucket for user uploads
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'user-uploads',
+  'user-uploads',
+  true,
+  5242880, -- 5MB limit per file
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
+) ON CONFLICT (id) DO NOTHING;
 
 -- Row Level Security Policies (only add if not already enabled)
 DO $$
@@ -399,6 +413,67 @@ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'private_config' AND policyname = 'Admins can manage private config') THEN
     CREATE POLICY "Admins can manage private config" ON private_config FOR ALL USING (
       EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );
+  END IF;
+END $$;
+
+-- Storage Policies for user-uploads bucket
+DO $$
+BEGIN
+  -- Enable RLS on storage.objects if not already enabled
+  ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+EXCEPTION
+  WHEN others THEN NULL;
+END $$;
+
+-- Allow authenticated users to upload their own files
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.policies WHERE name = 'Users can upload their own files') THEN
+    INSERT INTO storage.policies (name, bucket_id, definition)
+    VALUES (
+      'Users can upload their own files',
+      'user-uploads',
+      'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
+    );
+  END IF;
+END $$;
+
+-- Allow users to view their own files
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.policies WHERE name = 'Users can view their own files') THEN
+    INSERT INTO storage.policies (name, bucket_id, definition)
+    VALUES (
+      'Users can view their own files',
+      'user-uploads',
+      'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
+    );
+  END IF;
+END $$;
+
+-- Allow public access to view all files (since bucket is public)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.policies WHERE name = 'Public can view files') THEN
+    INSERT INTO storage.policies (name, bucket_id, definition)
+    VALUES (
+      'Public can view files',
+      'user-uploads',
+      'bucket_id = ''user-uploads'''
+    );
+  END IF;
+END $$;
+
+-- Allow users to delete their own files
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM storage.policies WHERE name = 'Users can delete their own files') THEN
+    INSERT INTO storage.policies (name, bucket_id, definition)
+    VALUES (
+      'Users can delete their own files',
+      'user-uploads',
+      'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
     );
   END IF;
 END $$;

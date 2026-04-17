@@ -38,14 +38,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
         // Upload to Supabase Storage
         const fileName = `profile-${Date.now()}.jpg`;
         const { error: uploadError } = await supabase.storage
-          .from('uploads')
+          .from('user-uploads')
           .upload(`users/${user.id}/${fileName}`, file);
 
         if (uploadError) throw uploadError;
 
         // Get public URL
         const { data: urlData } = supabase.storage
-          .from('uploads')
+          .from('user-uploads')
           .getPublicUrl(`users/${user.id}/${fileName}`);
 
         const downloadURL = urlData.publicUrl;
@@ -73,6 +73,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
         }
 
         // Fallback: Convert to base64 and save directly to database
+        console.info("Storage quota exceeded, using database storage for profile photo");
         try {
           const reader = new FileReader();
           reader.onload = async (event) => {
