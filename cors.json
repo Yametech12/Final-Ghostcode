@@ -1,0 +1,21 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+      "https://epimetheus-project.vercel.app",
+      "https://epimetheus.vercel.app",
+      "https://www.epimetheus.ai"
+    ],
+    "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],
+    "maxAgeSeconds": 3600,
+    "responseHeader": [
+      "Content-Type",
+      "Authorization",
+      "Content-Length",
+      "Accept-Encoding",
+      "x-goog-resumable"
+    ]
+  }
+]

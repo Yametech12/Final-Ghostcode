@@ -1,0 +1,5 @@
+{
+  "name": "Remix: Epimetheus",
+  "description": "An interactive guide and personality profiler based on the EPIMETHEUS system, presented by Yame Coaching.",
+  "requestFramePermissions": ["microphone"]
+}
