@@ -112,7 +112,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin
+          redirectTo: 'https://epimetheusproject.vercel.app'
         }
       });
       if (error) throw error;
@@ -167,7 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
+        redirectTo: 'https://epimetheusproject.vercel.app/reset-password'
       });
       if (error) throw error;
       toast.success('Password reset email sent');
