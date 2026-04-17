@@ -78,7 +78,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const result = await signUpWithEmail(email, password, name, true);
+      const result = await signUpWithEmail(email, password, name);
 
       if (result.requiresVerification) {
         setVerificationSent(true);
@@ -321,7 +321,7 @@ export default function RegisterPage() {
               setLoading(true);
               setError('');
               try {
-                await signInWithGoogle(true);
+                await signInWithGoogle();
                 navigate('/');
               } catch (err: any) {
                 console.error("Google Sign-In Error:", err);

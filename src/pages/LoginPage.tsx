@@ -46,7 +46,7 @@ export default function LoginPage() {
     setError('');
 
     try {
-      await signInWithEmail(email, password, rememberMe);
+      await signInWithEmail(email, password);
       navigate('/');
     } catch (err: any) {
       const message = getSupabaseErrorMessage(err);
@@ -166,7 +166,7 @@ export default function LoginPage() {
               setLoading(true);
               setError('');
               try {
-                await signInWithGoogle(rememberMe);
+                await signInWithGoogle();
                 navigate('/');
               } catch (err: any) {
                 console.error("Google Sign-In Error:", err);

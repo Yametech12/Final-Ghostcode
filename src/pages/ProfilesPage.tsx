@@ -153,7 +153,7 @@ export default function ProfilesPage() {
             { typeId: 'NDI', date: new Date(Date.now() - 259200000).toISOString(), name: 'The Lone Wolf' }
           ]);
           setFieldReports([
-            { id: '1', userId: user.uid, title: 'Sample Report', content: 'Mock field report' }
+            { id: '1', userId: user.id, title: 'Sample Report', content: 'Mock field report' }
           ]);
           toast.info("Using demo data while offline.");
         } else {

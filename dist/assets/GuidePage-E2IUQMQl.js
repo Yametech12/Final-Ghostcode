@@ -1,4 +1,4 @@
-import{j as e,aj as w,ah as g,ax as x,w as v,Z as T,g as k,a as S,c as j}from"./chunk-CG41wATI.js";import{r as c}from"./chunk-Cstz0flv.js";import{F as I}from"./chunk-DZrT0hEU.js";import{G as s}from"./chunk-BeOuhlbh.js";import"./chunk-Bk5-9w94.js";import"./index-DufNxPFX.js";import"./chunk-CpJfINCX.js";import"./chunk-pOD7n95U.js";import"./chunk-D0on6b_E.js";const l=[{id:"intro",title:"The Myth & Introduction",content:`
+import{j as e,aj as w,ah as g,ax as x,w as v,Z as T,g as k,a as S,c as j}from"./chunk-CG41wATI.js";import{r as c}from"./chunk-Cstz0flv.js";import{F as I}from"./chunk-hd-L4SgN.js";import{G as s}from"./chunk-BeOuhlbh.js";import"./chunk-VrwKcXjF.js";import"./index-D6ehak72.js";import"./chunk-CpJfINCX.js";import"./chunk-pOD7n95U.js";import"./chunk-D0on6b_E.js";const l=[{id:"intro",title:"The Myth & Introduction",content:`
 # The Myth of Epimetheus
 In Greek mythology, Epimetheus was the one who opened his heart to Pandora-not because he ignored the warnings, but because he understood something others did not: Some things are worth the risk.
 
