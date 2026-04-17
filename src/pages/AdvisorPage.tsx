@@ -179,11 +179,6 @@ export default function AdvisorPage() {
       // Create a temporary session ID for this conversation
       activeSessionId = `temp-${Date.now()}`;
       setCurrentSessionId(activeSessionId);
-          setSessions(prev => [{ id: activeSessionId!, title, timestamp: new Date() }, ...prev]);
-        } catch (error) {
-          console.error("Failed to create session:", error);
-        }
-      }
     }
 
     setInput('');
