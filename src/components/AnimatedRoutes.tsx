@@ -8,8 +8,6 @@ import { lazyWithRetry } from '../utils/lazyWithRetry';
 
 // Critical pages - loaded immediately on app start
 const HomePage = lazyWithRetry(() => import('../pages/HomePage'));
-const LoginPage = lazyWithRetry(() => import('../pages/LoginPage'));
-const RegisterPage = lazyWithRetry(() => import('../pages/RegisterPage'));
 
 // Core functionality pages - high priority
 const ProfilesPage = lazyWithRetry(() => import('../pages/ProfilesPage'));
@@ -52,20 +50,7 @@ const pageTransition = {
 };
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const auth = useAuth();
-  if (!auth) {
-    return <LoadingScreen />;
-  }
-  const { user, loading } = auth;
-
-  if (loading) {
-    return <LoadingScreen />;
-  }
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
+  // Authentication disabled - allow access to all routes
   return <Layout>{children}</Layout>;
 }
 
@@ -109,8 +94,6 @@ export default function AnimatedRoutes() {
     <Suspense fallback={<LoadingScreen />}>
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
-          <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
-          <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
           <Route path="/" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>

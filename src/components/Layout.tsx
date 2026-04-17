@@ -1,10 +1,10 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, LogOut, LogIn, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart } from 'lucide-react';
+import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
-import { useAuth } from '../context/AuthContext';
+
 import { useTheme } from '../context/ThemeContext';
 import { useIsMobile, useSwipeGesture, usePullToRefresh, useMobilePerformance } from '../hooks/useMobile';
 
@@ -76,9 +76,7 @@ export default function Layout({ children }: LayoutProps) {
   const dropdownTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user, userData, logout } = auth;
+
 
   // Mobile optimizations
   const isMobile = useIsMobile();
@@ -109,15 +107,7 @@ export default function Layout({ children }: LayoutProps) {
     }, 500);
   };
 
-  const handleLogout = async () => {
-    try {
-      await logout();
-      navigate('/', { replace: true });
-      setIsMenuOpen(false);
-    } catch {
-      toast.error('Logout failed');
-    }
-  };
+
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -394,52 +384,7 @@ export default function Layout({ children }: LayoutProps) {
                 {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {user ? (
-                <div 
-                  className="relative"
-                  onMouseEnter={() => handleMouseEnter('profile')}
-                  onMouseLeave={handleMouseLeave}
-                >
-                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
-                    <img 
-                      src={user.photoURL || undefined} 
-                      alt={user.displayName || 'User'} 
-                      className="w-8 h-8 rounded-full border border-white/10 shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
-                  </button>
-                  
-                  {activeDropdown === 'profile' && (
-                    <div className="absolute top-full right-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-3 z-[60]">
-                      <div className="flex flex-col mb-3 pb-3 border-b border-white/10">
-                        <span className="text-sm font-bold text-white break-words">{user.displayName}</span>
-                        <span className="text-xs text-slate-400 break-words">{user.email}</span>
-                      </div>
-                      <button 
-                        onClick={() => {
-                          setActiveDropdown(null);
-                          handleLogout();
-                        }}
-                        className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all"
-                      >
-                        <LogOut className="w-4 h-4" />
-                        Sign Out
-                      </button>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    setIsMenuOpen(false);
-                  }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl accent-gradient text-white text-sm font-bold shadow-lg shadow-accent-primary/20 hover:scale-105 active:scale-95 transition-all leading-none"
-                >
-                  <LogIn className="w-4 h-4" />
-                  Sign In
-                </button>
-              )}
+
             </div>
 
             {/* Mobile menu button */}
@@ -504,26 +449,7 @@ export default function Layout({ children }: LayoutProps) {
                 )}
               </div>
 
-              {user && (
-                <div className="flex items-center gap-4 px-4 py-4 bg-white/5 rounded-2xl border border-white/10 mx-2">
-                  <img 
-                    src={user.photoURL || undefined} 
-                    alt={user.displayName || 'User'} 
-                    className="w-12 h-12 rounded-full border border-white/10"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-base font-bold text-white whitespace-nowrap overflow-hidden text-ellipsis">{user.displayName}</div>
-                    <div className="text-xs text-slate-500 truncate">{user.email}</div>
-                  </div>
-                  <button 
-                    onClick={handleLogout}
-                    className="p-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-              )}
+
               
               {!user && (
                 <button
