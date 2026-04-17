@@ -23,15 +23,35 @@ export default function ProfilePhotoUpload() {
       const file = e.target.files[0];
 
       // Basic validation
+      if (!file) {
+        setUploadError("No file selected.");
+        toast.error("No file selected.");
+        return;
+      }
+
       if (!file.type.startsWith('image/')) {
         setUploadError("Please select a valid image file.");
-        toast.error("Invalid file type.");
+        toast.error("Invalid file type. Please select an image.");
+        return;
+      }
+
+      // Check for supported image formats
+      const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+      if (!supportedTypes.includes(file.type.toLowerCase())) {
+        setUploadError("Unsupported image format. Please use JPEG, PNG, WebP, or GIF.");
+        toast.error("Unsupported image format.");
         return;
       }
 
       if (file.size > 10 * 1024 * 1024) { // 10MB limit for input
         setUploadError("Image is too large. Please select a file under 10MB.");
-        toast.error("File too large.");
+        toast.error("File too large. Maximum 10MB allowed.");
+        return;
+      }
+
+      if (file.size < 1024) { // Minimum 1KB to avoid empty/corrupted files
+        setUploadError("Image file appears to be corrupted or too small.");
+        toast.error("Invalid image file.");
         return;
       }
 
@@ -40,38 +60,71 @@ export default function ProfilePhotoUpload() {
         const options = {
           maxSizeMB: 0.5, // Aim for 500KB
           maxWidthOrHeight: 1024,
-          useWebWorker: true
+          useWebWorker: true,
+          preserveExif: false, // Remove EXIF data to reduce size
+          alwaysKeepResolution: false
         };
 
         const compressedFile = await imageCompression(file, options);
 
+        // Verify compressed file is valid
+        if (!compressedFile || compressedFile.size === 0) {
+          throw new Error("Compression resulted in invalid file");
+        }
+
         // Convert to base64 for direct upload
         const reader = new FileReader();
+
         reader.addEventListener('load', async () => {
-          const base64Data = reader.result as string;
+          try {
+            const base64Data = reader.result as string;
 
-          // Check size after compression
-          const sizeInBytes = (base64Data.length * 3) / 4;
-          if (sizeInBytes > 800 * 1024) {
-            setUploadError('Image is too large even after compression. Please use a smaller image.');
-            toast.error('Image too large');
+            if (!base64Data || !base64Data.startsWith('data:image/')) {
+              throw new Error("Invalid base64 data generated");
+            }
+
+            // Check size after compression
+            const sizeInBytes = (base64Data.length * 3) / 4;
+            if (sizeInBytes > 800 * 1024) {
+              setUploadError('Image is too large even after compression. Please use a smaller image.');
+              toast.error('Image too large after compression');
+              setIsCompressing(false);
+              return;
+            }
+
+            // Upload to storage
+            await handleUpload(base64Data);
+          } catch (uploadError: any) {
+            console.error("Error during upload process:", uploadError);
+            setUploadError(`Upload failed: ${uploadError.message || 'Unknown error'}`);
+            toast.error("Failed to upload image.");
+          } finally {
             setIsCompressing(false);
-            return;
           }
+        });
 
-          // Upload to storage
-          await handleUpload(base64Data);
+        reader.addEventListener('error', (error) => {
+          console.error("FileReader error:", error);
+          setUploadError("Failed to read the image file. The file may be corrupted.");
+          toast.error("File reading error. Please try a different image.");
           setIsCompressing(false);
         });
-        reader.addEventListener('error', () => {
-          setUploadError("Failed to read the image file.");
-          setIsCompressing(false);
-        });
+
         reader.readAsDataURL(compressedFile);
       } catch (error: any) {
         console.error("Error compressing image:", error);
-        setUploadError(`Compression failed: ${error.message || 'Unknown error'}`);
-        toast.error("Failed to process image.");
+        let errorMessage = "Failed to process image.";
+
+        if (error.message?.includes("Unsupported file type")) {
+          errorMessage = "Unsupported image format. Please use JPEG, PNG, WebP, or GIF.";
+        } else if (error.message?.includes("File too large")) {
+          errorMessage = "Image is too large to compress. Please use a smaller image.";
+        } else if (error.message?.includes("Invalid file")) {
+          errorMessage = "The selected file appears to be corrupted. Please try a different image.";
+        }
+
+        setUploadError(errorMessage);
+        toast.error(errorMessage);
         setIsCompressing(false);
       }
     }

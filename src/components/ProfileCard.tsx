@@ -20,15 +20,34 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
     const file = e.target.files?.[0];
     if (!file || !user) return;
 
+    // Basic file validation
+    if (!file) {
+      toast.error('No file selected');
+      return;
+    }
+
     // Validate file type
     if (!file.type.startsWith('image/')) {
       toast.error('Please select a valid image file');
       return;
     }
 
+    // Check for supported image formats
+    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+    if (!supportedTypes.includes(file.type.toLowerCase())) {
+      toast.error('Unsupported image format. Please use JPEG, PNG, WebP, or GIF.');
+      return;
+    }
+
     // Validate file size (max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       toast.error('Image file is too large. Please choose a file under 10MB');
+      return;
+    }
+
+    // Check for minimum file size (avoid corrupted files)
+    if (file.size < 1024) {
+      toast.error('Image file appears to be corrupted or too small');
       return;
     }
 
@@ -77,9 +96,14 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
         console.info("Storage quota exceeded, using database storage for profile photo");
         try {
           const reader = new FileReader();
+
           reader.onload = async (event) => {
-            const base64String = event.target?.result as string;
-            if (base64String) {
+            try {
+              const base64String = event.target?.result as string;
+              if (!base64String || !base64String.startsWith('data:image/')) {
+                throw new Error("Invalid base64 data generated");
+              }
+
               const { error: updateError } = await supabase
                 .from('users')
                 .update({ photoURL: base64String })
@@ -92,18 +116,31 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
                 await updateUserData({ photoURL: base64String });
               }
               toast.success("Profile photo updated! (Using local storage)");
+            } catch (processError: any) {
+              console.error("Error processing fallback upload:", processError);
+              toast.error("Failed to process image data. Please try again.");
+            } finally {
+              setUploading(false);
             }
           };
+
+          reader.onerror = () => {
+            console.error("FileReader error in fallback upload");
+            toast.error("Failed to read image file. Please try again.");
+            setUploading(false);
+          };
+
           reader.readAsDataURL(file);
         } catch (fallbackError: any) {
+          console.error("Fallback upload setup failed:", fallbackError);
           const isQuotaError = fallbackError?.message?.includes('quota') || fallbackError?.message?.includes('resource');
           if (isQuotaError) {
             console.info("Database quota exceeded for photo update, photo stored locally");
             toast.success("Profile photo updated! (Using local storage)");
           } else {
-            console.error("Fallback upload also failed:", fallbackError);
             toast.error("Failed to save profile photo. Please try again.");
           }
+          setUploading(false);
         }
       }
     } catch (error) {
