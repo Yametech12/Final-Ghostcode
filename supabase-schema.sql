@@ -247,7 +247,21 @@ EXCEPTION
   WHEN others THEN NULL;
 END $$;
 
+-- Performance Indexes
+CREATE INDEX IF NOT EXISTS idx_calibrations_user_timestamp ON calibrations(user_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_oracle_analyses_user_timestamp ON oracle_analyses(user_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_field_reports_timestamp ON field_reports(timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_field_reports_user_timestamp ON field_reports(user_id, timestamp DESC);
+CREATE INDEX IF NOT EXISTS idx_advisor_sessions_user_updated ON advisor_sessions(user_id, updated_at DESC);
+CREATE INDEX IF NOT EXISTS idx_advisor_messages_session_timestamp ON advisor_messages(session_id, timestamp ASC);
+CREATE INDEX IF NOT EXISTS idx_favorites_user_content ON favorites(user_id, content_type, content_id);
+CREATE INDEX IF NOT EXISTS idx_dossiers_user_created ON dossiers(user_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_feedback_created ON feedback(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_report_likes_report ON report_likes(report_id);
+
 -- RLS Policies (these will be created only if they don't exist)
+
+-- Users table policies
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Users can read/write their own data') THEN
@@ -255,5 +269,136 @@ BEGIN
   END IF;
 END $$;
 
--- Note: The rest of the policies, indexes, and functions from the original schema should be added here
--- but wrapped in DO $$ blocks to handle "already exists" errors
+-- Calibrations policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'calibrations' AND policyname = 'Users can read/write their own calibrations') THEN
+    CREATE POLICY "Users can read/write their own calibrations" ON calibrations FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Oracle analyses policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'oracle_analyses' AND policyname = 'Users can read/write their own analyses') THEN
+    CREATE POLICY "Users can read/write their own analyses" ON oracle_analyses FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Feedback policies (allow anonymous feedback)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Anyone can create feedback') THEN
+    CREATE POLICY "Anyone can create feedback" ON feedback FOR INSERT WITH CHECK (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Admins can read all feedback') THEN
+    CREATE POLICY "Admins can read all feedback" ON feedback FOR SELECT USING (
+      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );
+  END IF;
+END $$;
+
+-- Field reports policies (public read, authenticated write)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_reports' AND policyname = 'Anyone can read field reports') THEN
+    CREATE POLICY "Anyone can read field reports" ON field_reports FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_reports' AND policyname = 'Authenticated users can create reports') THEN
+    CREATE POLICY "Authenticated users can create reports" ON field_reports FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_reports' AND policyname = 'Users can update their own reports') THEN
+    CREATE POLICY "Users can update their own reports" ON field_reports FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Report likes policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'report_likes' AND policyname = 'Anyone can read likes') THEN
+    CREATE POLICY "Anyone can read likes" ON report_likes FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'report_likes' AND policyname = 'Authenticated users can manage their likes') THEN
+    CREATE POLICY "Authenticated users can manage their likes" ON report_likes FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Field report comments policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_report_comments' AND policyname = 'Anyone can read comments') THEN
+    CREATE POLICY "Anyone can read comments" ON field_report_comments FOR SELECT USING (true);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_report_comments' AND policyname = 'Authenticated users can create comments') THEN
+    CREATE POLICY "Authenticated users can create comments" ON field_report_comments FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'field_report_comments' AND policyname = 'Users can update their own comments') THEN
+    CREATE POLICY "Users can update their own comments" ON field_report_comments FOR UPDATE USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Favorites policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'favorites' AND policyname = 'Users can manage their own favorites') THEN
+    CREATE POLICY "Users can manage their own favorites" ON favorites FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Dossiers policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'dossiers' AND policyname = 'Users can manage their own dossiers') THEN
+    CREATE POLICY "Users can manage their own dossiers" ON dossiers FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Advisor sessions policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'advisor_sessions' AND policyname = 'Users can manage their own sessions') THEN
+    CREATE POLICY "Users can manage their own sessions" ON advisor_sessions FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Advisor messages policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'advisor_messages' AND policyname = 'Users can manage their own messages') THEN
+    CREATE POLICY "Users can manage their own messages" ON advisor_messages FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Assessment results policies
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'assessment_results' AND policyname = 'Users can manage their own assessment results') THEN
+    CREATE POLICY "Users can manage their own assessment results" ON assessment_results FOR ALL USING (auth.uid() = user_id);
+  END IF;
+END $$;
+
+-- Verification codes policies (service role only)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'verification_codes' AND policyname = 'Service role can manage verification codes') THEN
+    CREATE POLICY "Service role can manage verification codes" ON verification_codes FOR ALL USING (auth.role() = 'service_role');
+  END IF;
+END $$;
+
+-- Public config policies (read-only for all)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'public_config' AND policyname = 'Anyone can read public config') THEN
+    CREATE POLICY "Anyone can read public config" ON public_config FOR SELECT USING (true);
+  END IF;
+END $$;
+
+-- Private config policies (admin only)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'private_config' AND policyname = 'Admins can manage private config') THEN
+    CREATE POLICY "Admins can manage private config" ON private_config FOR ALL USING (
+      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+    );
+  END IF;
+END $$;
