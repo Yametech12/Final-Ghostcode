@@ -174,24 +174,11 @@ export default function AdvisorPage() {
 
     let activeSessionId = currentSessionId;
 
-    if (user) {
-      if (!activeSessionId) {
-        try {
-          const { supabase } = await import('../lib/supabase');
-          const title = userMessage.substring(0, 30) + (userMessage.length > 30 ? '...' : '');
-          const { data, error } = await supabase
-            .from('advisor_sessions')
-            .insert({
-              userId: user.id,
-              title: title,
-              timestamp: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            })
-            .select()
-            .single();
-          if (error) throw error;
-          activeSessionId = data.id;
-          setCurrentSessionId(activeSessionId);
+    // Session saving disabled - authentication removed
+    if (!activeSessionId) {
+      // Create a temporary session ID for this conversation
+      activeSessionId = `temp-${Date.now()}`;
+      setCurrentSessionId(activeSessionId);
           setSessions(prev => [{ id: activeSessionId!, title, timestamp: new Date() }, ...prev]);
         } catch (error) {
           console.error("Failed to create session:", error);
@@ -272,37 +259,7 @@ export default function AdvisorPage() {
         m.id === assistantMsgId ? { ...m, isStreaming: false } : m
       ));
 
-      if (user && activeSessionId) {
-        const { supabase } = await import('../lib/supabase');
-
-        const { error: userMsgError } = await supabase
-          .from('advisor_messages')
-          .insert({
-            userId: user.id,
-            sessionId: activeSessionId,
-            role: 'user',
-            content: userMessage,
-            timestamp: new Date().toISOString()
-          });
-        if (userMsgError) throw userMsgError;
-
-        const { error: modelMsgError } = await supabase
-          .from('advisor_messages')
-          .insert({
-            userId: user.id,
-            sessionId: activeSessionId,
-            role: 'model',
-            content: fullContent,
-            timestamp: new Date().toISOString()
-          });
-        if (modelMsgError) throw modelMsgError;
-
-        const { error: updateError } = await supabase
-          .from('advisor_sessions')
-          .update({ updatedAt: new Date().toISOString() })
-          .eq('id', activeSessionId);
-        if (updateError) throw updateError;
-      }
+      // Database saving disabled - authentication removed
 
     } catch (error: any) {
       console.error("Advisor Error:", error);
@@ -396,77 +353,7 @@ export default function AdvisorPage() {
         )}>
 
 
-          {user && (
-            <div className="flex-1 p-5 rounded-2xl bg-[#151619] border border-white/5 shadow-2xl flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-4 border-b border-white/5 pb-2">
-                <h3 className="text-xs font-mono text-slate-400 uppercase tracking-widest">History</h3>
-                <button 
-                  onClick={() => setIsSidebarOpen(false)}
-                  className="lg:hidden p-1 text-slate-400 hover:text-white"
-                  aria-label="Close sidebar"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="space-y-2 flex-1 overflow-y-auto pr-2" data-lenis-prevent>
-                {sessions.map((session) => (
-                  <div key={session.id} className="group relative">
-                    <button
-                      onClick={() => {
-                        setCurrentSessionId(session.id);
-                        setIsSidebarOpen(false);
-                      }}
-                      className={cn(
-                        "w-full p-3 rounded-xl border transition-all text-left flex items-start gap-3",
-                        currentSessionId === session.id 
-                          ? "bg-accent-primary/20 border-accent-primary/30" 
-                          : "bg-white/5 border-transparent hover:border-white/10 hover:bg-white/10"
-                      )}
-                    >
-                      <MessageSquare className={cn("w-4 h-4 mt-0.5 shrink-0", currentSessionId === session.id ? "text-accent-primary" : "text-slate-500")} />
-                      <div className="flex-1 min-w-0 pr-6">
-                        <div className={cn("text-xs font-bold truncate mb-0.5", currentSessionId === session.id ? "text-accent-primary" : "text-white")}>{session.title}</div>
-                        <div className="text-[10px] text-slate-500 leading-tight truncate">
-                          {session.timestamp?.toDate ? session.timestamp.toDate().toLocaleDateString() : 'Recent'}
-                        </div>
-                      </div>
-                    </button>
-                    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-                      {confirmDelete === session.id ? (
-                        <div className="flex items-center gap-1 animate-in fade-in zoom-in duration-200">
-                          <button
-                            onClick={(e) => { e.stopPropagation(); deleteSession(session.id); setConfirmDelete(null); }}
-                            className="p-1.5 bg-red-500/20 text-red-400 hover:bg-red-500/30 rounded-md transition-all"
-                            title="Confirm Delete"
-                          >
-                            <Check className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            onClick={(e) => { e.stopPropagation(); setConfirmDelete(null); }}
-                            className="p-1.5 bg-white/10 text-slate-400 hover:bg-white/20 rounded-md transition-all"
-                            title="Cancel"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          onClick={(e) => { e.stopPropagation(); setConfirmDelete(session.id); }}
-                          className="p-2 text-slate-500 hover:text-red-400 transition-all opacity-40 hover:opacity-100"
-                          title="Delete Chat"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {sessions.length === 0 && (
-                  <div className="text-xs text-slate-500 text-center py-4">No history yet</div>
-                )}
-              </div>
-            </div>
-          )}
+
 
 
         </div>

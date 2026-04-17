@@ -136,46 +136,16 @@ export default function AssessmentPage() {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [pastResults, setPastResults] = useState<{typeId: string, date: string}[]>([]);
   const navigate = useNavigate();
-  const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
 
   useEffect(() => {
     localStorage.setItem('assessment_current_step', currentStep.toString());
     localStorage.setItem('assessment_current_answers', JSON.stringify(answers));
   }, [currentStep, answers]);
 
+  // Past results disabled - authentication removed
   useEffect(() => {
-    const loadPastResults = async () => {
-      if (user) {
-        try {
-          const { data: calibrations, error } = await supabase
-            .from('calibrations')
-            .select('*')
-            .eq('userId', user.id)
-            .order('timestamp', { ascending: false })
-            .limit(10);
-          if (error) throw error;
-          const results: {typeId: string, date: string}[] = [];
-          calibrations.forEach((data) => {
-            results.push({
-              typeId: data.typeId,
-              date: data.timestamp || new Date().toISOString()
-            });
-          });
-          setPastResults(results);
-        } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'calibrations');
-        }
-      } else {
-        const saved = localStorage.getItem('assessment_past_results');
-        setPastResults(safeParseJSON(saved, []));
-      }
-    };
-    loadPastResults().catch(err => {
-      console.error("Unhandled error in AssessmentPage loadPastResults:", err);
-    });
-  }, [user]);
+    setPastResults([]);
+  }, []);
 
   const handleAnswer = (questionId: string, value: string) => {
     if (isTransitioning) return;
@@ -221,29 +191,9 @@ export default function AssessmentPage() {
     localStorage.removeItem('assessment_current_step');
     localStorage.removeItem('assessment_current_answers');
     
-    // Save to Firestore if user is logged in
-    if (user) {
-      try {
-        const { error } = await supabase
-          .from('calibrations')
-          .insert({
-            userId: user.id,
-            typeId: resultType,
-            answers: finalAnswers,
-            timestamp: new Date().toISOString()
-          });
-        if (error) throw error;
-      } catch (error) {
-        if (error instanceof Error && error.message.includes('offline')) {
-          console.warn("Firestore is offline. Result not saved to cloud.");
-        } else {
-          handleFirestoreError(error, OperationType.CREATE, 'calibrations');
-        }
-      }
-    }
-    
+    // Database save disabled - authentication removed
     setTimeout(() => {
-      navigate(`/assessment-result?type=${resultType}${user ? '&saved=true' : ''}`);
+      navigate(`/assessment-result?type=${resultType}`);
     }, 1500);
   };
 

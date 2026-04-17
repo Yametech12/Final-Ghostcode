@@ -175,17 +175,7 @@ export default function Layout({ children }: LayoutProps) {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  const navGroups = React.useMemo(() => {
-    return NAV_GROUPS.map(group => {
-      if (group.label === 'Reference' && userData?.role === 'admin') {
-        return {
-          ...group,
-          items: [...group.items, { name: 'Admin', path: '/admin', icon: Shield }]
-        };
-      }
-      return group;
-    });
-  }, [userData?.role]);
+  const navGroups = NAV_GROUPS;
 
   // Dropdown items filtering
   const getFilteredGroupItems = (group: typeof navGroups[0]) => {
@@ -450,19 +440,7 @@ export default function Layout({ children }: LayoutProps) {
               </div>
 
 
-              
-              {!user && (
-                <button
-                  onClick={() => {
-                    navigate('/');
-                    setIsMenuOpen(false);
-                  }}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-5 rounded-2xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20"
-                >
-                  <LogIn className="w-6 h-6" />
-                  Sign In
-                </button>
-              )}
+
 
               <div className="space-y-8">
                 {navGroups.map((group) => {

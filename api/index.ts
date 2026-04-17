@@ -5,8 +5,8 @@ import { fileURLToPath } from 'url';
 
 console.log("Server starting...");
 
-import { getApiKey } from './config.js';
-import { AI_PROVIDER, API_URL } from './ai.js';
+import { getApiKey } from './config.ts';
+import { AI_PROVIDER, API_URL } from './ai.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

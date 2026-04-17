@@ -111,9 +111,6 @@ const practiceScenarios = [
 ];
 
 export default function CalibrationPage() {
-  const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [mode, setMode] = React.useState<'ai' | 'manual' | 'practice' | 'history'>('ai');
   const [structuredInput, setStructuredInput] = React.useState({
     eyeContact: '',
@@ -274,7 +271,6 @@ export default function CalibrationPage() {
 
   const deleteHistoryItem = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (!user) return;
     
     try {
       const { error } = await supabase.from('oracle_analyses').delete().eq('id', id);
@@ -551,12 +547,6 @@ export default function CalibrationPage() {
             <Zap className="w-3 h-3 text-slate-400" />
             <span className="text-xs text-slate-400">EPIMETHEUS Framework</span>
           </div>
-          {user && (
-            <div className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-500/10 border border-green-500/20">
-              <div className="w-2 h-2 bg-green-500 rounded-full" />
-              <span className="text-xs text-green-400 font-medium">Connected</span>
-            </div>
-          )}
         </div>
       </div>
 

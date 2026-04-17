@@ -17,8 +17,8 @@ interface ChatSession {
 }
 
 export function useAdvisor() {
-  const safeAuth = useAuth();
-  const user = safeAuth?.user;
+  // Authentication disabled
+  const user = null;
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
 

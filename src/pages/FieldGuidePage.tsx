@@ -41,9 +41,6 @@ interface FieldReportComment {
 }
 
 export default function FieldGuidePage() {
-  const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<'scenarios' | 'reports'>('scenarios');
@@ -90,29 +87,10 @@ export default function FieldGuidePage() {
     fetchReports();
   }, []);
 
-  // Fetch User Likes for Reports
+  // User likes disabled (authentication removed)
   useEffect(() => {
-    if (!user) {
-      setUserLikes(new Set());
-      return;
-    }
-
-    const fetchLikes = async () => {
-      try {
-        const { data: likes, error } = await supabase
-          .from('report_likes')
-          .select('reportId')
-          .eq('userId', user.id);
-        if (error) throw error;
-        const likedIds = new Set(likes.map(like => like.reportId));
-        setUserLikes(likedIds);
-      } catch (error) {
-        console.error("Error fetching user likes:", error);
-      }
-    };
-
-    fetchLikes();
-  }, [user]);
+    setUserLikes(new Set());
+  }, []);
 
   // Form State
   const [newReport, setNewReport] = React.useState({
@@ -137,14 +115,13 @@ export default function FieldGuidePage() {
       const { error } = await supabase
         .from('field_reports')
         .insert({
-          author: newReport.author || user.user_metadata?.display_name || 'Anonymous',
+          author: newReport.author || 'Anonymous',
           type: newReport.type || 'Unknown',
           scenario: newReport.scenario,
           action: newReport.action,
           result: newReport.result,
           likes: 0,
           commentCount: 0,
-          userId: user.id,
           timestamp: new Date().toISOString()
         });
       if (error) throw error;
@@ -168,53 +145,8 @@ export default function FieldGuidePage() {
   };
 
   const handleLike = async (reportId: string) => {
-    if (!user) {
-      toast.error("You must be signed in to like a report.");
-      return;
-    }
-
-    const isLiked = userLikes.has(reportId);
-
-    try {
-      if (isLiked) {
-        // Unlike
-        const { error: deleteError } = await supabase
-          .from('report_likes')
-          .delete()
-          .eq('userId', user.id)
-          .eq('reportId', reportId);
-        if (deleteError) throw deleteError;
-
-        const { error: updateError } = await supabase
-          .from('field_reports')
-          .update({ likes: (reports.find(r => r.id === reportId)?.likes || 0) - 1 })
-          .eq('id', reportId);
-        if (updateError) throw updateError;
-      } else {
-        // Like
-        const { error: insertError } = await supabase
-          .from('report_likes')
-          .insert({
-            userId: user.id,
-            reportId: reportId,
-            timestamp: new Date().toISOString()
-          });
-        if (insertError) throw insertError;
-
-        const { error: updateError } = await supabase
-          .from('field_reports')
-          .update({ likes: (reports.find(r => r.id === reportId)?.likes || 0) + 1 })
-          .eq('id', reportId);
-        if (updateError) throw updateError;
-      }
-    } catch (error: any) {
-      console.error("Error toggling like:", error);
-      if (error.code === 'permission-denied') {
-        toast.error("Permission denied. Please check your Firestore rules.");
-      } else {
-        handleFirestoreError(error, OperationType.WRITE, `field_reports/${reportId}`);
-      }
-    }
+    // Likes disabled - authentication removed
+    toast.info("Like functionality is currently disabled.");
   };
 
   const toggleComments = (reportId: string) => {
@@ -253,10 +185,6 @@ export default function FieldGuidePage() {
   };
 
   const handleSubmitComment = async (reportId: string) => {
-    if (!user) {
-      toast.error("You must be signed in to comment.");
-      return;
-    }
     if (!newComment.trim()) return;
 
     setIsSubmittingComment(true);
@@ -265,8 +193,7 @@ export default function FieldGuidePage() {
         .from('field_report_comments')
         .insert({
           reportId,
-          userId: user.id,
-          author: user.user_metadata?.display_name || 'Anonymous',
+          author: 'Anonymous',
           content: newComment.trim(),
           timestamp: new Date().toISOString()
         });
@@ -759,38 +686,34 @@ export default function FieldGuidePage() {
                         )}
                       </div>
 
-                      {user ? (
-                        <div className="flex gap-2">
-                          <input
-                            type="text"
-                            value={newComment}
-                            onChange={(e) => setNewComment(e.target.value)}
-                            placeholder="Add a comment..."
-                            className="flex-1 bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-accent-primary/50 transition-colors"
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' && !e.shiftKey) {
-                                e.preventDefault();
-                                handleSubmitComment(report.id).catch(err => {
-                                  console.error("Comment submission failed:", err);
-                                });
-                              }
-                            }}
-                          />
-                          <button
-                            onClick={() => {
-                              handleSubmitComment(report.id).catch(err => {
-                                console.error("Comment submission failed:", err);
-                              });
-                            }}
-                            disabled={isSubmittingComment || !newComment.trim()}
-                            className="p-2 rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                          >
-                            {isSubmittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                          </button>
-                        </div>
-                      ) : (
-                        <p className="text-xs text-slate-500 text-center">Sign in to leave a comment.</p>
-                      )}
+                       <div className="flex gap-2">
+                         <input
+                           type="text"
+                           value={newComment}
+                           onChange={(e) => setNewComment(e.target.value)}
+                           placeholder="Add a comment..."
+                           className="flex-1 bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-accent-primary/50 transition-colors"
+                           onKeyDown={(e) => {
+                             if (e.key === 'Enter' && !e.shiftKey) {
+                               e.preventDefault();
+                               handleSubmitComment(report.id).catch(err => {
+                                 console.error("Comment submission failed:", err);
+                               });
+                             }
+                           }}
+                         />
+                         <button
+                           onClick={() => {
+                             handleSubmitComment(report.id).catch(err => {
+                               console.error("Comment submission failed:", err);
+                             });
+                           }}
+                           disabled={isSubmittingComment || !newComment.trim()}
+                           className="p-2 rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                         >
+                           {isSubmittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                         </button>
+                       </div>
                     </div>
                   )}
                 </div>
