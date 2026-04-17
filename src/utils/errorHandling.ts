@@ -84,3 +84,33 @@ export function handleAsyncError(promise: Promise<any>, context?: string) {
     throw error;
   });
 }
+
+// Function to get user-friendly error message from Supabase auth errors
+export function getSupabaseErrorMessage(error: any): string {
+  if (!error) return 'An unknown error occurred';
+
+  const message = error.message || String(error);
+
+  // Handle common Supabase auth errors
+  if (message.includes('Invalid login credentials')) {
+    return 'Invalid email or password';
+  }
+  if (message.includes('Email not confirmed')) {
+    return 'Please check your email and confirm your account';
+  }
+  if (message.includes('User already registered')) {
+    return 'An account with this email already exists';
+  }
+  if (message.includes('Password should be at least 6 characters')) {
+    return 'Password must be at least 6 characters long';
+  }
+  if (message.includes('Unable to validate email address')) {
+    return 'Please enter a valid email address';
+  }
+  if (message.includes('Failed to fetch')) {
+    return 'Network error - please check your connection';
+  }
+
+  // Return the original message if no specific handling
+  return message;
+}

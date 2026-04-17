@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
 import { toast } from 'sonner';
+import { getSupabaseErrorMessage } from '../utils/errorHandling';
 
 const getAuthErrorMessage = (error: any) => {
   const errorCode = error.code || (error.message && error.message.match(/auth\/[a-z-]+/)?.[0]);
@@ -87,7 +88,7 @@ export default function RegisterPage() {
         navigate('/login');
       }
     } catch (err: any) {
-      const message = getFirebaseErrorMessage(err);
+      const message = getSupabaseErrorMessage(err);
       setError(message);
       toast.error(message);
       console.error("Registration Error:", err);
