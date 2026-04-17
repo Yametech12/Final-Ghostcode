@@ -8,37 +8,26 @@ VALUES (
   ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/gif']
 ) ON CONFLICT (id) DO NOTHING;
 
--- Enable RLS on storage.objects
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- Note: RLS is enabled by default on storage.objects in Supabase.
+-- Storage policies must be created via Dashboard or CLI (see comments below).
 
--- Allow authenticated users to upload their own files
-INSERT INTO storage.policies (name, bucket_id, definition)
-VALUES (
-  'Users can upload their own files',
-  'user-uploads',
-  'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
-) ON CONFLICT (name) DO NOTHING;
-
--- Allow users to view their own files
-INSERT INTO storage.policies (name, bucket_id, definition)
-VALUES (
-  'Users can view their own files',
-  'user-uploads',
-  'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
-) ON CONFLICT (name) DO NOTHING;
-
--- Allow public access to view all files (since bucket is public)
-INSERT INTO storage.policies (name, bucket_id, definition)
-VALUES (
-  'Public can view files',
-  'user-uploads',
-  'bucket_id = ''user-uploads'''
-) ON CONFLICT (name) DO NOTHING;
-
--- Allow users to delete their own files
-INSERT INTO storage.policies (name, bucket_id, definition)
-VALUES (
-  'Users can delete their own files',
-  'user-uploads',
-  'bucket_id = ''user-uploads'' AND auth.role() = ''authenticated'' AND (storage.foldername(name))[1] = auth.uid()::text'
-) ON CONFLICT (name) DO NOTHING;
+-- To create policies manually:
+-- 1. Dashboard: Storage > Buckets > user-uploads > Policies > Add Policy
+-- 2. CLI: supabase storage policies create user-uploads --name "Policy Name" --definition "condition"
+--
+-- Policies needed:
+-- - Name: "Users can upload their own files"
+--   Definition: bucket_id = 'user-uploads' AND auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text
+--   Operations: INSERT
+--
+-- - Name: "Users can view their own files"
+--   Definition: bucket_id = 'user-uploads' AND auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text
+--   Operations: SELECT
+--
+-- - Name: "Public can view files"
+--   Definition: bucket_id = 'user-uploads'
+--   Operations: SELECT
+--
+-- - Name: "Users can delete their own files"
+--   Definition: bucket_id = 'user-uploads' AND auth.role() = 'authenticated' AND (storage.foldername(name))[1] = auth.uid()::text
+--   Operations: DELETE

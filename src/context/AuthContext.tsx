@@ -73,23 +73,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Safety timeout to prevent infinite loading
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        const supabaseUser: SupabaseUser = {
-          id: session.user.id,
-          email: session.user.email,
-          user_metadata: session.user.user_metadata || {},
-          displayName: session.user.user_metadata?.display_name,
-          photoURL: session.user.user_metadata?.avatar_url
-        };
-        setUser(supabaseUser);
-        loadUserData(session.user.id);
-      } else {
+    const safetyTimeout = setTimeout(() => {
+      if (loading) {
+        console.warn('Auth loading timeout - forcing loading to false');
         setLoading(false);
       }
-    });
+    }, 15000); // 15 second safety timeout
+
+    return () => clearTimeout(safetyTimeout);
+  }, [loading]);
+
+  useEffect(() => {
+    // Get initial session with timeout
+    const loadSession = async () => {
+      try {
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise((_, reject) => {
+          setTimeout(() => reject(new Error('Session loading timeout')), 10000); // 10 second timeout
+        });
+
+        const { data: { session } } = await Promise.race([sessionPromise, timeoutPromise]) as any;
+
+        if (session?.user) {
+          const supabaseUser: SupabaseUser = {
+            id: session.user.id,
+            email: session.user.email,
+            user_metadata: session.user.user_metadata || {},
+            displayName: session.user.user_metadata?.display_name,
+            photoURL: session.user.user_metadata?.avatar_url
+          };
+          setUser(supabaseUser);
+          await loadUserData(session.user.id);
+        }
+      } catch (error) {
+        console.error('Failed to load session:', error);
+        // Set loading to false even on error to prevent infinite loading
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSession();
 
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
@@ -115,6 +141,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const loadUserData = async (userId: string) => {
     try {
+      console.log('Loading user data for:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
@@ -122,10 +149,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         .single();
 
       if (data && !error) {
+        console.log('User data loaded successfully:', data);
         setUserData(data);
+      } else {
+        console.warn('Failed to load user data:', error);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
+      // Set empty user data to prevent infinite loading
+      setUserData(null);
     }
   };
 
