@@ -18,7 +18,7 @@ export function useRoutePreloading() {
 
         // Preload tool pages when user is in core areas
         if (['/profiles', '/advisor', '/assessment'].includes(location.pathname)) {
-          import('../pages/CalibrationPage');
+          // import('../pages/CalibrationPage');
           import('../pages/ProfilerPage');
           import('../pages/QuizPage');
         }

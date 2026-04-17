@@ -18,7 +18,7 @@ const AssessmentPage = lazyWithRetry(() => import('../pages/AssessmentPage'));
 const AssessmentResultPage = lazyWithRetry(() => import('../pages/AssessmentResultPage'));
 
 // Tool pages - medium priority
-const CalibrationPage = lazyWithRetry(() => import('../pages/CalibrationPage'));
+// const CalibrationPage = lazyWithRetry(() => import('../pages/CalibrationPage'));
 const ProfilerPage = lazyWithRetry(() => import('../pages/ProfilerPage'));
 const QuizPage = lazyWithRetry(() => import('../pages/QuizPage'));
 const ComparePage = lazyWithRetry(() => import('../pages/ComparePage'));
@@ -139,13 +139,13 @@ export default function AnimatedRoutes() {
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="/calibration" element={
+          {/* <Route path="/calibration" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><CalibrationPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
-          } />
+          } /> */}
           <Route path="/field-guide" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>

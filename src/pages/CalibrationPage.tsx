@@ -23,7 +23,7 @@ import { chatCompletion } from '../lib/ai';
 
 import { toast } from 'sonner';
 
-import { motion, AnimatePresence } from 'motion/react';
+import { motion, AnimatePresence } from 'motion';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
