@@ -55,6 +55,7 @@ app.use((_req, res, next) => {
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000',
+    'https://epimetheusproject.vercel.app',
     'https://epimetheus.ai',
     'https://www.epimetheus.ai'
   ];
