@@ -1,8 +1,7 @@
 import React from 'react';
 import {
   Send, Bot, User,
-  MessageSquare,
-  Volume2, Pause, X, Mic, MicOff, Trash2, ArrowDown, Check, History, Loader2, Copy
+  Volume2, Pause, X, Mic, MicOff, ArrowDown, History, Loader2, Copy
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -29,15 +28,10 @@ interface Message {
 
 export default function AdvisorPage() {
   const {
-    user,
     messages,
     setMessages,
-    sessions,
     currentSessionId,
     setCurrentSessionId,
-    setSessions,
-    confirmDelete,
-    setConfirmDelete,
     isSidebarOpen,
     setIsSidebarOpen,
     isLoading,
@@ -50,7 +44,6 @@ export default function AdvisorPage() {
     setIsSpeaking,
     showScrollButton,
     setShowScrollButton,
-    deleteSession,
   } = useAdvisor();
 
   const [error, setError] = React.useState<string | null>(null);
@@ -267,8 +260,8 @@ export default function AdvisorPage() {
       let errorMessage = "There was a disturbance in the connection. Please try again.";
 
       if (error instanceof Error) {
-        if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("PERMISSION_DENIED")) {
-          errorMessage = "AI API key error. Please check your Gemini API key configuration.";
+        if (error.message?.includes("API_KEY_INVALID") || error.message?.includes("PERMISSION_DENIED") || error.message?.includes("not configured")) {
+          errorMessage = "AI API key error. Please check your OpenRouter API key configuration.";
         } else if (error.message?.includes("RESOURCE_EXHAUSTED") || error.message?.includes("RATE_LIMIT")) {
           errorMessage = "AI service is rate limited. Please try again in a moment.";
         } else if (error.message?.includes("INVALID_ARGUMENT")) {

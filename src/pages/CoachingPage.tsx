@@ -14,8 +14,6 @@ interface Message {
 
 export default function CoachingPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',
@@ -28,6 +26,9 @@ export default function CoachingPage() {
   const [contextLoaded, setContextLoaded] = useState(false);
   const [userContext, setUserContext] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

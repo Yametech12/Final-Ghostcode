@@ -15,12 +15,13 @@ interface ProfileCardModalProps {
 
 export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, achievementsCount = 0, fieldReportsCount = 0 }: ProfileCardModalProps) {
   const auth = useAuth();
-  if (!auth) return null;
-  const { user, userData } = auth;
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [copied, setCopied] = useState(false);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
+
+  if (!auth) return null;
+  const { user, userData } = auth;
 
   useEffect(() => {
     if (!isOpen) return;

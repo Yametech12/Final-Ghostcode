@@ -1,23 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
-import {
-  CheckCircle2, Target, AlertCircle, Zap, Trophy, Clock,
-  Play, Pause, RotateCcw, ArrowRight, Star, Award
-} from 'lucide-react';
+import { useState } from 'react';
+import { motion } from 'motion/react';
+import { Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 
 export default function CalibrationPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
-
   const [currentTask, setCurrentTask] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState(0);
   const [startTime] = useState(Date.now());
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   // Sample calibration tasks
   const tasks = [

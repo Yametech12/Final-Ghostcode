@@ -48,6 +48,28 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
 
 app.use(rateLimitMiddleware);
 
+// Security headers middleware
+app.use((req, res, next) => {
+  // Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Prevent MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // XSS Protection
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  // Referrer policy
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Content Security Policy
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
+  );
+  // HSTS (HTTP Strict Transport Security)
+  if (req.secure || process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+  next();
+});
+
 // CORS headers
 app.use((_req, res, next) => {
   const origin = _req.headers.origin;
@@ -91,6 +113,39 @@ app.get("/api/health", async (_req, res) => {
     aiProvider: AI_PROVIDER,
     timestamp: new Date().toISOString()
   });
+});
+
+// Security event logging endpoint
+app.post("/api/security/log", async (req, res) => {
+  try {
+    const { event, userId, email, ip, userAgent, timestamp, details } = req.body;
+
+    // Validate required fields
+    if (!event) {
+      return res.status(400).json({ error: "Event type is required" });
+    }
+
+    // Log to console with structured format
+    const logEntry = {
+      event,
+      userId,
+      email,
+      ip,
+      userAgent: userAgent?.substring(0, 200), // Limit length
+      timestamp: timestamp || new Date().toISOString(),
+      details,
+      platform: process.env.NODE_ENV || 'unknown'
+    };
+
+    console.log(`[SECURITY] ${JSON.stringify(logEntry)}`);
+
+    // In production, you could store these logs in a database or send to a monitoring service
+    // For now, just acknowledge receipt
+    res.json({ success: true, logged: true });
+  } catch (error) {
+    console.error('Security log error:', error);
+    res.status(500).json({ error: 'Failed to log security event' });
+  }
 });
 
 app.post("/api/auth/send-code", async (req, res) => {

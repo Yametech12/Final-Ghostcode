@@ -15,12 +15,13 @@ const getCategory = (type: string): 'Personality' | 'Content' | 'Assessment' => 
 
 export function useFavorites() {
   const auth = useAuth();
+  const [favorites, setFavorites] = useState<Favorite[]>([]);
+  const [loading, setLoading] = useState(true);
+
   if (!auth) {
     return { favorites: [], loading: true, toggleFavorite: async () => {}, isFavorite: () => false };
   }
   const { user } = auth;
-  const [favorites, setFavorites] = useState<Favorite[]>([]);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user) {

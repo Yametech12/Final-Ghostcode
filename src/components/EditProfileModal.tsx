@@ -11,16 +11,17 @@ interface EditProfileModalProps {
 
 export default function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
   const auth = useAuth();
-  if (!auth) return null;
-  const { userData, updateUserData } = auth;
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
-    displayName: userData?.displayName || '',
-    bio: userData?.bio || '',
-    phone: userData?.contactInfo?.phone || '',
-    instagram: userData?.contactInfo?.instagram || '',
-    twitter: userData?.contactInfo?.twitter || '',
+    displayName: '',
+    bio: '',
+    phone: '',
+    instagram: '',
+    twitter: '',
   });
+
+  if (!auth) return null;
+  const { userData, updateUserData } = auth;
 
   useEffect(() => {
     if (userData) {

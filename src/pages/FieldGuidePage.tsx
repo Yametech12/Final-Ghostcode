@@ -41,26 +41,25 @@ interface FieldReportComment {
 }
 
 export default function FieldGuidePage() {
+  const auth = useAuth();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<'scenarios' | 'reports'>('scenarios');
-  
-  // Reports State
   const [reports, setReports] = useState<FieldReport[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
   const [userLikes, setUserLikes] = useState<Set<string>>(new Set());
-  
   const [isModalOpen, setIsModalOpen] = React.useState(false);
   const [reportSearch, setReportSearch] = React.useState('');
   const [reportSort, setReportSort] = React.useState<'newest' | 'popular'>('newest');
   const [reportFilter, setReportFilter] = React.useState<string | null>(null);
   const [copiedText, setCopiedText] = React.useState<string | null>(null);
-
-  // Comments State
   const [expandedReportId, setExpandedReportId] = useState<string | null>(null);
   const [comments, setComments] = useState<Record<string, FieldReportComment[]>>({});
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   // Fetch Reports
   useEffect(() => {
@@ -144,7 +143,7 @@ export default function FieldGuidePage() {
     }
   };
 
-  const handleLike = async (reportId: string) => {
+  const handleLike = async (_reportId: string) => {
     // Likes disabled - authentication removed
     toast.info("Like functionality is currently disabled.");
   };

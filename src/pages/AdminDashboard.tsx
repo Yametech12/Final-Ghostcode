@@ -55,8 +55,6 @@ interface Feedback {
 
 export default function AdminDashboard() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { userData } = auth;
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "users" | "reports" | "feedback"
@@ -68,6 +66,9 @@ export default function AdminDashboard() {
   const [reportsLoading, setReportsLoading] = useState(true);
   const [feedbacksLoading, setFeedbacksLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+
+  if (!auth) return <div>Loading...</div>;
+  const { userData } = auth;
 
   useEffect(() => {
     if (userData && userData.role !== "admin") {
@@ -173,21 +174,6 @@ export default function AdminDashboard() {
 
     try {
       
-      // Define all collections that might have data associated with this user
-      const collectionsToDelete = [
-        "field_reports",
-        "field_report_comments",
-        "report_likes",
-        "calibrations",
-        "oracle_analyses",
-        "favorites",
-        "dossiers",
-        "advisor_sessions",
-        "advisor_messages",
-        "assessment_results",
-        "feedback"
-      ];
-
       // Delete data from all associated collections
       // Note: Tables with CASCADE constraints will be deleted automatically when user is deleted
 

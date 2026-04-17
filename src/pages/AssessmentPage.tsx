@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { ArrowLeft, Target, Shield, Flame, CheckCircle2, Clock, RotateCcw } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
-import { supabase } from '../lib/supabase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
+import { useAuth } from '../context/AuthContext';
+import { supabase } from '../lib/supabase';
+import { toast } from 'sonner';
 
 type Question = {
   id: string;
@@ -124,6 +125,8 @@ const questions: Question[] = [
 ];
 
 export default function AssessmentPage() {
+  const auth = useAuth();
+  const { user } = auth || {};
   const [currentStep, setCurrentStep] = useState(() => {
     const saved = localStorage.getItem('assessment_current_step');
     return saved ? parseInt(saved, 10) : 0;
@@ -191,7 +194,23 @@ export default function AssessmentPage() {
     localStorage.removeItem('assessment_current_step');
     localStorage.removeItem('assessment_current_answers');
     
-    // Database save disabled - authentication removed
+    // Save to database if user is logged in
+    if (user) {
+      try {
+        await supabase
+          .from('assessment_results')
+          .insert({
+            user_id: user.id,
+            type_id: resultType,
+            answers: finalAnswers,
+          });
+        toast.success('Assessment result saved!');
+      } catch (error) {
+        console.error('Error saving assessment result:', error);
+        toast.error('Failed to save assessment result');
+      }
+    }
+
     setTimeout(() => {
       navigate(`/assessment-result?type=${resultType}`);
     }, 1500);

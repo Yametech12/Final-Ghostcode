@@ -9,8 +9,6 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
 export default function ProfilerPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [traits, setTraits] = useState(() => {
     const saved = localStorage.getItem('profiler_current_traits');
     return safeParseJSON(saved, {
@@ -21,6 +19,9 @@ export default function ProfilerPage() {
   });
 
   const [pastResults, setPastResults] = useState<{typeId: string, date: string}[]>([]);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   useEffect(() => {
     const loadPastResults = async () => {

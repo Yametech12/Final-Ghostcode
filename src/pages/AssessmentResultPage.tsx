@@ -6,17 +6,20 @@ import { useAuth } from '../context/AuthContext';
 import FavoriteButton from '../components/FavoriteButton';
 import ProfileRadarChart from '../components/ProfileRadarChart';
 import { supabase } from '../lib/supabase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+
 import { toast } from 'sonner';
 
 export default function AssessmentResultPage() {
   const [searchParams] = useSearchParams();
-  const typeId = searchParams.get('type');
-  const profile = personalityTypes.find(p => p.id === typeId);
   const navigate = useNavigate();
-  // Authentication disabled - working without user auth
+  const auth = useAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const typeId = searchParams.get('type');
+  const profile = personalityTypes.find(p => p.id === typeId);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   useEffect(() => {
     if (!profile) {
@@ -27,14 +30,28 @@ export default function AssessmentResultPage() {
   if (!profile) return null;
 
   const handleSaveToProfile = async () => {
-    // Profile saving disabled - authentication removed
+    if (!user) return;
+
     setIsSaving(true);
-    // Simulate save delay
-    setTimeout(() => {
+    try {
+      const { error } = await supabase
+        .from('assessment_results')
+        .insert({
+          user_id: user.id,
+          type_id: profile.id,
+          // answers would be needed but not available here
+        });
+
+      if (error) throw error;
+
       setSaved(true);
-      toast.success('Assessment results displayed (saving disabled)');
+      toast.success('Assessment result saved to your profile!');
+    } catch (error: any) {
+      console.error('Error saving assessment result:', error);
+      toast.error('Failed to save assessment result');
+    } finally {
       setIsSaving(false);
-    }, 1000);
+    }
   };
 
   return (

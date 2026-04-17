@@ -18,7 +18,7 @@ const AssessmentPage = lazyWithRetry(() => import('../pages/AssessmentPage'));
 const AssessmentResultPage = lazyWithRetry(() => import('../pages/AssessmentResultPage'));
 
 // Tool pages - medium priority
-// const CalibrationPage = lazyWithRetry(() => import('../pages/CalibrationPage'));
+const CalibrationPage = lazyWithRetry(() => import('../pages/CalibrationPage'));
 const ProfilerPage = lazyWithRetry(() => import('../pages/ProfilerPage'));
 const QuizPage = lazyWithRetry(() => import('../pages/QuizPage'));
 const ComparePage = lazyWithRetry(() => import('../pages/ComparePage'));

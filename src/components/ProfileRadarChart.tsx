@@ -109,4 +109,4 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
       </ResponsiveContainer>
     </div>
   );
-}
+};

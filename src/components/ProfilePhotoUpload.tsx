@@ -9,12 +9,13 @@ import { cn } from '../lib/utils';
 
 export default function ProfilePhotoUpload() {
   const auth = useAuth();
-  if (!auth) return null;
-  const { user, updateUserProfile } = auth;
   const [isUploading, setIsUploading] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+
+  if (!auth) return null;
+  const { user, updateUserProfile } = auth;
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     setUploadError(null);

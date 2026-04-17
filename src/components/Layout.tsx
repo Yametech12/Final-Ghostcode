@@ -1,6 +1,6 @@
 import React, { useEffect, Suspense, lazy } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart } from 'lucide-react';
+import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
@@ -8,6 +8,8 @@ import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useIsMobile, useSwipeGesture, usePullToRefresh, useMobilePerformance } from '../hooks/useMobile';
+import { useSessionTimeout } from '../hooks/useSessionTimeout';
+import { toast } from 'sonner';
 
 import Logo from './Logo';
 
@@ -95,6 +97,27 @@ export default function Layout({ children }: LayoutProps) {
 
   // Mobile performance optimizations
   useMobilePerformance();
+
+  // Session timeout management (30 min, warning at 2 min)
+  useSessionTimeout(
+    30 * 60 * 1000,
+    2 * 60 * 1000,
+    () => {
+      toast.warning('Session expiring soon', {
+        description: 'You will be logged out due to inactivity. Click to stay signed in.',
+        action: {
+          label: 'Stay Signed In',
+          onClick: () => toast.dismiss()
+        },
+        duration: 15000,
+      });
+    },
+    () => {
+      toast.info('Session expired', {
+        description: 'You have been logged out due to inactivity.',
+      });
+    }
+  );
 
   const handleMouseEnter = (label: string) => {
     if (dropdownTimeoutRef.current) {

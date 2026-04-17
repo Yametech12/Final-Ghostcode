@@ -21,14 +21,15 @@ const feedbackTypes = [
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const auth = useAuth();
-  if (!auth) return null;
-  const { user } = auth;
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'general' | 'praise' | 'suggestion' | 'content' | 'ui' | 'performance'>('general');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [email, setEmail] = useState('');
+
+  if (!auth) return null;
+  const { user } = auth;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

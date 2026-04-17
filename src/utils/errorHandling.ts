@@ -1,5 +1,3 @@
-import { supabase } from '../lib/supabase';
-
 export enum OperationType {
   CREATE = 'create',
   UPDATE = 'update',

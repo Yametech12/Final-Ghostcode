@@ -19,21 +19,20 @@ interface Dossier {
 
 export default function DossiersPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-
-  // Form state
   const [name, setName] = useState('');
   const [typeId, setTypeId] = useState(personalityTypes[0].id);
   const [phase, setPhase] = useState<Dossier['phase']>('Intrigue');
   const [notes, setNotes] = useState('');
   const [lastInteraction, setLastInteraction] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   useEffect(() => {
     const loadDossiers = async () => {

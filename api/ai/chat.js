@@ -2,11 +2,11 @@ import { getApiKey } from '../config.js';
 import { AI_PROVIDER, API_URL } from '../services/ai.js';
 
 const FALLBACK_MODELS = [
-  "microsoft/wizardlm-2-8x22b",
+  "openai/gpt-4o-mini",
   "meta-llama/llama-3.1-8b-instruct:free",
-  "anthropic/claude-3-haiku",
-  "openai/gpt-3.5-turbo",
-  "google/gemma-2-9b-it:free"
+  "anthropic/claude-3.5-sonnet:free",
+  "google/gemma-3-5it-mini:free",
+  "microsoft/wizardlm-2-8x22b"
 ];
 
 async function chatWithOpenRouter(body, apiKeyVal, retries = 3, delay = 1000) {

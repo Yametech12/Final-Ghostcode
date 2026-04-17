@@ -3,6 +3,22 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  if (typeof AbortController === 'undefined') {
+    global.AbortController = class AbortController {
+      constructor() {
+        this.signal = {
+          aborted: false,
+          addEventListener: () => {},
+          removeEventListener: () => {},
+          dispatchEvent: () => true,
+        };
+      }
+      abort() {
+        this.signal.aborted = true;
+      }
+    };
+  }
+
   try {
     const diagnostics = {
       timestamp: new Date().toISOString(),

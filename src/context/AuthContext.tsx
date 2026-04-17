@@ -2,6 +2,28 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 
+// Security logging utility
+const logSecurityEvent = async (event: string, userId?: string, email?: string | null, details?: Record<string, any>) => {
+  try {
+    await fetch('/api/security/log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        event,
+        userId,
+        email,
+        ip: 'client-side', // Actual IP logged server-side
+        userAgent: navigator.userAgent,
+        details,
+        timestamp: new Date().toISOString()
+      })
+    });
+  } catch (err) {
+    // Silently fail - logging shouldn't break user experience
+    console.debug('Security log failed:', err);
+  }
+};
+
 // Supabase User type compatibility
 interface SupabaseUser {
   id: string;
@@ -36,8 +58,8 @@ interface AuthContextType {
   userData: UserData | null;
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
-  signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, name: string) => Promise<{ requiresVerification: boolean }>;
+  signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string, recaptchaToken?: string | null) => Promise<{ requiresVerification: boolean }>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
@@ -70,7 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
         const supabaseUser: SupabaseUser = {
           id: session.user.id,
@@ -123,23 +145,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const signInWithEmail = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string, password: string, recaptchaToken?: string | null) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const signInOptions: { email: string; password: string; options?: { captchaToken?: string } } = {
         email,
         password
-      });
+      };
+
+      if (recaptchaToken) {
+        signInOptions.options = { captchaToken: recaptchaToken };
+      }
+
+      const { error } = await supabase.auth.signInWithPassword(signInOptions);
       if (error) throw error;
+
+      // Log successful login
+      await logSecurityEvent('login_success', user?.id, email, { email });
     } catch (error: any) {
       console.error('Email sign in error:', error);
       toast.error(error.message || 'Failed to sign in');
+      // Log failed login attempt
+      await logSecurityEvent('login_failed', undefined, email, {
+        error: error.message,
+        email,
+        captchaUsed: !!recaptchaToken
+      });
       throw error;
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string, name: string) => {
+  const signUpWithEmail = async (email: string, password: string, name: string, recaptchaToken?: string | null) => {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const signUpOptions: { email: string; password: string; options?: { data?: { display_name?: string }; captchaToken?: string } } = {
         email,
         password,
         options: {
@@ -147,9 +184,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             display_name: name
           }
         }
-      });
+      };
+
+      if (recaptchaToken) {
+        signUpOptions.options!.captchaToken = recaptchaToken;
+      }
+
+      const { data, error } = await supabase.auth.signUp(signUpOptions);
 
       if (error) throw error;
+
+      // Log signup attempt
+      await logSecurityEvent('signup_attempt', data.user?.id, email, {
+        name,
+        requiresVerification: !data.user?.email_confirmed_at
+      });
 
       if (data.user && !data.user.email_confirmed_at) {
         toast.success('Check your email for verification link');
@@ -160,6 +209,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Email sign up error:', error);
       toast.error(error.message || 'Failed to sign up');
+      // Log failed signup
+      await logSecurityEvent('signup_failed', undefined, email, {
+        error: error.message,
+        name
+      });
       throw error;
     }
   };
@@ -171,9 +225,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
       if (error) throw error;
       toast.success('Password reset email sent');
+      // Log password reset request
+      await logSecurityEvent('password_reset_requested', undefined, email);
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast.error('Failed to send reset email');
+      await logSecurityEvent('password_reset_failed', undefined, email, {
+        error: error.message
+      });
       throw error;
     }
   };
@@ -183,9 +242,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
       toast.success('Signed out successfully');
+      // Log logout
+      await logSecurityEvent('logout', user?.id, user?.email);
     } catch (error: any) {
       console.error('Logout error:', error);
       toast.error('Failed to sign out');
+      await logSecurityEvent('logout_failed', user?.id, user?.email, {
+        error: error.message
+      });
       throw error;
     }
   };

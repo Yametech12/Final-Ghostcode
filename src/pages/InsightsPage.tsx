@@ -12,10 +12,11 @@ import { Skeleton } from '../components/ui/Skeleton';
 
 export default function InsightsPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
   const [loading, setLoading] = useState(true);
   const [calibrations, setCalibrations] = useState<any[]>([]);
+
+  if (!auth) return <div>Loading...</div>;
+  const { user } = auth;
 
   useEffect(() => {
     const fetchData = async () => {
