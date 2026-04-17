@@ -12,14 +12,11 @@ import { toast } from 'sonner';
 export default function AssessmentResultPage() {
   const [searchParams] = useSearchParams();
   const typeId = searchParams.get('type');
-  const initialSaved = searchParams.get('saved') === 'true';
   const profile = personalityTypes.find(p => p.id === typeId);
   const navigate = useNavigate();
-  const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  // Authentication disabled - working without user auth
   const [isSaving, setIsSaving] = useState(false);
-  const [saved, setSaved] = useState(initialSaved);
+  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     if (!profile) {
@@ -30,30 +27,14 @@ export default function AssessmentResultPage() {
   if (!profile) return null;
 
   const handleSaveToProfile = async () => {
-    if (!user) return;
+    // Profile saving disabled - authentication removed
     setIsSaving(true);
-    try {
-      const { error } = await supabase
-        .from('calibrations')
-        .insert({
-          userId: user.id,
-          typeId: profile.id,
-          timestamp: new Date().toISOString()
-        });
-      if (error) throw error;
+    // Simulate save delay
+    setTimeout(() => {
       setSaved(true);
-      toast.success('Assessment saved to your profile');
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('offline')) {
-        console.warn("Firestore is offline. Could not save assessment.");
-        toast.error("Unable to save to profile while offline. Please check your connection.");
-      } else {
-        toast.error("Failed to save assessment. Please try again.");
-        handleFirestoreError(error, OperationType.CREATE, 'calibrations');
-      }
-    } finally {
+      toast.success('Assessment results displayed (saving disabled)');
       setIsSaving(false);
-    }
+    }, 1000);
   };
 
   return (
