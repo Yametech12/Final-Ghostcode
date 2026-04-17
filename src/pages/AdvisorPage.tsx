@@ -174,11 +174,15 @@ export default function AdvisorPage() {
 
     let activeSessionId = currentSessionId;
 
-    // Session saving disabled - authentication removed
-    if (!activeSessionId) {
-      // Create a temporary session ID for this conversation
-      activeSessionId = `temp-${Date.now()}`;
-      setCurrentSessionId(activeSessionId);
+    try {
+      // Session saving disabled - authentication removed
+      if (!activeSessionId) {
+        // Create a temporary session ID for this conversation
+        activeSessionId = `temp-${Date.now()}`;
+        setCurrentSessionId(activeSessionId);
+      }
+    } catch (error) {
+      console.error("Failed to create session:", error);
     }
 
     setInput('');
