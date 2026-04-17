@@ -79,14 +79,8 @@ export default defineConfig(({mode}) => {
             // Image processing
             'image-vendor': ['browser-image-compression', 'html2canvas', 'html2pdf.js'],
 
-            // AI and external APIs
-            'ai-vendor': ['@google/generative-ai'],
-
             // Utility libraries
             'utils-vendor': ['lenis'],
-
-            // Personality data (large static data)
-            'personality-data': ['./src/data/personalityTypes'],
           },
           // Optimize chunk file names
           chunkFileNames: (chunkInfo) => {
