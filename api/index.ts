@@ -196,28 +196,128 @@ app.post("/api/security/log", async (req, res) => {
 app.post("/api/upload/profile-photo", async (req, res) => {
   try {
     const { userId, base64Data } = req.body;
-    if (!userId || !base64Data) return res.status(400).json({ error: "userId and base64Data required" });
+
+    if (!userId) {
+      return res.status(400).json({
+        error: "User ID is required",
+        code: "MISSING_USER_ID"
+      });
+    }
+
+    if (!base64Data) {
+      return res.status(400).json({
+        error: "Image data is required",
+        code: "MISSING_IMAGE_DATA"
+      });
+    }
+
+    // Validate UUID
+    if (!isValidUUID(userId)) {
+      return res.status(400).json({
+        error: "Invalid user ID format",
+        code: "INVALID_USER_ID"
+      });
+    }
+
+    // Validate base64 format
+    if (!base64Data.startsWith('data:image/')) {
+      return res.status(400).json({
+        error: "Invalid image data format",
+        code: "INVALID_IMAGE_FORMAT"
+      });
+    }
 
     // Convert base64 to buffer
-    const base64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
-    const buffer = Buffer.from(base64, 'base64');
+    let base64: string;
+    try {
+      base64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+      if (!base64 || base64.length === 0) {
+        throw new Error("Empty base64 data");
+      }
+    } catch (parseError) {
+      console.error('Base64 parsing error:', parseError);
+      return res.status(400).json({
+        error: "Invalid base64 image data",
+        code: "INVALID_BASE64"
+      });
+    }
+
+    let buffer: Buffer;
+    try {
+      buffer = Buffer.from(base64, 'base64');
+      if (buffer.length === 0) {
+        throw new Error("Empty buffer");
+      }
+    } catch (bufferError) {
+      console.error('Buffer creation error:', bufferError);
+      return res.status(400).json({
+        error: "Failed to process image data",
+        code: "BUFFER_ERROR"
+      });
+    }
+
+    // Check file size (max 1MB after base64 decoding approximation)
+    const maxSize = 1024 * 1024; // 1MB
+    if (buffer.length > maxSize) {
+      return res.status(413).json({
+        error: "Image is too large",
+        code: "FILE_TOO_LARGE",
+        maxSize: `${Math.round(maxSize / 1024)}KB`
+      });
+    }
 
     const fileName = `users/${userId}/profile-${Date.now()}.jpg`;
     const file = bucket.file(fileName);
 
-    await file.save(buffer, {
-      metadata: {
-        contentType: 'image/jpeg',
-      },
-      public: true,
-    });
+    try {
+      await file.save(buffer, {
+        metadata: {
+          contentType: 'image/jpeg',
+        },
+        public: true,
+      });
+    } catch (gcsError: any) {
+      console.error('GCS upload error:', gcsError);
+
+      if (gcsError.code === 403) {
+        return res.status(403).json({
+          error: "Storage permission denied",
+          code: "STORAGE_PERMISSION_DENIED"
+        });
+      } else if (gcsError.code === 413) {
+        return res.status(413).json({
+          error: "File too large for storage",
+          code: "STORAGE_SIZE_LIMIT"
+        });
+      } else {
+        return res.status(500).json({
+          error: "Storage upload failed",
+          code: "STORAGE_ERROR"
+        });
+      }
+    }
 
     const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
 
-    res.json({ success: true, url: publicUrl });
-  } catch (error) {
-    console.error('Upload error:', error);
-    res.status(500).json({ error: "Upload failed" });
+    res.json({
+      success: true,
+      url: publicUrl,
+      fileName: fileName
+    });
+
+  } catch (error: any) {
+    console.error('Profile photo upload error:', {
+      message: error.message,
+      stack: error.stack,
+      code: error.code,
+      name: error.name
+    });
+
+    // Generic error response
+    res.status(500).json({
+      error: "Upload failed",
+      code: "UPLOAD_ERROR"
+    });
   }
 });
 

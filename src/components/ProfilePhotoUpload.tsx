@@ -72,45 +72,92 @@ export default function ProfilePhotoUpload() {
           throw new Error("Compression resulted in invalid file");
         }
 
-        // Convert to base64 for direct upload
-        const reader = new FileReader();
+            // Convert to base64 for direct upload
+            const reader = new FileReader();
 
-        reader.addEventListener('load', async () => {
-          try {
-            const base64Data = reader.result as string;
+            reader.addEventListener('load', async () => {
+              try {
+                const base64Data = reader.result as string;
 
-            if (!base64Data || !base64Data.startsWith('data:image/')) {
-              throw new Error("Invalid base64 data generated");
-            }
+                if (!base64Data) {
+                  throw new Error("No data received from FileReader");
+                }
 
-            // Check size after compression
-            const sizeInBytes = (base64Data.length * 3) / 4;
-            if (sizeInBytes > 800 * 1024) {
-              setUploadError('Image is too large even after compression. Please use a smaller image.');
-              toast.error('Image too large after compression');
+                if (!base64Data.startsWith('data:image/')) {
+                  throw new Error("Invalid base64 data generated - not an image");
+                }
+
+                // Validate base64 format
+                const base64Match = base64Data.match(/^data:image\/([a-zA-Z]+);base64,/);
+                if (!base64Match) {
+                  throw new Error("Invalid base64 image format");
+                }
+
+                const mimeType = `image/${base64Match[1]}`;
+                if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'].includes(mimeType)) {
+                  throw new Error(`Unsupported image type: ${mimeType}`);
+                }
+
+                // Check size after compression
+                const sizeInBytes = (base64Data.length * 3) / 4;
+                if (sizeInBytes > 800 * 1024) {
+                  throw new Error('Image is too large even after compression (max 800KB)');
+                }
+
+                if (sizeInBytes < 1024) {
+                  throw new Error('Image file appears corrupted or too small');
+                }
+
+                // Upload via API
+                await handleUpload(base64Data);
+              } catch (uploadError: any) {
+                console.error("Error processing image upload:", uploadError instanceof Error ? uploadError.message : uploadError);
+
+                // More detailed error logging
+                if (uploadError instanceof Error) {
+                  console.error("Error details:", {
+                    message: uploadError.message,
+                    stack: uploadError.stack,
+                    name: uploadError.name
+                  });
+                } else if (uploadError && typeof uploadError === 'object') {
+                  console.error("Error object properties:", Object.keys(uploadError));
+                  if (uploadError.response) {
+                    console.error("Server response:", uploadError.response);
+                  }
+                  if (uploadError.status) {
+                    console.error("HTTP status:", uploadError.status);
+                  }
+                }
+
+                let errorMessage = "Failed to process image.";
+                if (uploadError?.message?.includes('network') || uploadError?.message?.includes('fetch')) {
+                  errorMessage = "Network error. Please check your connection and try again.";
+                } else if (uploadError?.message?.includes('size') || uploadError?.message?.includes('large')) {
+                  errorMessage = "Image is too large. Please use a smaller image.";
+                } else if (uploadError?.message?.includes('corrupted') || uploadError?.message?.includes('small')) {
+                  errorMessage = "Image file appears corrupted. Please try a different image.";
+                } else if (uploadError?.message?.includes('format') || uploadError?.message?.includes('type')) {
+                  errorMessage = "Unsupported image format. Please use JPEG, PNG, WebP, or GIF.";
+                } else if (uploadError?.message) {
+                  errorMessage = uploadError.message;
+                }
+
+                setUploadError(errorMessage);
+                toast.error(errorMessage);
+              } finally {
+                setIsCompressing(false);
+              }
+            });
+
+            reader.addEventListener('error', (error) => {
+              console.error("FileReader error:", error);
+              setUploadError("Failed to read the image file. The file may be corrupted.");
+              toast.error("File reading error. Please try a different image.");
               setIsCompressing(false);
-              return;
-            }
+            });
 
-            // Upload via API
-            await handleUpload(base64Data);
-          } catch (uploadError: any) {
-            console.error("Error during upload process:", uploadError);
-            setUploadError(`Upload failed: ${uploadError.message || 'Unknown error'}`);
-            toast.error("Failed to upload image.");
-          } finally {
-            setIsCompressing(false);
-          }
-        });
-
-        reader.addEventListener('error', (error) => {
-          console.error("FileReader error:", error);
-          setUploadError("Failed to read the image file. The file may be corrupted.");
-          toast.error("File reading error. Please try a different image.");
-          setIsCompressing(false);
-        });
-
-        reader.readAsDataURL(compressedFile);
+            reader.readAsDataURL(compressedFile);
       } catch (error: any) {
         console.error("Error compressing image:", error);
         let errorMessage = "Failed to process image.";
@@ -173,17 +220,49 @@ export default function ProfilePhotoUpload() {
 
       toast.success('Profile photo updated successfully!');
     } catch (error: any) {
-      console.error('Error uploading image:', error);
-      if (error.message?.includes('permission') || error.code === 'PGRST301') {
-        setUploadError("Permission denied. Your account may not have permission to update this profile.");
-        toast.error("Permission denied.");
-      } else if (error.message?.includes('network') || error.message?.includes('fetch')) {
-        setUploadError("Network error. Please check your connection and try again.");
-        toast.error("Network error.");
-      } else {
-        setUploadError(error.message || "An error occurred while processing the image.");
-        toast.error(error.message || "Processing error.");
+      console.error('Error uploading image:', error instanceof Error ? error.message : error);
+
+      // Detailed error logging
+      if (error instanceof Error) {
+        console.error("Upload error details:", {
+          message: error.message,
+          stack: error.stack,
+          name: error.name
+        });
+      } else if (error && typeof error === 'object') {
+        console.error("Error object:", error);
+        if (error.response) {
+          console.error("Server response:", error.response);
+        }
+        if (error.status) {
+          console.error("HTTP status:", error.status);
+        }
       }
+
+      let errorMessage = "Failed to upload image.";
+      if (error?.message?.includes('permission') || error?.code === 'PGRST301') {
+        errorMessage = "Permission denied. Your account may not have permission to update this profile.";
+        toast.error("Permission denied.");
+      } else if (error?.message?.includes('network') || error?.message?.includes('fetch') || error?.code === 'NETWORK_ERROR') {
+        errorMessage = "Network error. Please check your connection and try again.";
+        toast.error("Network error.");
+      } else if (error?.message?.includes('CORS') || error?.message?.includes('cors')) {
+        errorMessage = "CORS error. Please try again or contact support.";
+        toast.error("CORS error.");
+      } else if (error?.status === 413) {
+        errorMessage = "Image is too large for the server. Please use a smaller image.";
+        toast.error("Image too large.");
+      } else if (error?.status === 415) {
+        errorMessage = "Unsupported image format. Please use JPEG, PNG, WebP, or GIF.";
+        toast.error("Unsupported format.");
+      } else if (error?.message) {
+        errorMessage = error.message;
+        toast.error(error.message);
+      } else {
+        toast.error("Upload failed.");
+      }
+
+      setUploadError(errorMessage);
     } finally {
       setIsUploading(false);
     }
