@@ -282,11 +282,13 @@ CREATE INDEX IF NOT EXISTS idx_report_likes_report ON report_likes(report_id);
 
 -- RLS Policies (these will be created only if they don't exist)
 
--- Users table policies - FIXED: No infinite recursion (explicit text casting on both sides)
+-- Users table policies - FIXED: No infinite recursion
+-- Use direct JWT claim check instead of table lookup
 DO $$
 BEGIN
   DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
-  CREATE POLICY "Users can read/write their own data" ON users FOR ALL USING (auth.uid()::text = uid::text);
+  CREATE POLICY "Users can read/write their own data" ON users FOR ALL 
+  USING (auth.jwt() ->> 'sub' = uid);
 END $$;
 
 -- Calibrations policies
@@ -305,6 +307,15 @@ BEGIN
   END IF;
 END $$;
 
+-- Security definer function to check admin status without recursion
+CREATE OR REPLACE FUNCTION is_admin()
+RETURNS BOOLEAN AS $$
+BEGIN
+  -- Direct JWT claim check - no table query required
+  RETURN auth.jwt() ->> 'role' = 'admin';
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
 -- Feedback policies (allow anonymous feedback)
 DO $$
 BEGIN
@@ -313,7 +324,7 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Admins can read all feedback') THEN
     CREATE POLICY "Admins can read all feedback" ON feedback FOR SELECT USING (
-      auth.jwt() ->> 'role' = 'admin'
+      is_admin()
     );
   END IF;
 END $$;
