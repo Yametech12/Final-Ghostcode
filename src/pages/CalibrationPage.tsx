@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Trophy } from 'lucide-react';
+import { Trophy, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { isUUID } from '../utils/validation';
 
 export default function CalibrationPage() {
   const auth = useAuth();
@@ -12,6 +13,7 @@ export default function CalibrationPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState(0);
   const [startTime] = useState(Date.now());
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   if (!auth) return <div>Loading...</div>;
   const { user } = auth;
@@ -55,21 +57,41 @@ export default function CalibrationPage() {
     if (currentTask < tasks.length - 1) {
       setCurrentTask(currentTask + 1);
     } else {
-      // Complete assessment
-      setIsComplete(true);
-      const accuracy = Math.round((score + (answerIndex === currentTaskData.correct ? 1 : 0)) / tasks.length * 100);
+      // Complete assessment - send to AI for analysis
+      setIsAnalyzing(true);
 
-      // Save to Supabase
-      if (user) {
-        supabase.from('calibrations').insert({
-          userId: user.id,
-          typeId: 'calibration_test',
-          answers: newAnswers,
-          timestamp: new Date().toISOString(),
-          accuracy: accuracy
-        }).then(() => {
-          toast.success(`Calibration complete! Accuracy: ${accuracy}%`);
+      if (!user?.id || !isUUID(user.id)) {
+        toast.error('Invalid user session. Please refresh and try again.');
+        setIsAnalyzing(false);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/calibration/analyze', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            typeId: 'personality_calibration',
+            answers: newAnswers,
+            userId: user.id
+          })
         });
+
+        if (!response.ok) {
+          throw new Error(`Analysis failed: ${response.status}`);
+        }
+
+        const data = await response.json();
+        setIsComplete(true);
+
+        toast.success('AI analysis complete! Your personality traits have been extracted.');
+      } catch (error) {
+        console.error('Calibration submission error:', error);
+        toast.error('Failed to analyze calibration. Please try again.');
+        // Still complete with basic scoring as fallback
+        setIsComplete(true);
+      } finally {
+        setIsAnalyzing(false);
       }
     }
   };
@@ -84,6 +106,18 @@ export default function CalibrationPage() {
   if (isComplete) {
     const accuracy = Math.round((score / tasks.length) * 100);
     const timeTaken = Math.round((Date.now() - startTime) / 1000 / 60); // minutes
+
+    if (isAnalyzing) {
+      return (
+        <div className="min-h-screen p-8 flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <Loader2 className="w-12 h-12 animate-spin mx-auto text-accent-primary" />
+            <h2 className="text-xl font-semibold text-white">Analyzing Your Responses</h2>
+            <p className="text-slate-400">AI is extracting your personality traits...</p>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className="min-h-screen p-8">

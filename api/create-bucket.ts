@@ -2,14 +2,14 @@ import "dotenv/config";
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseAnonKey) {
-  console.error('SUPABASE_ANON_KEY not found in environment variables');
+if (!supabaseServiceKey) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY not found in environment variables');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 async function createBucket() {
   const { data, error } = await supabase.storage.createBucket('user-uploads', {

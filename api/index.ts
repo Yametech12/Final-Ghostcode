@@ -5,9 +5,11 @@ import { fileURLToPath } from 'url';
 
 console.log("Server starting...");
 
-import { getApiKey } from './config.ts';
+import { getApiKey, createCompletion, createStreamingCompletion } from './config.ts';
 import { AI_PROVIDER, API_URL } from './ai.ts';
 import { bucket } from './gcs.ts';
+import { createClient } from '@supabase/supabase-js';
+import { serializeError } from '../src/utils/errorHandling';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -15,6 +17,17 @@ const __dirname = path.dirname(__filename);
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Supabase client for backend operations
+const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
+const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+
+if (!supabaseAnonKey) {
+  console.error('SUPABASE_ANON_KEY not found in environment variables');
+  process.exit(1);
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // UUID validation function
 function isValidUUID(uuid: string): boolean {
@@ -247,6 +260,272 @@ app.get("/api/ai/credits", async (_req, res) => {
   } catch (error) {
     console.error("Credits error:", error);
     res.status(500).json({ error: "Failed to fetch credits" });
+  }
+});
+
+// Advisor session management
+app.post("/api/advisor/session", validateUUIDMiddleware, async (req, res) => {
+  const { userId, title = 'AI Advisor Session' } = req.body;
+
+  try {
+    // Create new session
+    const { data: session, error: sessionError } = await supabase
+      .from('advisor_sessions')
+      .insert({
+        user_id: userId,
+        title,
+        timestamp: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (sessionError) throw sessionError;
+
+    res.json({ sessionId: session.id });
+  } catch (err) {
+    console.error('Session creation error:', serializeError(err));
+    res.status(500).json({ error: 'Failed to create session' });
+  }
+});
+
+app.get("/api/advisor/session", validateUUIDMiddleware, async (req, res) => {
+  const { userId } = req.query;
+
+  try {
+    // Get latest session with messages
+    const { data: session, error: sessionError } = await supabase
+      .from('advisor_sessions')
+      .select('id, title, timestamp')
+      .eq('user_id', userId)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (sessionError && sessionError.code !== 'PGRST116') throw sessionError;
+
+    if (!session) {
+      return res.json({ sessionId: null, messages: [] });
+    }
+
+    // Get recent messages
+    const { data: messages, error: messagesError } = await supabase
+      .from('advisor_messages')
+      .select('id, role, content, timestamp')
+      .eq('session_id', session.id)
+      .order('timestamp', { ascending: true })
+      .limit(50);
+
+    if (messagesError) throw messagesError;
+
+    res.json({
+      sessionId: session.id,
+      messages: messages || []
+    });
+  } catch (err) {
+    console.error('Session fetch error:', serializeError(err));
+    res.status(500).json({ error: 'Failed to fetch session' });
+  }
+});
+
+app.delete("/api/advisor/session/:sessionId", validateUUIDMiddleware, async (req, res) => {
+  const { sessionId } = req.params;
+
+  try {
+    // Delete messages and session
+    await supabase.from('advisor_messages').delete().eq('session_id', sessionId);
+    await supabase.from('advisor_sessions').delete().eq('id', sessionId);
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Session deletion error:', serializeError(err));
+    res.status(500).json({ error: 'Failed to delete session' });
+  }
+});
+
+// Advisor chat with streaming and context
+app.post("/api/advisor/chat", validateUUIDMiddleware, async (req, res) => {
+  const { sessionId, message, userId } = req.body;
+
+  if (!message?.trim()) {
+    return res.status(400).json({ error: 'Message is required' });
+  }
+
+  try {
+    // Get user's calibration traits for personalization
+    const { data: calibration } = await supabase
+      .from('calibrations')
+      .select('traits')
+      .eq('user_id', userId)
+      .order('timestamp', { ascending: false })
+      .limit(1)
+      .single();
+
+    // Get last 10 messages for context
+    const { data: history } = await supabase
+      .from('advisor_messages')
+      .select('role, content')
+      .eq('session_id', sessionId)
+      .order('timestamp', { ascending: true })
+      .limit(10);
+
+    // Build system prompt with persona and user traits
+    const systemPrompt = `You are Epimetheus, a wise and empathetic advisor specializing in interpersonal dynamics and personality analysis.
+
+User personality traits: ${calibration?.traits ? JSON.stringify(calibration.traits) : 'Not yet analyzed'}
+
+Guidelines:
+- Keep responses concise and actionable (under 200 words)
+- Be empathetic and non-judgmental
+- Ground advice in psychological principles
+- Ask clarifying questions when needed
+- Focus on healthy relationship patterns`;
+
+    const messages = [
+      { role: 'system', content: systemPrompt },
+      ...(history || []).map(m => ({ role: m.role, content: m.content })),
+      { role: 'user', content: message }
+    ];
+
+    // Save user message first
+    await supabase.from('advisor_messages').insert({
+      session_id: sessionId,
+      user_id: userId,
+      role: 'user',
+      content: message
+    });
+
+    // Stream response back to client
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+
+    let fullContent = '';
+
+    try {
+      // Use streaming completion
+      for await (const chunk of createStreamingCompletion({
+        model: 'openai/gpt-4o-mini',
+        messages,
+        temperature: 0.7,
+        max_tokens: 500
+      })) {
+        const content = chunk.choices?.[0]?.delta?.content || '';
+        if (content) {
+          fullContent += content;
+          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+        }
+      }
+
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (streamError) {
+      console.error('Streaming error:', serializeError(streamError));
+      // Fallback to non-streaming
+      try {
+        const fallbackCompletion = await createCompletion({
+          model: 'openai/gpt-4o-mini',
+          messages,
+          temperature: 0.7,
+          max_tokens: 500
+        });
+
+        fullContent = fallbackCompletion.choices[0]?.message?.content || 'I apologize, but I encountered an error processing your request.';
+        res.write(`data: ${JSON.stringify({ content: fullContent })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+      } catch (fallbackError) {
+        console.error('Fallback error:', serializeError(fallbackError));
+        res.write(`data: ${JSON.stringify({ error: 'AI service unavailable' })}\n\n`);
+        res.end();
+        return;
+      }
+    }
+
+    // Save assistant response
+    await supabase.from('advisor_messages').insert({
+      session_id: sessionId,
+      user_id: userId,
+      role: 'model',
+      content: fullContent
+    });
+
+    // Update session timestamp
+    await supabase
+      .from('advisor_sessions')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', sessionId);
+
+  } catch (err) {
+    console.error('Advisor chat error:', serializeError(err));
+
+    if (!res.headersSent) {
+      res.write(`data: ${JSON.stringify({ error: 'AI service unavailable' })}\n\n`);
+      res.end();
+    }
+  }
+});
+
+// Calibration analysis endpoint with AI-powered personality analysis
+app.post("/api/calibration/analyze", validateUUIDMiddleware, async (req, res) => {
+  const { typeId, answers, userId } = req.body;
+
+  if (!typeId || !answers || !userId) {
+    return res.status(400).json({
+      error: 'Missing required fields',
+      details: 'typeId, answers, and userId are required'
+    });
+  }
+
+  try {
+    const prompt = `
+    You are a personality analysis system. Based on the following answers to a "${typeId}" calibration, extract a JSON object with:
+    - 5 primary traits (each with name and score 0-100)
+    - 3 archetypes (e.g., "The Strategist", "The Empath")
+    - A short summary (2 sentences)
+
+    Answers: ${JSON.stringify(answers)}
+
+    Return ONLY valid JSON:
+    {
+      "traits": [{"name": "Openness", "score": 78}, ...],
+      "archetypes": ["...", "...", "..."],
+      "summary": "..."
+    }
+  `;
+
+    const completion = await createCompletion({
+      model: 'openai/gpt-4o-mini',
+      messages: [{ role: 'user', content: prompt }],
+      temperature: 0.3,
+      response_format: { type: 'json_object' },
+      max_tokens: 1000
+    });
+
+    const traits = JSON.parse(completion.choices[0].message.content);
+
+    // Store in Supabase
+    const { data, error } = await supabase
+      .from('calibrations')
+      .insert({
+        user_id: userId,
+        type_id: typeId,
+        answers,
+        traits,
+        timestamp: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    res.json({ success: true, calibration: data, traits });
+  } catch (err) {
+    console.error('Calibration analysis error:', serializeError(err));
+    res.status(500).json({
+      error: 'Failed to analyze calibration',
+      details: err instanceof Error ? err.message : 'Unknown error'
+    });
   }
 });
 
