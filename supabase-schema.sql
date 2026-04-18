@@ -313,7 +313,7 @@ BEGIN
   END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Admins can read all feedback') THEN
     CREATE POLICY "Admins can read all feedback" ON feedback FOR SELECT USING (
-      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+      auth.jwt() ->> 'role' = 'admin'
     );
   END IF;
 END $$;
