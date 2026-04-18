@@ -1,5 +1,3 @@
-import React from 'react';
-
 interface TypingIndicatorProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';

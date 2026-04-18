@@ -452,34 +452,60 @@ app.post("/api/advisor/chat", validateUUIDMiddleware, async (req, res) => {
   }
 
   try {
-    // Get user's calibration traits for personalization
-    const { data: calibration } = await supabase
+    // Get user's calibration data for personalization
+    const { data: calibrations } = await supabase
       .from('calibrations')
-      .select('traits')
+      .select('traits, type_id')
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
-      .limit(1)
-      .single();
+      .limit(3);
 
-    // Get last 10 messages for context
+    // Get conversation history for context (last 15 messages)
     const { data: history } = await supabase
       .from('advisor_messages')
-      .select('role, content')
+      .select('role, content, timestamp')
       .eq('session_id', sessionId)
       .order('timestamp', { ascending: true })
-      .limit(10);
+      .limit(15);
 
-    // Build system prompt with persona and user traits
-    const systemPrompt = `You are Epimetheus, a wise and empathetic advisor specializing in interpersonal dynamics and personality analysis.
+    // Get user's recent activity patterns
+    const { data: recentActivity } = await supabase
+      .from('advisor_sessions')
+      .select('title, timestamp')
+      .eq('user_id', userId)
+      .order('timestamp', { ascending: false })
+      .limit(5);
 
-User personality traits: ${calibration?.traits ? JSON.stringify(calibration.traits) : 'Not yet analyzed'}
+    // Build comprehensive system prompt
+    const latestCalibration = calibrations?.[0];
+    const personalityType = latestCalibration?.type_id || 'Unknown';
+    const traits = latestCalibration?.traits || {};
 
-Guidelines:
-- Keep responses concise and actionable (under 200 words)
-- Be empathetic and non-judgmental
-- Ground advice in psychological principles
-- Ask clarifying questions when needed
-- Focus on healthy relationship patterns`;
+    const systemPrompt = `You are Epimetheus, the ancient Greek god of afterthought and wise counsel, reincarnated as a modern relationship advisor. You specialize in interpersonal dynamics, personality analysis, and strategic relationship guidance.
+
+## USER PROFILE
+Personality Type: ${personalityType}
+Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrated'}
+
+## CONVERSATION CONTEXT
+Recent Sessions: ${recentActivity?.map(s => s.title).join(', ') || 'None'}
+Message History: ${history?.length || 0} messages in this session
+
+## CORE PRINCIPLES
+- Provide actionable, specific advice grounded in psychological principles
+- Respect individual differences while promoting healthy patterns
+- Use the EPIMETHEUS framework when relevant
+- Be direct but empathetic, challenging but supportive
+- Focus on mutual benefit and emotional intelligence
+- Adapt communication style to user's personality type
+
+## RESPONSE GUIDELINES
+- Keep responses under 250 words
+- Include 1-2 specific, actionable steps when giving advice
+- Ask thoughtful questions to deepen understanding
+- Reference user's calibration data when relevant
+- End with a forward-looking suggestion or question
+- Maintain professional, insightful tone`;
 
     const messages = [
       { role: 'system', content: systemPrompt },
@@ -499,46 +525,104 @@ Guidelines:
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     let fullContent = '';
+    let isStreamEnded = false;
+
+    const endStream = (finalContent?: string) => {
+      if (isStreamEnded) return;
+      isStreamEnded = true;
+
+      if (finalContent) {
+        fullContent = finalContent;
+      }
+
+      if (!res.headersSent) {
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+      }
+    };
 
     try {
-      // Use streaming completion
+      // Use streaming completion with improved error handling
+      let chunkCount = 0;
+      const maxChunks = 100; // Prevent infinite streaming
+
       for await (const chunk of createStreamingCompletion({
         model: 'openai/gpt-4o-mini',
         messages,
         temperature: 0.7,
-        max_tokens: 500
+        max_tokens: 600
       })) {
+        if (isStreamEnded || chunkCount++ > maxChunks) break;
+
         const content = chunk.choices?.[0]?.delta?.content || '';
         if (content) {
           fullContent += content;
-          res.write(`data: ${JSON.stringify({ content })}\n\n`);
+
+          // Send chunk with error handling
+          try {
+            if (!res.destroyed) {
+              res.write(`data: ${JSON.stringify({ content })}\n\n`);
+            }
+          } catch (writeError) {
+            console.error('Stream write error:', serializeError(writeError));
+            break;
+          }
+        }
+
+        // Check for completion signal
+        if (chunk.choices?.[0]?.finish_reason) {
+          break;
         }
       }
 
-      res.write('data: [DONE]\n\n');
-      res.end();
-    } catch (streamError) {
+      // Ensure we send completion signal
+      endStream();
+
+    } catch (streamError: any) {
       console.error('Streaming error:', serializeError(streamError));
-      // Fallback to non-streaming
+
+      // Enhanced fallback with personality-aware error messages
       try {
+        const fallbackMessages = [
+          ...messages.slice(0, -1), // Remove the problematic user message
+          {
+            role: 'system',
+            content: 'The user encountered a technical issue. Provide a brief, helpful response acknowledging the problem and offering to continue the conversation.'
+          },
+          { role: 'user', content: 'I encountered an error with my previous message. Can we continue?' }
+        ];
+
         const fallbackCompletion = await createCompletion({
           model: 'openai/gpt-4o-mini',
-          messages,
+          messages: fallbackMessages,
           temperature: 0.7,
-          max_tokens: 500
+          max_tokens: 300
         });
 
-        fullContent = fallbackCompletion.choices[0]?.message?.content || 'I apologize, but I encountered an error processing your request.';
-        res.write(`data: ${JSON.stringify({ content: fullContent })}\n\n`);
-        res.write('data: [DONE]\n\n');
-        res.end();
-      } catch (fallbackError) {
+        const fallbackContent = fallbackCompletion.choices[0]?.message?.content ||
+          'I apologize for the technical interruption. Please try rephrasing your question, and I\'ll be happy to help.';
+
+        fullContent = fallbackContent;
+
+        if (!res.destroyed) {
+          res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
+          endStream();
+        }
+
+      } catch (fallbackError: any) {
         console.error('Fallback error:', serializeError(fallbackError));
-        res.write(`data: ${JSON.stringify({ error: 'AI service unavailable' })}\n\n`);
-        res.end();
-        return;
+
+        const errorMessage = 'I\'m experiencing technical difficulties. Please try again in a moment.';
+        fullContent = errorMessage;
+
+        if (!res.destroyed) {
+          res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
+          endStream();
+        }
       }
     }
 

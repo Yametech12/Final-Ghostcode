@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { serializeError } from '../utils/errorHandling';
 
 interface UseAiWithRetryOptions {
   maxRetries?: number;

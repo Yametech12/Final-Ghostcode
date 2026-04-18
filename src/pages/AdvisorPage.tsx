@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2, User, Sparkles, Copy, ThumbsUp, ThumbsDown, Trash2, Download } from 'lucide-react';
+import { Send, Bot, Loader2, User, Sparkles, Copy, ThumbsUp, ThumbsDown, Trash2, Download, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
@@ -7,8 +7,10 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAdvisorChat } from '../hooks/useAdvisorChat';
 import { RequireValidUUID } from '../components/RequireValidUUID';
 import Tooltip from '../components/Tooltip';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 export default function AdvisorPage() {
+  const { user } = useEnhancedAuth();
   const {
     messages,
     sendMessage,
@@ -43,7 +45,20 @@ export default function AdvisorPage() {
     "What are her likely intentions?",
     "How can I improve my calibration?",
     "What red flags should I watch for?",
-    "How to escalate safely?"
+    "How to escalate safely?",
+    "What does my personality type mean?",
+    "How to handle rejection?",
+    "When to walk away?",
+    "Building emotional connection",
+    "Reading body language cues"
+  ];
+
+  const followUpSuggestions = [
+    "Tell me more about the situation",
+    "What happened next?",
+    "How did you feel about that?",
+    "What would you do differently?",
+    "What are your goals here?"
   ];
 
   const handleSend = async () => {
@@ -130,6 +145,11 @@ export default function AdvisorPage() {
               <div>
                 <h1 className="text-2xl font-bold text-white">Epimetheus Advisor</h1>
                 <p className="text-sm text-slate-400">AI-powered relationship intelligence</p>
+                {user && (
+                  <div className="mt-2 text-xs text-slate-500">
+                    Personalized for your profile • Session active
+                  </div>
+                )}
               </div>
             </div>
 
@@ -290,7 +310,7 @@ export default function AdvisorPage() {
             </AnimatePresence>
           </div>
 
-          {/* Quick Actions */}
+          {/* Quick Actions & Suggestions */}
           <AnimatePresence>
             {messages.length === 0 && !isLoadingSession && (
               <motion.div
@@ -301,10 +321,10 @@ export default function AdvisorPage() {
               >
                 <div className="flex items-center gap-2 mb-3">
                   <Sparkles className="w-4 h-4 text-accent-primary" />
-                  <span className="text-sm font-medium text-slate-300">Quick Start</span>
+                  <span className="text-sm font-medium text-slate-300">Quick Start Questions</span>
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {quickActions.map((action, index) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                  {quickActions.slice(0, 6).map((action, index) => (
                     <button
                       key={index}
                       onClick={() => handleQuickSend(action)}
@@ -312,6 +332,32 @@ export default function AdvisorPage() {
                       className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-accent-primary/50 rounded-lg text-left text-sm text-slate-300 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {action}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+
+            {messages.length > 0 && messages[messages.length - 1]?.role === 'model' && !isStreaming && (
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                className="mb-4"
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <MessageSquare className="w-4 h-4 text-accent-primary" />
+                  <span className="text-sm font-medium text-slate-300">Follow-up suggestions</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {followUpSuggestions.map((suggestion, index) => (
+                    <button
+                      key={index}
+                      onClick={() => handleQuickSend(suggestion)}
+                      disabled={isStreaming}
+                      className="px-3 py-1 bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/20 hover:border-accent-primary/40 rounded-full text-xs text-accent-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {suggestion}
                     </button>
                   ))}
                 </div>

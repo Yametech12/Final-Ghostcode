@@ -1,4 +1,3 @@
-import React from 'react';
 import { NavLink } from 'react-router-dom';
 import { Home, MessageCircle, BarChart3, FileText, User } from 'lucide-react';
 import { cn } from '../lib/utils';

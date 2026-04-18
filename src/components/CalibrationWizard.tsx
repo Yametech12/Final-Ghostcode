@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-interface Question {
+export interface Question {
   id: string;
   text: string;
   type: 'slider' | 'multiple' | 'text';

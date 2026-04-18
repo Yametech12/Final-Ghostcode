@@ -3,11 +3,12 @@ import { createPortal } from 'react-dom';
 
 interface TooltipProps {
   children: React.ReactNode;
-  term: string;
-  definition: string;
+  term?: string;
+  definition?: string;
+  content?: string;
 }
 
-export default function Tooltip({ children, term, definition }: TooltipProps) {
+export default function Tooltip({ children, term, definition, content }: TooltipProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [coords, setCoords] = useState({ x: 0, y: 0, align: 'center' as 'center' | 'left' | 'right' });
   const triggerRef = useRef<HTMLSpanElement>(null);
@@ -103,7 +104,7 @@ export default function Tooltip({ children, term, definition }: TooltipProps) {
           className="pointer-events-none w-max max-w-[calc(100vw-32px)] sm:max-w-xs p-3 rounded-xl bg-mystic-900 border border-white/10 shadow-xl shadow-black/50 animate-in fade-in zoom-in-95 duration-200"
         >
           <div className="text-sm font-bold text-accent-primary mb-1">{term}</div>
-          <div className="text-xs text-slate-300 leading-relaxed">{definition}</div>
+          <div className="text-xs text-slate-300 leading-relaxed">{content || definition}</div>
           
           {/* Tooltip Arrow */}
           <div 

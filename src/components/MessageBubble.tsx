@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Copy, RefreshCw, ThumbsUp, ThumbsDown, Bot, User } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -21,14 +21,11 @@ export function MessageBubble({
   className = ''
 }: MessageBubbleProps) {
   const isUser = role === 'user';
-  const [copied, setCopied] = useState(false);
 
   const copyToClipboard = async () => {
     try {
       await navigator.clipboard.writeText(content);
-      setCopied(true);
       toast.success('Message copied to clipboard');
-      setTimeout(() => setCopied(false), 2000);
     } catch (error) {
       toast.error('Failed to copy to clipboard');
     }
@@ -69,20 +66,21 @@ export function MessageBubble({
             ? "bg-accent-primary text-white ml-auto"
             : "bg-slate-800/50 backdrop-blur-sm border border-white/10 text-slate-200"
         )}>
-          <ReactMarkdown
-            className="prose prose-invert max-w-none prose-sm"
-            components={{
-              p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
-              strong: ({ children }) => <strong className="font-semibold text-accent-primary">{children}</strong>,
-              ul: ({ children }) => <ul className="space-y-1 mb-2">{children}</ul>,
-              li: ({ children }) => <li className="flex items-start gap-2">
-                <span className="text-accent-primary mt-1.5 text-xs">•</span>
-                <span>{children}</span>
-              </li>,
-            }}
-          >
-            {content}
-          </ReactMarkdown>
+          <div className="prose prose-invert max-w-none prose-sm">
+            <ReactMarkdown
+              components={{
+                p: ({ children }) => <p className="mb-2 last:mb-0 leading-relaxed">{children}</p>,
+                strong: ({ children }) => <strong className="font-semibold text-accent-primary">{children}</strong>,
+                ul: ({ children }) => <ul className="space-y-1 mb-2">{children}</ul>,
+                li: ({ children }) => <li className="flex items-start gap-2">
+                  <span className="text-accent-primary mt-1.5 text-xs">•</span>
+                  <span>{children}</span>
+                </li>,
+              }}
+            >
+              {content}
+            </ReactMarkdown>
+          </div>
         </div>
 
         {/* Message Actions */}
