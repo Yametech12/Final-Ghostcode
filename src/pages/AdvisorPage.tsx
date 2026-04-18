@@ -8,6 +8,7 @@ import { useAdvisorChat } from '../hooks/useAdvisorChat';
 import { RequireValidUUID } from '../components/RequireValidUUID';
 import Tooltip from '../components/Tooltip';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
+import SessionErrorBoundary from '../components/SessionErrorBoundary';
 
 export default function AdvisorPage() {
   const { user } = useEnhancedAuth();
@@ -121,11 +122,12 @@ export default function AdvisorPage() {
 
   return (
     <RequireValidUUID>
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="min-h-screen flex flex-col"
-      >
+      <SessionErrorBoundary>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="min-h-screen flex flex-col"
+        >
         <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full p-4">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
@@ -387,7 +389,8 @@ export default function AdvisorPage() {
             </div>
           </div>
         </div>
-      </motion.div>
+        </motion.div>
+      </SessionErrorBoundary>
     </RequireValidUUID>
   );
 }

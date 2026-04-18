@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import ProfileCard from '../components/ProfileCard';
 import ProfileCardModal from '../components/ProfileCardModal';
+import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
@@ -110,64 +111,96 @@ export default function ProfilesPage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!user) return;
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
+        // Fetch calibrations with proper error handling
         const { data: calibrations, error } = await supabase
           .from('calibrations')
-          .select('*')
-          .eq('userId', user.id);
-        if (error) throw error;
-        const fetchedAssessments: Assessment[] = [];
-        calibrations.forEach((data) => {
-          const profile = personalityTypes.find(p => p.id === data.typeId);
-          if (profile) {
-            fetchedAssessments.push({
-              typeId: data.typeId,
-              date: data.timestamp || new Date().toISOString(),
-              name: profile.name
-            });
-          }
-        });
+          .select('type_id, timestamp')
+          .eq('user_id', user.id)
+          .order('timestamp', { ascending: false });
 
-        // Sort by date descending
-        const sorted = fetchedAssessments.sort((a, b) =>
-          new Date(b.date).getTime() - new Date(a.date).getTime()
-        );
-        setAssessments(sorted);
+        if (error) {
+          console.error('Error fetching calibrations:', error);
+          handleFirestoreError(error, OperationType.LIST, 'calibrations');
+        } else {
+          const fetchedAssessments: Assessment[] = [];
+          calibrations?.forEach((data) => {
+            const profile = personalityTypes.find(p => p.id === data.type_id);
+            if (profile) {
+              fetchedAssessments.push({
+                typeId: data.type_id,
+                date: data.timestamp || new Date().toISOString(),
+                name: profile.name
+              });
+            }
+          });
+          setAssessments(fetchedAssessments);
+        }
 
-        // Fetch field reports
+        // Fetch field reports with proper error handling
         const { data: reports, error: reportsError } = await supabase
           .from('field_reports')
-          .select('*')
-          .eq('userId', user.id);
-        if (reportsError) throw reportsError;
-        setFieldReports(reports);
+          .select('id, title, type, result, timestamp, likes')
+          .eq('user_id', user.id)
+          .order('timestamp', { ascending: false })
+          .limit(10);
+
+        if (reportsError) {
+          console.error('Error fetching field reports:', reportsError);
+          handleFirestoreError(reportsError, OperationType.LIST, 'field_reports');
+        } else {
+          setFieldReports(reports || []);
+        }
 
       } catch (error) {
-        if (error instanceof Error && error.message.includes('offline')) {
-          console.warn("Firestore is offline. Using mock data for demo.");
-          // Mock data for demo
-          setAssessments([
-            { typeId: 'TDI', date: new Date(Date.now() - 86400000).toISOString(), name: 'The Playette' },
-            { typeId: 'TJI', date: new Date(Date.now() - 172800000).toISOString(), name: 'The Social Butterfly' },
-            { typeId: 'NDI', date: new Date(Date.now() - 259200000).toISOString(), name: 'The Lone Wolf' }
-          ]);
-          setFieldReports([
-            { id: '1', userId: user.id, title: 'Sample Report', content: 'Mock field report' }
-          ]);
-          toast.info("Using demo data while offline.");
+        console.error('Error fetching profile data:', error);
+        if (error instanceof Error && error.message.includes('network')) {
+          toast.error('Network error. Please check your connection.');
         } else {
-          toast.error("Failed to load data.");
-          handleFirestoreError(error, OperationType.LIST, 'calibrations');
+          toast.error('Failed to load profile data. Please refresh the page.');
         }
       } finally {
         setLoading(false);
       }
     };
-    fetchData().catch(() => {}); // Handled in function
+
+    fetchData();
   }, [user]);
 
   if (!auth) return <div>Loading...</div>;
+
+  if (loading) {
+    return (
+      <div className="space-y-16 pb-24">
+        <div className="flex flex-col lg:flex-row gap-8 items-stretch">
+          <div className="w-full lg:w-96 shrink-0">
+            <Skeleton className="h-96 rounded-3xl" />
+          </div>
+          <div className="flex-grow glass-card p-8">
+            <div className="space-y-6">
+              <Skeleton className="h-8 w-48" />
+              <Skeleton className="h-4 w-96" />
+              <div className="grid grid-cols-2 gap-3">
+                <Skeleton className="h-16 rounded-xl" />
+                <Skeleton className="h-16 rounded-xl" />
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <Skeleton key={i} className="h-20 rounded-2xl" />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-16 pb-24">
@@ -179,8 +212,15 @@ export default function ProfilesPage() {
         
         <div className="flex-grow glass-card p-8 flex flex-col justify-between relative overflow-hidden">
           <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[140%] bg-accent-primary/5 blur-[100px] rounded-full pointer-events-none" />
-          
+
           <div className="relative z-10 space-y-8">
+            {/* Profile Photo Upload Section */}
+            <div className="space-y-4">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-[10px] font-bold uppercase tracking-widest">
+                Profile Management
+              </div>
+              <ProfilePhotoUpload />
+            </div>
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-[10px] font-bold uppercase tracking-widest">
                 Operative Stats

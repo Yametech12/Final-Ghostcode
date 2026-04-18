@@ -1,8 +1,6 @@
-import React, { useState } from 'react';
-import { Camera, Loader2, User as UserIcon, Edit3, Crown, Calendar, Zap } from 'lucide-react';
-import { supabase } from '../lib/supabase';
+import React from 'react';
+import { User as UserIcon, Edit3, Crown, Calendar, Zap } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { toast } from 'sonner';
 
 
 interface ProfileCardProps {
@@ -11,145 +9,13 @@ interface ProfileCardProps {
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
   const auth = useAuth();
-  const [uploading, setUploading] = useState(false);
 
   if (!auth) return null;
-  const { user, userData, updateUserData, updateUserProfile } = auth;
+  const { user, userData } = auth;
 
-  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file || !user) return;
+  // Note: Photo upload is now handled by ProfilePhotoUpload component
+  // This function is kept for backward compatibility but delegates to the main component
 
-    // Basic file validation
-    if (!file) {
-      toast.error('No file selected');
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select a valid image file');
-      return;
-    }
-
-    // Check for supported image formats
-    const supportedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
-    if (!supportedTypes.includes(file.type.toLowerCase())) {
-      toast.error('Unsupported image format. Please use JPEG, PNG, WebP, or GIF.');
-      return;
-    }
-
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error('Image file is too large. Please choose a file under 10MB');
-      return;
-    }
-
-    // Check for minimum file size (avoid corrupted files)
-    if (file.size < 1024) {
-      toast.error('Image file appears to be corrupted or too small');
-      return;
-    }
-
-    setUploading(true);
-
-    try {
-      try {
-        // Upload to Supabase Storage
-        const fileName = `profile-${Date.now()}.jpg`;
-        const { error: uploadError } = await supabase.storage
-          .from('user-uploads')
-          .upload(`users/${user.id}/${fileName}`, file);
-
-        if (uploadError) throw uploadError;
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('user-uploads')
-          .getPublicUrl(`users/${user.id}/${fileName}`);
-
-        const downloadURL = urlData.publicUrl;
-
-        // Update user profile in database
-        const { error: updateError } = await supabase
-          .from('users')
-          .update({ photoURL: downloadURL })
-          .eq('uid', user.id);
-
-        if (updateError) throw updateError;
-
-        await updateUserProfile({ photoURL: downloadURL });
-        if (updateUserData) {
-          await updateUserData({ photoURL: downloadURL });
-        }
-
-        toast.success("Profile photo updated!");
-      } catch (storageError: any) {
-        const isQuotaError = storageError?.message?.includes('quota') || storageError?.message?.includes('storage');
-        if (isQuotaError) {
-          console.info("Storage quota exceeded, using local storage for profile photo");
-        } else {
-          console.warn("Storage upload failed, trying fallback:", storageError);
-        }
-
-        // Fallback: Convert to base64 and save directly to database
-        console.info("Storage quota exceeded, using database storage for profile photo");
-        try {
-          const reader = new FileReader();
-
-          reader.onload = async (event) => {
-            try {
-              const base64String = event.target?.result as string;
-              if (!base64String || !base64String.startsWith('data:image/')) {
-                throw new Error("Invalid base64 data generated");
-              }
-
-              const { error: updateError } = await supabase
-                .from('users')
-                .update({ photoURL: base64String })
-                .eq('uid', user.id);
-
-              if (updateError) throw updateError;
-
-              await updateUserProfile({ photoURL: base64String });
-              if (updateUserData) {
-                await updateUserData({ photoURL: base64String });
-              }
-              toast.success("Profile photo updated! (Using local storage)");
-            } catch (processError: any) {
-              console.error("Error processing fallback upload:", processError);
-              toast.error("Failed to process image data. Please try again.");
-            } finally {
-              setUploading(false);
-            }
-          };
-
-          reader.onerror = () => {
-            console.error("FileReader error in fallback upload");
-            toast.error("Failed to read image file. Please try again.");
-            setUploading(false);
-          };
-
-          reader.readAsDataURL(file);
-        } catch (fallbackError: any) {
-          console.error("Fallback upload setup failed:", fallbackError);
-          const isQuotaError = fallbackError?.message?.includes('quota') || fallbackError?.message?.includes('resource');
-          if (isQuotaError) {
-            console.info("Database quota exceeded for photo update, photo stored locally");
-            toast.success("Profile photo updated! (Using local storage)");
-          } else {
-            toast.error("Failed to save profile photo. Please try again.");
-          }
-          setUploading(false);
-        }
-      }
-    } catch (error) {
-      console.error('Upload failed:', error);
-      toast.error('Failed to upload image. Please try again.');
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const displayImage = userData?.photoURL;
   const memberSince = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'New Member';
@@ -186,29 +52,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
                   <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-mystic-800 to-mystic-900">
                     <UserIcon size={48} className="text-mystic-600" />
                   </div>
-                )}
-
-                {/* Loading Overlay */}
-                {uploading && (
-                  <div className="absolute inset-0 bg-black/70 flex items-center justify-center z-20 backdrop-blur-sm">
-                    <Loader2 className="w-8 h-8 text-accent-primary animate-spin" />
-                  </div>
-                )}
-
-                {/* Photo Upload */}
-                {!uploading && (
-                  <label className="absolute inset-0 bg-black/50 opacity-0 hover:opacity-100 transition-all duration-300 cursor-pointer flex items-center justify-center backdrop-blur-[2px] z-10 rounded-full">
-                    <Camera className="w-7 h-7 text-white mb-1" />
-                    <span className="text-[9px] font-bold text-white uppercase tracking-wider">
-                      Update
-                    </span>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/*"
-                      onChange={handleImageUpload}
-                    />
-                  </label>
                 )}
               </div>
             </div>
