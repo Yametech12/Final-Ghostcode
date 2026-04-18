@@ -24,7 +24,6 @@ export default function LoginPage() {
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   // Password strength calculation
@@ -55,7 +54,7 @@ export default function LoginPage() {
     return errors;
   }, [password]);
 
-  const isFormValid = email && password && acceptTerms && (!import.meta.env.VITE_RECAPTCHA_SITE_KEY || recaptchaToken) && !emailError && passwordErrors.length === 0;
+  const isFormValid = email && password && acceptTerms && !emailError && passwordErrors.length === 0;
 
   // Load stored attempts on mount
   useEffect(() => {
@@ -126,6 +125,10 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
+      let recaptchaToken = null;
+      if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+        recaptchaToken = await recaptchaRef.current?.executeAsync();
+      }
       await signInWithEmail(email, password, recaptchaToken);
       // Clear attempts on success
       localStorage.removeItem('loginAttempts');
@@ -135,7 +138,6 @@ export default function LoginPage() {
       handleFailedAttempt();
       setError(getSupabaseErrorMessage(err));
       recaptchaRef.current?.reset();
-      setRecaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -263,10 +265,7 @@ export default function LoginPage() {
               <ReCAPTCHA
                 ref={recaptchaRef}
                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                onChange={setRecaptchaToken}
-                onExpired={() => setRecaptchaToken(null)}
-                size="compact"
-                theme="dark"
+                size="invisible"
               />
             ) : (
               <div className="text-red-400 text-sm text-center">
