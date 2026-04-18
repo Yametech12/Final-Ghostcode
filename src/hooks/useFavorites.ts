@@ -38,7 +38,7 @@ export function useFavorites() {
           table: 'favorites',
           filter: `user_id=eq.${user.id}`
         },
-        async () => {
+         async () => {
           // Re-fetch all favorites when there's a change
           const { data, error } = await supabase
             .from('favorites')
@@ -48,7 +48,6 @@ export function useFavorites() {
 
           if (error) {
             console.error('Error fetching favorites:', error);
-            setLoading(false);
             return;
           }
 
@@ -62,18 +61,22 @@ export function useFavorites() {
             timestamp: new Date(item.timestamp)
           }));
           setFavorites(favs);
-          setLoading(false);
         }
       )
       .subscribe();
 
-    // Initial fetch
+    // Initial fetch with abort controller
+    const abortController = new AbortController();
+    
     const fetchFavorites = async () => {
       const { data, error } = await supabase
         .from('favorites')
         .select('*')
         .eq('user_id', user.id)
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false })
+        .abortSignal(abortController.signal);
+
+      if (abortController.signal.aborted) return;
 
       if (error) {
         console.error('Error fetching favorites:', error);
@@ -95,6 +98,11 @@ export function useFavorites() {
     };
 
     fetchFavorites();
+
+    return () => {
+      abortController.abort();
+      supabase.removeChannel(channel);
+    };
 
     return () => {
       supabase.removeChannel(channel);

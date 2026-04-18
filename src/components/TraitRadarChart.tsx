@@ -19,6 +19,21 @@ interface TraitRadarChartProps {
   height?: number;
 }
 
+// CustomTooltip moved OUTSIDE component to prevent recreation on every render
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    return (
+      <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg">
+        <p className="text-white font-medium">{label}</p>
+        <p className="text-accent-primary">
+          Score: {payload[0].value}/100
+        </p>
+      </div>
+    );
+  }
+  return null;
+};
+
 export function TraitRadarChart({
   traits,
   className = '',
@@ -32,20 +47,6 @@ export function TraitRadarChart({
     { name: 'Agreeableness', score: 50 },
     { name: 'Neuroticism', score: 50 },
   ];
-
-  const CustomTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-slate-800 border border-slate-600 rounded-lg p-3 shadow-lg">
-          <p className="text-white font-medium">{label}</p>
-          <p className="text-accent-primary">
-            Score: {payload[0].value}/100
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className={className}>

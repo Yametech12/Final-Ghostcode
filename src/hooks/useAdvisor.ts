@@ -171,20 +171,38 @@ export function useAdvisor() {
 
   useEffect(() => {
     if (user) {
-      loadSessions().then(() => {
-        if (sessions.length > 0 && !currentSessionId) {
-          setCurrentSessionId(sessions[0].id);
+      const abortController = new AbortController();
+      
+      loadSessions().then((loadedSessions) => {
+        if (!abortController.signal.aborted) {
+          if (loadedSessions && loadedSessions.length > 0 && !currentSessionId) {
+            setCurrentSessionId(loadedSessions[0].id);
+          }
+          setIsLoaded(true);
         }
-        setIsLoaded(true);
       }).catch(() => {
-        setIsLoaded(true);
+        if (!abortController.signal.aborted) {
+          setIsLoaded(true);
+        }
       });
+
+      return () => {
+        abortController.abort();
+      };
     }
-  }, [user, loadSessions, sessions, currentSessionId]);
+  }, [user, loadSessions, currentSessionId]);
 
   useEffect(() => {
     if (currentSessionId) {
-      loadMessages(currentSessionId);
+      const abortController = new AbortController();
+      
+      loadMessages(currentSessionId).catch(() => {
+        // Errors handled internally
+      });
+
+      return () => {
+        abortController.abort();
+      };
     }
   }, [currentSessionId, loadMessages]);
 

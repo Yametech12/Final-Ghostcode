@@ -1,4 +1,4 @@
-import{j as e,at as w,ah as g,aE as x,x as v,Z as T,i as k,b as S,c as j}from"./chunk-9FMcmyUC.js";import{r as c}from"./chunk-DBK0rL3D.js";import{F as I}from"./chunk-BuD1SRP6.js";import{G as s}from"./chunk-CCssh8LV.js";import"./chunk-CKY87H-G.js";import"./index-Crf9Uz9j.js";import"./chunk-CpJfINCX.js";import"./chunk-pOD7n95U.js";import"./chunk-Dnk-bhvW.js";import"./chunk-p9CuBGdI.js";const l=[{id:"intro",title:"The Myth & Introduction",content:`
+import{j as e,at as w,ah as g,aE as x,x as v,Z as T,i as k,b as S,c as j}from"./chunk-9FMcmyUC.js";import{r as c}from"./chunk-DBK0rL3D.js";import{F as I}from"./chunk-BiJNjoh5.js";import{G as s}from"./chunk-CCssh8LV.js";import"./chunk-BMoNk2Ah.js";import"./index-BB_TmX3s.js";import"./chunk-CpJfINCX.js";import"./chunk-pOD7n95U.js";import"./chunk-Dnk-bhvW.js";import"./chunk-p9CuBGdI.js";const l=[{id:"intro",title:"The Myth & Introduction",content:`
 # The Myth of Epimetheus
 In Greek mythology, Epimetheus was the one who opened his heart to Pandora-not because he ignored the warnings, but because he understood something others did not: Some things are worth the risk.
 

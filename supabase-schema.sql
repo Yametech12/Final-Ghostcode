@@ -41,7 +41,7 @@ CREATE TABLE IF NOT EXISTS oracle_analyses (
 -- Feedback table
 CREATE TABLE IF NOT EXISTS feedback (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES users(id),
+  user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   user_name TEXT,
   email TEXT,
   type TEXT NOT NULL CHECK (type IN ('bug', 'feature', 'general', 'praise', 'suggestion', 'content', 'ui', 'performance')),
@@ -405,11 +405,17 @@ BEGIN
   END IF;
 END $$;
 
--- Public config policies (read-only for all)
+-- Public config policies (read-only for all, write only for admins)
 DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'public_config' AND policyname = 'Anyone can read public config') THEN
     CREATE POLICY "Anyone can read public config" ON public_config FOR SELECT USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'public_config' AND policyname = 'Admins can manage public config') THEN
+    CREATE POLICY "Admins can manage public config" ON public_config FOR ALL USING (
+      auth.jwt() ->> 'role' = 'admin'
+    );
   END IF;
 END $$;
 
@@ -418,10 +424,51 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'private_config' AND policyname = 'Admins can manage private config') THEN
     CREATE POLICY "Admins can manage private config" ON private_config FOR ALL USING (
-      EXISTS (SELECT 1 FROM users WHERE id = auth.uid() AND role = 'admin')
+      auth.jwt() ->> 'role' = 'admin'
     );
   END IF;
 END $$;
 
--- Storage policies for user-uploads bucket must be created manually via Supabase Dashboard or CLI.
--- See documentation for creating storage policies: https://supabase.com/docs/guides/storage/security/access-control
+-- Storage policies for user-uploads bucket
+DO $$
+BEGIN
+  -- Allow authenticated users to upload their own files
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Users can upload their own files') THEN
+    CREATE POLICY "Users can upload their own files" ON storage.objects
+    FOR INSERT TO authenticated
+    WITH CHECK (
+      bucket_id = 'user-uploads' AND
+      (storage.foldername(name))[1] = auth.uid()::text
+    );
+  END IF;
+
+  -- Allow users to read their own files
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Users can read their own files') THEN
+    CREATE POLICY "Users can read their own files" ON storage.objects
+    FOR SELECT TO authenticated
+    USING (
+      bucket_id = 'user-uploads' AND
+      (storage.foldername(name))[1] = auth.uid()::text
+    );
+  END IF;
+
+  -- Allow users to update their own files
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Users can update their own files') THEN
+    CREATE POLICY "Users can update their own files" ON storage.objects
+    FOR UPDATE TO authenticated
+    USING (
+      bucket_id = 'user-uploads' AND
+      (storage.foldername(name))[1] = auth.uid()::text
+    );
+  END IF;
+
+  -- Allow users to delete their own files
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'objects' AND policyname = 'Users can delete their own files') THEN
+    CREATE POLICY "Users can delete their own files" ON storage.objects
+    FOR DELETE TO authenticated
+    USING (
+      bucket_id = 'user-uploads' AND
+      (storage.foldername(name))[1] = auth.uid()::text
+    );
+  END IF;
+END $$;

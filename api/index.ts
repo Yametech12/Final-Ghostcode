@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 console.log("Server starting...");
 
-import { getApiKey, createCompletion, createStreamingCompletion } from './config.ts';
+import { getApiKey, createCompletion, createStreamingCompletion, DEFAULT_MODEL, VISION_MODEL, FALLBACK_MODELS } from './config.ts';
 import { AI_PROVIDER, API_URL } from './ai.ts';
 import { bucket } from './gcs.ts';
 import { createClient } from '@supabase/supabase-js';
@@ -549,10 +549,15 @@ Message History: ${history?.length || 0} messages in this session
           if (done) break;
 
           buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
+          
+          // Proper SSE line handling - lines are terminated by \n\n
+          while (true) {
+            const lineEnd = buffer.indexOf('\n\n');
+            if (lineEnd === -1) break; // No complete line yet
+            
+            const line = buffer.slice(0, lineEnd);
+            buffer = buffer.slice(lineEnd + 2); // Remove processed line + separator
+            
             if (line.startsWith('data: ')) {
               const data = line.slice(6);
               if (data === '[DONE]') {
@@ -570,11 +575,13 @@ Message History: ${history?.length || 0} messages in this session
                 }
 
                 if (parsed.choices?.[0]?.finish_reason) {
+                  // Break out of all loops when stream completes
+                  chunkCount = maxChunks;
                   break;
                 }
               } catch (parseError) {
-                // Skip invalid chunks
-                console.warn('Skipping invalid stream chunk:', parseError);
+                // Skip invalid chunks but log
+                console.warn('Skipping invalid stream chunk:', parseError, 'Line:', line.substring(0, 100));
               }
             }
           }
@@ -605,24 +612,30 @@ Message History: ${history?.length || 0} messages in this session
     }
 
     // Save assistant response
-    await supabase.from('advisor_messages').insert({
-      session_id: sessionId,
-      user_id: userId,
-      role: 'model',
-      content: fullContent
-    });
+    try {
+      await supabase.from('advisor_messages').insert({
+        session_id: sessionId,
+        user_id: userId,
+        role: 'model',
+        content: fullContent
+      });
 
-    // Update session timestamp
-    await supabase
-      .from('advisor_sessions')
-      .update({ updated_at: new Date().toISOString() })
-      .eq('id', sessionId);
+      // Update session timestamp
+      await supabase
+        .from('advisor_sessions')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', sessionId);
+    } catch (dbError) {
+      console.error('Failed to save chat history:', serializeError(dbError));
+      // Don't fail the request if DB save fails - user already got the response
+    }
 
   } catch (err) {
     console.error('Advisor chat error:', serializeError(err));
 
-    if (!res.headersSent) {
+    if (!res.headersSent && !res.destroyed) {
       res.write(`data: ${JSON.stringify({ error: 'AI service unavailable' })}\n\n`);
+      res.write(`data: [DONE]\n\n`);
       res.end();
     }
   }
@@ -707,8 +720,7 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
     });
     
     // Use vision-capable model when images are present
-    const visionModel = "openai/gpt-4o-mini";
-    const effectiveModel = hasImage ? visionModel : (model || "openai/gpt-4o-mini");
+    const effectiveModel = hasImage ? VISION_MODEL : (model || DEFAULT_MODEL);
     
     const requestBody: any = {
       model: effectiveModel,
