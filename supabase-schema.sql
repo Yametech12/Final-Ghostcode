@@ -57,6 +57,7 @@ CREATE TABLE IF NOT EXISTS field_reports (
   user_id UUID REFERENCES users(id) ON DELETE CASCADE,
   author TEXT NOT NULL,
   type TEXT NOT NULL,
+  title TEXT,
   scenario TEXT NOT NULL,
   action TEXT NOT NULL,
   result TEXT NOT NULL,
@@ -64,6 +65,12 @@ CREATE TABLE IF NOT EXISTS field_reports (
   likes INTEGER DEFAULT 0,
   comment_count INTEGER DEFAULT 0
 );
+
+-- Add title column if it doesn't exist (for existing tables)
+ALTER TABLE field_reports ADD COLUMN IF NOT EXISTS title TEXT;
+
+-- Set default title from scenario for existing rows
+UPDATE field_reports SET title = scenario WHERE title IS NULL;
 
 -- Report likes table
 CREATE TABLE IF NOT EXISTS report_likes (
@@ -275,12 +282,11 @@ CREATE INDEX IF NOT EXISTS idx_report_likes_report ON report_likes(report_id);
 
 -- RLS Policies (these will be created only if they don't exist)
 
--- Users table policies
+-- Users table policies - FIXED: No infinite recursion (explicit text casting on both sides)
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'users' AND policyname = 'Users can read/write their own data') THEN
-    CREATE POLICY "Users can read/write their own data" ON users FOR ALL USING (auth.uid()::text = uid);
-  END IF;
+  DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
+  CREATE POLICY "Users can read/write their own data" ON users FOR ALL USING (auth.uid()::text = uid::text);
 END $$;
 
 -- Calibrations policies

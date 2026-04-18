@@ -111,7 +111,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
       if (data && !error) {
         console.log('User data loaded successfully:', data);
-        setUserData(data);
+        // Map database snake_case to application camelCase
+        const mappedData = {
+          ...data,
+          displayName: data.display_name,
+          photoURL: data.photo_url,
+          contactInfo: data.contact_info,
+          createdAt: data.created_at,
+          lastLoginAt: data.last_login_at
+        };
+        setUserData(mappedData);
       } else {
         console.warn('Failed to load user data:', error);
         setUserData(null);
@@ -202,6 +211,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         requiresVerification: !data.user?.email_confirmed_at
       });
 
+      // Create user record in database
+      if (data.user) {
+        try {
+          await supabase
+            .from('users')
+            .insert({
+              uid: data.user.id,
+              email: data.user.email,
+              display_name: name,
+              photo_url: data.user.user_metadata?.avatar_url || null
+            });
+        } catch (insertError) {
+          console.error('Error creating user record:', insertError);
+        }
+      }
+
       if (data.user && !data.user.email_confirmed_at) {
         toast.success('Check your email for verification link');
         return { requiresVerification: true };
@@ -260,14 +285,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
-      const { error } = await supabase.auth.updateUser({
+      // Update auth user metadata
+      const { error: authError } = await supabase.auth.updateUser({
         data: {
           display_name: data.displayName,
           avatar_url: data.photoURL
         }
       });
 
-      if (error) throw error;
+      if (authError) throw authError;
+
+      // Update database users table
+      const { error: dbError } = await supabase
+        .from('users')
+        .update({
+          display_name: data.displayName,
+          photo_url: data.photoURL
+        })
+        .eq('uid', user.id);
+
+      if (dbError) throw dbError;
 
       // Update userData state
       if (userData) {
@@ -286,9 +323,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!user) return;
 
     try {
+      // Map application camelCase to database snake_case
+      const dbData: Record<string, any> = {};
+      if (data.displayName !== undefined) dbData.display_name = data.displayName;
+      if (data.photoURL !== undefined) dbData.photo_url = data.photoURL;
+      if (data.bio !== undefined) dbData.bio = data.bio;
+      if (data.contactInfo !== undefined) dbData.contact_info = data.contactInfo;
+      if (data.lastLoginAt !== undefined) dbData.last_login_at = data.lastLoginAt;
+
       const { error } = await supabase
         .from('users')
-        .update(data)
+        .update(dbData)
         .eq('uid', user.id);
 
       if (error) throw error;

@@ -526,58 +526,68 @@ Message History: ${history?.length || 0} messages in this session
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
     let fullContent = '';
-    let isStreamEnded = false;
-
-    const endStream = (finalContent?: string) => {
-      if (isStreamEnded) return;
-      isStreamEnded = true;
-
-      if (finalContent) {
-        fullContent = finalContent;
-      }
-
-      if (!res.headersSent) {
-        res.write(`data: [DONE]\n\n`);
-        res.end();
-      }
-    };
 
     try {
-      // Use streaming completion with improved error handling
-      let chunkCount = 0;
-      const maxChunks = 100; // Prevent infinite streaming
-
-      for await (const chunk of createStreamingCompletion({
+      // Get stream directly and handle it properly without async generator
+      const stream = await createCompletion({
         model: 'openai/gpt-4o-mini',
         messages,
         temperature: 0.7,
-        max_tokens: 600
-      })) {
-        if (isStreamEnded || chunkCount++ > maxChunks) break;
+        max_tokens: 600,
+        stream: true
+      }) as ReadableStream;
 
-        const content = chunk.choices?.[0]?.delta?.content || '';
-        if (content) {
-          fullContent += content;
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+      let chunkCount = 0;
+      const maxChunks = 500; // Prevent infinite streaming
 
-          // Send chunk with error handling
-          try {
-            if (!res.destroyed) {
-              res.write(`data: ${JSON.stringify({ content })}\n\n`);
+      try {
+        while (chunkCount++ < maxChunks) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                continue;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                const content = parsed.choices?.[0]?.delta?.content || '';
+                if (content) {
+                  fullContent += content;
+                  if (!res.destroyed) {
+                    res.write(`data: ${JSON.stringify({ content })}\n\n`);
+                  }
+                }
+
+                if (parsed.choices?.[0]?.finish_reason) {
+                  break;
+                }
+              } catch (parseError) {
+                // Skip invalid chunks
+                console.warn('Skipping invalid stream chunk:', parseError);
+              }
             }
-          } catch (writeError) {
-            console.error('Stream write error:', serializeError(writeError));
-            break;
           }
         }
-
-        // Check for completion signal
-        if (chunk.choices?.[0]?.finish_reason) {
-          break;
-        }
+      } finally {
+        reader.releaseLock();
       }
 
-      // Ensure we send completion signal
-      endStream();
+      // Send completion signal
+      if (!res.destroyed) {
+        res.write(`data: [DONE]\n\n`);
+        res.end();
+      }
 
     } catch (streamError: any) {
       console.error('Streaming error:', serializeError(streamError));
@@ -589,7 +599,8 @@ Message History: ${history?.length || 0} messages in this session
 
       if (!res.destroyed) {
         res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
-        endStream();
+        res.write(`data: [DONE]\n\n`);
+        res.end();
       }
     }
 

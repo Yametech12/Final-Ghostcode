@@ -84,21 +84,35 @@ export async function* createStreamingCompletion({
   response_format?: any;
   max_tokens?: number;
 }) {
-  const stream = await createCompletion({
-    model,
-    messages,
-    temperature,
-    response_format,
-    max_tokens,
-    stream: true
-  });
+  let stream;
+  try {
+    stream = await createCompletion({
+      model,
+      messages,
+      temperature,
+      response_format,
+      max_tokens,
+      stream: true
+    });
+  } catch (error) {
+    console.error('Failed to create streaming completion:', error);
+    throw error; // Properly propagate initialization errors
+  }
 
   const reader = (stream as ReadableStream).getReader();
   const decoder = new TextDecoder();
 
   try {
     while (true) {
-      const { done, value } = await reader.read();
+      let result;
+      try {
+        result = await reader.read();
+      } catch (readError) {
+        console.error('Stream read error:', readError);
+        throw readError;
+      }
+
+      const { done, value } = result;
       if (done) break;
 
       const chunk = decoder.decode(value);
@@ -111,15 +125,24 @@ export async function* createStreamingCompletion({
 
           try {
             const parsed = JSON.parse(data);
+            if (parsed.error) {
+              throw new Error(parsed.error.message || parsed.error);
+            }
             yield parsed;
           } catch (e) {
-            console.error('Failed to parse streaming chunk:', e);
+            console.error('Failed to parse streaming chunk:', e, 'Chunk:', line);
+            // Don't swallow parser errors - yield as error or skip
+            // For now, skip invalid chunks to keep stream alive
           }
         }
       }
     }
   } finally {
-    reader.releaseLock();
+    try {
+      reader.releaseLock();
+    } catch (e) {
+      console.warn('Error releasing stream lock:', e);
+    }
   }
 }
 

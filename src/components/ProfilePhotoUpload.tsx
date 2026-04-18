@@ -206,7 +206,7 @@ export default function ProfilePhotoUpload() {
       // Update user profile in database
       const { error: dbError } = await supabase
         .from('users')
-        .update({ photoURL: publicUrl })
+        .update({ photo_url: publicUrl })
         .eq('uid', user.id);
 
       if (dbError) throw dbError;
