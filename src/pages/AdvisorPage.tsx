@@ -21,6 +21,7 @@ export default function AdvisorPage() {
   } = useAdvisorChat();
 
   const [input, setInput] = useState('');
+  const [isSending, setIsSending] = useState(false);
   const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike'>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -64,14 +65,24 @@ export default function AdvisorPage() {
 
   const handleSend = async () => {
     const textToSend = input.trim();
-    if (!textToSend || isStreaming) return;
+    if (!textToSend || isSending) return;
     setInput('');
-    await sendMessage(textToSend);
+    setIsSending(true);
+    try {
+      await sendMessage(textToSend);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleQuickSend = async (message: string) => {
-    if (!message || isStreaming) return;
-    await sendMessage(message);
+    if (!message || isSending) return;
+    setIsSending(true);
+    try {
+      await sendMessage(message);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -330,7 +341,7 @@ export default function AdvisorPage() {
                     <button
                       key={index}
                       onClick={() => handleQuickSend(action)}
-                      disabled={isStreaming}
+                      disabled={isSending}
                       className="p-3 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-accent-primary/50 rounded-lg text-left text-sm text-slate-300 hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {action}
@@ -356,7 +367,7 @@ export default function AdvisorPage() {
                     <button
                       key={index}
                       onClick={() => handleQuickSend(suggestion)}
-                      disabled={isStreaming}
+                      disabled={isSending}
                       className="px-3 py-1 bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/20 hover:border-accent-primary/40 rounded-full text-xs text-accent-primary hover:text-white transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {suggestion}
@@ -381,7 +392,7 @@ export default function AdvisorPage() {
               />
               <button
                 onClick={() => handleSend()}
-                disabled={!input.trim() || isStreaming}
+                disabled={!input.trim() || isSending}
                 className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
                 <Send className="w-5 h-5" />

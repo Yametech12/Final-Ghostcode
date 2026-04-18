@@ -1,0 +1,1 @@
+import{j as a}from"./chunk-9FMcmyUC.js";import{c as n}from"./chunk-Dnk-bhvW.js";function l({className:e,variant:r="default",...s}){const t={default:"rounded-md",circle:"rounded-full",rounded:"rounded-lg"};return a.jsx("div",{className:n("animate-pulse bg-slate-700",t[r],e),...s})}export{l as S};

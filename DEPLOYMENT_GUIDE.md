@@ -9,7 +9,7 @@
    Go to: https://supabase.com/dashboard/project/YOUR_PROJECT/settings/api
    - Click "Generate new secret" under service_role
    - Copy the new key IMMEDIATELY
-   - Update VITE_SUPABASE_SERVICE_ROLE_KEY in .env
+   - Update SUPABASE_SERVICE_ROLE_KEY in .env (backend only, NEVER prefix with VITE_)
    - NEVER use the old hardcoded key again!
    ```
 
@@ -31,7 +31,7 @@ APP_URL=https://epimetheusproject.vercel.app
 # Supabase (CRITICAL - get from dashboard)
 VITE_SUPABASE_URL=https://cuinkiyozecqkskmufgo.supabase.co
 VITE_SUPABASE_ANON_KEY=[your-anon-key]
-VITE_SUPABASE_SERVICE_ROLE_KEY=[NEWLY-GENERATED-service-key]
+SUPABASE_SERVICE_ROLE_KEY=[NEWLY-GENERATED-service-key]
 
 # AI API
 OPENROUTER_API_KEY=[your-openrouter-key]

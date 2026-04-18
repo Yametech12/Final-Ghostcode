@@ -84,96 +84,110 @@ export function useAdvisorChat() {
     setMessages(prev => [...prev, userMessage]);
     setIsStreaming(true);
 
-    try {
-      const response = await fetch('/api/advisor/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId,
-          message: content.trim(),
-          userId: user.id
-        })
-      });
+    const attemptSend = async (retriesLeft: number): Promise<void> => {
+      try {
+        const response = await fetch('/api/advisor/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sessionId,
+            message: content.trim(),
+            userId: user.id
+          })
+        });
 
-      if (!response.ok) {
-        throw new Error(`Chat failed: ${response.status}`);
-      }
+        if (!response.ok) {
+          throw new Error(`Chat failed: ${response.status}`);
+        }
 
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No response stream');
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No response stream');
 
-      let assistantContent = '';
-      const decoder = new TextDecoder();
+        let assistantContent = '';
+        const decoder = new TextDecoder();
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
 
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
 
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            const data = line.slice(6);
-            if (data === '[DONE]') {
-              setIsStreaming(false);
-              return;
-            }
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.error) {
-                throw new Error(parsed.error);
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                setIsStreaming(false);
+                return;
               }
 
-              if (parsed.content) {
-                assistantContent += parsed.content;
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.error) {
+                  throw new Error(parsed.error);
+                }
 
-                // Update streaming message
-                setMessages(prev => {
-                  const last = prev[prev.length - 1];
-                  if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
-                    // Replace streaming message
-                    return [
-                      ...prev.slice(0, -1),
-                      {
-                        id: `streaming-${Date.now()}`,
-                        role: 'model',
-                        content: assistantContent,
-                        timestamp: new Date()
-                      }
-                    ];
-                  } else if (last?.role !== 'model') {
-                    // Add new streaming message
-                    return [
-                      ...prev,
-                      {
-                        id: `streaming-${Date.now()}`,
-                        role: 'model',
-                        content: assistantContent,
-                        timestamp: new Date()
-                      }
-                    ];
-                  } else {
-                    // Update existing streaming message
-                    return [
-                      ...prev.slice(0, -1),
-                      {
-                        id: last.id,
-                        role: 'model',
-                        content: assistantContent,
-                        timestamp: new Date()
-                      }
-                    ];
-                  }
-                });
+                if (parsed.content) {
+                  assistantContent += parsed.content;
+
+                  // Update streaming message
+                  setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
+                      // Replace streaming message
+                      return [
+                        ...prev.slice(0, -1),
+                        {
+                          id: `streaming-${Date.now()}`,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    } else if (last?.role !== 'model') {
+                      // Add new streaming message
+                      return [
+                        ...prev,
+                        {
+                          id: `streaming-${Date.now()}`,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    } else {
+                      // Update existing streaming message
+                      return [
+                        ...prev.slice(0, -1),
+                        {
+                          id: last.id,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    }
+                  });
+                }
+              } catch (parseError) {
+                console.error('Parse error:', parseError);
               }
-            } catch (parseError) {
-              console.error('Parse error:', parseError);
             }
           }
         }
+      } catch (error) {
+        if (retriesLeft > 0) {
+          // Exponential backoff
+          await new Promise(r => setTimeout(r, 1000 * Math.pow(2, 2 - retriesLeft)));
+          return attemptSend(retriesLeft - 1);
+        } else {
+          throw error;
+        }
       }
+    };
+
+    try {
+      await attemptSend(2); // 2 retries
     } catch (error) {
       console.error('Chat error:', error);
       toast.error('Message failed to send. Please try again.');

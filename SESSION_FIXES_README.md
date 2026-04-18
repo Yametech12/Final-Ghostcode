@@ -3,7 +3,7 @@
 ## 🚨 CRITICAL SECURITY FIX
 **IMMEDIATE ACTION REQUIRED:**
 - ✅ **FIXED**: Removed hardcoded JWT token from `kilo.json`
-- ✅ **ADDED**: Environment variable `VITE_SUPABASE_SERVICE_ROLE_KEY` to `.env`
+- ✅ **ADDED**: Environment variable `SUPABASE_SERVICE_ROLE_KEY` to `.env` (backend only, NEVER use VITE_ prefix)
 - ⚠️ **ACTION NEEDED**: Regenerate your Supabase service role key in the dashboard and update `.env`
 
 ## 🐛 Issues Fixed

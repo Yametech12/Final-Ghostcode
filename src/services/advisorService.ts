@@ -1,5 +1,3 @@
-import { isUUID } from '../utils/validation';
-
 export async function sendAdvisorMessage(
   message: string,
   sessionId: string,

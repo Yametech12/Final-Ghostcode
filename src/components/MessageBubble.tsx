@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Copy, RefreshCw, ThumbsUp, ThumbsDown, Bot, User } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';

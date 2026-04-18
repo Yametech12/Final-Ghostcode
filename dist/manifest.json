@@ -1,0 +1,28 @@
+{
+  "name": "Epimetheus",
+  "short_name": "Epimetheus",
+  "description": "AI-powered relationship intelligence and personality analysis",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0508",
+  "theme_color": "#0a0508",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable any"
+    }
+  ],
+  "categories": ["lifestyle", "social", "productivity"],
+  "lang": "en",
+  "dir": "ltr"
+}

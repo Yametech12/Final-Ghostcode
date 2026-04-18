@@ -481,7 +481,12 @@ app.post("/api/advisor/chat", validateUUIDMiddleware, async (req, res) => {
     const personalityType = latestCalibration?.type_id || 'Unknown';
     const traits = latestCalibration?.traits || {};
 
-    const systemPrompt = `You are Epimetheus, the ancient Greek god of afterthought and wise counsel, reincarnated as a modern relationship advisor. You specialize in interpersonal dynamics, personality analysis, and strategic relationship guidance.
+    const systemPrompt = `You are Epimetheus, a relationship intelligence advisor.
+Your goal is to help users navigate interpersonal dynamics with empathy, psychological insight, and practical advice.
+- Never be generic; ask clarifying questions when needed.
+- Use attachment theory, communication frameworks (NVC), and emotional intelligence concepts.
+- Keep responses warm but professional, max 3 paragraphs.
+- If the user mentions a specific person ("she/her"), infer possible intentions based on behavior patterns, but avoid assumptions.
 
 ## USER PROFILE
 Personality Type: ${personalityType}
@@ -490,14 +495,6 @@ Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrate
 ## CONVERSATION CONTEXT
 Recent Sessions: ${recentActivity?.map(s => s.title).join(', ') || 'None'}
 Message History: ${history?.length || 0} messages in this session
-
-## CORE PRINCIPLES
-- Provide actionable, specific advice grounded in psychological principles
-- Respect individual differences while promoting healthy patterns
-- Use the EPIMETHEUS framework when relevant
-- Be direct but empathetic, challenging but supportive
-- Focus on mutual benefit and emotional intelligence
-- Adapt communication style to user's personality type
 
 ## RESPONSE GUIDELINES
 - Keep responses under 250 words
@@ -585,44 +582,14 @@ Message History: ${history?.length || 0} messages in this session
     } catch (streamError: any) {
       console.error('Streaming error:', serializeError(streamError));
 
-      // Enhanced fallback with personality-aware error messages
-      try {
-        const fallbackMessages = [
-          ...messages.slice(0, -1), // Remove the problematic user message
-          {
-            role: 'system',
-            content: 'The user encountered a technical issue. Provide a brief, helpful response acknowledging the problem and offering to continue the conversation.'
-          },
-          { role: 'user', content: 'I encountered an error with my previous message. Can we continue?' }
-        ];
+      // Local rule-based fallback
+      const fallbackContent = "I'm having trouble connecting right now. Please try again in a moment, and I'll be here to help with your relationship questions.";
 
-        const fallbackCompletion = await createCompletion({
-          model: 'openai/gpt-4o-mini',
-          messages: fallbackMessages,
-          temperature: 0.7,
-          max_tokens: 300
-        });
+      fullContent = fallbackContent;
 
-        const fallbackContent = fallbackCompletion.choices[0]?.message?.content ||
-          'I apologize for the technical interruption. Please try rephrasing your question, and I\'ll be happy to help.';
-
-        fullContent = fallbackContent;
-
-        if (!res.destroyed) {
-          res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
-          endStream();
-        }
-
-      } catch (fallbackError: any) {
-        console.error('Fallback error:', serializeError(fallbackError));
-
-        const errorMessage = 'I\'m experiencing technical difficulties. Please try again in a moment.';
-        fullContent = errorMessage;
-
-        if (!res.destroyed) {
-          res.write(`data: ${JSON.stringify({ error: errorMessage })}\n\n`);
-          endStream();
-        }
+      if (!res.destroyed) {
+        res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
+        endStream();
       }
     }
 
