@@ -48,7 +48,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
       try {
         const base64 = await fetchAsBase64(sourceUrl);
         setPhotoDataUrl(base64);
-      } catch (error) {
+      } catch {
         try {
           const fallbackUrl = `https://ui-avatars.com/api/?name=${user?.displayName || 'O'}&background=random`;
           const fallbackBase64 = await fetchAsBase64(fallbackUrl);

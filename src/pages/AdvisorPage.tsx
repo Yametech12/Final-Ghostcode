@@ -125,7 +125,7 @@ export default function AdvisorPage() {
     recognition.onend = () => {
       setIsListening(false);
     };
-  }, [recognition]);
+  }, [recognition, setInput, setIsListening]);
 
   const toggleListening = () => {
     if (!recognition) {
@@ -144,7 +144,7 @@ export default function AdvisorPage() {
     try {
       await navigator.clipboard.writeText(content);
       toast.success('Message copied to clipboard!');
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy to clipboard');
     }
   };

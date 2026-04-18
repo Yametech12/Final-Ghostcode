@@ -7,13 +7,13 @@ export function safeParseJSON<T>(text: string, fallback: T): T {
   try {
     // 1. Try direct parse
     return JSON.parse(text);
-  } catch (e) {
+  } catch {
     // 2. Try to extract from markdown blocks
     const jsonMatch = text.match(/```json\s*([\s\S]*?)\s*```/) || text.match(/```\s*([\s\S]*?)\s*```/);
     if (jsonMatch && jsonMatch[1]) {
       try {
         return JSON.parse(jsonMatch[1].trim());
-      } catch (e2) {
+      } catch {
         // Fall through to more aggressive fixes
       }
     }
@@ -26,7 +26,7 @@ export function safeParseJSON<T>(text: string, fallback: T): T {
       const candidate = text.substring(firstBrace, lastBrace + 1);
       try {
         return JSON.parse(candidate);
-      } catch (e3) {
+      } catch {
         // 4. If it's still failing, it might be truncated.
         // Try to fix common truncation issues (missing closing braces)
         let fixed = candidate;
@@ -46,7 +46,7 @@ export function safeParseJSON<T>(text: string, fallback: T): T {
         
         try {
           return JSON.parse(fixed);
-        } catch (e4) {
+        } catch {
           // Last resort: try to fix truncated strings inside JSON
           // This is complex, but we can try a simple fix for the most common case:
           // "key": "val... (truncated)

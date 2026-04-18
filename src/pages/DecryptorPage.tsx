@@ -90,7 +90,7 @@ Keep responses concise, professional, and highly strategic. Use EPIMETHEUS termi
       setCopied(true);
       toast.success('Analysis copied to clipboard!');
       setTimeout(() => setCopied(false), 2000);
-    } catch (err) {
+    } catch {
       toast.error('Failed to copy to clipboard');
     }
   };

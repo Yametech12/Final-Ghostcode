@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
+
 import { toast } from 'sonner';
 import { getSupabaseErrorMessage } from '../utils/errorHandling';
 
@@ -48,12 +49,12 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
   const [verificationSent, setVerificationSent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const navigate = useNavigate();
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
   const { signUpWithEmail, signInWithGoogle } = auth;
 
   // Check if user just verified their email
@@ -64,6 +65,8 @@ export default function RegisterPage() {
       navigate('/login');
     }
   }, [searchParams, navigate]);
+
+  if (!auth) return <div>Loading...</div>;
 
   const passwordErrors = password ? validatePassword(password) : [];
   const passwordsMatch = password === confirmPassword && password.length > 0;
@@ -323,14 +326,12 @@ export default function RegisterPage() {
               try {
                 await signInWithGoogle();
                 navigate('/');
-              } catch (err: any) {
-                console.error("Google Sign-In Error:", err);
-    const message = getAuthErrorMessage(err);
-                setError(message);
-                toast.error(message);
-              } finally {
-                setLoading(false);
-              }
+      } catch (err: any) {
+        console.error('Registration error:', err);
+        setError(getAuthErrorMessage(err) || getSupabaseErrorMessage(err));
+      } finally {
+        setLoading(false);
+      }
             }}
             disabled={loading}
             className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"

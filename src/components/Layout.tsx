@@ -179,7 +179,7 @@ export default function Layout({ children }: LayoutProps) {
             message = `System Error (${errInfo.operationType} on ${errInfo.path || 'unknown path'}): ${errInfo.error}`;
           }
         }
-      } catch (e) {
+      } catch {
         // Not JSON, use original message
       }
 

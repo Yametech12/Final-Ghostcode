@@ -82,7 +82,7 @@ export function useSessionWithRetry(options: UseSessionWithRetryOptions = {}): U
 
   useEffect(() => {
     loadSession();
-  }, []); // Only run once on mount
+  }, [loadSession]); // Only run once on mount
 
   // Listen for auth changes
   useEffect(() => {

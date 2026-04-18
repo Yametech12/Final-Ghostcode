@@ -33,8 +33,6 @@ export default function ProfilesPage() {
 
   const { user, userData } = auth || {};
 
-  if (!auth) return <div>Loading...</div>;
-
   const achievements = useMemo(() => {
     const list = [];
     if (assessments.length >= 1) {
@@ -168,6 +166,8 @@ export default function ProfilesPage() {
     };
     fetchData().catch(() => {}); // Handled in function
   }, [user]);
+
+  if (!auth) return <div>Loading...</div>;
 
   return (
     <div className="space-y-16 pb-24">

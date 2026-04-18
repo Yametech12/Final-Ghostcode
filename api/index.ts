@@ -185,7 +185,7 @@ app.get("/api/ai/test-key", async (_req, res) => {
     if (!key) return res.json({ configured: false, error: "API key not configured" });
     
     res.json({ configured: true, provider: AI_PROVIDER });
-  } catch (error) {
+  } catch {
     res.status(500).json({ configured: false, error: "Test failed" });
   }
 });
@@ -287,8 +287,8 @@ app.post("/api/ai/chat", async (req, res) => {
       responseText = await cloned.text();
       console.log('OpenRouter response status:', status, 'text:', responseText?.substring(0, 300));
       errorData = JSON.parse(responseText);
-    } catch (e) {
-      console.error('Failed to parse response:', e, 'text was:', responseText);
+    } catch {
+      console.error('Failed to parse response, text was:', responseText);
       errorData = {};
     }
 

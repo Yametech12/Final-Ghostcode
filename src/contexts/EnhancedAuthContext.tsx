@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
@@ -8,7 +8,7 @@ interface EnhancedAuthContextType {
   loading: boolean;
   error: string | null;
   signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<void>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<{ user: User | null; session: Session | null; }>;
   signOut: () => Promise<void>;
   retrySession: () => Promise<void>;
   forceRefreshSession: () => Promise<void>;
@@ -16,12 +16,11 @@ interface EnhancedAuthContextType {
 
 const EnhancedAuthContext = createContext<EnhancedAuthContextType | undefined>(undefined);
 
-export function EnhancedAuthProvider({ children }: { children: React.ReactNode }) {
+export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 2000;
 

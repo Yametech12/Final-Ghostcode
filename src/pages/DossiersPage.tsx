@@ -66,7 +66,7 @@ export default function DossiersPage() {
         if (saved) {
           try {
             setDossiers(JSON.parse(saved));
-          } catch (e) {
+          } catch {
             console.error('Failed to parse dossiers');
           }
         }
