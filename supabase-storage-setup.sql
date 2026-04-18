@@ -16,6 +16,7 @@ EXCEPTION
 END $$;
 
 -- Create policy: Allow authenticated users to upload their own files
+DROP POLICY IF EXISTS "Users can upload their own files" ON storage.objects;
 CREATE POLICY "Users can upload their own files" ON storage.objects
 FOR INSERT WITH CHECK (
   bucket_id = 'user-uploads'
@@ -24,6 +25,7 @@ FOR INSERT WITH CHECK (
 );
 
 -- Create policy: Allow users to view their own files
+DROP POLICY IF EXISTS "Users can view their own files" ON storage.objects;
 CREATE POLICY "Users can view their own files" ON storage.objects
 FOR SELECT USING (
   bucket_id = 'user-uploads'
@@ -32,10 +34,12 @@ FOR SELECT USING (
 );
 
 -- Create policy: Allow public access to view all files
+DROP POLICY IF EXISTS "Public can view files" ON storage.objects;
 CREATE POLICY "Public can view files" ON storage.objects
 FOR SELECT USING (bucket_id = 'user-uploads');
 
 -- Create policy: Allow users to delete their own files
+DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
 CREATE POLICY "Users can delete their own files" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'user-uploads'
@@ -44,6 +48,7 @@ FOR DELETE USING (
 );
 
 -- Create policy: Allow users to update their own files
+DROP POLICY IF EXISTS "Users can update their own files" ON storage.objects;
 CREATE POLICY "Users can update their own files" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'user-uploads'
