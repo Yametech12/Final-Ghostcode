@@ -112,3 +112,19 @@ export function getSupabaseErrorMessage(error: unknown): string {
   // Return the original message if no specific handling
   return message;
 }
+
+// Email validation utility
+export function isValidEmail(email: string): boolean {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailRegex.test(email);
+}
+
+// Input sanitization utility
+export function sanitizeInput(input: string): string {
+  // Remove potentially dangerous characters and trim
+  return input
+    .replace(/[<>]/g, '') // Remove angle brackets
+    .replace(/javascript:/gi, '') // Remove javascript: protocol
+    .replace(/on\w+=/gi, '') // Remove event handlers
+    .trim();
+}
