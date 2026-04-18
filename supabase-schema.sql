@@ -308,26 +308,33 @@ BEGIN
   END IF;
 END $$;
 
--- Security definer function to check admin status without recursion
-CREATE OR REPLACE FUNCTION is_admin()
-RETURNS BOOLEAN AS $$
-BEGIN
-  -- Direct JWT claim check - no table query required
-  RETURN auth.jwt() ->> 'role' = 'admin';
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+-- Security definer function to check admin status WITHOUT recursion
+-- This is the OFFICIAL Supabase recommended fix for RLS recursion
+CREATE OR REPLACE FUNCTION public.is_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT COALESCE(
+    (SELECT true FROM public.users WHERE id = auth.uid() AND role = 'admin'),
+    false
+  );
+$$;
 
--- Feedback policies (allow anonymous feedback)
+-- Users table policies - COMPLETELY FIXED, NO RECURSION
 DO $$
 BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Anyone can create feedback') THEN
-    CREATE POLICY "Anyone can create feedback" ON feedback FOR INSERT WITH CHECK (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'feedback' AND policyname = 'Admins can read all feedback') THEN
-    CREATE POLICY "Admins can read all feedback" ON feedback FOR SELECT USING (
-      is_admin()
-    );
-  END IF;
+  DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
+  DROP POLICY IF EXISTS "Admins can see all users" ON users;
+  
+  -- Regular users can only access their own data
+  CREATE POLICY "Users can read/write their own data" ON users FOR ALL 
+  USING (id = auth.uid());
+  
+  -- Admins can access all user data (uses safe function above)
+  CREATE POLICY "Admins can see all users" ON users FOR SELECT
+  USING (public.is_admin());
 END $$;
 
 -- Field reports policies (public read, authenticated write)
