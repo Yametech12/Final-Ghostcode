@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAdvisor } from '../hooks/useAdvisor';
 import { AlertTriangle } from 'lucide-react';
+import { useSessionWithRetry } from '../hooks/useSessionWithRetry';
 
 interface Message {
   id: string;
@@ -45,6 +46,8 @@ export default function AdvisorPage() {
     showScrollButton,
     setShowScrollButton,
   } = useAdvisor();
+
+  const { user, loading: isAuthLoading } = useSessionWithRetry();
 
   const [error, setError] = React.useState<string | null>(null);
 
@@ -153,9 +156,40 @@ export default function AdvisorPage() {
     setError(null);
   };
 
+  // Retry mechanism for AI calls
+  const callAIWithRetry = async (apiMessages: any[], retries = 2): Promise<any> => {
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      try {
+        const { chatCompletion } = await import('../lib/ai');
+        return await chatCompletion(apiMessages, undefined, { stream: true });
+      } catch (error: any) {
+        console.warn(`AI call attempt ${attempt + 1} failed:`, error);
+
+        // Don't retry on client errors (400-499), only server errors
+        if (error?.status >= 400 && error?.status < 500) {
+          throw error;
+        }
+
+        if (attempt === retries) {
+          throw error;
+        }
+
+        // Exponential backoff: 1s, 2s, 4s...
+        const delay = Math.pow(2, attempt) * 1000;
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  };
+
   const handleSend = async (overrideInput?: string) => {
     const textToSend = typeof overrideInput === 'string' ? overrideInput : input;
     if (!textToSend.trim() || isLoading) return;
+
+    // Guard: Wait for valid user ID (not temp)
+    if (isAuthLoading || !user?.id || user.id.startsWith('temp-')) {
+      toast.error('Please wait for authentication to complete');
+      return;
+    }
 
     const userMessage = textToSend.trim();
     const userMsgId = Date.now().toString();
@@ -170,8 +204,8 @@ export default function AdvisorPage() {
     try {
       // Session saving disabled - authentication removed
       if (!activeSessionId) {
-        // Create a temporary session ID for this conversation
-        activeSessionId = `temp-${Date.now()}`;
+        // Use real UUID instead of temp
+        activeSessionId = user.id; // Use actual user ID
         setCurrentSessionId(activeSessionId);
       }
     } catch (error) {
@@ -193,7 +227,6 @@ export default function AdvisorPage() {
 
     try {
       const { personalityTypes } = await import('../data/personalityTypes');
-      const { chatCompletion } = await import('../lib/ai');
 
       const systemInstruction = `You are the "Epimetheus Advisor", an elite strategist and expert in the EPIMETHEUS personality profiling system for women. 
       Your goal is to provide high-level, actionable, and deeply psychological advice for men navigating dating, relationships, and social dynamics.
@@ -232,7 +265,7 @@ export default function AdvisorPage() {
         }
       ];
 
-      const response = await chatCompletion(apiMessages as any, undefined, { stream: true });
+      const response = await callAIWithRetry(apiMessages as any);
 
       const assistantMsgId = (Date.now() + 1).toString();
       setMessages(prev => [...prev, { id: assistantMsgId, role: 'model', content: '', isStreaming: true }]);

@@ -16,6 +16,35 @@ const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// UUID validation function
+function isValidUUID(uuid: string): boolean {
+  const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+  return uuidRegex.test(uuid);
+}
+
+// UUID validation middleware
+function validateUUIDMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+  const { userId, sessionId } = req.body || {};
+
+  if (userId && !isValidUUID(userId)) {
+    return res.status(400).json({
+      error: 'Invalid user ID',
+      details: 'User ID must be a valid UUID',
+      code: 'INVALID_UUID'
+    });
+  }
+
+  if (sessionId && !isValidUUID(sessionId)) {
+    return res.status(400).json({
+      error: 'Invalid session ID',
+      details: 'Session ID must be a valid UUID',
+      code: 'INVALID_UUID'
+    });
+  }
+
+  next();
+}
+
 // Simple rate limiter for AI endpoints
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const RATE_LIMIT = 10; // requests per minute
@@ -25,24 +54,24 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
   if (!req.path.startsWith('/api/ai')) {
     return next();
   }
-  
+
   const ip = req.ip || req.headers['x-forwarded-for'] as string || 'unknown';
   const now = Date.now();
   const record = rateLimitStore.get(ip);
-  
+
   if (!record || now > record.resetTime) {
     rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
     return next();
   }
-  
+
   if (record.count >= RATE_LIMIT) {
-    return res.status(429).json({ 
-      error: 'Rate limited', 
+    return res.status(429).json({
+      error: 'Rate limited',
       details: `Maximum ${RATE_LIMIT} requests per minute`,
       retryAfter: Math.ceil((record.resetTime - now) / 1000)
     });
   }
-  
+
   record.count++;
   next();
 }
@@ -221,7 +250,7 @@ app.get("/api/ai/credits", async (_req, res) => {
   }
 });
 
-app.post("/api/ai/chat", async (req, res) => {
+app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
   try {
     const key = await getApiKey();
     if (!key) return res.status(500).json({ error: "API key not configured" });
@@ -344,9 +373,54 @@ app.post("/api/ai/chat", async (req, res) => {
       } : undefined
     });
   } catch (error) {
-    console.error("Chat error:", error);
+    // Enhanced logging for debugging
+    const errorDetails = {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      timestamp: new Date().toISOString(),
+      userAgent: req.headers['user-agent'],
+      ip: req.ip || req.headers['x-forwarded-for'],
+      requestBody: req.body ? JSON.stringify(req.body).substring(0, 500) : null,
+      endpoint: req.path,
+      method: req.method
+    };
+    console.error("Chat error details:", JSON.stringify(errorDetails, null, 2));
+
     const errMsg = error instanceof Error ? error.message : String(error);
-    res.status(500).json({ error: "Chat request failed", details: errMsg });
+
+    // Categorize errors for better client handling
+    let statusCode = 500;
+    let errorCode = 'UNKNOWN_ERROR';
+    let userMessage = 'Chat request failed';
+
+    if (errMsg.includes('fetch') || errMsg.includes('network')) {
+      statusCode = 503;
+      errorCode = 'NETWORK_ERROR';
+      userMessage = 'Network error - please check your connection';
+    } else if (errMsg.includes('timeout')) {
+      statusCode = 504;
+      errorCode = 'TIMEOUT_ERROR';
+      userMessage = 'Request timed out - please try again';
+    } else if (errMsg.includes('rate limit')) {
+      statusCode = 429;
+      errorCode = 'RATE_LIMIT_ERROR';
+      userMessage = 'Too many requests - please wait and try again';
+    } else if (errMsg.includes('401') || errMsg.includes('Invalid API key')) {
+      statusCode = 500; // Don't expose auth errors
+      errorCode = 'AI_SERVICE_ERROR';
+      userMessage = 'AI service temporarily unavailable';
+    } else if (errMsg.includes('402') || errMsg.includes('insufficient credits')) {
+      statusCode = 500;
+      errorCode = 'AI_SERVICE_ERROR';
+      userMessage = 'AI service temporarily unavailable';
+    }
+
+    res.status(statusCode).json({
+      error: userMessage,
+      details: process.env.NODE_ENV === 'development' ? errMsg : undefined,
+      code: errorCode,
+      timestamp: new Date().toISOString()
+    });
   }
 });
 

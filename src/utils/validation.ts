@@ -159,7 +159,7 @@ export function validatePasswordSecurity(password: string): {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>?]/.test(password);
+  const hasSpecial = /[!@#$%^&*()_+\-=\[]{} ;':"\\|,.<>?]/.test(password);
 
   if (!hasUppercase) {
     errors.push('Password must contain at least one uppercase letter');
