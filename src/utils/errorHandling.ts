@@ -60,7 +60,7 @@ export function useErrorHandler() {
   return (error: Error | string, _context?: string) => {
     const message = typeof error === 'string' ? error : error.message;
 
-    console.error('Error handled by useErrorHandler:', error);
+    console.error('Error handled by useErrorHandler:', serializeError(error));
 
     // In production, you might want to send this to an error reporting service
     if (process.env.NODE_ENV === 'production') {
@@ -73,7 +73,7 @@ export function useErrorHandler() {
 // Utility function for handling promise rejections
 export function handleAsyncError(promise: Promise<unknown>, context?: string) {
   return promise.catch((error) => {
-    console.error(`Async error${context ? ` in ${context}` : ''}:`, error);
+    console.error(`Async error${context ? ` in ${context}` : ''}:`, serializeError(error));
 
     if (error.name !== 'ChunkLoadError') {
       // toast.error(`Something went wrong${context ? ` ${context.toLowerCase()}` : ''}`);
@@ -127,4 +127,17 @@ export function sanitizeInput(input: string): string {
     .replace(/javascript:/gi, '') // Remove javascript: protocol
     .replace(/on\w+=/gi, '') // Remove event handlers
     .trim();
+}
+
+// Helper function to properly serialize Error objects for logging
+export function serializeError(err: unknown): Record<string, any> {
+  if (err instanceof Error) {
+    return {
+      name: err.name,
+      message: err.message,
+      stack: err.stack,
+      ...(err as any) // Include any custom properties
+    };
+  }
+  return { error: err };
 }

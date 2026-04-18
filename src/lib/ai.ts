@@ -1,3 +1,5 @@
+import { serializeError } from '../utils/errorHandling';
+
 // OpenRouter model configuration - using reliable models
 export const DEFAULT_MODEL = "openai/gpt-4o-mini";
 // Fallback models in order of preference
@@ -130,12 +132,12 @@ export async function chatCompletion(
                     const data = JSON.parse(line.slice(6));
                     yield data;
                   } catch (e) {
-                    console.error("Error parsing stream chunk", e);
+                    console.error("Error parsing stream chunk", serializeError(e));
                   }
                 }
               }
             } catch (e) {
-              console.error("Error reading stream chunk", e);
+              console.error("Error reading stream chunk", serializeError(e));
               break;
             }
           }

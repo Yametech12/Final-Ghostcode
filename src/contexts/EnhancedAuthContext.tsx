@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
+import { serializeError } from '../utils/errorHandling';
 
 interface EnhancedAuthContextType {
   user: User | null;
@@ -36,7 +37,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       }
       return null;
     } catch (err: any) {
-      console.error('Session load error:', err);
+      console.error('Session load error:', serializeError(err));
       if (retry < MAX_RETRIES) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retry)));
         return loadSession(retry + 1);
@@ -86,7 +87,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       setSession(data.session);
       setUser(data.session?.user ?? null);
     } catch (err) {
-      console.error('Force refresh failed:', err);
+      console.error('Force refresh failed:', serializeError(err));
     }
   }, []);
 

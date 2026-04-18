@@ -13,6 +13,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAdvisor } from '../hooks/useAdvisor';
 import { AlertTriangle } from 'lucide-react';
 import { useSessionWithRetry } from '../hooks/useSessionWithRetry';
+import { serializeError } from '../utils/errorHandling';
 
 interface Message {
   id: string;
@@ -93,7 +94,7 @@ export default function AdvisorPage() {
       utterance.onend = () => setIsSpeaking(null);
       window.speechSynthesis.speak(utterance);
     } catch (error) {
-      console.error("TTS Error:", error);
+      console.error("TTS Error:", serializeError(error));
       setIsSpeaking(null);
     }
   };
@@ -120,7 +121,7 @@ export default function AdvisorPage() {
     };
 
     recognition.onerror = (event: any) => {
-      console.error("Speech recognition error", event.error);
+      console.error("Speech recognition error", serializeError(event.error));
       setIsListening(false);
       toast.error("Microphone access denied or error occurred.");
     };
@@ -209,7 +210,7 @@ export default function AdvisorPage() {
         setCurrentSessionId(activeSessionId);
       }
     } catch (error) {
-      console.error("Failed to create session:", error);
+      console.error("Failed to create session:", serializeError(error));
     }
 
     setInput('');
@@ -287,7 +288,7 @@ export default function AdvisorPage() {
       // Database saving disabled - authentication removed
 
     } catch (error: any) {
-      console.error("Advisor Error:", error);
+      console.error("Advisor Error:", serializeError(error));
       setError(error instanceof Error ? error.message : "Unknown error occurred");
 
       let errorMessage = "There was a disturbance in the connection. Please try again.";
@@ -555,7 +556,7 @@ export default function AdvisorPage() {
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();
-                      handleSend().catch(err => console.error("Failed to send message:", err));
+                      handleSend().catch(err => console.error("Failed to send message:", serializeError(err)));
                     }
                   }}
                   placeholder="Enter query parameters..."
@@ -566,7 +567,7 @@ export default function AdvisorPage() {
               <button
                 onClick={() => {
                   handleSend().catch(err => {
-                    console.error("Failed to send message:", err);
+                    console.error("Failed to send message:", serializeError(err));
                   });
                 }}
                 disabled={isLoading || !input.trim()}
