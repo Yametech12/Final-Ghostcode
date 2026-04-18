@@ -122,26 +122,56 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
     setIsLoading(true);
 
     try {
-      const conversationContext = messages
+      // Find system message (always include it first)
+      const systemMessage = messages.find(m => m.role === 'system');
+      
+      // Get conversation history (last 10 messages, excluding system)
+      const conversationHistory = messages
         .filter(m => m.role !== 'system')
-        .slice(-10) // Keep last 10 messages for context
+        .slice(-10)
         .map(m => ({
           role: m.role === 'user' ? 'user' : 'assistant',
           content: m.content
         }));
 
-      conversationContext.push({ role: 'user', content: userMsg.content });
+      // Build full context: system message + history + new user message
+      const fullContext = [];
+      if (systemMessage) {
+        fullContext.push({ role: 'system', content: systemMessage.content });
+      }
+      fullContext.push(...conversationHistory);
+      fullContext.push({ role: 'user', content: userMsg.content });
 
-      const response = await chatCompletion(conversationContext, undefined, { max_tokens: 300 });
-
-      const aiResponse = response.choices[0]?.message?.content || '...';
-
+      const response = await chatCompletion(fullContext, undefined, { stream: true, max_tokens: 300 });
+      
+      let aiResponse = '';
+      const streamId = `streaming-${Date.now()}`;
+      
+      // Add empty assistant message first
       setMessages(prev => [...prev, {
-        id: (Date.now() + 1).toString(),
+        id: streamId,
         role: 'assistant',
-        content: aiResponse,
+        content: '',
         timestamp: new Date()
       }]);
+
+      for await (const chunk of response) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        aiResponse += content;
+        
+        setMessages(prev => prev.map(msg => 
+          msg.id === streamId 
+            ? { ...msg, content: aiResponse } 
+            : msg
+        ));
+      }
+      
+      // Final update with complete response
+      setMessages(prev => prev.map(msg => 
+        msg.id === streamId 
+          ? { ...msg, id: (Date.now() + 1).toString() } 
+          : msg
+      ));
 
     } catch (error: any) {
       console.error("Simulation Error:", error);

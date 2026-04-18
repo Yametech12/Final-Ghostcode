@@ -103,13 +103,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = useCallback(async (userId: string) => {
     try {
       console.log('Loading user data for:', userId);
+      // Use .maybeSingle() to avoid errors when user profile doesn't exist yet (new users)
       const { data, error } = await supabase
         .from('users')
         .select('*')
         .eq('uid', userId)
-        .single();
+        .maybeSingle();
 
-      if (data && !error) {
+      if (error) {
+        console.error('Database error loading user data:', error.message, error.code);
+        setUserData(null);
+        return;
+      }
+
+      if (data) {
         console.log('User data loaded successfully:', data);
         // Map database snake_case to application camelCase
         const mappedData = {
@@ -122,11 +129,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         };
         setUserData(mappedData);
       } else {
-        console.warn('Failed to load user data:', error);
+        // Normal case: user exists in auth but no profile record created yet
+        console.log('No profile record found for user:', userId);
         setUserData(null);
       }
     } catch (error) {
-      console.error('Error loading user data:', error);
+      console.error('Unexpected error loading user data:', error);
       setUserData(null);
     }
   }, []);

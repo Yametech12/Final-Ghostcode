@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
 import { toast } from 'sonner';
@@ -8,6 +8,7 @@ interface Message {
   role: 'user' | 'model';
   content: string;
   timestamp?: Date;
+  failed?: boolean;
 }
 
 export function useAdvisorChat() {
@@ -16,6 +17,16 @@ export function useAdvisorChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   // Create or load advisor session
   useEffect(() => {
@@ -86,6 +97,13 @@ export function useAdvisorChat() {
 
     const attemptSend = async (retriesLeft: number): Promise<void> => {
       try {
+        // Abort any existing request
+        if (abortControllerRef.current) {
+          abortControllerRef.current.abort();
+        }
+        
+        abortControllerRef.current = new AbortController();
+        
         const response = await fetch('/api/advisor/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -93,7 +111,8 @@ export function useAdvisorChat() {
             sessionId,
             message: content.trim(),
             userId: user.id
-          })
+          }),
+          signal: abortControllerRef.current.signal
         });
 
         if (!response.ok) {
@@ -107,75 +126,88 @@ export function useAdvisorChat() {
         const decoder = new TextDecoder();
 
         while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+          try {
+            const { done, value } = await reader.read();
+            if (done) break;
 
-          const chunk = decoder.decode(value);
-          const lines = chunk.split('\n');
+            const chunk = decoder.decode(value);
+            const lines = chunk.split('\n');
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') {
-                setIsStreaming(false);
-                return;
-              }
-
-              try {
-                const parsed = JSON.parse(data);
-                if (parsed.error) {
-                  throw new Error(parsed.error);
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                const data = line.slice(6);
+                if (data === '[DONE]') {
+                  setIsStreaming(false);
+                  return;
                 }
 
-                if (parsed.content) {
-                  assistantContent += parsed.content;
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.error) {
+                    throw new Error(parsed.error);
+                  }
 
-                  // Update streaming message
-                  setMessages(prev => {
-                    const last = prev[prev.length - 1];
-                    if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
-                      // Replace streaming message
-                      return [
-                        ...prev.slice(0, -1),
-                        {
-                          id: `streaming-${Date.now()}`,
-                          role: 'model',
-                          content: assistantContent,
-                          timestamp: new Date()
-                        }
-                      ];
-                    } else if (last?.role !== 'model') {
-                      // Add new streaming message
-                      return [
-                        ...prev,
-                        {
-                          id: `streaming-${Date.now()}`,
-                          role: 'model',
-                          content: assistantContent,
-                          timestamp: new Date()
-                        }
-                      ];
-                    } else {
-                      // Update existing streaming message
-                      return [
-                        ...prev.slice(0, -1),
-                        {
-                          id: last.id,
-                          role: 'model',
-                          content: assistantContent,
-                          timestamp: new Date()
-                        }
-                      ];
-                    }
-                  });
+                  if (parsed.content) {
+                    assistantContent += parsed.content;
+
+                    // Update streaming message
+                    setMessages(prev => {
+                      const last = prev[prev.length - 1];
+                      if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
+                        // Replace streaming message
+                        return [
+                          ...prev.slice(0, -1),
+                          {
+                            id: `streaming-${Date.now()}`,
+                            role: 'model',
+                            content: assistantContent,
+                            timestamp: new Date()
+                          }
+                        ];
+                      } else if (last?.role !== 'model') {
+                        // Add new streaming message
+                        return [
+                          ...prev,
+                          {
+                            id: `streaming-${Date.now()}`,
+                            role: 'model',
+                            content: assistantContent,
+                            timestamp: new Date()
+                          }
+                        ];
+                      } else {
+                        // Update existing streaming message
+                        return [
+                          ...prev.slice(0, -1),
+                          {
+                            id: last.id,
+                            role: 'model',
+                            content: assistantContent,
+                            timestamp: new Date()
+                          }
+                        ];
+                      }
+                    });
+                  }
+                } catch (parseError) {
+                  console.error('Parse error:', parseError);
                 }
-              } catch (parseError) {
-                console.error('Parse error:', parseError);
               }
             }
+          } catch (readError) {
+            // If aborted, this is expected
+            if (abortControllerRef.current?.signal.aborted) {
+              return;
+            }
+            throw readError;
           }
         }
       } catch (error) {
+        // If aborted, don't retry
+        if (error instanceof Error && error.name === 'AbortError') {
+          return;
+        }
+        
         if (retriesLeft > 0) {
           // Exponential backoff
           await new Promise(r => setTimeout(r, 1000 * Math.pow(2, 2 - retriesLeft)));
@@ -193,8 +225,12 @@ export function useAdvisorChat() {
       toast.error('Message failed to send. Please try again.');
       setIsStreaming(false);
 
-      // Remove failed message
-      setMessages(prev => prev.filter(msg => msg.id !== userMessage.id));
+      // Mark message as failed instead of removing it
+      setMessages(prev => prev.map(msg => 
+        msg.id === userMessage.id 
+          ? { ...msg, failed: true } 
+          : msg
+      ));
     }
   }, [sessionId, user, isStreaming]);
 

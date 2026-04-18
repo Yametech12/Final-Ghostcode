@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 
 console.log("Server starting...");
 
-import { getApiKey, createCompletion, createStreamingCompletion, DEFAULT_MODEL, VISION_MODEL, FALLBACK_MODELS } from './config.ts';
+import { getApiKey, createCompletion, DEFAULT_MODEL, VISION_MODEL } from './config.ts';
 import { AI_PROVIDER, API_URL } from './ai.ts';
 import { bucket } from './gcs.ts';
 import { createClient } from '@supabase/supabase-js';
@@ -677,7 +677,25 @@ app.post("/api/calibration/analyze", validateUUIDMiddleware, async (req, res) =>
       max_tokens: 1000
     });
 
-    const traits = JSON.parse(completion.choices[0].message.content);
+    let traits;
+    try {
+      const content = completion.choices[0].message.content;
+      traits = JSON.parse(content);
+      
+      // Validate response structure
+      if (!traits.traits || !Array.isArray(traits.traits)) {
+        throw new Error('Invalid response: missing traits array');
+      }
+      if (!traits.archetypes || !Array.isArray(traits.archetypes)) {
+        throw new Error('Invalid response: missing archetypes array');
+      }
+      if (!traits.summary || typeof traits.summary !== 'string') {
+        throw new Error('Invalid response: missing summary');
+      }
+    } catch (parseError) {
+      console.error('Failed to parse calibration AI response:', parseError);
+      throw new Error('AI returned invalid analysis format');
+    }
 
     // Store in Supabase
     const { data, error } = await supabase

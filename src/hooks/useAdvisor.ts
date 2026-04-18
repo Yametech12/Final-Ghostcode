@@ -36,7 +36,7 @@ export function useAdvisor() {
 
   // Load sessions
   const loadSessions = useCallback(async () => {
-    if (!user) return;
+    if (!user) return [];
     try {
       const { data, error } = await supabase
         .from('advisor_sessions')
@@ -52,9 +52,11 @@ export function useAdvisor() {
         timestamp: new Date(item.timestamp)
       })) as ChatSession[];
       setSessions(sessionsData);
+      return sessionsData;
     } catch (error: any) {
       console.error('Error loading sessions:', error);
       toast.error('Failed to load sessions');
+      return [];
     }
   }, [user]);
 

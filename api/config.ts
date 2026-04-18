@@ -15,15 +15,14 @@ export const FALLBACK_MODELS = [
   "microsoft/wizardlm-2-8x22b"
 ];
 
-export async function getApiKey(): Promise<string> {
+export async function getApiKey(): Promise<string | null> {
   if (!apiKey) {
     apiKey = process.env.OPENROUTER_API_KEY || "";
   }
 
   if (!apiKey) {
-    throw new Error(
-      "OpenRouter API key is not configured. Please set the OPENROUTER_API_KEY environment variable."
-    );
+    console.warn("WARNING: OpenRouter API key is not configured. AI features will be disabled.");
+    return null;
   }
 
   return apiKey;
@@ -46,6 +45,11 @@ export async function createCompletion({
   stream?: boolean;
 }) {
   const apiKey = await getApiKey();
+  
+  if (!apiKey) {
+    throw new Error("OpenRouter API key is not configured. AI features are unavailable.");
+  }
+  
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];
   let lastError: Error | null = null;
 
