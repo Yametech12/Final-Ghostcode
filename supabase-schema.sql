@@ -282,13 +282,14 @@ CREATE INDEX IF NOT EXISTS idx_report_likes_report ON report_likes(report_id);
 
 -- RLS Policies (these will be created only if they don't exist)
 
--- Users table policies - FIXED: No infinite recursion
--- Use direct JWT claim check instead of table lookup
+-- Users table policies - ABSOLUTE RECURSION FIX
+-- Use direct id comparison with auth.uid() - this is the official Supabase pattern
+-- This will NEVER cause infinite recursion
 DO $$
 BEGIN
   DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
   CREATE POLICY "Users can read/write their own data" ON users FOR ALL 
-  USING (auth.jwt() ->> 'sub' = uid);
+  USING (id = auth.uid());
 END $$;
 
 -- Calibrations policies
