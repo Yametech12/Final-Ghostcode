@@ -9,39 +9,23 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { email, code } = req.body;
-  if (!email || !code) return res.status(400).json({ error: "Email and code are required" });
+  const { email, token } = req.body;
+  if (!email || !token) return res.status(400).json({ error: "Email and token are required" });
 
   try {
-    const { data, error } = await supabase
-      .from('verification_codes')
-      .select('*')
-      .eq('id', email)
-      .single();
+    const { data, error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: 'email'
+    });
 
-    if (error || !data) {
-      return res.status(400).json({ error: "No verification code found for this email" });
-    }
+    if (error) throw error;
 
-    if (data.code !== code) {
-      return res.status(400).json({ error: "Invalid verification code" });
-    }
-
-    if (Date.now() > data.expiresAt) {
-      return res.status(400).json({ error: "Verification code has expired" });
-    }
-
-    // Code is valid, delete it from Supabase
-    await supabase
-      .from('verification_codes')
-      .delete()
-      .eq('id', email);
-
-    res.json({ success: true, message: "Code verified successfully" });
+    res.json({ success: true, message: "OTP verified successfully", user: data.user });
   } catch (error) {
-    console.error("Error verifying code:", error);
+    console.error("Error verifying OTP:", error);
     res.status(500).json({
-      error: "Failed to verify code",
+      error: "Failed to verify OTP",
       details: error.message
     });
   }

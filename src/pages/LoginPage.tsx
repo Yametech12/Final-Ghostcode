@@ -1,58 +1,66 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSupabaseErrorMessage } from '../utils/errorHandling';
 
-const getAuthErrorMessage = (error: any) => {
-  const errorCode = error.code || (error.message && error.message.match(/auth\/[a-z-]+/)?.[0]);
-  
-  switch (errorCode) {
-    case 'auth/user-not-found':
-      return 'No account found with this email.';
-    case 'auth/wrong-password':
-      return 'Incorrect password.';
-    case 'auth/email-already-in-use':
-      return 'An account with this email already exists.';
-    case 'auth/weak-password':
-      return 'Password should be at least 6 characters.';
-    case 'auth/invalid-email':
-      return 'Invalid email address;'
-    case 'auth/too-many-requests':
-      return 'Too many failed attempts. Please try again later.';
-    case 'auth/operation-not-allowed':
-      return 'Email/password accounts are not enabled.';
-    default:
-      return 'An unknown authentication error occurred.';
-  }
-};
-
 export default function LoginPage() {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [rememberMe, setRememberMe] = useState(true);
-  const [showPassword, setShowPassword] = useState(false);
+  const [code, setCode] = useState('');
+  const [step, setStep] = useState<'email' | 'code'>('email');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const navigate = useNavigate();
   const auth = useAuth();
   if (!auth) return <div>Loading...</div>;
-  const { signInWithEmail, signInWithGoogle, resetPassword } = auth;
+  const { signInWithGoogle } = auth;
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSendCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
 
     try {
-      await signInWithEmail(email, password);
+      const response = await fetch('/api/auth/send-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      toast.success('Code sent to your email');
+      setStep('code');
+    } catch (err: any) {
+      setError(err.message);
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/auth/verify-code', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, token: code }),
+      });
+
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error);
+
+      toast.success('Logged in successfully');
       navigate('/');
     } catch (err: any) {
-      const message = getSupabaseErrorMessage(err);
-      setError(message);
-      toast.error(message);
-      console.error("Auth Error:", err);
+      setError(err.message);
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -66,18 +74,16 @@ export default function LoginPage() {
             <User className="w-8 h-8 text-accent-primary" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
-          <p className="text-slate-400">Sign in to access your dashboard</p>
+          <p className="text-slate-400">Enter your email to receive a login code</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={step === 'email' ? handleSendCode : handleVerifyCode} className="space-y-6">
           {error && (
             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               {error}
             </div>
           )}
-
-
 
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Email</label>
@@ -91,57 +97,46 @@ export default function LoginPage() {
                 placeholder="you@example.com"
                 autoComplete="email"
                 required
+                disabled={step === 'code'}
               />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white focus:outline-none focus:border-accent-primary/50 transition-all"
-                placeholder="••••••••"
-                autoComplete="current-password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-              >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
+          {step === 'code' && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-slate-300">Verification Code</label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value)}
+                  className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-accent-primary/50 transition-all"
+                  placeholder="Enter 6-digit code"
+                  required
+                />
+              </div>
             </div>
-          </div>
-
-          <div className="flex items-center justify-between text-sm">
-              <label className="flex items-center gap-2 text-slate-400 cursor-pointer">
-                <input type="checkbox" checked={rememberMe} onChange={(e) => setRememberMe(e.target.checked)} className="rounded border-white/10 bg-white/5 text-accent-primary focus:ring-accent-primary" />
-                Remember me
-              </label>
-              <button type="button" onClick={async () => {
-                if (!email) { setError('Please enter your email first'); return; }
-                try { await resetPassword(email); toast.success('Reset email sent'); }
-                catch (err: any) { 
-    const message = getAuthErrorMessage(err);
-                    setError(message);
-                    toast.error(message);
-                }
-              }} className="text-accent-primary hover:underline">Forgot password?</button>
-            </div>
+          )}
 
           <button
             type="submit"
             disabled={loading}
             className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50"
           >
-            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Sign In'}
+            {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : step === 'email' ? 'Send Code' : 'Verify Code'}
             {!loading && <ArrowRight className="w-5 h-5" />}
           </button>
+
+          {step === 'code' && (
+            <button
+              type="button"
+              onClick={() => setStep('email')}
+              className="w-full text-accent-primary hover:underline text-sm"
+            >
+              Back to email
+            </button>
+          )}
         </form>
 
         <div className="mt-6 text-center text-sm text-slate-400">
