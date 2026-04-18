@@ -55,7 +55,7 @@ export default function LoginPage() {
     return errors;
   }, [password]);
 
-  const isFormValid = email && password && acceptTerms && recaptchaToken && !emailError && passwordErrors.length === 0;
+  const isFormValid = email && password && acceptTerms && (!import.meta.env.VITE_RECAPTCHA_SITE_KEY || recaptchaToken) && !emailError && passwordErrors.length === 0;
 
   // Load stored attempts on mount
   useEffect(() => {
@@ -259,13 +259,20 @@ export default function LoginPage() {
 
           {/* ReCAPTCHA */}
           <div className="flex justify-center">
-            <ReCAPTCHA
-              ref={recaptchaRef}
-              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY || ''}
-              onChange={(token) => setRecaptchaToken(token)}
-              onExpired={() => setRecaptchaToken(null)}
-              hl="en"
-            />
+            {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
+              <ReCAPTCHA
+                ref={recaptchaRef}
+                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                onChange={setRecaptchaToken}
+                onExpired={() => setRecaptchaToken(null)}
+                size="compact"
+                theme="dark"
+              />
+            ) : (
+              <div className="text-red-400 text-sm text-center">
+                reCAPTCHA site key not configured. Please add VITE_RECAPTCHA_SITE_KEY to your .env file.
+              </div>
+            )}
           </div>
 
           {/* Attempts warning */}
