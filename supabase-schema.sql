@@ -433,7 +433,7 @@ BEGIN
   
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'public_config' AND policyname = 'Admins can manage public config') THEN
     CREATE POLICY "Admins can manage public config" ON public_config FOR ALL USING (
-      auth.jwt() ->> 'role' = 'admin'
+      public.is_admin()
     );
   END IF;
 END $$;
@@ -443,7 +443,7 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'private_config' AND policyname = 'Admins can manage private config') THEN
     CREATE POLICY "Admins can manage private config" ON private_config FOR ALL USING (
-      auth.jwt() ->> 'role' = 'admin'
+      public.is_admin()
     );
   END IF;
 END $$;
