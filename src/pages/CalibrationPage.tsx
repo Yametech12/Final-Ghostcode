@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'motion/react';
-import { Trophy, Loader2 } from 'lucide-react';
+import { Trophy } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { isUUID } from '../utils/validation';
 
 export default function CalibrationPage() {
   const auth = useAuth();
@@ -13,7 +12,6 @@ export default function CalibrationPage() {
   const [isComplete, setIsComplete] = useState(false);
   const [score, setScore] = useState(0);
   const [startTime] = useState(Date.now());
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   if (!auth) return <div>Loading...</div>;
   const { user } = auth;
@@ -57,41 +55,21 @@ export default function CalibrationPage() {
     if (currentTask < tasks.length - 1) {
       setCurrentTask(currentTask + 1);
     } else {
-      // Complete assessment - send to AI for analysis
-      setIsAnalyzing(true);
+      // Complete assessment
+      setIsComplete(true);
+      const accuracy = Math.round((score + (answerIndex === currentTaskData.correct ? 1 : 0)) / tasks.length * 100);
 
-      if (!user?.id || !isUUID(user.id)) {
-        toast.error('Invalid user session. Please refresh and try again.');
-        setIsAnalyzing(false);
-        return;
-      }
-
-      try {
-        const response = await fetch('/api/calibration/analyze', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            typeId: 'personality_calibration',
-            answers: newAnswers,
-            userId: user.id
-          })
+      // Save to Supabase
+      if (user) {
+        supabase.from('calibrations').insert({
+          userId: user.id,
+          typeId: 'calibration_test',
+          answers: newAnswers,
+          timestamp: new Date().toISOString(),
+          accuracy: accuracy
+        }).then(() => {
+          toast.success(`Calibration complete! Accuracy: ${accuracy}%`);
         });
-
-        if (!response.ok) {
-          throw new Error(`Analysis failed: ${response.status}`);
-        }
-
-        const data = await response.json();
-        setIsComplete(true);
-
-        toast.success('AI analysis complete! Your personality traits have been extracted.');
-      } catch (error) {
-        console.error('Calibration submission error:', error);
-        toast.error('Failed to analyze calibration. Please try again.');
-        // Still complete with basic scoring as fallback
-        setIsComplete(true);
-      } finally {
-        setIsAnalyzing(false);
       }
     }
   };
@@ -107,17 +85,57 @@ export default function CalibrationPage() {
     const accuracy = Math.round((score / tasks.length) * 100);
     const timeTaken = Math.round((Date.now() - startTime) / 1000 / 60); // minutes
 
-    if (isAnalyzing) {
-      return (
-        <div className="min-h-screen p-8 flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <Loader2 className="w-12 h-12 animate-spin mx-auto text-accent-primary" />
-            <h2 className="text-xl font-semibold text-white">Analyzing Your Responses</h2>
-            <p className="text-slate-400">AI is extracting your personality traits...</p>
-          </div>
+    return (
+      <div className="min-h-screen p-8">
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-center space-y-8"
+          >
+            <div className="w-24 h-24 rounded-full bg-accent-primary/20 flex items-center justify-center mx-auto">
+              <Trophy className="w-12 h-12 text-accent-primary" />
+            </div>
+
+            <div>
+              <h1 className="text-4xl font-bold text-white mb-2">Calibration Complete!</h1>
+              <p className="text-slate-400 text-lg">Your profiling accuracy has been tested</p>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 max-w-md mx-auto">
+              <div className="bg-mystic-900/50 rounded-xl p-4 border border-white/10">
+                <div className="text-2xl font-bold text-accent-primary">{accuracy}%</div>
+                <div className="text-sm text-slate-400">Accuracy</div>
+              </div>
+              <div className="bg-mystic-900/50 rounded-xl p-4 border border-white/10">
+                <div className="text-2xl font-bold text-white">{score}/{tasks.length}</div>
+                <div className="text-sm text-slate-400">Correct</div>
+              </div>
+              <div className="bg-mystic-900/50 rounded-xl p-4 border border-white/10">
+                <div className="text-2xl font-bold text-cyan-400">{timeTaken}m</div>
+                <div className="text-sm text-slate-400">Time</div>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-slate-300">
+                {accuracy >= 80 ? 'Excellent calibration! Your profiling skills are sharp.' :
+                 accuracy >= 60 ? 'Good work! Room for improvement in pattern recognition.' :
+                 'Keep practicing! Focus on behavioral cues and EPIMETHEUS principles.'}
+              </p>
+
+              <button
+                onClick={resetCalibration}
+                className="px-6 py-3 rounded-xl bg-accent-primary text-white font-semibold hover:bg-accent-primary/80 transition-colors"
+              >
+                Retake Calibration
+              </button>
+            </div>
+          </motion.div>
         </div>
-      );
-    }
+      </div>
+    );
+  }
 
     return (
       <div className="min-h-screen p-8">
