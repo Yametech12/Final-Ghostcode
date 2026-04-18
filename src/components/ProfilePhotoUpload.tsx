@@ -92,7 +92,7 @@ export default function ProfilePhotoUpload() {
               return;
             }
 
-            // Upload to storage
+            // Upload via API
             await handleUpload(base64Data);
           } catch (uploadError: any) {
             console.error("Error during upload process:", uploadError);
@@ -137,70 +137,41 @@ export default function ProfilePhotoUpload() {
       setIsUploading(true);
       setUploadError(null);
 
-      // Convert base64 to blob for upload
-      const response = await fetch(base64Data);
-      const blob = await response.blob();
-      const fileName = `profile-${Date.now()}.jpg`;
+      // Upload via API
+      const response = await fetch('/api/upload/profile-photo', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: user.id,
+          base64Data,
+        }),
+      });
 
-      try {
-        // Upload to Supabase Storage
-        const { error: uploadError } = await supabase.storage
-          .from('user-uploads')
-          .upload(`users/${user.id}/${fileName}`, blob, {
-            contentType: 'image/jpeg',
-            upsert: true
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Get public URL
-        const { data: urlData } = supabase.storage
-          .from('user-uploads')
-          .getPublicUrl(`users/${user.id}/${fileName}`);
-
-        const publicUrl = urlData.publicUrl;
-
-        // Update user profile in database
-        const { error: dbError } = await supabase
-          .from('users')
-          .update({ photoURL: publicUrl })
-          .eq('uid', user.id);
-
-        if (dbError) throw dbError;
-
-        // Update local profile
-        try {
-          await updateUserProfile({ photoURL: publicUrl });
-        } catch (err: any) {
-          console.warn("Failed to update local profile, but photo was saved:", err);
-        }
-
-        toast.success('Profile photo updated successfully!');
-      } catch (storageError: any) {
-        console.error("Storage upload failed:", storageError);
-
-        // Fallback: Store base64 directly in database
-        console.info("Falling back to database storage");
-        try {
-          const { error: dbError } = await supabase
-            .from('users')
-            .update({ photoURL: base64Data })
-            .eq('uid', user.id);
-
-          if (dbError) throw dbError;
-
-          try {
-            await updateUserProfile({ photoURL: base64Data });
-          } catch (err: any) {
-            console.warn("Failed to update local profile:", err);
-          }
-
-          toast.success('Profile photo updated! (Using database storage)');
-        } catch (dbFallbackError: any) {
-          console.error("Database fallback also failed:", dbFallbackError);
-          throw dbFallbackError;
-        }
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Upload failed');
       }
+
+      const { url: publicUrl } = await response.json();
+
+      // Update user profile in database
+      const { error: dbError } = await supabase
+        .from('users')
+        .update({ photoURL: publicUrl })
+        .eq('uid', user.id);
+
+      if (dbError) throw dbError;
+
+      // Update local profile
+      try {
+        await updateUserProfile({ photoURL: publicUrl });
+      } catch (err: any) {
+        console.warn("Failed to update local profile, but photo was saved:", err);
+      }
+
+      toast.success('Profile photo updated successfully!');
     } catch (error: any) {
       console.error('Error uploading image:', error);
       if (error.message?.includes('permission') || error.code === 'PGRST301') {

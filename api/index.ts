@@ -7,6 +7,7 @@ console.log("Server starting...");
 
 import { getApiKey } from './config.ts';
 import { AI_PROVIDER, API_URL } from './ai.ts';
+import { bucket } from './gcs.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -61,7 +62,7 @@ app.use((req, res, next) => {
   // Content Security Policy
   res.setHeader(
     'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
+    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://storage.googleapis.com; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
   );
   // HSTS (HTTP Strict Transport Security)
   if (req.secure || process.env.NODE_ENV === 'production') {
@@ -168,10 +169,38 @@ app.post("/api/auth/verify-code", async (req, res) => {
   try {
     const { email, code } = req.body;
     if (!email || !code) return res.status(400).json({ error: "Email and code required" });
-    
+
     res.json({ success: true, user: { email }, message: "Verified" });
   } catch (error) {
     res.status(500).json({ error: "Verification failed" });
+  }
+});
+
+app.post("/api/upload/profile-photo", async (req, res) => {
+  try {
+    const { userId, base64Data } = req.body;
+    if (!userId || !base64Data) return res.status(400).json({ error: "userId and base64Data required" });
+
+    // Convert base64 to buffer
+    const base64 = base64Data.replace(/^data:image\/\w+;base64,/, '');
+    const buffer = Buffer.from(base64, 'base64');
+
+    const fileName = `users/${userId}/profile-${Date.now()}.jpg`;
+    const file = bucket.file(fileName);
+
+    await file.save(buffer, {
+      metadata: {
+        contentType: 'image/jpeg',
+      },
+      public: true,
+    });
+
+    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+
+    res.json({ success: true, url: publicUrl });
+  } catch (error) {
+    console.error('Upload error:', error);
+    res.status(500).json({ error: "Upload failed" });
   }
 });
 
