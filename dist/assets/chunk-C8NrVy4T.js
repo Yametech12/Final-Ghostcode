@@ -1,1 +1,0 @@
-import{j as o}from"./chunk-CG41wATI.js";import{c as r}from"./chunk-D0on6b_E.js";function n({className:e,...t}){return o.jsx("div",{className:r("animate-pulse rounded-md bg-white/5",e),...t})}export{n as S};

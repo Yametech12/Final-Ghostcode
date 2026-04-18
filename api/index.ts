@@ -149,32 +149,7 @@ app.post("/api/security/log", async (req, res) => {
   }
 });
 
-app.post("/api/auth/send-code", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ error: "Email required" });
-    
-    const codes = new Map();
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    codes.set(email, { code, expires: Date.now() + 600000 });
-    
-    console.log(`Verification code for ${email}: ${code}`);
-    res.json({ success: true, message: "Code sent" });
-  } catch (error) {
-    res.status(500).json({ error: "Failed to send code" });
-  }
-});
-
-app.post("/api/auth/verify-code", async (req, res) => {
-  try {
-    const { email, code } = req.body;
-    if (!email || !code) return res.status(400).json({ error: "Email and code required" });
-
-    res.json({ success: true, user: { email }, message: "Verified" });
-  } catch (error) {
-    res.status(500).json({ error: "Verification failed" });
-  }
-});
+// OTP authentication endpoints removed - now using Supabase password-based auth
 
 app.post("/api/upload/profile-photo", async (req, res) => {
   try {
