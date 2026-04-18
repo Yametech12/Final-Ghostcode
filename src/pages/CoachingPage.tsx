@@ -27,8 +27,7 @@ export default function CoachingPage() {
   const [userContext, setUserContext] = useState<string>('');
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  const { user } = auth || {};
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

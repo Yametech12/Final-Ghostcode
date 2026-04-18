@@ -20,8 +20,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
   const [copied, setCopied] = useState(false);
   const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
 
-  if (!auth) return null;
-  const { user, userData } = auth;
+  const { user, userData } = auth || {};
 
   useEffect(() => {
     if (!isOpen) return;

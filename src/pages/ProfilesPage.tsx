@@ -25,13 +25,15 @@ type Assessment = {
 
 export default function ProfilesPage() {
   const auth = useAuth();
-  if (!auth) return <div>Loading...</div>;
-  const { user, userData } = auth;
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [fieldReports, setFieldReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
+  const { user, userData } = auth || {};
+
+  if (!auth) return <div>Loading...</div>;
 
   const achievements = useMemo(() => {
     const list = [];

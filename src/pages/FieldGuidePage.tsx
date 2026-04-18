@@ -58,8 +58,7 @@ export default function FieldGuidePage() {
   const [newComment, setNewComment] = useState('');
   const [isSubmittingComment, setIsSubmittingComment] = useState(false);
 
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  const { user } = auth || {};
 
   // Fetch Reports
   useEffect(() => {

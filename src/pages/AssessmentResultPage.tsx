@@ -18,8 +18,7 @@ export default function AssessmentResultPage() {
   const typeId = searchParams.get('type');
   const profile = personalityTypes.find(p => p.id === typeId);
 
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  const { user } = auth || {};
 
   useEffect(() => {
     if (!profile) {

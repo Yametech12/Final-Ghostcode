@@ -20,8 +20,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     twitter: '',
   });
 
-  if (!auth) return null;
-  const { userData, updateUserData } = auth;
+  const { userData, updateUserData } = auth || {};
 
   useEffect(() => {
     if (userData) {

@@ -31,8 +31,7 @@ export default function DossiersPage() {
   const [lastInteraction, setLastInteraction] = useState('');
   const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  const { user } = auth || {};
 
   useEffect(() => {
     const loadDossiers = async () => {

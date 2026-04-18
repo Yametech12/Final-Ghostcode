@@ -152,7 +152,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
   };
 
   const displayImage = userData?.photoURL;
-  const memberSince = userData?.createdAt?.toDate?.()?.toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) || 'New Member';
+  const memberSince = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'New Member';
 
   const profileCard = (
     <div className="max-w-md mx-auto bg-mystic-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-accent-primary/5 overflow-hidden">

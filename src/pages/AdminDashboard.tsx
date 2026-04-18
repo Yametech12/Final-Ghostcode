@@ -67,8 +67,7 @@ export default function AdminDashboard() {
   const [feedbacksLoading, setFeedbacksLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
 
-  if (!auth) return <div>Loading...</div>;
-  const { userData } = auth;
+  const { userData } = auth || {};
 
   useEffect(() => {
     if (userData && userData.role !== "admin") {

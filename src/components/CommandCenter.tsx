@@ -247,11 +247,7 @@ export default function CommandCenter() {
             >
 
             <div className="p-4 border-b border-white/10 flex items-center gap-4">
-              {false ? (
-                <Loader2 className="w-5 h-5 text-accent-primary animate-spin" />
-              ) : (
-                <Search className="w-5 h-5 text-slate-500" />
-              )}
+              <Search className="w-5 h-5 text-slate-500" />
               <input
                 autoFocus
                 type="text"
@@ -270,7 +266,7 @@ export default function CommandCenter() {
             </div>
 
             <div className="max-h-[60vh] overflow-y-auto p-2 scrollbar-hide" data-lenis-prevent>
-              {false && query ? (
+              {query ? (
                 <div className="flex items-center justify-center py-8">
                   <motion.div
                     initial={{ opacity: 0 }}
@@ -360,7 +356,7 @@ export default function CommandCenter() {
                     </motion.button>
                   ))}
                 </motion.div>
-              ) : !false && (
+              ) : (
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}

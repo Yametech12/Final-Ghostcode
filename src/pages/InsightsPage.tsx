@@ -15,8 +15,7 @@ export default function InsightsPage() {
   const [loading, setLoading] = useState(true);
   const [calibrations, setCalibrations] = useState<any[]>([]);
 
-  if (!auth) return <div>Loading...</div>;
-  const { user } = auth;
+  const { user } = auth || {};
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,7 +29,7 @@ export default function InsightsPage() {
         const data = calibrations.map(cal => ({
           id: cal.id,
           ...cal,
-          date: new Date(cal.timestamp) || new Date()
+          date: new Date(cal.timestamp)
         }));
         setCalibrations(data.sort((a, b) => a.date.getTime() - b.date.getTime()));
       } catch (error) {

@@ -1,84 +1,42 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { useSessionWithRetry } from '../hooks/useSessionWithRetry';
 
-// Security logging utility
-const logSecurityEvent = async (event: string, userId?: string, email?: string | null, details?: Record<string, unknown>) => {
-  try {
-    await fetch('/api/security/log', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        event,
-        userId,
-        email,
-        ip: 'client-side', // Actual IP logged server-side
-        userAgent: navigator.userAgent,
-        details,
-        timestamp: new Date().toISOString()
-      })
-    });
-  } catch (err) {
-    // Silently fail - logging shouldn't break user experience
-    console.debug('Security log failed:', err);
-  }
-};
-
-// Supabase User type compatibility
-interface SupabaseUser {
-  id: string;
-  email: string | null;
-  user_metadata: {
-    display_name?: string;
-    avatar_url?: string;
-    [key: string]: any;
-  };
-  displayName?: string;
-  photoURL?: string;
-}
-
-interface UserData {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
-  bio?: string;
-  contactInfo?: {
-    phone?: string;
-    instagram?: string;
-    twitter?: string;
-  };
-  role: 'user' | 'admin';
-  createdAt: string;
-  lastLoginAt?: string;
-}
-
-interface AuthContextType {
-  user: SupabaseUser | null;
-  userData: UserData | null;
+interface EnhancedAuthContextType {
+  // Session state
+  user: any;
+  userData: any;
+  session: any;
   loading: boolean;
   error: string | null;
-  retrySession: () => void;
+
+  // Auth methods
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string, recaptchaToken?: string | null) => Promise<{ requiresVerification: boolean }>;
   resetPassword: (email: string) => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
-  updateUserData: (data: Partial<UserData>) => Promise<void>;
+  updateUserData: (data: Partial<any>) => Promise<void>;
+
+  // Session management
+  retrySession: () => void;
+  forceRefreshSession: () => Promise<void>;
+  clearSession: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const EnhancedAuthContext = createContext<EnhancedAuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [userData, setUserData] = useState<UserData | null>(null);
+export function EnhancedAuthProvider({ children }: { children: React.ReactNode }) {
+  const [userData, setUserData] = useState<any>(null);
+  const [sessionRefreshCount, setSessionRefreshCount] = useState(0);
 
-  // Use the retry hook for session management
-  const { user: sessionUser, loading: sessionLoading, error: sessionError, retry: retrySession } = useSessionWithRetry({
+  // Use our enhanced session hook
+  const { session, user: sessionUser, loading: sessionLoading, error: sessionError, retry: retrySession } = useSessionWithRetry({
     maxRetries: 3,
     retryDelay: 2000,
-    timeout: 10000
+    timeout: 15000 // Increased timeout
   });
 
   // Convert Supabase user to our interface
@@ -91,15 +49,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   } : null;
 
   const loading = sessionLoading;
+  const error = sessionError;
 
-  // Safety timeout as fallback
-  useEffect(() => {
-    if (sessionError) {
-      console.error('Session loading failed after retries:', sessionError);
-      // Could show a retry button or error message to user
-    }
-  }, [sessionError]);
-
+  // Enhanced user data loading with error handling
   const loadUserData = useCallback(async (userId: string) => {
     try {
       console.log('Loading user data for:', userId);
@@ -112,6 +64,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (data && !error) {
         console.log('User data loaded successfully:', data);
         setUserData(data);
+      } else if (error?.code === 'PGRST116') {
+        // User not found in database, create profile
+        console.log('User not found in database, creating profile...');
+        await createUserProfile(userId, sessionUser);
       } else {
         console.warn('Failed to load user data:', error);
         setUserData(null);
@@ -120,7 +76,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Error loading user data:', error);
       setUserData(null);
     }
-  }, []);
+  }, [sessionUser]);
+
+  // Create user profile if it doesn't exist
+  const createUserProfile = async (userId: string, userInfo: any) => {
+    try {
+      const profileData = {
+        uid: userId,
+        email: userInfo.email,
+        display_name: userInfo.user_metadata?.display_name || null,
+        photo_url: userInfo.user_metadata?.avatar_url || null,
+        role: 'user',
+        created_at: new Date().toISOString(),
+        last_login_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('users')
+        .insert(profileData)
+        .select()
+        .single();
+
+      if (data && !error) {
+        console.log('User profile created:', data);
+        setUserData(data);
+        toast.success('Profile created successfully');
+      } else {
+        throw error;
+      }
+    } catch (error) {
+      console.error('Failed to create user profile:', error);
+      toast.error('Failed to create profile');
+    }
+  };
 
   // Load user data when session user changes
   useEffect(() => {
@@ -131,12 +119,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [sessionUser?.id, loadUserData]);
 
+  // Force refresh session
+  const forceRefreshSession = useCallback(async () => {
+    try {
+      setSessionRefreshCount(prev => prev + 1);
+      const { data, error } = await supabase.auth.refreshSession();
+
+      if (error) throw error;
+
+      console.log('Session refreshed successfully');
+      toast.success('Session refreshed');
+
+    } catch (error) {
+      console.error('Failed to refresh session:', error);
+      toast.error('Failed to refresh session');
+      throw error;
+    }
+  }, []);
+
+  // Clear session completely
+  const clearSession = useCallback(() => {
+    try {
+      // Clear all auth-related storage
+      const keys = Object.keys(localStorage);
+      keys.forEach(key => {
+        if (key.includes('supabase') || key.includes('auth')) {
+          localStorage.removeItem(key);
+        }
+      });
+
+      const sessionKeys = Object.keys(sessionStorage);
+      sessionKeys.forEach(key => {
+        if (key.includes('supabase') || key.includes('auth')) {
+          sessionStorage.removeItem(key);
+        }
+      });
+
+      setUserData(null);
+      console.log('Session cleared');
+    } catch (error) {
+      console.error('Error clearing session:', error);
+    }
+  }, []);
+
+  // Auth methods (enhanced versions)
   const signInWithGoogle = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://epimetheusproject.vercel.app'
+          redirectTo: window.location.origin
         }
       });
       if (error) throw error;
@@ -149,11 +181,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string, recaptchaToken?: string | null) => {
     try {
-      const signInOptions: { email: string; password: string; options?: { captchaToken?: string } } = {
-        email,
-        password
-      };
-
+      const signInOptions: any = { email, password };
       if (recaptchaToken) {
         signInOptions.options = { captchaToken: recaptchaToken };
       }
@@ -161,46 +189,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase.auth.signInWithPassword(signInOptions);
       if (error) throw error;
 
-      // Log successful login
-      await logSecurityEvent('login_success', user?.id, email, { email });
+      toast.success('Signed in successfully');
     } catch (error: any) {
       console.error('Email sign in error:', error);
       toast.error(error.message || 'Failed to sign in');
-      // Log failed login attempt
-      await logSecurityEvent('login_failed', undefined, email, {
-        error: error.message,
-        email,
-        captchaUsed: !!recaptchaToken
-      });
       throw error;
     }
   };
 
   const signUpWithEmail = async (email: string, password: string, name: string, recaptchaToken?: string | null) => {
     try {
-      const signUpOptions: { email: string; password: string; options?: { data?: { display_name?: string }; captchaToken?: string } } = {
+      const signUpOptions: any = {
         email,
         password,
         options: {
-          data: {
-            display_name: name
-          }
+          data: { display_name: name }
         }
       };
 
       if (recaptchaToken) {
-        signUpOptions.options!.captchaToken = recaptchaToken;
+        signUpOptions.options.captchaToken = recaptchaToken;
       }
 
       const { data, error } = await supabase.auth.signUp(signUpOptions);
 
       if (error) throw error;
-
-      // Log signup attempt
-      await logSecurityEvent('signup_attempt', data.user?.id, email, {
-        name,
-        requiresVerification: !data.user?.email_confirmed_at
-      });
 
       if (data.user && !data.user.email_confirmed_at) {
         toast.success('Check your email for verification link');
@@ -211,11 +224,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error: any) {
       console.error('Email sign up error:', error);
       toast.error(error.message || 'Failed to sign up');
-      // Log failed signup
-      await logSecurityEvent('signup_failed', undefined, email, {
-        error: error.message,
-        name
-      });
       throw error;
     }
   };
@@ -223,18 +231,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const resetPassword = async (email: string) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://epimetheusproject.vercel.app/reset-password'
+        redirectTo: `${window.location.origin}/reset-password`
       });
       if (error) throw error;
       toast.success('Password reset email sent');
-      // Log password reset request
-      await logSecurityEvent('password_reset_requested', undefined, email);
     } catch (error: any) {
       console.error('Password reset error:', error);
       toast.error('Failed to send reset email');
-      await logSecurityEvent('password_reset_failed', undefined, email, {
-        error: error.message
-      });
       throw error;
     }
   };
@@ -243,21 +246,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const { error } = await supabase.auth.signOut();
       if (error) throw error;
+
+      clearSession();
       toast.success('Signed out successfully');
-      // Log logout
-      await logSecurityEvent('logout', user?.id, user?.email);
+
+      // Force redirect
+      setTimeout(() => {
+        window.location.href = '/login';
+      }, 500);
     } catch (error: any) {
       console.error('Logout error:', error);
-      toast.error('Failed to sign out');
-      await logSecurityEvent('logout_failed', user?.id, user?.email, {
-        error: error.message
-      });
+
+      // Force clear even if API fails
+      clearSession();
+
+      toast.error('Signed out (with issues)');
+      window.location.href = '/login';
       throw error;
     }
   };
 
   const updateUserProfile = async (data: { displayName?: string, photoURL?: string }) => {
-    if (!user) return;
+    if (!sessionUser) return;
 
     try {
       const { error } = await supabase.auth.updateUser({
@@ -282,14 +292,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateUserData = async (data: Partial<UserData>) => {
-    if (!user) return;
+  const updateUserData = async (data: Partial<any>) => {
+    if (!sessionUser) return;
 
     try {
       const { error } = await supabase
         .from('users')
         .update(data)
-        .eq('uid', user.id);
+        .eq('uid', sessionUser.id);
 
       if (error) throw error;
 
@@ -304,30 +314,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const value: EnhancedAuthContextType = {
+    // Session state
+    user,
+    userData,
+    session,
+    loading,
+    error,
+
+    // Auth methods
+    signInWithGoogle,
+    signInWithEmail,
+    signUpWithEmail,
+    resetPassword,
+    logout,
+    updateUserProfile,
+    updateUserData,
+
+    // Session management
+    retrySession,
+    forceRefreshSession,
+    clearSession
+  };
+
   return (
-    <AuthContext.Provider value={{
-      user,
-      userData,
-      loading,
-      error: sessionError,
-      retrySession: retrySession,
-      signInWithGoogle,
-      signInWithEmail,
-      signUpWithEmail,
-      resetPassword,
-      logout,
-      updateUserProfile,
-      updateUserData
-    }}>
+    <EnhancedAuthContext.Provider value={value}>
       {children}
-    </AuthContext.Provider>
+    </EnhancedAuthContext.Provider>
   );
 }
 
-export function useAuth() {
-  const context = useContext(AuthContext);
+export function useEnhancedAuth() {
+  const context = useContext(EnhancedAuthContext);
   if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
+    throw new Error('useEnhancedAuth must be used within an EnhancedAuthProvider');
   }
   return context;
 }

@@ -28,7 +28,7 @@ export interface FirestoreErrorInfo {
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
   const errorMessage = error instanceof Error ? error.message : String(error);
-  const errorCode = (error as any)?.code;
+  const errorCode = (error as { code?: string })?.code;
 
   // Handle quota errors gracefully - don't throw
   if (errorCode === 'resource-exhausted' || errorMessage.includes('quota')) {
@@ -71,7 +71,7 @@ export function useErrorHandler() {
 }
 
 // Utility function for handling promise rejections
-export function handleAsyncError(promise: Promise<any>, context?: string) {
+export function handleAsyncError(promise: Promise<unknown>, context?: string) {
   return promise.catch((error) => {
     console.error(`Async error${context ? ` in ${context}` : ''}:`, error);
 
@@ -84,10 +84,10 @@ export function handleAsyncError(promise: Promise<any>, context?: string) {
 }
 
 // Function to get user-friendly error message from Supabase auth errors
-export function getSupabaseErrorMessage(error: any): string {
+export function getSupabaseErrorMessage(error: unknown): string {
   if (!error) return 'An unknown error occurred';
 
-  const message = error.message || String(error);
+  const message = (error as { message?: string }).message || String(error);
 
   // Handle common Supabase auth errors
   if (message.includes('Invalid login credentials')) {

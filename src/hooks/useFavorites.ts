@@ -18,10 +18,7 @@ export function useFavorites() {
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
 
-  if (!auth) {
-    return { favorites: [], loading: true, toggleFavorite: async () => {}, isFavorite: () => false };
-  }
-  const { user } = auth;
+  const user = auth?.user;
 
   useEffect(() => {
     if (!user) {
