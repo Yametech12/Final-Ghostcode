@@ -207,7 +207,10 @@ export default function ProfilesPage() {
       {/* User Profile Section */}
       <div className="flex flex-col lg:flex-row gap-8 items-stretch">
         <div className="w-full lg:w-96 shrink-0">
-          <ProfileCard onEditProfile={() => setIsEditModalOpen(true)} />
+          <ProfileCard 
+            onEditProfile={() => setIsEditModalOpen(true)}
+            onPhotoUpload={() => document.getElementById('profile-photo-input')?.click()}
+          />
         </div>
         
         <div className="flex-grow glass-card p-8 flex flex-col justify-between relative overflow-hidden">
@@ -247,74 +250,106 @@ export default function ProfilesPage() {
 
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <motion.div
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2"
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2 relative overflow-hidden group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 }}
+                whileHover={{ y: -4, scale: 1.02 }}
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-primary/0 via-accent-primary/5 to-accent-primary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <motion.div
-                  className="text-3xl font-black text-accent-primary"
+                  className="text-3xl font-black text-accent-primary relative z-10"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.3, type: "spring", stiffness: 200 }}
                 >
                   {assessments.length}
                 </motion.div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Analyses</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">Analyses</div>
+                <div className="h-1 w-full bg-white/5 mt-3 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((assessments.length / 15) * 100, 100)}%` }}
+                    transition={{ delay: 0.5, duration: 1.2, ease: "easeOut" }}
+                  />
+                </div>
               </motion.div>
               <motion.div
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2"
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2 relative overflow-hidden group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.2 }}
+                whileHover={{ y: -4, scale: 1.02 }}
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 via-purple-500/5 to-purple-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <motion.div
-                  className="text-3xl font-black text-white"
+                  className="text-3xl font-black text-white relative z-10"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.4, type: "spring", stiffness: 200 }}
                 >
                   {achievements.length}
                 </motion.div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Badges</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">Badges</div>
+                <div className="h-1 w-full bg-white/5 mt-3 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((achievements.length / 8) * 100, 100)}%` }}
+                    transition={{ delay: 0.6, duration: 1.2, ease: "easeOut" }}
+                  />
+                </div>
               </motion.div>
               <motion.div
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2"
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2 relative overflow-hidden group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.3 }}
+                whileHover={{ y: -4, scale: 1.02 }}
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-accent-secondary/0 via-accent-secondary/5 to-accent-secondary/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <motion.div
-                  className="text-3xl font-black text-accent-secondary"
+                  className="text-3xl font-black text-accent-secondary relative z-10"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.5, type: "spring", stiffness: 200 }}
                 >
                   {fieldReports.length}
                 </motion.div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Reports</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">Reports</div>
+                <div className="h-1 w-full bg-white/5 mt-3 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-accent-secondary to-yellow-500 rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${Math.min((fieldReports.length / 10) * 100, 100)}%` }}
+                    transition={{ delay: 0.7, duration: 1.2, ease: "easeOut" }}
+                  />
+                </div>
               </motion.div>
               <motion.div
-                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2"
+                className="p-6 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2 relative overflow-hidden group"
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}
+                whileHover={{ y: -4, scale: 1.02 }}
               >
+                <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 via-yellow-500/5 to-yellow-500/0 opacity-0 group-hover:opacity-100 transition-opacity" />
                 <motion.div
-                  className="text-3xl font-black text-yellow-500"
+                  className="text-3xl font-black text-yellow-500 relative z-10"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ delay: 0.6, type: "spring", stiffness: 200 }}
                 >
                   {assessments.length >= 15 ? 'S' : assessments.length >= 10 ? 'A+' : assessments.length >= 5 ? 'A' : assessments.length >= 1 ? 'B+' : 'C'}
                 </motion.div>
-                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Rank</div>
-                <div className="w-full bg-white/10 rounded-full h-1 mt-2">
-                  <motion.div
-                    className="bg-yellow-500 h-1 rounded-full"
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">Rank</div>
+                <div className="h-1 w-full bg-white/5 mt-3 rounded-full overflow-hidden">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-yellow-500 to-amber-400 rounded-full"
                     initial={{ width: 0 }}
                     animate={{ width: `${Math.min((assessments.length / 15) * 100, 100)}%` }}
-                    transition={{ delay: 0.8, duration: 1, ease: "easeOut" }}
+                    transition={{ delay: 0.8, duration: 1.2, ease: "easeOut" }}
                   />
                 </div>
               </motion.div>
@@ -340,18 +375,23 @@ export default function ProfilesPage() {
         </div>
       </div>
 
-      {/* Achievements Section */}
+       {/* Achievements Section */}
       {achievements.length > 0 && (
         <div className="space-y-6">
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Award className="w-6 h-6 text-accent-primary" />
-            Achievements
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-white flex items-center gap-2">
+              <Award className="w-6 h-6 text-accent-primary" />
+              Achievements
+            </h2>
+            <span className="text-sm text-slate-400">
+              {achievements.length} / 8 unlocked
+            </span>
+          </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {achievements.map((achievement, index) => (
               <motion.div
                 key={achievement.id}
-                className="glass-card p-4 flex flex-col items-center text-center space-y-3 hover:border-accent-primary/30 transition-colors"
+                className="glass-card p-4 flex flex-col items-center text-center space-y-3 hover:border-accent-primary/30 transition-colors relative overflow-hidden group"
                 initial={{ opacity: 0, scale: 0.8, y: 20 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 transition={{
@@ -366,6 +406,14 @@ export default function ProfilesPage() {
                   transition: { duration: 0.2 }
                 }}
               >
+                {/* Background glow effect */}
+                <div className="absolute inset-0 bg-gradient-to-br from-transparent via-accent-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                
+                {/* Locked/Unlocked indicator */}
+                <div className="absolute top-2 right-2">
+                  <div className="w-2 h-2 rounded-full bg-green-500" />
+                </div>
+                
                 <motion.div
                   className={cn("w-12 h-12 rounded-full flex items-center justify-center", achievement.bg)}
                   whileHover={{ rotate: 360 }}
@@ -374,6 +422,16 @@ export default function ProfilesPage() {
                   <achievement.icon className={cn("w-6 h-6", achievement.color)} />
                 </motion.div>
                 <span className="text-sm font-bold text-white">{achievement.name}</span>
+                
+                {/* Progress indicator */}
+                <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden mt-1">
+                  <motion.div 
+                    className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: '100%' }}
+                    transition={{ delay: index * 0.1 + 0.3, duration: 0.8, ease: "easeOut" }}
+                  />
+                </div>
               </motion.div>
             ))}
           </div>
@@ -436,35 +494,43 @@ export default function ProfilesPage() {
             ))}
           </div>
         ) : filteredAssessments.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredAssessments.map((assessment, index) => (
-              <Link
-                key={index}
-                to={`/encyclopedia?type=${assessment.typeId}`}
-                className="glass-card p-8 flex flex-col gap-6 hover:border-accent-primary/50 transition-all group relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 w-24 h-24 bg-accent-primary/5 blur-2xl rounded-full -mr-12 -mt-12 group-hover:bg-accent-primary/10 transition-colors" />
-                
-                <div className="flex justify-between items-start relative z-10">
-                  <div className="w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary font-mono font-black text-xl group-hover:scale-110 transition-transform shadow-inner">
-                    {assessment.typeId}
-                  </div>
-                  <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
-                    <Clock className="w-3 h-3" />
-                    {new Date(assessment.date).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="relative z-10">
-                  <h3 className="text-2xl font-bold text-white group-hover:text-accent-primary transition-colors">
-                    {assessment.name}
-                  </h3>
-                  <div className="text-xs text-slate-400 mt-2 flex items-center gap-1 font-medium">
-                    View full profile <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+             {filteredAssessments.map((assessment, index) => (
+               <Link
+                 key={index}
+                 to={`/encyclopedia?type=${assessment.typeId}`}
+                 className="glass-card p-8 flex flex-col gap-6 hover:border-accent-primary/50 transition-all group relative overflow-hidden"
+               >
+                 <div className="absolute top-0 right-0 w-24 h-24 bg-accent-primary/5 blur-2xl rounded-full -mr-12 -mt-12 group-hover:bg-accent-primary/15 transition-colors" />
+                 <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-accent-primary to-accent-secondary scale-y-0 group-hover:scale-y-100 origin-top transition-transform duration-300" />
+                 
+                 <div className="flex justify-between items-start relative z-10">
+                   <motion.div 
+                     className="w-14 h-14 rounded-2xl bg-accent-primary/10 flex items-center justify-center text-accent-primary font-mono font-black text-xl group-hover:scale-110 transition-transform shadow-inner"
+                     whileHover={{ rotate: [0, -5, 5, 0], scale: 1.1 }}
+                     transition={{ type: "spring", stiffness: 300 }}
+                   >
+                     {assessment.typeId}
+                   </motion.div>
+                   <div className="flex items-center gap-1.5 text-[10px] text-slate-500 font-bold uppercase tracking-widest">
+                     <Clock className="w-3 h-3" />
+                     {new Date(assessment.date).toLocaleDateString()}
+                   </div>
+                 </div>
+                 <div className="relative z-10">
+                   <h3 className="text-2xl font-bold text-white group-hover:text-accent-primary transition-colors">
+                     {assessment.name}
+                   </h3>
+                   <div className="text-xs text-slate-400 mt-2 flex items-center gap-1 font-medium">
+                     View full profile <ChevronRight className="w-3 h-3 group-hover:translate-x-1 transition-transform" />
+                   </div>
+                 </div>
+                 
+                 {/* Bottom reveal effect */}
+                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-primary to-accent-secondary scale-x-0 group-hover:scale-x-100 origin-left transition-transform duration-500" />
+               </Link>
+             ))}
+           </div>
         ) : assessments.length > 0 ? (
           <div className="glass-card p-12 text-center space-y-4">
             <Search className="w-8 h-8 text-slate-600 mx-auto" />
