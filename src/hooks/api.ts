@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { fetchWithErrorHandling } from '../lib/fetch';
 
 // AI Chat Hook
 export function useAIChat() {
@@ -8,7 +9,7 @@ export function useAIChat() {
       model?: string;
       options?: any;
     }) => {
-      const response = await fetch('/api/ai/chat', {
+      return fetchWithErrorHandling('/api/ai/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -17,13 +18,6 @@ export function useAIChat() {
           ...options,
         }),
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'AI request failed');
-      }
-
-      return response.json();
     },
   });
 }
@@ -34,10 +28,7 @@ export function useUserProfile(userId?: string) {
     queryKey: ['user-profile', userId],
     queryFn: async () => {
       if (!userId) return null;
-
-      const response = await fetch(`/api/users/${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch user profile');
-      return response.json();
+      return fetchWithErrorHandling(`/api/users/${userId}`);
     },
     enabled: !!userId,
   });
@@ -63,10 +54,7 @@ export function useChatSessions(userId?: string) {
     queryKey: ['chat-sessions', userId],
     queryFn: async () => {
       if (!userId) return [];
-
-      const response = await fetch(`/api/chat/sessions?userId=${userId}`);
-      if (!response.ok) throw new Error('Failed to fetch chat sessions');
-      return response.json();
+      return fetchWithErrorHandling(`/api/chat/sessions?userId=${userId}`);
     },
     enabled: !!userId,
   });
@@ -78,14 +66,11 @@ export function useSaveChatSession() {
 
   return useMutation({
     mutationFn: async (sessionData: any) => {
-      const response = await fetch('/api/chat/sessions', {
+      return fetchWithErrorHandling('/api/chat/sessions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(sessionData),
       });
-
-      if (!response.ok) throw new Error('Failed to save chat session');
-      return response.json();
     },
     onSuccess: () => {
       // Invalidate and refetch chat sessions

@@ -10,7 +10,7 @@ interface EnhancedAuthContextType {
   error: string | null;
   signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string, displayName?: string) => Promise<{ user: User | null; session: Session | null; }>;
+  signUp: (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => Promise<{ user: User | null; session: Session | null; }>;
   signOut: () => Promise<void>;
   retrySession: () => Promise<void>;
   forceRefreshSession: () => Promise<void>;
@@ -103,12 +103,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     setUser(data.session.user);
   };
 
-  const signUp = async (email: string, password: string, displayName?: string) => {
+  const signUp = async (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { display_name: displayName }
+        data: { display_name: displayName },
+        ...(recaptchaToken ? { captchaToken: recaptchaToken } : {})
       }
     });
     if (error) throw error;
@@ -126,12 +127,24 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     window.location.href = '/';
   };
 
+  const signInWithGoogle = async () => {
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin || 'https://epimetheusproject.vercel.app',
+        skipBrowserRedirect: false
+      }
+    });
+    if (error) throw error;
+  };
+
   const value = {
     user,
     session,
     loading,
     error,
     signInWithEmail,
+    signInWithGoogle,
     signUp,
     signOut,
     retrySession,

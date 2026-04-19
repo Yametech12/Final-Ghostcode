@@ -1,7 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
+import ReCAPTCHA from 'react-google-recaptcha';
+import Logo from '../components/Logo';
 
 import { toast } from 'sonner';
 import { getSupabaseErrorMessage } from '../utils/errorHandling';
@@ -49,6 +51,7 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [verificationSent, setVerificationSent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -81,7 +84,11 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const result = await signUpWithEmail(email, password, name);
+      let recaptchaToken = null;
+      if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
+        recaptchaToken = await recaptchaRef.current?.executeAsync();
+      }
+      const result = await signUpWithEmail(email, password, name, recaptchaToken);
 
       if (result.requiresVerification) {
         setVerificationSent(true);
@@ -154,8 +161,8 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center p-4 bg-mystic-950">
       <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
         <div className="text-center mb-8">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-accent-primary/20 flex items-center justify-center">
-            <Shield className="w-8 h-8 text-accent-primary" />
+          <div className="flex justify-center mb-4">
+            <Logo size="xl" />
           </div>
           <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
           <p className="text-slate-400">Join Epimetheus with email verification</p>
@@ -290,7 +297,19 @@ export default function RegisterPage() {
                 Privacy Policy
               </button>
             </label>
-          </div>
+           </div>
+
+           {/* ReCAPTCHA - Graceful degradation if not configured */}
+           <div className="flex justify-center">
+             {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
+               <ReCAPTCHA
+                 ref={recaptchaRef}
+                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+                 size="invisible"
+                 className="recaptcha-container"
+               />
+             ) : null}
+           </div>
 
           <button
             type="submit"

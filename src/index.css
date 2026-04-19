@@ -307,6 +307,17 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: translateX(100%) rotate(45deg); }
 }
 
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
 .mystic-border {
   @apply border border-slate-700/20 hover:border-accent-primary/30 transition-all duration-500;
 }
@@ -383,5 +394,33 @@ h1, h2, h3, h4, h5, h6 {
 .advisor-grid-bg {
   background-image: radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0);
   background-size: 24px 24px;
+}
+
+/* ReCAPTCHA Alignment Fixes */
+.recaptcha-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  transform: scale(0.9);
+  transform-origin: center center;
+}
+
+.recaptcha-container > div {
+  display: flex !important;
+  justify-content: center !important;
+  align-items: center !important;
+  width: 100% !important;
+}
+
+/* Fix for Google reCAPTCHA iframe alignment */
+.grecaptcha-badge {
+  z-index: 99999 !important;
+}
+
+@media (max-width: 640px) {
+  .recaptcha-container {
+    transform: scale(0.85);
+  }
 }
 
