@@ -196,12 +196,29 @@ export default function ProfilePhotoUpload() {
         }),
       });
 
+      const responseClone = response.clone();
+
       if (!response.ok) {
-        const errorData = await response.json();
+        let errorData;
+        try {
+          errorData = await response.json();
+        } catch {
+          const text = await responseClone.text();
+          console.error("Upload error response:", text);
+          throw new Error('Upload failed');
+        }
         throw new Error(errorData.error || 'Upload failed');
       }
 
-      const { url: publicUrl } = await response.json();
+      let publicUrl;
+      try {
+        const data = await response.json();
+        publicUrl = data.url;
+      } catch (jsonError) {
+        const text = await responseClone.text();
+        console.error("Invalid JSON in upload response:", text);
+        throw new Error('Invalid upload response');
+      }
 
       // Update user profile in database
       const { error: dbError } = await supabase

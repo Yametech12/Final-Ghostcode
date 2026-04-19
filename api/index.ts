@@ -352,11 +352,17 @@ app.get("/api/ai/credits", async (_req, res) => {
       return res.status(response.status).json({ error: "Failed to fetch credits" });
     }
     
-    const data = await response.json();
-    res.json({
-      credits: data.credits,
-      usage: data.usage
-    });
+    try {
+      const data = await response.json();
+      res.json({
+        credits: data.credits,
+        usage: data.usage
+      });
+    } catch (jsonError) {
+      const text = await response.text();
+      console.error("Invalid JSON in credits response:", text);
+      return res.status(500).json({ error: "Failed to parse credits response" });
+    }
   } catch (error) {
     console.error("Credits error:", error);
     res.status(500).json({ error: "Failed to fetch credits" });
@@ -835,14 +841,20 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
       });
     }
 
-    const data = await response.json();
-    res.json({
-      ...data,
-      _debug: process.env.NODE_ENV === 'development' ? {
-        model: requestBody.model,
-        timestamp: new Date().toISOString()
-      } : undefined
-    });
+    try {
+      const data = await response.json();
+      res.json({
+        ...data,
+        _debug: process.env.NODE_ENV === 'development' ? {
+          model: requestBody.model,
+          timestamp: new Date().toISOString()
+        } : undefined
+      });
+    } catch (jsonError) {
+      const text = await response.text();
+      console.error("Invalid JSON in AI response:", text);
+      return res.status(500).json({ error: "Failed to parse AI response" });
+    }
   } catch (error) {
     // Enhanced logging for debugging
     const errorDetails = {

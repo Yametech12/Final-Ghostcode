@@ -9,6 +9,7 @@ interface EnhancedAuthContextType {
   loading: boolean;
   error: string | null;
   signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ user: User | null; session: Session | null; }>;
   signOut: () => Promise<void>;
   retrySession: () => Promise<void>;

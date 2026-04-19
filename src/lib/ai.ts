@@ -143,7 +143,13 @@ export async function chatCompletion(
           }
         })();
       } else {
-        return await response.json();
+        try {
+          return await response.json();
+        } catch (jsonError) {
+          const text = await response.text();
+          console.error("Invalid JSON response:", text);
+          throw new Error(`Invalid JSON response: ${text.slice(0, 100)}`);
+        }
       }
     } catch (error) {
       lastError = error as Error;

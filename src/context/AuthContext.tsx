@@ -148,18 +148,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [sessionUser?.id, loadUserData]);
 
+  // Detect if running in embedded WebView
+  const isEmbeddedWebView = () => {
+    const ua = navigator.userAgent || '';
+    // Check for common WebView indicators
+    return (
+      ua.includes('wv') || 
+      ua.includes('WebView') || 
+      ua.includes('Instagram') || 
+      ua.includes('FBAN') || 
+      ua.includes('FBAV') || 
+      ua.includes('LinkedInApp') ||
+      ua.includes('Twitter') ||
+      ua.includes('Line/') ||
+      (ua.includes('Android') && !ua.includes('Chrome')) ||
+      (ua.includes('iPhone') && !ua.includes('Safari'))
+    );
+  };
+
   const signInWithGoogle = async () => {
     try {
+      // Check if running in embedded WebView first
+      if (isEmbeddedWebView()) {
+        toast.error(
+          'Google sign-in is blocked in embedded browsers. Please open this website in Chrome, Safari, or your device\'s default browser.',
+          { duration: 10000 }
+        );
+        throw new Error('Google OAuth not supported in embedded WebView');
+      }
+
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: 'https://epimetheusproject.vercel.app'
+          redirectTo: window.location.origin || 'https://epimetheusproject.vercel.app',
+          skipBrowserRedirect: false
         }
       });
       if (error) throw error;
     } catch (error: any) {
       console.error('Google sign in error:', error);
-      toast.error('Failed to sign in with Google');
+      
+      // Handle specific disallowed_useragent error
+      if (error.message?.includes('disallowed_useragent') || error.code === 'disallowed_useragent') {
+        toast.error(
+          'Google sign-in is blocked in this browser. Please open this website in your device\'s default browser (Chrome/Safari) and try again.',
+          { duration: 10000 }
+        );
+      } else {
+        toast.error(error.message || 'Failed to sign in with Google');
+      }
+      
       throw error;
     }
   };

@@ -1,5 +1,5 @@
 import React from 'react';
-import { User as UserIcon, Edit3, Crown, Calendar, Zap } from 'lucide-react';
+import { User as UserIcon, Edit3, Crown } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 
@@ -76,17 +76,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
             {user?.email}
           </p>
 
-          {/* Member Badge */}
-          <div className="flex items-center justify-center gap-4 mt-3">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10">
-              <Calendar className="w-3.5 h-3.5 text-accent-primary" />
-              <span className="text-xs text-mystic-400">{memberSince}</span>
-            </div>
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent-primary/10 border border-accent-primary/20">
-              <Zap className="w-3.5 h-3.5 text-accent-primary" />
-              <span className="text-xs text-accent-primary font-medium">Active</span>
-            </div>
-          </div>
+
         </div>
 
         {/* Action Button */}

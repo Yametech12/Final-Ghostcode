@@ -40,17 +40,23 @@ export function useAdvisorChat() {
         // Check for existing session
         const response = await fetch(`/api/advisor/session?userId=${user.id}`);
         if (response.ok) {
-          const data = await response.json();
-          setSessionId(data.sessionId);
+          try {
+            const data = await response.json();
+            setSessionId(data.sessionId);
 
-          // Load existing messages
-          if (data.messages?.length > 0) {
-            setMessages(data.messages.map((msg: any) => ({
-              id: msg.id,
-              role: msg.role,
-              content: msg.content,
-              timestamp: new Date(msg.timestamp)
-            })));
+            // Load existing messages
+            if (data.messages?.length > 0) {
+              setMessages(data.messages.map((msg: any) => ({
+                id: msg.id,
+                role: msg.role,
+                content: msg.content,
+                timestamp: new Date(msg.timestamp)
+              })));
+            }
+          } catch (jsonError) {
+            const text = await response.text();
+            console.error("Invalid JSON in session response:", text);
+            throw new Error("Invalid session response");
           }
         } else {
           // Create new session
@@ -61,8 +67,14 @@ export function useAdvisorChat() {
           });
 
           if (createResponse.ok) {
-            const data = await createResponse.json();
-            setSessionId(data.sessionId);
+            try {
+              const data = await createResponse.json();
+              setSessionId(data.sessionId);
+            } catch (jsonError) {
+              const text = await createResponse.text();
+              console.error("Invalid JSON in create session response:", text);
+              throw new Error("Invalid create session response");
+            }
           }
         }
       } catch (error) {
