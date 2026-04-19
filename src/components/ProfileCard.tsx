@@ -13,12 +13,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
   if (!auth) return null;
   const { user, userData } = auth;
 
-  // Note: Photo upload is now handled by ProfilePhotoUpload component
-  // This function is kept for backward compatibility but delegates to the main component
-
-
   const displayImage = userData?.photoURL;
-  const memberSince = userData?.createdAt ? new Date(userData.createdAt).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : 'New Member';
 
   const profileCard = (
     <div className="max-w-md mx-auto bg-mystic-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-accent-primary/5 overflow-hidden">
@@ -61,40 +56,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
           </div>
         </div>
 
-        {/* User Details */}
-        <div className="text-center space-y-3">
-          <div className="flex items-center justify-center gap-2">
-            <h2 className="text-2xl font-bold text-white">
-              {userData?.displayName || user?.email?.split('@')[0] || 'Anonymous'}
-            </h2>
-            {userData?.role === 'admin' && (
-              <Crown className="w-5 h-5 text-yellow-500" />
-            )}
-          </div>
-
-          <p className="text-mystic-400 text-sm">
-            {user?.email}
-          </p>
-
-
-        </div>
-
-        {/* Action Button */}
-        <div className="mt-8">
-          <button
-            onClick={onEditProfile}
-            className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-semibold py-3 rounded-xl hover:opacity-90 transition-all shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40 hover:scale-[1.02] active:scale-[0.98]"
-          >
-            <Edit3 className="w-4 h-4" />
-            Edit Profile
-          </button>
-        </div>
-
       </div>
     </div>
   );
-
-
 
   return profileCard;
 };
