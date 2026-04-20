@@ -184,49 +184,45 @@ export default function ProfilePhotoUpload() {
       setIsUploading(true);
       setUploadError(null);
 
-      // Upload via API
-      const response = await fetch('/api/upload/profile-photo', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          userId: user.id,
-          base64Data,
-        }),
-      });
+      // Convert base64 to blob
+      const base64Response = await fetch(`data:image/jpeg;base64,${base64Data}`);
+      const blob = await base64Response.blob();
 
-      const responseClone = response.clone();
+      // Create unique filename
+      const fileName = `${user.id}/profile-${Date.now()}.jpg`;
 
-      if (!response.ok) {
-        let errorData;
-        try {
-          errorData = await response.json();
-        } catch {
-          const text = await responseClone.text();
-          console.error("Upload error response:", text);
-          throw new Error('Upload failed');
-        }
-        throw new Error(errorData.error || 'Upload failed');
+      // Upload directly to Supabase storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from('user-uploads')
+        .upload(fileName, blob, {
+          contentType: 'image/jpeg',
+          upsert: true
+        });
+
+      if (uploadError) {
+        console.error('Storage upload error:', uploadError);
+        throw new Error(`Upload failed: ${uploadError.message}`);
       }
 
-      let publicUrl;
-      try {
-        const data = await response.json();
-        publicUrl = data.url;
-      } catch (jsonError) {
-        const text = await responseClone.text();
-        console.error("Invalid JSON in upload response:", text);
-        throw new Error('Invalid upload response');
+      // Get public URL
+      const { data: urlData } = supabase.storage
+        .from('user-uploads')
+        .getPublicUrl(fileName);
+
+      if (!urlData?.publicUrl) {
+        throw new Error('Failed to get public URL for uploaded image');
       }
 
       // Update user profile in database
       const { error: dbError } = await supabase
         .from('users')
-        .update({ photo_url: publicUrl })
+        .update({ photo_url: urlData.publicUrl })
         .eq('uid', user.id);
 
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('Database update error:', dbError);
+        throw new Error(`Failed to update profile: ${dbError.message}`);
+      }
 
       // Update local profile
       try {
