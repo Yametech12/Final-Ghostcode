@@ -311,12 +311,12 @@ END $$;
 -- Security definer function to check admin status WITHOUT recursion
 -- This is the OFFICIAL Supabase recommended fix for RLS recursion
 -- CRITICAL: Reads from JWT instead of querying the users table to prevent recursion
+-- NOTE: LEAKPROOF requires superuser, so we use SECURITY DEFINER instead
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql
 SECURITY DEFINER
 STABLE
-LEAKPROOF -- This bypasses RLS entirely for this function
 AS $$
   SELECT COALESCE(
     auth.jwt() -> 'app_metadata' ->> 'role' = 'admin',
