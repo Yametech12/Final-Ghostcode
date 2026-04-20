@@ -285,6 +285,17 @@ export default function ProfilePhotoUpload() {
     }
   };
 
+  // Detect Gravatar/auto-generated photos and treat them as empty
+  const isGravatarUrl = (url: string | undefined) => {
+    if (!url) return true;
+    return url.includes('gravatar.com') || 
+           url.includes('googleusercontent.com') || 
+           url.includes('ui-avatars.com') ||
+           url.length < 10;
+  };
+
+  const hasCustomPhoto = user?.photoURL && !isGravatarUrl(user.photoURL);
+
   return (
     <div className="flex flex-col items-center p-4">
       <div 
@@ -310,7 +321,7 @@ export default function ProfilePhotoUpload() {
           className="relative w-32 h-32 md:w-40 md:h-40 rounded-full overflow-hidden border-4 border-mystic-800 group-hover:border-accent-primary/50 transition-all duration-500 shadow-[0_0_40px_rgba(0,0,0,0.6)] z-10 bg-mystic-900"
         >
           <AnimatePresence mode="wait">
-            {user?.photoURL ? (
+            {hasCustomPhoto ? (
               <motion.img 
                 key="photo"
                 initial={{ opacity: 0, scale: 1.1 }}

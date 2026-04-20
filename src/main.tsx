@@ -5,6 +5,8 @@ import { EnhancedAuthProvider } from './contexts/EnhancedAuthContext';
 import SessionErrorBoundary from './components/SessionErrorBoundary';
 import App from './App';
 import './index.css';
+import { registerSW } from 'virtual:pwa-register';
+import { toast } from 'sonner';
 
 // Global unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {
@@ -23,3 +25,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     </BrowserRouter>
   </React.StrictMode>
 );
+
+registerSW({
+  onNeedRefresh() {
+    toast('A new version of the application is available. Please refresh the page to update.', {
+      action: {
+        label: 'Refresh',
+        onClick: () => window.location.reload(),
+      },
+      duration: Infinity,
+    });
+  },
+});

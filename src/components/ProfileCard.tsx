@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Camera } from 'lucide-react';
+import { User as UserIcon } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'motion/react';
 
 interface ProfileCardProps {
   onEditProfile?: () => void;
-  onPhotoUpload?: () => void;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile, onPhotoUpload }) => {
+const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
   const auth = useAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
@@ -142,18 +141,6 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile, onPhotoUpload 
                   </div>
                 )}
               </div>
-              
-              {/* Photo upload overlay */}
-              {onPhotoUpload && (
-                <motion.button
-                  onClick={(e) => { e.stopPropagation(); onPhotoUpload(); }}
-                  className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-accent-primary flex items-center justify-center shadow-lg opacity-0 group-hover:opacity-100 transition-all duration-300 hover:scale-110"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Camera className="w-5 h-5 text-white" />
-                </motion.button>
-              )}
             </motion.div>
 
             {/* Online/Status Indicator with pulse animation */}
