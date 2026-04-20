@@ -192,7 +192,7 @@ export default function ProfilePhotoUpload() {
       const fileName = `${user.id}/profile-${Date.now()}.jpg`;
 
       // Upload directly to Supabase storage
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { data: _uploadData, error: uploadError } = await supabase.storage
         .from('user-uploads')
         .upload(fileName, blob, {
           contentType: 'image/jpeg',
@@ -226,7 +226,7 @@ export default function ProfilePhotoUpload() {
 
       // Update local profile
       try {
-        await updateUserProfile({ photoURL: publicUrl });
+        await updateUserProfile({ photoURL: urlData.publicUrl });
       } catch (err: any) {
         console.warn("Failed to update local profile, but photo was saved:", err);
       }

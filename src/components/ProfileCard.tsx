@@ -7,13 +7,13 @@ interface ProfileCardProps {
   onEditProfile?: () => void;
 }
 
-const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
+const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile: _onEditProfile }) => {
   const auth = useAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
 
   if (!auth) return null;
-  const { user, userData } = auth;
+  const { user: _user, userData } = auth;
 
   const displayImage = userData?.photoURL;
 

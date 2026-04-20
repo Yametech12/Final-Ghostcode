@@ -31,8 +31,7 @@ export function sendError(
 
 export function sendServerError(res: Response, error: unknown) {
   console.error('Server Error:', error);
-  
-  const message = error instanceof Error ? error.message : 'Internal server error';
+
   const stack = error instanceof Error ? error.stack : undefined;
   
   res.status(500).json({
