@@ -9,7 +9,7 @@ import {
 import ProfileCard from '../components/ProfileCard';
 import ProfileCardModal from '../components/ProfileCardModal';
 import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';
@@ -25,7 +25,7 @@ type Assessment = {
 };
 
 export default function ProfilesPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [fieldReports, setFieldReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);

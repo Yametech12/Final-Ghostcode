@@ -54,7 +54,7 @@ interface Feedback {
 }
 
 export default function AdminDashboard() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "users" | "reports" | "feedback"

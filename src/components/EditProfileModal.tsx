@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, User, Phone, Instagram, Twitter, Save, Loader2 } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toast } from 'sonner';
 
 interface EditProfileModalProps {
@@ -10,7 +10,7 @@ interface EditProfileModalProps {
 }
 
 export default function EditProfileModal({ isOpen, onClose }: EditProfileModalProps) {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [formData, setFormData] = useState({

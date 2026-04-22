@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Sparkles, AlertCircle } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { chatCompletion } from '../lib/ai';
 import { personalityTypes } from '../data/personalityTypes';
 import { supabase } from '../lib/supabase';
@@ -13,7 +13,7 @@ interface Message {
 }
 
 export default function CoachingPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [messages, setMessages] = useState<Message[]>([
     {
       id: 'welcome',

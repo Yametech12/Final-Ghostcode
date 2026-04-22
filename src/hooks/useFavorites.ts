@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { Favorite } from '../types';
 import { toast } from 'sonner';
 
@@ -14,7 +14,7 @@ const getCategory = (type: string): 'Personality' | 'Content' | 'Assessment' => 
 };
 
 export function useFavorites() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [favorites, setFavorites] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
 

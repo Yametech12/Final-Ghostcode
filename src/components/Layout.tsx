@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useIsMobile, useSwipeGesture, usePullToRefresh, useMobilePerformance } from '../hooks/useMobile';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';
@@ -77,8 +77,8 @@ export default function Layout({ children }: LayoutProps) {
   const dropdownTimeoutRef = React.useRef<NodeJS.Timeout | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
-  const auth = useAuth();
-  const { user, logout } = auth || {};
+  const auth = useEnhancedAuth();
+  const { user, signOut } = auth || {};
 
   // Mobile optimizations
   const isMobile = useIsMobile();
@@ -132,7 +132,7 @@ export default function Layout({ children }: LayoutProps) {
 
   const handleLogout = async () => {
     try {
-      await logout();
+      await signOut();
       navigate('/', { replace: true });
       setIsMenuOpen(false);
     } catch {

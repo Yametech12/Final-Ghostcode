@@ -3,7 +3,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid 
 } from 'recharts';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { personalityTypes } from '../data/personalityTypes';
 import { Activity, Target, TrendingUp, PieChart } from 'lucide-react';
@@ -11,7 +11,7 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { Skeleton } from '../components/ui/Skeleton';
 
 export default function InsightsPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [loading, setLoading] = useState(true);
   const [calibrations, setCalibrations] = useState<any[]>([]);
 

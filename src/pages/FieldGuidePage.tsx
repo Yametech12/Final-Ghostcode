@@ -11,7 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
 function cn(...inputs: ClassValue[]) {
@@ -41,7 +41,7 @@ interface FieldReportComment {
 }
 
 export default function FieldGuidePage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [searchTerm, setSearchTerm] = React.useState('');
   const [selectedType, setSelectedType] = React.useState<string | null>(null);
   const [activeTab, setActiveTab] = React.useState<'scenarios' | 'reports'>('scenarios');

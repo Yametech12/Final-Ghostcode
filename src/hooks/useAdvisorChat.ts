@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
 import { toast } from 'sonner';
 
@@ -12,7 +12,7 @@ interface Message {
 }
 
 export function useAdvisorChat() {
-  const { user } = useAuth();
+  const { user } = useEnhancedAuth();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);

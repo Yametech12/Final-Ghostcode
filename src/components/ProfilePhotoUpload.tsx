@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Camera, Loader2, User, AlertCircle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import imageCompression from 'browser-image-compression';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
 
 export default function ProfilePhotoUpload() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [isUploading, setIsUploading] = useState(false);
   const [isCompressing, setIsCompressing] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);

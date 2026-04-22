@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { X, Download, Share2, Check, Crown, Zap, FileText, Award } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import Logo from './Logo';
@@ -14,7 +14,7 @@ interface ProfileCardModalProps {
 }
 
 export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, achievementsCount = 0, fieldReportsCount = 0 }: ProfileCardModalProps) {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [copied, setCopied] = useState(false);

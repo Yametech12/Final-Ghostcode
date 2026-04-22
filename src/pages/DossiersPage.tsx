@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Loader2 } from 'lucide-react';
 import { personalityTypes } from '../data/personalityTypes';
 import { toast } from 'sonner';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
@@ -18,7 +18,7 @@ interface Dossier {
 }
 
 export default function DossiersPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

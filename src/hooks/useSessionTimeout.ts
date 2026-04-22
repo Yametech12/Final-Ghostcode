@@ -1,5 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
  * Hook to manage automatic session timeout due to inactivity
@@ -14,7 +14,7 @@ export function useSessionTimeout(
   onWarning?: () => void,
   onTimeout?: () => void
 ) {
-  const { logout, user } = useAuth();
+  const { signOut, user } = useEnhancedAuth();
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   const warningRef = useRef<NodeJS.Timeout | null>(null);
   const activityRef = useRef<NodeJS.Timeout | null>(null);

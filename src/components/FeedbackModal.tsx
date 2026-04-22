@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send, MessageSquare, Loader2, CheckCircle2, Bug, Sparkles, Heart, Lightbulb, FileText, Layout, Zap } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 
@@ -20,7 +20,7 @@ const feedbackTypes = [
 ];
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'general' | 'praise' | 'suggestion' | 'content' | 'ui' | 'performance'>('general');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

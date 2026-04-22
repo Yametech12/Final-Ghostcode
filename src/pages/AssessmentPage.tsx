@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 
@@ -125,7 +125,7 @@ const questions: Question[] = [
 ];
 
 export default function AssessmentPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const { user } = auth || {};
   const [currentStep, setCurrentStep] = useState(() => {
     const saved = localStorage.getItem('assessment_current_step');

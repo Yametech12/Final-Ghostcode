@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { cn } from '../lib/utils';
 
 interface SessionErrorHandlerProps {
@@ -13,7 +13,7 @@ export default function SessionErrorHandler({
   showRetryButton = true,
   compact = false
 }: SessionErrorHandlerProps) {
-  const { error, loading, retrySession } = useAuth();
+  const { error, loading, retrySession } = useEnhancedAuth();
 
   if (!error || loading) return null;
 

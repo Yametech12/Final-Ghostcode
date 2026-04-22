@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import Logo from '../components/Logo';
@@ -57,8 +57,8 @@ export default function RegisterPage() {
   const [acceptTerms, setAcceptTerms] = useState(false);
 
   const navigate = useNavigate();
-  const auth = useAuth();
-  const { signUpWithEmail, signInWithGoogle } = auth;
+  const auth = useEnhancedAuth();
+  const { signUp, signInWithGoogle } = auth;
 
   // Check if user just verified their email
   useEffect(() => {
@@ -88,7 +88,7 @@ export default function RegisterPage() {
       if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
         recaptchaToken = await recaptchaRef.current?.executeAsync();
       }
-      const result = await signUpWithEmail(email, password, name, recaptchaToken);
+      const result = await signUp(email, password, name, recaptchaToken);
 
       if (result.requiresVerification) {
         setVerificationSent(true);

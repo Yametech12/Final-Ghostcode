@@ -3,12 +3,12 @@ import { Target, Shield, Flame, User, ArrowRight, CheckCircle2, Brain, Clock } f
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
 export default function ProfilerPage() {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [traits, setTraits] = useState(() => {
     const saved = localStorage.getItem('profiler_current_traits');
     return safeParseJSON(saved, {

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User as UserIcon } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { motion } from 'motion/react';
 
 interface ProfileCardProps {
@@ -8,7 +8,7 @@ interface ProfileCardProps {
 }
 
 const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile: _onEditProfile }) => {
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
 

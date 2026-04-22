@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { personalityTypes } from '../data/personalityTypes';
 import { ArrowLeft, Target, Shield, Flame, Zap, BookOpen, User, Save } from 'lucide-react';
-import { useAuth } from '../contexts/EnhancedAuthContext';
+import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import FavoriteButton from '../components/FavoriteButton';
 import ProfileRadarChart from '../components/ProfileRadarChart';
 import { supabase } from '../lib/supabase';
@@ -12,7 +12,7 @@ import { toast } from 'sonner';
 export default function AssessmentResultPage() {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const auth = useAuth();
+  const auth = useEnhancedAuth();
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const typeId = searchParams.get('type');

@@ -194,11 +194,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         }
       }
 
-      if (data.user && !data.user.email_confirmed_at) {
-        toast.success('Check your email for verification link');
-      }
-
-      return data;
+      return { requiresVerification: !data.user?.email_confirmed_at };
     } catch (error: any) {
       console.error('Email sign up error:', error);
       toast.error(error.message || 'Failed to sign up');
@@ -377,8 +373,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   );
 }
 
-export const useAuth = () => {
+export const useEnhancedAuth = () => {
   const context = useContext(EnhancedAuthContext);
-  if (!context) throw new Error('useAuth must be used within EnhancedAuthProvider');
+  if (!context) throw new Error('useEnhancedAuth must be used within EnhancedAuthProvider');
   return context;
 };
