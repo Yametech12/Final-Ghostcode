@@ -3,7 +3,7 @@ import { motion } from 'motion/react';
 import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Loader2 } from 'lucide-react';
 import { personalityTypes } from '../data/personalityTypes';
 import { toast } from 'sonner';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 

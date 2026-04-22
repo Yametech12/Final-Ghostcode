@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
 import { toast } from 'sonner';
 
@@ -12,7 +12,7 @@ interface Message {
 }
 
 export function useAdvisorChat() {
-  const { user } = useEnhancedAuth();
+  const { user } = useAuth();
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -53,7 +53,7 @@ export function useAdvisorChat() {
                 timestamp: new Date(msg.timestamp)
               })));
             }
-          } catch (jsonError) {
+          } catch (_jsonError) {
             const text = await response.text();
             console.error("Invalid JSON in session response:", text);
             throw new Error("Invalid session response");
@@ -70,7 +70,7 @@ export function useAdvisorChat() {
             try {
               const data = await createResponse.json();
               setSessionId(data.sessionId);
-            } catch (jsonError) {
+            } catch (_jsonError) {
               const text = await createResponse.text();
               console.error("Invalid JSON in create session response:", text);
               throw new Error("Invalid create session response");

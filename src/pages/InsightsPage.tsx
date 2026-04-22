@@ -3,7 +3,7 @@ import {
   Radar, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, 
   ResponsiveContainer, LineChart, Line, XAxis, YAxis, Tooltip, CartesianGrid 
 } from 'recharts';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { personalityTypes } from '../data/personalityTypes';
 import { Activity, Target, TrendingUp, PieChart } from 'lucide-react';

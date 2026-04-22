@@ -3,7 +3,7 @@ import { Target, Shield, Flame, User, ArrowRight, CheckCircle2, Brain, Clock } f
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
 import { Link } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User as UserIcon } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { motion } from 'motion/react';
 
 interface ProfileCardProps {
@@ -13,7 +13,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile: _onEditProfile
   const [isHovering, setIsHovering] = useState(false);
 
   if (!auth) return null;
-  const { user: _user, userData } = auth;
+  const { userData } = auth;
 
   const displayImage = userData?.photoURL;
 

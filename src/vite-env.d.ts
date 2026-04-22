@@ -1,4 +1,5 @@
 /// <reference types="vite/client" />
+/// <reference lib="dom" />
 
 declare module 'virtual:pwa-register' {
   export interface RegisterSWOptions {

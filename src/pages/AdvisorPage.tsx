@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, Loader2, User, Sparkles, Copy, ThumbsUp, ThumbsDown, Trash2, Download, MessageSquare } from 'lucide-react';
 import { cn } from '../lib/utils';

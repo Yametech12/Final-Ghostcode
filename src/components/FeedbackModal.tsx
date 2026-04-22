@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Send, MessageSquare, Loader2, CheckCircle2, Bug, Sparkles, Heart, Lightbulb, FileText, Layout, Zap } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 

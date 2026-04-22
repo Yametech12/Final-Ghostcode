@@ -3,7 +3,6 @@ import { ReactLenis } from 'lenis/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import ScrollToTop from './components/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
-import { AuthProvider } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import AnimatedRoutes from './components/AnimatedRoutes';
 import { Suspense } from 'react';
@@ -29,12 +28,10 @@ export default function App() {
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-            <AuthProvider>
-                <ScrollToTop />
-                <Suspense fallback={<LoadingScreen />}>
-                  <AppContent />
-                </Suspense>
-            </AuthProvider>
+            <ScrollToTop />
+            <Suspense fallback={<LoadingScreen />}>
+              <AppContent />
+            </Suspense>
           </ReactLenis>
         </ThemeProvider>
       </QueryClientProvider>

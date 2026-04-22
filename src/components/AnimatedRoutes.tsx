@@ -3,7 +3,7 @@ import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import Layout from './Layout';
 import { LoadingScreen, InlineLoader } from './LoadingComponents';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { lazyWithRetry } from '../utils/lazyWithRetry';
 
 // Critical pages - loaded immediately on app start

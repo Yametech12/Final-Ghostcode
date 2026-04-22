@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Bot, User, Loader2, Sparkles, AlertCircle } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { chatCompletion } from '../lib/ai';
 import { personalityTypes } from '../data/personalityTypes';
 import { supabase } from '../lib/supabase';

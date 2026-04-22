@@ -32,7 +32,7 @@ export function useAiWithRetry({
           setRetryCount(attempt);
           try {
             return await response.json();
-          } catch (jsonError) {
+          } catch (_jsonError) {
             const text = await response.text();
             console.error("Invalid JSON in AI response:", text);
             throw new Error(`Invalid AI response: ${text.slice(0, 100)}`);

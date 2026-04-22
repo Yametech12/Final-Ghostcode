@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Camera, Loader2, User, AlertCircle, Upload } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import imageCompression from 'browser-image-compression';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 import { cn } from '../lib/utils';
@@ -192,7 +192,7 @@ export default function ProfilePhotoUpload() {
       const fileName = `${user.id}/profile-${Date.now()}.jpg`;
 
       // Upload directly to Supabase storage
-      const { data: _uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('user-uploads')
         .upload(fileName, blob, {
           contentType: 'image/jpeg',

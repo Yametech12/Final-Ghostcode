@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
 

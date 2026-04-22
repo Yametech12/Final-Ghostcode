@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
 import ReCAPTCHA from 'react-google-recaptcha';
 import Logo from '../components/Logo';

@@ -6,7 +6,7 @@ let apiKey: string | null = null;
 
 // Centralized model configuration - single source of truth
 export const DEFAULT_MODEL = "openai/gpt-4o-mini";
-export const VISION_MODEL = "openai/gpt-4o-mini";
+export const VISION_MODEL = "openai/gpt-4o";
 export const FALLBACK_MODELS = [
   "openai/gpt-4o-mini",
   "anthropic/claude-3.5-sonnet-latest",

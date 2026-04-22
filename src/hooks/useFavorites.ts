@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { Favorite } from '../types';
 import { toast } from 'sonner';
 
@@ -101,10 +101,6 @@ export function useFavorites() {
 
     return () => {
       abortController.abort();
-      supabase.removeChannel(channel);
-    };
-
-    return () => {
       supabase.removeChannel(channel);
     };
   }, [user]);

@@ -3,7 +3,7 @@ import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { useIsMobile, useSwipeGesture, usePullToRefresh, useMobilePerformance } from '../hooks/useMobile';
 import { useSessionTimeout } from '../hooks/useSessionTimeout';

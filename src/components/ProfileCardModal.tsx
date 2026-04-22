@@ -1,6 +1,6 @@
 import { useRef, useState, useEffect } from 'react';
 import { X, Download, Share2, Check, Crown, Zap, FileText, Award } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import Logo from './Logo';

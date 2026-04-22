@@ -9,7 +9,7 @@ import {
 import ProfileCard from '../components/ProfileCard';
 import ProfileCardModal from '../components/ProfileCardModal';
 import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';

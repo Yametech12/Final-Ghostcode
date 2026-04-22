@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useSearchParams, Link, useNavigate } from 'react-router-dom';
 import { personalityTypes } from '../data/personalityTypes';
 import { ArrowLeft, Target, Shield, Flame, Zap, BookOpen, User, Save } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import FavoriteButton from '../components/FavoriteButton';
 import ProfileRadarChart from '../components/ProfileRadarChart';
 import { supabase } from '../lib/supabase';

@@ -25,7 +25,7 @@ export function MessageBubble({
     try {
       await navigator.clipboard.writeText(content);
       toast.success('Message copied to clipboard');
-    } catch (error) {
+    } catch (_error) {
       toast.error('Failed to copy to clipboard');
     }
   };

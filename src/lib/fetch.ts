@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 /**
  * Reusable fetch utility with proper JSON error handling
  * Handles:
@@ -36,7 +37,7 @@ export async function fetchWithErrorHandling<T>(
       try {
         errorData = await response.json();
         throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
-      } catch (jsonError) {
+      } catch (_jsonError) {
         const text = await responseClone.text();
         console.error(`[Fetch Error] ${response.status} ${url}:`, text);
         throw new Error(`Request failed with status ${response.status}`);
@@ -45,7 +46,7 @@ export async function fetchWithErrorHandling<T>(
     
     try {
       return await response.json() as T;
-    } catch (jsonError) {
+    } catch (_jsonError) {
       const text = await responseClone.text();
       console.error(`[JSON Parse Error] ${url}:`, text);
       throw new Error(`Invalid JSON response: ${text.slice(0, 100)}`);

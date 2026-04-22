@@ -1,13 +1,15 @@
+/// <reference lib="dom" />
 import "dotenv/config";
 import express from "express";
 import path from "path";
 import { fileURLToPath } from 'url';
+import helmet from 'helmet';
 
 console.log("Server starting...");
 
-import { getApiKey, createCompletion, DEFAULT_MODEL, VISION_MODEL } from './config.ts';
-import { AI_PROVIDER, API_URL } from './ai.ts';
-import { bucket } from './gcs.ts';
+import { getApiKey, createCompletion, DEFAULT_MODEL, VISION_MODEL } from './config.js';
+import { AI_PROVIDER, API_URL } from './ai.js';
+import { bucket } from './gcs.js';
 import { createClient } from '@supabase/supabase-js';
 import { serializeError } from '../src/utils/errorHandling';
 
@@ -15,8 +17,13 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+
+// Security middleware
+app.use(helmet());
+
+// Body parsing with size limits
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Supabase client for backend operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
@@ -116,7 +123,7 @@ app.use((req, res, next) => {
 // CORS headers
 app.use((_req, res, next) => {
   const origin = _req.headers.origin;
-  const allowedOrigins = [
+  const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : [
     'http://localhost:5173',
     'http://localhost:5174',
     'http://localhost:3000',
@@ -269,39 +276,57 @@ app.post("/api/upload/profile-photo", async (req, res) => {
     const fileName = `users/${userId}/profile-${Date.now()}.jpg`;
     const file = bucket.file(fileName);
 
-    try {
-      await file.save(buffer, {
-        metadata: {
-          contentType: 'image/jpeg',
-        },
-        public: true,
-      });
-    } catch (gcsError: any) {
-      console.error('GCS upload error:', gcsError);
+    let uploadAttempt = 0;
+    const maxRetries = 3;
+    const retryDelay = 1000; // 1 second
 
-      if (gcsError.code === 403) {
-        return res.status(403).json({
-          error: "Storage permission denied",
-          code: "STORAGE_PERMISSION_DENIED"
+    while (uploadAttempt < maxRetries) {
+      try {
+        await file.save(buffer, {
+          metadata: {
+            contentType: 'image/jpeg',
+          },
+          public: false, // Make private for security
         });
-      } else if (gcsError.code === 413) {
-        return res.status(413).json({
-          error: "File too large for storage",
-          code: "STORAGE_SIZE_LIMIT"
-        });
-      } else {
-        return res.status(500).json({
-          error: "Storage upload failed",
-          code: "STORAGE_ERROR"
-        });
+        break; // Success, exit retry loop
+      } catch (gcsError: any) {
+        console.error('GCS upload error:', gcsError);
+
+        uploadAttempt++;
+        if (uploadAttempt >= maxRetries) {
+          // All retries exhausted
+          if (gcsError.code === 403) {
+            return res.status(403).json({
+              error: "Storage permission denied",
+              code: "STORAGE_PERMISSION_DENIED"
+            });
+          } else if (gcsError.code === 413) {
+            return res.status(413).json({
+              error: "File too large for storage",
+              code: "STORAGE_SIZE_LIMIT"
+            });
+          } else {
+            return res.status(500).json({
+              error: "Storage upload failed after retries",
+              code: "STORAGE_ERROR"
+            });
+          }
+        } else {
+          // Wait before retry
+          await new Promise(resolve => setTimeout(resolve, retryDelay * uploadAttempt));
+        }
       }
     }
 
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${fileName}`;
+    // Generate signed URL for secure access
+    const [signedUrl] = await file.getSignedUrl({
+      action: 'read',
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
 
     res.json({
       success: true,
-      url: publicUrl,
+      url: signedUrl,
       fileName: fileName
     });
 
@@ -358,7 +383,7 @@ app.get("/api/ai/credits", async (_req, res) => {
         credits: data.credits,
         usage: data.usage
       });
-    } catch (jsonError) {
+    } catch (_jsonError) {
       const text = await response.text();
       console.error("Invalid JSON in credits response:", text);
       return res.status(500).json({ error: "Failed to parse credits response" });
@@ -850,7 +875,7 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
           timestamp: new Date().toISOString()
         } : undefined
       });
-    } catch (jsonError) {
+    } catch (_jsonError) {
       const text = await response.text();
       console.error("Invalid JSON in AI response:", text);
       return res.status(500).json({ error: "Failed to parse AI response" });
@@ -912,10 +937,16 @@ if (process.env.NODE_ENV === 'production') {
   app.use(express.static(path.join(__dirname, '../dist')));
 }
 
-// Error handling
+// Error handling middleware
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Error:', err);
-  res.status(500).json({ error: 'Internal server error' });
+  console.error('Unhandled error:', serializeError(err));
+  const statusCode = err.statusCode || err.status || 500;
+  const errorResponse = {
+    error: 'Internal server error',
+    code: err.code || 'INTERNAL_ERROR',
+    ...(process.env.NODE_ENV === 'development' && { details: serializeError(err) })
+  };
+  res.status(statusCode).json(errorResponse);
 });
 
 // Local dev

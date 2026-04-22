@@ -24,11 +24,6 @@ async function createBucket() {
     });
 
     console.log('Bucket created successfully');
-
-    // Set public access if needed (for public reads)
-    await bucket.makePublic();
-
-    console.log('Bucket made public');
   } catch (error) {
     console.error('Error creating bucket:', error);
   }

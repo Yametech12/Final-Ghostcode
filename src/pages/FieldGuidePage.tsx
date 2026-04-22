@@ -11,7 +11,7 @@ import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
 function cn(...inputs: ClassValue[]) {

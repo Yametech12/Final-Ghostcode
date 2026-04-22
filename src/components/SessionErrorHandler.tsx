@@ -1,5 +1,5 @@
 import { AlertCircle, RefreshCw, WifiOff } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../contexts/EnhancedAuthContext';
 import { cn } from '../lib/utils';
 
 interface SessionErrorHandlerProps {
