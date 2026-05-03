@@ -11,6 +11,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile: _onEditProfile
   const auth = useEnhancedAuth();
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isHovering, setIsHovering] = useState(false);
+  const [imageError, setImageError] = useState(false);
 
   if (!auth) return null;
   const { userData } = auth;
@@ -121,27 +122,31 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile: _onEditProfile
               }}
             />
 
-            {/* Avatar */}
-            <motion.div 
-              className="relative w-32 h-32 rounded-full p-1.5 bg-mystic-900 shadow-2xl"
-              whileHover={{ scale: 1.05 }}
-              transition={{ type: "spring", stiffness: 300 }}
-            >
-              <div className="w-full h-full rounded-full overflow-hidden bg-mystic-800 border-2 border-gradient-to-r from-accent-primary to-accent-secondary">
-                {displayImage ? (
-                  <img
-                    src={displayImage}
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-mystic-800 to-mystic-900">
-                    <UserIcon size={56} className="text-mystic-600" />
+             {/* Avatar */}
+                <motion.div 
+                  className="relative w-32 h-32 rounded-full p-1.5 bg-mystic-900 shadow-2xl"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <div className="w-full h-full rounded-full overflow-hidden bg-mystic-800 border-2 border-gradient-to-r from-accent-primary to-accent-secondary">
+                    {displayImage && !imageError ? (
+                      <img
+                        src={`${displayImage}?width=200&height=200&format=webp`}
+                        alt="Profile photo"
+                        className="w-full h-full object-cover"
+                        width={128}
+                        height={128}
+                        loading="lazy"
+                        decoding="async"
+                        onError={() => setImageError(true)}
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-mystic-800 to-mystic-900">
+                        <UserIcon size={56} className="text-mystic-600" />
+                      </div>
+                    )}
                   </div>
-                )}
-              </div>
-            </motion.div>
+                </motion.div>
 
             {/* Online/Status Indicator with pulse animation */}
             <motion.div 
