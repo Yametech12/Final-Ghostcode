@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import ProfileCard from '../components/ProfileCard';
 import ProfileCardModal from '../components/ProfileCardModal';
-import ProfilePhotoUpload from '../components/ProfilePhotoUpload';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
@@ -213,13 +212,7 @@ export default function ProfilesPage() {
           <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[140%] bg-accent-primary opacity-20 blur-[100px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 space-y-8">
-            {/* Profile Photo Upload Section */}
-            <div className="space-y-4">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary opacity-10 border border-accent-primary opacity-20 text-accent-primary text-[10px] font-bold uppercase tracking-widest">
-                Profile Management
-              </div>
-              <ProfilePhotoUpload />
-            </div>
+            {/* Profile Stats */}
             <div className="space-y-4">
               <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary opacity-10 border border-accent-primary opacity-20 text-accent-primary text-[10px] font-bold uppercase tracking-widest">
                 Operative Stats

@@ -1,5 +1,5 @@
-import { useRef, useState, useEffect } from 'react';
-import { X, Download, Share2, Check, Crown, Zap, FileText, Award } from 'lucide-react';
+import { useRef, useState } from 'react';
+import { X, Download, Share2, Check, Crown, Zap, FileText, Award, User } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
@@ -18,49 +18,8 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
   const cardRef = useRef<HTMLDivElement>(null);
   const [isExporting, setIsExporting] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [photoDataUrl, setPhotoDataUrl] = useState<string | null>(null);
 
   const { user, userData } = auth || {};
-
-  useEffect(() => {
-    if (!isOpen) return;
-    
-    const loadPhoto = async () => {
-      const sourceUrl = user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName || 'O'}&background=random`;
-      
-      if (sourceUrl.startsWith('data:')) {
-        setPhotoDataUrl(sourceUrl);
-        return;
-      }
-
-      const fetchAsBase64 = async (url: string): Promise<string> => {
-        const response = await fetch(url, { mode: 'cors' });
-        if (!response.ok) throw new Error('Network response was not ok');
-        const blob = await response.blob();
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string);
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      };
-
-      try {
-        const base64 = await fetchAsBase64(sourceUrl);
-        setPhotoDataUrl(base64);
-      } catch {
-        try {
-          const fallbackUrl = `https://ui-avatars.com/api/?name=${user?.displayName || 'O'}&background=random`;
-          const fallbackBase64 = await fetchAsBase64(fallbackUrl);
-          setPhotoDataUrl(fallbackBase64);
-        } catch {
-          setPhotoDataUrl('data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7');
-        }
-      }
-    };
-
-    loadPhoto();
-  }, [isOpen, user?.photoURL, user?.displayName]);
 
   if (!isOpen) return null;
 
@@ -74,7 +33,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
         cacheBust: true,
       });
       const link = document.createElement('a');
-      link.download = `epimetheus-profile-${user?.displayName || 'operative'}.png`;
+      link.download = `epimetheus-profile-${userData?.displayName || user?.displayName || 'operative'}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
       link.click();
@@ -129,12 +88,8 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
             {/* Profile Info */}
             <div className="flex items-center gap-5">
               <div className="relative">
-                <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg">
-                  <img 
-                    src={photoDataUrl || user?.photoURL || `https://ui-avatars.com/api/?name=${user?.displayName || 'O'}&background=random`} 
-                    alt="Profile" 
-                    className="w-full h-full object-cover"
-                  />
+                <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-white/10 shadow-lg bg-mystic-800 flex items-center justify-center">
+                  <User className="w-10 h-10 text-accent-primary" />
                 </div>
                 {userData?.role === 'admin' && (
                   <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-500 rounded-lg flex items-center justify-center shadow-lg">
@@ -193,7 +148,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
         <div className="flex gap-3">
           <button
             onClick={handleDownload}
-            disabled={isExporting || !photoDataUrl}
+            disabled={isExporting}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
           >
             <Download className="w-4 h-4" />

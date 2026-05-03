@@ -4,8 +4,14 @@ import { supabase } from '../lib/supabase';
 import { serializeError } from '../utils/errorHandling';
 import { toast } from 'sonner';
 
+// Extended User type with metadata properties
+type ExtendedUser = User & {
+  photoURL: string | null;
+  displayName: string | null;
+};
+
 interface UserData {
-  uid: string;
+  id: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
@@ -21,14 +27,14 @@ interface UserData {
 }
 
 interface EnhancedAuthContextType {
-  user: User | null;
+  user: ExtendedUser | null;
   session: Session | null;
   userData: UserData | null;
   loading: boolean;
   error: string | null;
   signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => Promise<{ user: User | null; session: Session | null; }>;
+  signUp: (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => Promise<{ requiresVerification: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
@@ -40,7 +46,7 @@ interface EnhancedAuthContextType {
 const EnhancedAuthContext = createContext<EnhancedAuthContextType | undefined>(undefined);
 
 export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<ExtendedUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,13 +54,22 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   const MAX_RETRIES = 3;
   const RETRY_DELAY = 2000;
 
+  const wrapUser = (supabaseUser: User | null): ExtendedUser | null => {
+    if (!supabaseUser) return null;
+    return {
+      ...supabaseUser,
+      photoURL: supabaseUser.user_metadata?.avatar_url || null,
+      displayName: supabaseUser.user_metadata?.display_name || null,
+    } as ExtendedUser;
+  };
+
   const loadUserData = useCallback(async (userId: string) => {
     try {
       console.log('Loading user data for:', userId);
       const { data, error } = await supabase
         .from('users')
         .select('*')
-        .eq('uid', userId)
+        .eq('id', userId)
         .maybeSingle();
 
       if (error) {
@@ -90,7 +105,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       if (data.session) {
         setSession(data.session);
-        setUser(data.session.user);
+        setUser(wrapUser(data.session.user));
         setError(null);
         await loadUserData(data.session.user.id);
         return data.session;
@@ -119,7 +134,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       if (!mounted) return;
       if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
         setSession(newSession);
-        setUser(newSession?.user ?? null);
+        setUser(wrapUser(newSession?.user ?? null));
         setError(null);
         if (newSession?.user?.id) {
           await loadUserData(newSession.user.id);
@@ -149,7 +164,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       const { data, error } = await supabase.auth.refreshSession();
       if (error) throw error;
       setSession(data.session);
-      setUser(data.session?.user ?? null);
+      setUser(wrapUser(data.session?.user ?? null));
     } catch (err) {
       console.error('Force refresh failed:', serializeError(err));
     }
@@ -162,8 +177,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       options: recaptchaToken ? { captchaToken: recaptchaToken } : undefined
     });
     if (error) throw error;
-    setSession(data.session);
-    setUser(data.session.user);
+      setSession(data.session);
+      setUser(wrapUser(data.session.user));
   };
 
   const signUp = async (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => {
@@ -184,7 +199,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
           await supabase
             .from('users')
             .insert({
-              uid: data.user.id,
+              id: data.user.id,
               email: data.user.email,
               display_name: displayName,
               photo_url: data.user.user_metadata?.avatar_url || null
@@ -255,7 +270,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
           display_name: data.displayName,
           photo_url: data.photoURL
         })
-        .eq('uid', user.id);
+        .eq('id', user.id);
 
       if (dbError) throw dbError;
 
@@ -285,7 +300,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       const { error } = await supabase
         .from('users')
         .update(dbData)
-        .eq('uid', user.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 

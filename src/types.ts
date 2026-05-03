@@ -110,7 +110,7 @@ export interface Favorite {
 }
 
 export interface UserData {
-  uid: string;
+  id: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;

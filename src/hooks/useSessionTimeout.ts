@@ -44,13 +44,13 @@ export function useSessionTimeout(
     // Set timeout timer
     timeoutRef.current = setTimeout(async () => {
       try {
-        await logout();
+        await signOut();
         onTimeout?.();
       } catch (err) {
         console.error('Logout on timeout failed:', err);
       }
     }, timeoutMs);
-  }, [user, logout, timeoutMs, warningBeforeMs, onWarning, onTimeout]);
+  }, [user, signOut, timeoutMs, warningBeforeMs, onWarning, onTimeout]);
 
   const recordActivity = useCallback(() => {
     // Debounce activity resets

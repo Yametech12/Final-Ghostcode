@@ -11,7 +11,8 @@ import {
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { handleFirestoreError, OperationType } from "../utils/errorHandling";
-import { useAuth } from "../context/AuthContext";
+import { useEnhancedAuth } from "../contexts/EnhancedAuthContext";
+
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
   } | null>(null);
 
   const handleDeleteUser = async (userId: string, force = false) => {
-    if (userData?.uid === userId) {
+    if (userData?.id === userId) {
       toast.error("You cannot delete your own admin account.");
       return;
     }

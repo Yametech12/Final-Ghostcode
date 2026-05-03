@@ -39,7 +39,7 @@ interface SupabaseUser {
 }
 
 interface UserData {
-  uid: string;
+  id: string;
   email: string | null;
   displayName: string | null;
   photoURL: string | null;
@@ -103,12 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadUserData = useCallback(async (userId: string) => {
     try {
       console.log('Loading user data for:', userId);
-      // Use .maybeSingle() to avoid errors when user profile doesn't exist yet (new users)
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('uid', userId)
-        .maybeSingle();
+       // Use .maybeSingle() to avoid errors when user profile doesn't exist yet (new users)
+       const { data, error } = await supabase
+         .from('users')
+         .select('*')
+         .eq('id', userId)
+         .maybeSingle();
 
       if (error) {
         console.error('Database error loading user data:', error.message, error.code);
@@ -263,7 +263,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           await supabase
             .from('users')
             .insert({
-              uid: data.user.id,
+              id: data.user.id,
               email: data.user.email,
               display_name: name,
               photo_url: data.user.user_metadata?.avatar_url || null
@@ -348,7 +348,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           display_name: data.displayName,
           photo_url: data.photoURL
         })
-        .eq('uid', user.id);
+        .eq('id', user.id);
 
       if (dbError) throw dbError;
 
@@ -380,7 +380,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { error } = await supabase
         .from('users')
         .update(dbData)
-        .eq('uid', user.id);
+        .eq('id', user.id);
 
       if (error) throw error;
 
@@ -416,6 +416,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 }
 
 export function useEnhancedAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
+
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');

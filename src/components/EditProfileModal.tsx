@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { X, User, Phone, Instagram, Twitter, Save, Loader2 } from 'lucide-react';
+import { X, User, Phone, Instagram, Twitter, Save, Loader2, Upload, Camera } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toast } from 'sonner';
+import { supabase } from '../lib/supabase';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -20,8 +21,12 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     instagram: '',
     twitter: '',
   });
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
-  const { userData, updateUserData } = auth || {};
+  const { userData, updateUserData, updateUserProfile } = auth || {};
 
   const validateField = (name: string, value: string) => {
     const newErrors = { ...errors };
@@ -74,6 +79,80 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     validateField(name, value);
   };
 
+  const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) {
+      setPhotoFile(null);
+      setPhotoPreview(null);
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (5MB max)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image size must be less than 5MB');
+      return;
+    }
+
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
+    
+    // Auto-upload when file is selected
+    await handleUploadPhoto();
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!photoFile || !userData?.id) return;
+
+    setUploadingPhoto(true);
+    try {
+      const fileExt = photoFile.name.split('.').pop();
+      const fileName = `${userData.id}/profile-${Date.now()}.${fileExt}`;
+
+      const { error } = await supabase
+        .storage
+        .from('user-uploads')
+        .upload(fileName, photoFile, {
+          contentType: photoFile.type,
+          upsert: false
+        });
+
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('user-uploads')
+        .getPublicUrl(fileName);
+
+      setPhotoUrl(publicUrl);
+      setPhotoPreview(publicUrl);
+      
+      // Update user profile with new photo URL
+      await updateUserProfile({ photoURL: publicUrl });
+      
+      toast.success('Profile photo uploaded successfully');
+    } catch (error: any) {
+      console.error('Photo upload error:', error);
+      toast.error('Failed to upload photo');
+    } finally {
+      setUploadingPhoto(false);
+    }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPhotoUrl(null);
+    setPhotoPreview(null);
+    if (userData?.id) {
+      updateUserProfile({ photoURL: null });
+    }
+  };
+
   useEffect(() => {
     if (userData) {
       setFormData({
@@ -83,6 +162,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         instagram: userData.contactInfo?.instagram || '',
         twitter: userData.contactInfo?.twitter || '',
       });
+      setPhotoUrl(userData.photoURL);
+      setPhotoPreview(userData.photoURL);
     }
   }, [userData]);
 
@@ -107,17 +188,16 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
     setLoading(true);
     try {
-      await updateUserData({
-        displayName: formData.displayName.trim(),
-        bio: formData.bio.trim(),
-        contactInfo: {
-          phone: formData.phone.trim(),
-          instagram: formData.instagram.trim(),
-          twitter: formData.twitter.trim(),
-        }
-      });
+       await updateUserData({
+           displayName: formData.displayName.trim(),
+           bio: formData.bio.trim(),
+           contactInfo: {
+             phone: formData.phone.trim(),
+             instagram: formData.instagram.trim(),
+             twitter: formData.twitter.trim(),
+           }
+         });
       toast.success('Profile updated successfully');
-      onClose();
       onClose();
     } catch {
       toast.error('Failed to update profile');
@@ -150,116 +230,191 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2 scrollbar-hide" data-lenis-prevent>
-            <div className="space-y-2">
+            {/* Photo Upload Section */}
+            <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
-                <span className={`text-[9px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
-                  {formData.displayName.length}/50
-                </span>
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">
+                  Profile Photo
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => document.getElementById('photo-input')?.click()}
+                    disabled={uploadingPhoto}
+                    className={`flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium 
+                     ${uploadingPhoto ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 transition-colors'}`}
+                  >
+                    <Upload className="w-4 h-4" />
+                    {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
+                  </button>
+                  {photoUrl && (
+                    <button
+                      type="button"
+                      onClick={handleRemovePhoto}
+                      className="flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                      Remove
+                    </button>
+                  )}
+                </div>
               </div>
+              
               <input
-                type="text"
-                value={formData.displayName}
-                onChange={(e) => handleFieldChange('displayName', e.target.value)}
-                className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${
-                  errors.displayName
-                    ? 'border-red-500/50 focus:border-red-500'
-                    : 'border-white/10 focus:border-accent-primary/50'
-                }`}
-                placeholder="Your name"
-                maxLength={50}
+                type="file"
+                id="photo-input"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={handlePhotoChange}
               />
-              {errors.displayName && (
-                <p className="text-[9px] text-red-400">{errors.displayName}</p>
+              
+              {/* Photo Preview */}
+              {photoPreview && (
+                <div className="relative aspect-square w-full bg-white/5 rounded-xl overflow-hidden">
+                  <img
+                    src={photoPreview}
+                    alt="Profile preview"
+                    className="w-full h-full object-cover"
+                  />
+                  {uploadingPhoto && (
+                    <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    </div>
+                  )}
+                </div>
               )}
-            </div>
-
-            <div className="space-y-2">
-              <div className="flex justify-between items-center">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
-                <span className={`text-[9px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
-                  {formData.bio.length}/500
-                </span>
-              </div>
-              <textarea
-                value={formData.bio}
-                onChange={(e) => handleFieldChange('bio', e.target.value)}
-                className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none min-h-[100px] resize-none transition-colors ${
-                  errors.bio
-                    ? 'border-red-500/50 focus:border-red-500'
-                    : 'border-white/10 focus:border-accent-primary/50'
-                }`}
-                placeholder="A short bio about yourself..."
-                maxLength={500}
-              />
-              {errors.bio && (
-                <p className="text-[9px] text-red-400">{errors.bio}</p>
-              )}
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Phone</label>
-                <div className="relative">
-                  <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                  <input
-                    type="tel"
-                    value={formData.phone}
-                    onChange={(e) => handleFieldChange('phone', e.target.value)}
-                    className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
-                      errors.phone
-                        ? 'border-red-500/50 focus:border-red-500'
-                        : 'border-white/10 focus:border-accent-primary/50'
-                    }`}
-                    placeholder="+1 234..."
+              
+              {!photoPreview && userData?.photoURL && (
+                <div className="relative aspect-square w-full bg-white/5 rounded-xl overflow-hidden">
+                  <img
+                    src={userData.photoURL}
+                    alt="Current profile photo"
+                    className="w-full h-full object-cover"
                   />
                 </div>
-                {errors.phone && (
-                  <p className="text-[9px] text-red-400">{errors.phone}</p>
+              )}
+              
+              {!photoPreview && !userData?.photoURL && (
+                <div className="relative aspect-square w-full bg-white/5 rounded-xl flex items-center justify-center text-slate-500">
+                  <Camera className="w-8 h-8 opacity-50" />
+                  <p className="mt-2 text-[12px]">No photo selected</p>
+                </div>
+              )}
+            </div>
+            
+            {/* Form Fields */}
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
+                  <span className={`text-[9px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
+                    {formData.displayName.length}/50
+                  </span>
+                </div>
+                <input
+                  type="text"
+                  value={formData.displayName}
+                  onChange={(e) => handleFieldChange('displayName', e.target.value)}
+                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${
+                    errors.displayName
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : 'border-white/10 focus:border-accent-primary/50'
+                  }`}
+                  placeholder="Your name"
+                  maxLength={50}
+                />
+                {errors.displayName && (
+                  <p className="text-[9px] text-red-400">{errors.displayName}</p>
                 )}
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
+                <div className="flex justify-between items-center">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
+                  <span className={`text-[9px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
+                    {formData.bio.length}/500
+                  </span>
+                </div>
+                <textarea
+                  value={formData.bio}
+                  onChange={(e) => handleFieldChange('bio', e.target.value)}
+                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none min-h-[100px] resize-none transition-colors ${
+                    errors.bio
+                      ? 'border-red-500/50 focus:border-red-500'
+                      : 'border-white/10 focus:border-accent-primary/50'
+                  }`}
+                  placeholder="A short bio about yourself..."
+                  maxLength={500}
+                />
+                {errors.bio && (
+                  <p className="text-[9px] text-red-400">{errors.bio}</p>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Phone</label>
+                  <div className="relative">
+                    <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="tel"
+                      value={formData.phone}
+                      onChange={(e) => handleFieldChange('phone', e.target.value)}
+                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
+                        errors.phone
+                          ? 'border-red-500/50 focus:border-red-500'
+                          : 'border-white/10 focus:border-accent-primary/50'
+                      }`}
+                      placeholder="+1 234..."
+                    />
+                  </div>
+                  {errors.phone && (
+                    <p className="text-[9px] text-red-400">{errors.phone}</p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
+                  <div className="relative">
+                    <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <input
+                      type="text"
+                      value={formData.instagram}
+                      onChange={(e) => handleFieldChange('instagram', e.target.value)}
+                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
+                        errors.instagram
+                          ? 'border-red-500/50 focus:border-red-500'
+                          : 'border-white/10 focus:border-accent-primary/50'
+                      }`}
+                      placeholder="@username"
+                    />
+                  </div>
+                  {errors.instagram && (
+                    <p className="text-[9px] text-red-400">{errors.instagram}</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Twitter / X</label>
                 <div className="relative">
-                  <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                  <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
                     type="text"
-                    value={formData.instagram}
-                    onChange={(e) => handleFieldChange('instagram', e.target.value)}
+                    value={formData.twitter}
+                    onChange={(e) => handleFieldChange('twitter', e.target.value)}
                     className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
-                      errors.instagram
+                      errors.twitter
                         ? 'border-red-500/50 focus:border-red-500'
                         : 'border-white/10 focus:border-accent-primary/50'
                     }`}
                     placeholder="@username"
                   />
                 </div>
-                {errors.instagram && (
-                  <p className="text-[9px] text-red-400">{errors.instagram}</p>
+                {errors.twitter && (
+                  <p className="text-[9px] text-red-400">{errors.twitter}</p>
                 )}
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Twitter / X</label>
-              <div className="relative">
-                <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                <input
-                  type="text"
-                  value={formData.twitter}
-                  onChange={(e) => handleFieldChange('twitter', e.target.value)}
-                  className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
-                    errors.twitter
-                      ? 'border-red-500/50 focus:border-red-500'
-                      : 'border-white/10 focus:border-accent-primary/50'
-                  }`}
-                  placeholder="@username"
-                />
-              </div>
-              {errors.twitter && (
-                <p className="text-[9px] text-red-400">{errors.twitter}</p>
-              )}
             </div>
           </div>
 

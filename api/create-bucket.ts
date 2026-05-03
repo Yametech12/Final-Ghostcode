@@ -2,10 +2,15 @@ import "dotenv/config";
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
+  console.error('VITE_SUPABASE_URL not found in environment variables');
+  process.exit(1);
+}
 
 if (!supabaseServiceKey) {
-  console.error('SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY not found in environment variables');
+  console.error('SUPABASE_SERVICE_ROLE_KEY not found in environment variables. Bucket creation requires service role key.');
   process.exit(1);
 }
 

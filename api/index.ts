@@ -9,7 +9,6 @@ console.log("Server starting...");
 
 import { getApiKey, createCompletion, DEFAULT_MODEL, VISION_MODEL } from './config.js';
 import { AI_PROVIDER, API_URL } from './ai.js';
-import { bucket } from './gcs.js';
 import { createClient } from '@supabase/supabase-js';
 import { serializeError } from '../src/utils/errorHandling';
 
@@ -29,8 +28,13 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
 
+if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
+  console.error('VITE_SUPABASE_URL not found in environment variables. Check your .env file.');
+  process.exit(1);
+}
+
 if (!supabaseAnonKey) {
-  console.error('SUPABASE_ANON_KEY not found in environment variables');
+  console.error('SUPABASE_ANON_KEY/VITE_SUPABASE_ANON_KEY not found in environment variables. Check your .env file.');
   process.exit(1);
 }
 
@@ -108,11 +112,11 @@ app.use((req, res, next) => {
   res.setHeader('X-XSS-Protection', '1; mode=block');
   // Referrer policy
   res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Content Security Policy
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https: https://storage.googleapis.com; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
-  );
+    // Content Security Policy
+    res.setHeader(
+      'Content-Security-Policy',
+      "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
+    );
   // HSTS (HTTP Strict Transport Security)
   if (req.secure || process.env.NODE_ENV === 'production') {
     res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
@@ -274,59 +278,32 @@ app.post("/api/upload/profile-photo", async (req, res) => {
     }
 
     const fileName = `users/${userId}/profile-${Date.now()}.jpg`;
-    const file = bucket.file(fileName);
+    
+    // Upload to Supabase Storage
+    const { error } = await supabase
+      .storage
+      .from('user-uploads')
+      .upload(fileName, buffer, {
+        contentType: 'image/jpeg',
+      });
 
-    let uploadAttempt = 0;
-    const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
-
-    while (uploadAttempt < maxRetries) {
-      try {
-        await file.save(buffer, {
-          metadata: {
-            contentType: 'image/jpeg',
-          },
-          public: false, // Make private for security
-        });
-        break; // Success, exit retry loop
-      } catch (gcsError: any) {
-        console.error('GCS upload error:', gcsError);
-
-        uploadAttempt++;
-        if (uploadAttempt >= maxRetries) {
-          // All retries exhausted
-          if (gcsError.code === 403) {
-            return res.status(403).json({
-              error: "Storage permission denied",
-              code: "STORAGE_PERMISSION_DENIED"
-            });
-          } else if (gcsError.code === 413) {
-            return res.status(413).json({
-              error: "File too large for storage",
-              code: "STORAGE_SIZE_LIMIT"
-            });
-          } else {
-            return res.status(500).json({
-              error: "Storage upload failed after retries",
-              code: "STORAGE_ERROR"
-            });
-          }
-        } else {
-          // Wait before retry
-          await new Promise(resolve => setTimeout(resolve, retryDelay * uploadAttempt));
-        }
-      }
+    if (error) {
+      console.error('Supabase upload error:', error);
+      return res.status(500).json({
+        error: "Storage upload failed",
+        code: "STORAGE_ERROR"
+      });
     }
 
-    // Generate signed URL for secure access
-    const [signedUrl] = await file.getSignedUrl({
-      action: 'read',
-      expires: Date.now() + 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    // Get public URL for the uploaded file
+    const { data: { publicUrl } } = supabase
+      .storage
+      .from('user-uploads')
+      .getPublicUrl(fileName);
 
     res.json({
       success: true,
-      url: signedUrl,
+      url: publicUrl,
       fileName: fileName
     });
 
