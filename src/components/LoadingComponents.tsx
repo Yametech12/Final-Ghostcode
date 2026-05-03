@@ -165,7 +165,7 @@ export function InlineLoader({ message }: { message?: string }) {
     <div className="flex flex-col items-center justify-center py-12 gap-4">
       <div className="relative w-16 h-16">
         {/* Outer glow */}
-        <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-md" />
+        <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-md animate-pulse" />
         {/* Animated ring */}
         <div
           className="absolute inset-0 rounded-full border-4 border-accent-primary/30 border-t-accent-primary animate-spin"
