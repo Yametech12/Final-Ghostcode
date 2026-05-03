@@ -28,6 +28,24 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
   const { userData, updateUserData, updateUserProfile } = auth || {};
 
+  // Cleanup object URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview && photoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(photoPreview);
+      }
+    };
+  }, [photoPreview]);
+
+  // Cleanup object URLs on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (photoPreview && photoPreview.startsWith('blob:')) {
+        URL.revokeObjectURL(photoPreview);
+      }
+    };
+  }, [photoPreview]);
+
   const validateField = (name: string, value: string) => {
     const newErrors = { ...errors };
 
@@ -237,26 +255,28 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   Profile Photo
                 </label>
                 <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => document.getElementById('photo-input')?.click()}
-                    disabled={uploadingPhoto}
-                    className={`flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium 
-                     ${uploadingPhoto ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 transition-colors'}`}
-                  >
-                    <Upload className="w-4 h-4" />
-                    {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
-                  </button>
-                  {photoUrl && (
-                    <button
-                      type="button"
-                      onClick={handleRemovePhoto}
-                      className="flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors"
-                    >
-                      <X className="w-4 h-4" />
-                      Remove
-                    </button>
-                  )}
+               <button
+                 type="button"
+                 onClick={() => document.getElementById('photo-input')?.click()}
+                 disabled={uploadingPhoto}
+                 className={`flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium 
+                  ${uploadingPhoto ? 'opacity-50 cursor-not-allowed' : 'hover:bg-white/10 transition-colors'}`}
+                 aria-label="Change profile photo"
+               >
+                 <Upload className="w-4 h-4" aria-hidden="true" />
+                 {uploadingPhoto ? 'Uploading...' : 'Change Photo'}
+               </button>
+               {photoUrl && (
+                 <button
+                   type="button"
+                   onClick={handleRemovePhoto}
+                   className="flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors"
+                   aria-label="Remove profile photo"
+                 >
+                   <X className="w-4 h-4" aria-hidden="true" />
+                   Remove
+                 </button>
+               )}
                 </div>
               </div>
               
