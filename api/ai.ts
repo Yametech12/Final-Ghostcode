@@ -1,2 +1,4 @@
-export const AI_PROVIDER = 'openrouter';
-export const API_URL = 'https://openrouter.ai/api/v1/chat/completions';
+import { getAIProvider } from './config.js';
+
+export const AI_PROVIDER = getAIProvider();
+export const API_URL = 'https://api.regolo.ai/v1/chat/completions';

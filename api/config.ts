@@ -1,34 +1,74 @@
 import "dotenv/config";
-// Polyfill ReadableStream for Node.js < 18
-import { ReadableStream } from 'node:stream/web';
 
 let apiKey: string | null = null;
+let aiProvider: 'regolo' | 'openrouter' | 'none' = 'none';
 
-// Centralized model configuration - single source of truth
-export const DEFAULT_MODEL = "openai/gpt-4o-mini";
-export const VISION_MODEL = "openai/gpt-4o";
+// Determine which AI provider to use
+const regoloKey = process.env.REGOLO_API_KEY;
+const openrouterKey = process.env.OPENROUTER_API_KEY;
+
+if (regoloKey) {
+  apiKey = regoloKey;
+  aiProvider = 'regolo';
+} else if (openrouterKey) {
+  apiKey = openrouterKey;
+  aiProvider = 'openrouter';
+}
+
+// Regolo AI models (from https://docs.regolo.ai/)
+export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
+export const VISION_MODEL = "Llama-3.3-70B-Instruct"; // Regolo's best vision-capable model
 export const FALLBACK_MODELS = [
-  "openai/gpt-4o-mini",
-  "anthropic/claude-3.5-sonnet-latest",
-  "meta-llama/llama-3.1-8b-instruct:free",
-  "google/gemma-3-5it-mini:free",
-  "microsoft/wizardlm-2-8x22b"
+  "Llama-3.3-70B-Instruct",
+  "Llama-3.1-8B-Instruct",
+  "gemma4-31b",
+  "mistral-small3.2"
 ];
+
+export function getAIProvider(): 'regolo' | 'openrouter' | 'none' {
+  return aiProvider;
+}
 
 export async function getApiKey(): Promise<string | null> {
   if (!apiKey) {
-    apiKey = process.env.OPENROUTER_API_KEY || "";
-  }
-
-  if (!apiKey) {
-    console.warn("WARNING: OpenRouter API key is not configured. AI features will be disabled.");
+    console.warn("WARNING: No AI API key configured (REGOLO_API_KEY or OPENROUTER_API_KEY). AI features will be disabled.");
     return null;
   }
-
   return apiKey;
 }
 
-// AI completion function for OpenRouter with model fallback
+// Base URLs for each provider
+const PROVIDER_BASE_URLS = {
+  regolo: 'https://api.regolo.ai/v1/chat/completions',
+  openrouter: 'https://openrouter.ai/api/v1/chat/completions'
+};
+
+function getBaseUrl(): string {
+  if (aiProvider === 'regolo') {
+    return PROVIDER_BASE_URLS.regolo;
+  } else if (aiProvider === 'openrouter') {
+    return PROVIDER_BASE_URLS.openrouter;
+  }
+  throw new Error('No AI provider configured');
+}
+
+// Get provider-specific headers
+function getHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`
+  };
+  
+  // OpenRouter requires these headers, Regolo does not
+  if (aiProvider === 'openrouter') {
+    headers['HTTP-Referer'] = process.env.APP_URL || 'http://localhost:5173';
+    headers['X-Title'] = 'Epimetheus AI';
+  }
+  
+  return headers;
+}
+
+// AI completion function with model fallback
 export async function createCompletion({
   model,
   messages,
@@ -44,18 +84,20 @@ export async function createCompletion({
   max_tokens?: number;
   stream?: boolean;
 }) {
-  const apiKey = await getApiKey();
+  const key = await getApiKey();
   
-  if (!apiKey) {
-    throw new Error("OpenRouter API key is not configured. AI features are unavailable.");
+  if (!key) {
+    throw new Error(`${aiProvider.toUpperCase()} API key is not configured. AI features are unavailable.`);
   }
   
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];
   let lastError: Error | null = null;
+  const baseUrl = getBaseUrl();
+  const headers = getHeaders();
 
   for (const modelToTry of modelsToTry) {
     try {
-      console.log(`Trying model: ${modelToTry}`);
+      console.log(`Trying model: ${modelToTry} via ${aiProvider}`);
       
       const payload: any = {
         model: modelToTry,
@@ -71,14 +113,9 @@ export async function createCompletion({
 
       // Try up to 3 times per model for rate limits
       for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+        const response = await fetch(baseUrl, {
           method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': process.env.APP_URL || 'http://localhost:5173',
-            'X-Title': 'Epimetheus AI'
-          },
+          headers,
           body: JSON.stringify(payload)
         });
 
@@ -105,10 +142,10 @@ export async function createCompletion({
         
         // Don't retry on auth errors, payment required, etc.
         if (response.status === 401 || response.status === 402 || response.status === 403) {
-          throw new Error(`OpenRouter API error: ${response.status} ${errorText}`);
+          throw new Error(`${aiProvider.toUpperCase()} API error: ${response.status} ${errorText}`);
         }
         
-        lastError = new Error(`OpenRouter API error: ${response.status} ${errorText}`);
+        lastError = new Error(`${aiProvider.toUpperCase()} API error: ${response.status} ${errorText}`);
         
         // For 400/404 (model not found), try next model
         if (response.status === 400 || response.status === 404) {
@@ -130,7 +167,7 @@ export async function createCompletion({
   throw lastError || new Error("All AI models failed");
 }
 
-// Streaming completion helper
+// Streaming completion helper (unchanged)
 export async function* createStreamingCompletion({
   model,
   messages,
@@ -156,7 +193,7 @@ export async function* createStreamingCompletion({
     });
   } catch (error) {
     console.error('Failed to create streaming completion:', error);
-    throw error; // Properly propagate initialization errors
+    throw error;
   }
 
   const reader = (stream as ReadableStream).getReader();
@@ -191,8 +228,6 @@ export async function* createStreamingCompletion({
             yield parsed;
           } catch (e) {
             console.error('Failed to parse streaming chunk:', e, 'Chunk:', line);
-            // Don't swallow parser errors - yield as error or skip
-            // For now, skip invalid chunks to keep stream alive
           }
         }
       }
