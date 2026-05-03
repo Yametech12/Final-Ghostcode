@@ -25,20 +25,20 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Supabase client for backend operations
-const supabaseUrl = process.env.VITE_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+const supabaseUrl = process.env.VITE_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!supabaseUrl || supabaseUrl === 'https://your-project.supabase.co') {
+if (!supabaseUrl) {
   console.error('VITE_SUPABASE_URL not found in environment variables. Check your .env file.');
   process.exit(1);
 }
 
-if (!supabaseAnonKey) {
-  console.error('SUPABASE_ANON_KEY/VITE_SUPABASE_ANON_KEY not found in environment variables. Check your .env file.');
+if (!supabaseServiceKey) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY not found in environment variables. Check your .env file.');
   process.exit(1);
 }
 
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // UUID validation function
 function isValidUUID(uuid: string): boolean {
