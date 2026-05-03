@@ -26,15 +26,15 @@ interface FieldReport {
   action: string;
   result: string;
   likes: number;
-  commentCount?: number;
+  comment_count?: number;
   date: string;
-  userId: string;
+  user_id: string;
 }
 
 interface FieldReportComment {
   id: string;
-  reportId: string;
-  userId: string;
+  report_id: string;
+  user_id: string;
   author: string;
   content: string;
   date: string;
@@ -69,11 +69,18 @@ export default function FieldGuidePage() {
           .select('*')
           .order('timestamp', { ascending: false });
         if (error) throw error;
-        const fetchedReports = reports.map(report => ({
-          id: report.id,
-          ...report,
-          date: new Date(report.timestamp).toLocaleDateString() || new Date().toLocaleDateString()
-        })) as FieldReport[];
+         const fetchedReports = reports.map(report => ({
+           id: report.id,
+           author: report.author,
+           type: report.type,
+           scenario: report.scenario,
+           action: report.action,
+           result: report.result,
+           likes: report.likes,
+           comment_count: report.comment_count || 0,
+           user_id: report.user_id,
+           date: new Date(report.timestamp).toLocaleDateString()
+         }));
         setReports(fetchedReports);
         setLoadingReports(false);
       } catch (error) {
@@ -110,18 +117,19 @@ export default function FieldGuidePage() {
 
     setIsSubmitting(true);
     try {
-      const { error } = await supabase
-        .from('field_reports')
-        .insert({
-          author: newReport.author || 'Anonymous',
-          type: newReport.type || 'Unknown',
-          scenario: newReport.scenario,
-          action: newReport.action,
-          result: newReport.result,
-          likes: 0,
-          commentCount: 0,
-          timestamp: new Date().toISOString()
-        });
+       const { error } = await supabase
+         .from('field_reports')
+         .insert({
+           user_id: user.id,
+           author: newReport.author || 'Anonymous',
+           type: newReport.type || 'Unknown',
+           scenario: newReport.scenario,
+           action: newReport.action,
+           result: newReport.result,
+           likes: 0,
+           comment_count: 0,
+           timestamp: new Date().toISOString()
+         });
       if (error) throw error;
 
       toast.success("Field report submitted successfully!");
@@ -160,18 +168,21 @@ export default function FieldGuidePage() {
 
   const fetchComments = async (reportId: string) => {
     try {
-      const { data: fetchedComments, error } = await supabase
-        .from('field_report_comments')
-        .select('*')
-        .eq('reportId', reportId)
-        .order('timestamp', { ascending: true });
+       const { data: fetchedComments, error } = await supabase
+         .from('field_report_comments')
+         .select('*')
+         .eq('report_id', reportId)
+         .order('timestamp', { ascending: true });
       if (error) throw error;
 
-      const comments = fetchedComments.map(comment => ({
-        id: comment.id,
-        ...comment,
-        date: new Date(comment.timestamp).toLocaleDateString() || new Date().toLocaleDateString()
-      })) as FieldReportComment[];
+       const comments = fetchedComments.map(comment => ({
+         id: comment.id,
+         report_id: comment.report_id,
+         user_id: comment.user_id,
+         author: comment.author,
+         content: comment.content,
+         date: new Date(comment.timestamp).toLocaleDateString()
+       }));
 
       setComments(prev => ({
         ...prev,
@@ -187,20 +198,20 @@ export default function FieldGuidePage() {
 
     setIsSubmittingComment(true);
     try {
-      const { error: insertError } = await supabase
-        .from('field_report_comments')
-        .insert({
-          reportId,
-          author: 'Anonymous',
-          content: newComment.trim(),
-          timestamp: new Date().toISOString()
-        });
+       const { error: insertError } = await supabase
+         .from('field_report_comments')
+         .insert({
+           report_id: reportId,
+           author: 'Anonymous',
+           content: newComment.trim(),
+           timestamp: new Date().toISOString()
+         });
       if (insertError) throw insertError;
 
-      const { error: updateError } = await supabase
-        .from('field_reports')
-        .update({ commentCount: (reports.find(r => r.id === reportId)?.commentCount || 0) + 1 })
-        .eq('id', reportId);
+       const { error: updateError } = await supabase
+         .from('field_reports')
+         .update({ comment_count: (reports.find(r => r.id === reportId)?.comment_count || 0) + 1 })
+         .eq('id', reportId);
       if (updateError) throw updateError;
 
       setNewComment('');
@@ -643,7 +654,7 @@ export default function FieldGuidePage() {
                         )}
                       >
                         <MessageSquare className="w-4 h-4" />
-                        {report.commentCount || 0}
+                         {report.comment_count || 0}
                       </button>
                     </div>
                   </div>

@@ -26,20 +26,20 @@ export default function ProfilerPage() {
     const loadPastResults = async () => {
       if (user) {
         try {
-          const { data: calibrations, error } = await supabase
-            .from('calibrations')
-            .select('*')
-            .eq('userId', user.id)
-            .order('timestamp', { ascending: false })
-            .limit(5);
-          if (error) throw error;
-          const results: {typeId: string, date: string}[] = [];
-          calibrations.forEach((data) => {
-            results.push({
-              typeId: data.typeId,
-              date: data.timestamp || new Date().toISOString()
-            });
-          });
+           const { data: calibrations, error } = await supabase
+             .from('calibrations')
+             .select('*')
+             .eq('user_id', user.id)
+             .order('timestamp', { ascending: false })
+             .limit(5);
+           if (error) throw error;
+           const results: {typeId: string, date: string}[] = [];
+           calibrations.forEach((data) => {
+             results.push({
+               typeId: data.type_id,
+               date: data.timestamp || new Date().toISOString()
+             });
+           });
           setPastResults(results);
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, 'calibrations');
@@ -73,14 +73,14 @@ export default function ProfilerPage() {
         
         if (user) {
           try {
-            const { error } = await supabase
-              .from('calibrations')
-              .insert({
-                userId: user.id,
-                typeId: matchedType.id,
-                traits: traits,
-                timestamp: new Date().toISOString()
-              });
+             const { error } = await supabase
+               .from('calibrations')
+               .insert({
+                 user_id: user.id,
+                 type_id: matchedType.id,
+                 traits: traits,
+                 timestamp: new Date().toISOString()
+               });
             if (error) throw error;
           } catch (error) {
             handleFirestoreError(error, OperationType.CREATE, 'calibrations');

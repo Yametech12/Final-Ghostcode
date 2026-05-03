@@ -21,16 +21,16 @@ export default function InsightsPage() {
     const fetchData = async () => {
       if (!user) return;
       try {
-        const { data: calibrations, error } = await supabase
-          .from('calibrations')
-          .select('*')
-          .eq('userId', user.id);
-        if (error) throw error;
-        const data = calibrations.map(cal => ({
-          id: cal.id,
-          ...cal,
-          date: new Date(cal.timestamp)
-        }));
+         const { data: calibrations, error } = await supabase
+           .from('calibrations')
+           .select('*')
+           .eq('user_id', user.id);
+         if (error) throw error;
+         const data = calibrations.map(cal => ({
+           id: cal.id,
+           ...cal,
+           date: new Date(cal.timestamp)
+         }));
         setCalibrations(data.sort((a, b) => a.date.getTime() - b.date.getTime()));
       } catch (error) {
         console.error("Error fetching insights data:", error);
@@ -46,8 +46,8 @@ export default function InsightsPage() {
     const typeCounts: Record<string, number> = {};
     personalityTypes.forEach(t => typeCounts[t.name] = 0);
     
-    calibrations.forEach(c => {
-      const type = personalityTypes.find(t => t.id === c.typeId);
+     calibrations.forEach(c => {
+       const type = personalityTypes.find(t => t.id === c.type_id);
       if (type) {
         typeCounts[type.name] = (typeCounts[type.name] || 0) + 1;
       }
@@ -210,9 +210,9 @@ export default function InsightsPage() {
               <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Most Common Type</span>
             </div>
             <div className="glass-card p-6 flex flex-col items-center justify-center text-center space-y-2">
-              <span className="text-4xl font-bold text-accent-secondary">
-                {new Set(calibrations.map(c => c.typeId)).size}
-              </span>
+               <span className="text-4xl font-bold text-accent-secondary">
+                 {new Set(calibrations.map(c => c.type_id)).size}
+               </span>
               <span className="text-sm font-bold text-slate-500 uppercase tracking-widest">Unique Types Found</span>
             </div>
           </div>

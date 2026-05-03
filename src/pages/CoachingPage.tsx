@@ -37,34 +37,34 @@ export default function CoachingPage() {
     async function loadUserContext() {
       if (!user) return;
       try {
-        // Fetch recent calibrations to give the AI context
-        const { data: calibrations, error: calError } = await supabase
-          .from('calibrations')
-          .select('*')
-          .eq('userId', user.id)
-          .order('timestamp', { ascending: false })
-          .limit(3);
+         // Fetch recent calibrations to give the AI context
+         const { data: calibrations, error: calError } = await supabase
+           .from('calibrations')
+           .select('*')
+           .eq('user_id', user.id)
+           .order('timestamp', { ascending: false })
+           .limit(3);
         if (calError) throw calError;
         let contextString = "User's recent calibrations:\n";
 
         if (!calibrations || calibrations.length === 0) {
           contextString += "No recent calibrations found.\n";
         } else {
-          calibrations.forEach(data => {
-            const type = personalityTypes.find(t => t.id === data.typeId);
-            if (type) {
-              contextString += `- Calibrated someone as ${type.name} (${type.id})\n`;
-            }
-          });
+           calibrations.forEach(data => {
+             const type = personalityTypes.find(t => t.id === data.type_id);
+             if (type) {
+               contextString += `- Calibrated someone as ${type.name} (${type.id})\n`;
+             }
+           });
         }
 
-        // Fetch recent field reports
-        const { data: reports, error: reportsError } = await supabase
-          .from('field_reports')
-          .select('*')
-          .eq('userId', user.id)
-          .order('timestamp', { ascending: false })
-          .limit(2);
+         // Fetch recent field reports
+         const { data: reports, error: reportsError } = await supabase
+           .from('field_reports')
+           .select('*')
+           .eq('user_id', user.id)
+           .order('timestamp', { ascending: false })
+           .limit(2);
         if (reportsError) throw reportsError;
         contextString += "\nUser's recent field reports:\n";
 

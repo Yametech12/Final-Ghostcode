@@ -88,15 +88,15 @@ export function useAdvisor() {
   const createNewSession = useCallback(async (title: string = 'New Session') => {
     if (!user) return null;
     try {
-      const { data, error } = await supabase
-        .from('advisor_sessions')
-        .insert({
-          user_id: user.id,
-          title,
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+       const { data, error } = await supabase
+         .from('advisor_sessions')
+         .insert({
+           user_id: user.id,
+           title,
+           timestamp: new Date().toISOString()
+         })
+         .select()
+         .single();
 
       if (error) throw error;
 
@@ -116,14 +116,14 @@ export function useAdvisor() {
     setIsLoading(true);
     try {
       // Add user message
-      const { error } = await supabase
-        .from('advisor_messages')
-        .insert({
-          session_id: currentSessionId,
-          role: 'user',
-          content,
-          created_at: new Date().toISOString()
-        });
+       const { error } = await supabase
+         .from('advisor_messages')
+         .insert({
+           session_id: currentSessionId,
+           role: 'user',
+           content,
+           timestamp: new Date().toISOString()
+         });
 
       if (error) throw error;
 

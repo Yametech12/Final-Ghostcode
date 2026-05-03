@@ -10,11 +10,11 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 interface Dossier {
   id: string;
   name: string;
-  typeId: string;
+  type_id: string;
   phase: 'Intrigue' | 'Arousal' | 'Comfort' | 'Devotion';
   notes: string;
-  lastInteraction: string;
-  createdAt: string;
+  last_interaction: string;
+  created_at: string;
 }
 
 export default function DossiersPage() {
@@ -38,25 +38,25 @@ export default function DossiersPage() {
       setLoading(true);
       if (user) {
         try {
-          const { data: dossiers, error } = await supabase
-            .from('dossiers')
-            .select('*')
-            .eq('userId', user.id);
+           const { data: dossiers, error } = await supabase
+             .from('dossiers')
+             .select('*')
+             .eq('user_id', user.id);
           if (error) throw error;
-          const loadedDossiers: Dossier[] = [];
-          dossiers.forEach((data) => {
-            loadedDossiers.push({
-              id: data.id,
-              name: data.name,
-              typeId: data.typeId,
-              phase: data.phase,
-              notes: data.notes || '',
-              lastInteraction: data.lastInteraction || '',
-              createdAt: data.createdAt || new Date().toISOString()
-            });
-          });
-          // Sort by newest first
-          loadedDossiers.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+           const loadedDossiers: Dossier[] = [];
+           dossiers.forEach((data) => {
+             loadedDossiers.push({
+               id: data.id,
+               name: data.name,
+               type_id: data.type_id,
+               phase: data.phase,
+               notes: data.notes || '',
+               last_interaction: data.last_interaction || '',
+               created_at: data.created_at || new Date().toISOString()
+             });
+           });
+           // Sort by newest first
+           loadedDossiers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           setDossiers(loadedDossiers);
         } catch (error) {
           handleFirestoreError(error, OperationType.GET, 'dossiers');
@@ -105,7 +105,7 @@ export default function DossiersPage() {
     if (!name.trim()) return;
 
     if (editingId) {
-      const updatedDossier = { name, typeId, phase, notes, lastInteraction };
+      const updatedDossier = { name, type_id: typeId, phase, notes, last_interaction: lastInteraction };
       
       if (user) {
         try {
@@ -122,28 +122,28 @@ export default function DossiersPage() {
       
       saveDossiers(dossiers.map(d => d.id === editingId ? { ...d, ...updatedDossier } : d));
     } else {
-      const newDossierData = {
-        name,
-        typeId,
-        phase,
-        notes,
-        lastInteraction: lastInteraction || new Date().toISOString().split('T')[0],
-      };
+       const newDossierData = {
+         name,
+         type_id: typeId,
+         phase,
+         notes,
+         last_interaction: lastInteraction || new Date().toISOString().split('T')[0],
+       };
 
-      let newId = Date.now().toString();
-      let createdAtStr = new Date().toISOString();
+       let newId = Date.now().toString();
+       let createdAtStr = new Date().toISOString();
 
-      if (user) {
-        try {
-          const { data, error } = await supabase
-            .from('dossiers')
-            .insert({
-              ...newDossierData,
-              userId: user.id,
-              createdAt: new Date().toISOString()
-            })
-            .select()
-            .single();
+       if (user) {
+         try {
+           const { data, error } = await supabase
+             .from('dossiers')
+             .insert({
+               ...newDossierData,
+               user_id: user.id,
+               created_at: new Date().toISOString()
+             })
+             .select()
+             .single();
           if (error) throw error;
           newId = data.id;
         } catch (error) {
@@ -152,26 +152,26 @@ export default function DossiersPage() {
         }
       }
 
-      const newDossier: Dossier = {
-        id: newId,
-        ...newDossierData,
-        createdAt: createdAtStr
-      };
+       const newDossier: Dossier = {
+         id: newId,
+         ...newDossierData,
+         created_at: createdAtStr
+       };
       
       saveDossiers([newDossier, ...dossiers]);
     }
     closeModal();
   };
 
-  const handleEdit = (dossier: Dossier) => {
-    setEditingId(dossier.id);
-    setName(dossier.name);
-    setTypeId(dossier.typeId as any);
-    setPhase(dossier.phase);
-    setNotes(dossier.notes);
-    setLastInteraction(dossier.lastInteraction);
-    setIsModalOpen(true);
-  };
+   const handleEdit = (dossier: Dossier) => {
+     setEditingId(dossier.id);
+     setName(dossier.name);
+     setTypeId(dossier.type_id as any);
+     setPhase(dossier.phase);
+     setNotes(dossier.notes);
+     setLastInteraction(dossier.last_interaction);
+     setIsModalOpen(true);
+   };
 
   const handleDelete = async (id: string) => {
     if (confirmingDelete !== id) {
@@ -217,10 +217,10 @@ export default function DossiersPage() {
     setLastInteraction('');
   };
 
-  const filteredDossiers = dossiers.filter(d => 
-    d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    d.typeId.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+   const filteredDossiers = dossiers.filter(d => 
+     d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+     d.type_id.toLowerCase().includes(searchQuery.toLowerCase())
+   );
 
   return (
     <motion.div 
@@ -277,8 +277,8 @@ export default function DossiersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredDossiers.map(dossier => {
-            const type = personalityTypes.find(p => p.id === dossier.typeId);
+           {filteredDossiers.map(dossier => {
+             const type = personalityTypes.find(p => p.id === dossier.type_id);
             return (
               <div key={dossier.id} className="p-6 rounded-2xl bg-[#151619] border border-white/5 shadow-2xl relative group hover:border-accent-primary/30 transition-all">
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -303,7 +303,7 @@ export default function DossiersPage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-bold text-white">{dossier.name}</h3>
-                    <p className="text-xs font-mono text-accent-primary uppercase tracking-widest">{type?.name || dossier.typeId}</p>
+                     <p className="text-xs font-mono text-accent-primary uppercase tracking-widest">{type?.name || dossier.type_id}</p>
                   </div>
                 </div>
 
@@ -319,7 +319,7 @@ export default function DossiersPage() {
                     <span className="text-[10px] font-mono text-slate-500 uppercase tracking-widest block mb-1">Last Interaction</span>
                     <div className="flex items-center gap-2 text-sm text-slate-400">
                       <Calendar className="w-4 h-4" />
-                      {dossier.lastInteraction}
+                       {dossier.last_interaction}
                     </div>
                   </div>
 

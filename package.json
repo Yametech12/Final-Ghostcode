@@ -15,7 +15,8 @@
     "clean:dev": "taskkill /F /IM node.exe /FI \"WINDOWTITLE eq vite*\" 2>nul || echo No vite processes found",
     "lint": "tsc --noEmit",
     "lint:api": "tsc --noEmit --project tsconfig.api.json",
-    "lint:all": "npm run lint && npm run lint:api"
+    "lint:all": "npm run lint && npm run lint:api",
+    "diagnose": "tsx scripts/diagnostic.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.103.3",
