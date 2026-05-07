@@ -37,15 +37,6 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     };
   }, [photoPreview]);
 
-  // Cleanup object URLs on unmount to prevent memory leaks
-  useEffect(() => {
-    return () => {
-      if (photoPreview && photoPreview.startsWith('blob:')) {
-        URL.revokeObjectURL(photoPreview);
-      }
-    };
-  }, [photoPreview]);
-
   const validateField = (name: string, value: string) => {
     const newErrors = { ...errors };
 
