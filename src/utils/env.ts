@@ -7,6 +7,7 @@ export function validateEnvironment() {
   const required = [
     'VITE_SUPABASE_URL',
     'VITE_SUPABASE_ANON_KEY'
+    // Note: AI API key (REGOLO_API_KEY) is server-side only
   ];
 
   const missing = required.filter(key => !import.meta.env[key]);
@@ -20,20 +21,6 @@ export function validateEnvironment() {
   if (import.meta.env.VITE_RECAPTCHA_SITE_KEY?.includes('your_recaptcha_site_key_here')) {
     placeholders.push('VITE_RECAPTCHA_SITE_KEY');
   }
-
-  if (placeholders.length > 0) {
-    console.warn(`Warning: Placeholder values detected for: ${placeholders.join(', ')}. Replace with real keys.`);
-  }
-
-  return true;
-}
-
-  // Check for placeholder values
-  const placeholders = [];
-  if (import.meta.env.VITE_RECAPTCHA_SITE_KEY?.includes('your_recaptcha_site_key_here')) {
-    placeholders.push('VITE_RECAPTCHA_SITE_KEY');
-  }
-  // Note: REGOLO_API_KEY and OPENROUTER_API_KEY are server-side only, not checked here
 
   if (placeholders.length > 0) {
     console.warn(`Warning: Placeholder values detected for: ${placeholders.join(', ')}. Replace with real keys.`);

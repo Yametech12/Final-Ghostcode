@@ -29,34 +29,48 @@ export default function LoginPage() {
 
   // Password strength calculation
   const passwordStrength = React.useMemo(() => {
-    if (!password) return { strength: 'None', width: '0%', color: 'gray' };
+    if (!password) {
+      return {
+        strength: 'None',
+        width: '0%',
+        color: 'gray',
+        bgClass: 'bg-gray-500/50',
+        textClass: 'text-gray-400'
+      };
+    }
+
     let score = 0;
     if (password.length >= 8) score++;
     if (/[A-Z]/.test(password)) score++;
     if (/[a-z]/.test(password)) score++;
     if (/[0-9]/.test(password)) score++;
     if (/[^A-Za-z0-9]/.test(password)) score++;
+
     const strengthMap = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
     const widthMap = ['20%', '40%', '60%', '80%', '100%'];
-    const colorMap = ['red', 'orange', 'yellow', 'blue', 'green'];
+    const colorKeys = ['red', 'orange', 'yellow', 'blue', 'green'];
+    const colorIndex = Math.min(score - 1, 4);
+    const colorKey = score > 0 ? colorKeys[colorIndex] : 'gray';
+
+    const colorClassMap: Record<string, { bg: string; text: string }> = {
+      red: { bg: 'bg-red-500/50', text: 'text-red-400' },
+      orange: { bg: 'bg-orange-500/50', text: 'text-orange-400' },
+      yellow: { bg: 'bg-yellow-500/50', text: 'text-yellow-400' },
+      blue: { bg: 'bg-blue-500/50', text: 'text-blue-400' },
+      green: { bg: 'bg-green-500/50', text: 'text-green-400' },
+      gray: { bg: 'bg-gray-500/50', text: 'text-gray-400' }
+    };
+
+    const classes = colorClassMap[colorKey] || colorClassMap.gray;
+
     return {
       strength: strengthMap[score - 1] || 'None',
       width: widthMap[score - 1] || '0%',
-      color: colorMap[score - 1] || 'gray'
+      color: colorKey,
+      bgClass: classes.bg,
+      textClass: classes.text
     };
-   }, [password]);
-
-  const getStrengthColorClass = (color: string, type: 'text' | 'bg') => {
-    const map: Record<string, Record<string, string>> = {
-      red: { text: 'text-red-400', bg: 'bg-red-500' },
-      orange: { text: 'text-orange-400', bg: 'bg-orange-500' },
-      yellow: { text: 'text-yellow-400', bg: 'bg-yellow-500' },
-      blue: { text: 'text-blue-400', bg: 'bg-blue-500' },
-      green: { text: 'text-green-400', bg: 'bg-green-500' },
-      gray: { text: 'text-slate-400', bg: 'bg-slate-500' }
-    };
-    return map[color]?.[type] || map.gray[type];
-  };
+  }, [password]);
 
   const passwordErrors = React.useMemo(() => {
     const errors: string[] = [];
@@ -173,82 +187,84 @@ export default function LoginPage() {
         <h1 className="text-3xl font-bold text-white mb-2 text-center">Welcome Back</h1>
         <p className="text-slate-400 mb-6 text-center">Sign in to continue to Epimetheus</p>
 
-         <form onSubmit={handleSubmit} className="space-y-6">
-           {/* Email field */}
-           <div className="space-y-2">
-             <label htmlFor="email" className="text-sm font-medium text-slate-300">Email</label>
-             <div className="relative">
-               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
-               <input
-                 id="email"
-                 type="email"
-                 value={email}
-                 onChange={(e) => {
-                   const sanitized = sanitizeInput(e.target.value);
-                   setEmail(sanitized);
-                   setEmailError(sanitized && !isValidEmail(sanitized) ? 'Please enter a valid email address' : '');
-                 }}
-                 onBlur={() => {
-                   if (email && !isValidEmail(email)) setEmailError('Please enter a valid email address');
-                 }}
-                 className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
-                   emailError ? 'border-red-500/50' : 'border-white/10'
-                 }`}
-                 placeholder="you@example.com"
-                 autoComplete="email"
-                 required
-                 aria-invalid={!!emailError}
-                 aria-describedby={emailError ? 'email-error' : undefined}
-               />
-               {emailError && (
-                 <p id="email-error" className="text-xs text-red-400 mt-1">{emailError}</p>
-               )}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Email field */}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Email</label>
+            <div className="relative">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => {
+                  const sanitized = sanitizeInput(e.target.value);
+                  setEmail(sanitized);
+                  setEmailError(sanitized && !isValidEmail(sanitized) ? 'Please enter a valid email address' : '');
+                }}
+                onBlur={() => {
+                  if (email && !isValidEmail(email)) setEmailError('Please enter a valid email address');
+                }}
+                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
+                  emailError ? 'border-red-500/50' : 'border-white/10'
+                }`}
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+              />
             </div>
             {emailError && <div className="text-xs text-red-400">{emailError}</div>}
           </div>
 
           {/* Password field with strength meter */}
-           <div className="space-y-2">
-             <label htmlFor="password" className="text-sm font-medium text-slate-300">Password</label>
-             <div className="relative">
-               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
-               <input
-                 id="password"
-                 type={showPassword ? 'text' : 'password'}
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
-                   password && passwordErrors.length > 0
-                     ? 'border-red-500/50 focus:border-red-500/50'
-                     : password && passwordErrors.length === 0
-                     ? 'border-green-500/50 focus:border-green-500/50'
-                     : 'border-white/10 focus:border-accent-primary/50'
-                 }`}
-                 placeholder="••••••••"
-                 autoComplete="current-password"
-                 required
-                 aria-invalid={passwordErrors.length > 0}
-                 aria-describedby={passwordErrors.length > 0 ? 'password-errors' : undefined}
-               />
-               <button
-                 type="button"
-                 onClick={() => setShowPassword(!showPassword)}
-                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-               >
-                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-               </button>
-             </div>
-             {password && passwordErrors.length > 0 && (
-               <div id="password-errors" className="space-y-1" role="alert">
-                 {passwordErrors.map((error, index) => (
-                   <div key={index} className="flex items-center gap-1 text-xs text-red-400">
-                     <div className="w-1 h-1 rounded-full bg-red-400" aria-hidden="true" />
-                     {error}
-                   </div>
-                 ))}
-               </div>
-             )}
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-300">Password</label>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
+                  password && passwordErrors.length === 0
+                    ? 'border-green-500/50'
+                    : 'border-white/10'
+                }`}
+                placeholder="••••••••"
+                autoComplete="current-password"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+              >
+                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+              </button>
+            </div>
+            {password && (
+              <div className="space-y-2 mt-2">
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-400">Strength:</span>
+                  <span className={`font-medium ${passwordStrength.textClass}`}>
+                    {passwordStrength.strength}
+                  </span>
+                </div>
+                <div className="w-full bg-white/5 rounded-full h-2">
+                  <div
+                    className={`h-2 rounded-full transition-all ${passwordStrength.bgClass}`}
+                    style={{ width: passwordStrength.width }}
+                  />
+                </div>
+                {passwordErrors.length > 0 && (
+                  <div className="space-y-1 mt-2">
+                    {passwordErrors.map((err, i) => (
+                      <div key={i} className="flex items-center gap-1 text-xs text-red-400">
+                        <div className="w-1 h-1 rounded-full bg-red-400" />
+                        {err}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>

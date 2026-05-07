@@ -8,7 +8,6 @@ import helmet from 'helmet';
 console.log("Server starting...");
 
 import { getApiKey, createCompletion, DEFAULT_MODEL, VISION_MODEL } from './config.js';
-import { AI_PROVIDER, API_URL } from './ai.js';
 import { createClient } from '@supabase/supabase-js';
 import { serializeError } from '../src/utils/errorHandling';
 
@@ -39,6 +38,7 @@ if (!supabaseServiceKey) {
 }
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+const BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
 
 // UUID validation function
 function isValidUUID(uuid: string): boolean {
@@ -115,7 +115,7 @@ app.use((req, res, next) => {
     // Content Security Policy
     res.setHeader(
       'Content-Security-Policy',
-      "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.openrouter.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
+      "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.google.com https://www.gstatic.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.regolo.ai https://*.anthropic.com https://*.openai.com https://*.google.com; font-src 'self'; object-src 'none'; frame-ancestors 'self';"
     );
   // HSTS (HTTP Strict Transport Security)
   if (req.secure || process.env.NODE_ENV === 'production') {
@@ -159,12 +159,12 @@ app.options('/', (_req, res) => {
 
 // Combined route handlers (single function)
 app.get("/api/health", async (_req, res) => {
-  const openrouterKey = await getApiKey();
+  const regoloKey = await getApiKey();
   res.json({
     status: "ok",
     env: process.env.NODE_ENV,
-    openrouter: !!openrouterKey,
-    aiProvider: AI_PROVIDER,
+    regolo: !!regoloKey,
+    aiProvider: "Regolo AI",
     timestamp: new Date().toISOString()
   });
 });
@@ -336,35 +336,7 @@ app.get("/api/ai/test-key", async (_req, res) => {
 
 app.get("/api/ai/credits", async (_req, res) => {
   try {
-    const key = await getApiKey();
-    if (!key) return res.status(500).json({ error: "API key not configured" });
-    
-    const response = await fetch('https://openrouter.ai/api/v1/credits', {
-      headers: {
-        'Authorization': `Bearer ${key}`,
-        'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://epimetheus.ai',
-        'X-Title': process.env.OPENROUTER_TITLE || 'Epimetheus'
-      }
-    });
-    
-    if (!response.ok) {
-      const cloned = response.clone();
-      const text = await cloned.text();
-      console.log('Credits endpoint response:', response.status, text);
-      return res.status(response.status).json({ error: "Failed to fetch credits" });
-    }
-    
-    try {
-      const data = await response.json();
-      res.json({
-        credits: data.credits,
-        usage: data.usage
-      });
-    } catch (_jsonError) {
-      const text = await response.text();
-      console.error("Invalid JSON in credits response:", text);
-      return res.status(500).json({ error: "Failed to parse credits response" });
-    }
+    res.status(404).json({ error: "Credits endpoint not available for Regolo AI" });
   } catch (error) {
     console.error("Credits error:", error);
     res.status(500).json({ error: "Failed to fetch credits" });
@@ -538,7 +510,7 @@ Message History: ${history?.length || 0} messages in this session
     try {
       // Get stream directly and handle it properly without async generator
       const stream = await createCompletion({
-        model: 'openai/gpt-4o-mini',
+        model: DEFAULT_MODEL,
         messages,
         temperature: 0.7,
         max_tokens: 600,
@@ -678,7 +650,7 @@ app.post("/api/calibration/analyze", validateUUIDMiddleware, async (req, res) =>
   `;
 
     const completion = await createCompletion({
-      model: 'openai/gpt-4o-mini',
+      model: DEFAULT_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       response_format: { type: 'json_object' },
@@ -774,15 +746,13 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
       });
     }
 
-    console.log('OpenRouter request:', { model: requestBody.model, messagesCount: requestBody.messages.length });
+    console.log('Regolo AI request:', { model: requestBody.model, messagesCount: requestBody.messages.length });
 
-    const response = await fetch(API_URL, {
+    const response = await fetch(BASE_URL, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://epimetheus.ai',
-        'X-Title': process.env.OPENROUTER_TITLE || 'Epimetheus'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(requestBody),
     });
@@ -793,7 +763,7 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
     try {
       const cloned = response.clone();
       responseText = await cloned.text();
-      console.log('OpenRouter response status:', status, 'text:', responseText?.substring(0, 300));
+      console.log('Regolo AI response status:', status, 'text:', responseText?.substring(0, 300));
       errorData = JSON.parse(responseText);
     } catch {
       console.error('Failed to parse response, text was:', responseText);
@@ -801,37 +771,30 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
     }
 
     if (status === 400) {
-      return res.status(400).json({ 
-        error: "Bad request", 
+      return res.status(400).json({
+        error: "Bad request",
         details: errorData.error?.message || "Invalid request parameters",
         code: "BAD_REQUEST"
       });
     }
     if (status === 401) {
-      return res.status(401).json({ 
-        error: "Invalid API key", 
-        details: "Please check your OpenRouter API key",
+      return res.status(401).json({
+        error: "Invalid API key",
+        details: "Please check your Regolo API key",
         code: "INVALID_KEY"
       });
     }
-    if (status === 402) {
-      return res.status(402).json({ 
-        error: "Insufficient credits", 
-        details: "Please add credits to your OpenRouter account",
-        code: "INSUFFICIENT_CREDITS"
-      });
-    }
     if (status === 429) {
-      return res.status(429).json({ 
-        error: "Rate limited", 
+      return res.status(429).json({
+        error: "Rate limited",
         details: "Too many requests. Please wait before retrying",
         code: "RATE_LIMITED",
         retryAfter: response.headers.get("Retry-After")
       });
     }
     if (status === 502 || status === 503) {
-      return res.status(503).json({ 
-        error: "Model unavailable", 
+      return res.status(503).json({
+        error: "Model unavailable",
         details: "The AI model is temporarily unavailable. Please try again",
         code: "MODEL_UNAVAILABLE"
       });

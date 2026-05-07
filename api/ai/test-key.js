@@ -1,5 +1,4 @@
-import { getApiKey } from '../config.js';
-import { AI_PROVIDER, API_URL } from '../services/ai.js';
+import { getApiKey, DEFAULT_MODEL } from '../config.js';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {
@@ -13,24 +12,22 @@ export default async function handler(req, res) {
     if (!hasKey) {
       return res.status(200).json({
         configured: false,
-        error: "AI API key not configured on server"
+        error: "Regolo AI API key not configured on server"
       });
     }
 
-    // Test OpenRouter key with simple request
+    // Test Regolo key with simple request
     const testBody = {
-      model: "microsoft/wizardlm-2-8x22b",
+      model: DEFAULT_MODEL,
       messages: [{ role: "user", content: "Say 'Hello'" }],
       max_tokens: 10
     };
 
-    const response = await fetch(API_URL, {
+    const response = await fetch('https://api.regolo.ai/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${key}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.OPENROUTER_REFERER || 'https://epimetheus.ai',
-        'X-Title': process.env.OPENROUTER_TITLE || 'Epimetheus'
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(testBody),
     });
@@ -39,7 +36,7 @@ export default async function handler(req, res) {
       const data = await response.json();
       res.json({
         configured: true,
-        provider: AI_PROVIDER,
+        provider: "Regolo AI",
         model: data.model || 'unknown'
       });
     } else {
@@ -50,7 +47,7 @@ export default async function handler(req, res) {
       });
     }
   } catch (error) {
-    console.error("OpenRouter test error:", error);
+    console.error("Regolo AI test error:", error);
     res.status(500).json({
       configured: false,
       error: `Test failed: ${error.message}`

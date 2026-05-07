@@ -4,52 +4,43 @@ export default async function handler(req, res) {
   }
 
   try {
-    const response = await fetch('https://openrouter.ai/api/v1/models', {
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!response.ok) {
-      return res.status(response.status).json({ error: 'Failed to fetch models' });
+    const apiKey = process.env.REGOLO_API_KEY;
+    if (!apiKey) {
+      return res.status(500).json({ error: 'REGOLO_API_KEY not configured' });
     }
 
-    const data = await response.json();
-
-    // Filter to show only a few key models for debugging
-    const freeModels = data.data?.filter((model) =>
-      model.id.includes('free') ||
-      model.id.includes('meta-llama') ||
-      model.id.includes('microsoft/wizardlm')
-    ).slice(0, 10) || [];
-
-    const paidModels = data.data?.filter((model) =>
-      model.id.includes('claude') ||
-      model.id.includes('gpt-4') ||
-      model.id.includes('gemini')
-    ).slice(0, 5) || [];
+    // Regolo supported models
+    const models = [
+      {
+        id: "Llama-3.3-70B-Instruct",
+        name: "Llama 3.3 70B Instruct",
+        description: "Latest Llama model with strong instruction-following capabilities"
+      },
+      {
+        id: "Llama-3.1-8B-Instruct",
+        name: "Llama 3.1 8B Instruct",
+        description: "Efficient Llama model for fast responses"
+      },
+      {
+        id: "gemma4-31b",
+        name: "Gemma 4 31B",
+        description: "Google's high-performance language model"
+      },
+      {
+        id: "mistral-small3.2",
+        name: "Mistral Small 3.2",
+        description: "Compact but capable Mistral model"
+      }
+    ];
 
     res.json({
-      total: data.data?.length || 0,
-      free_models: freeModels.map((model) => ({
-        id: model.id,
-        name: model.name,
-        pricing: model.pricing
-      })),
-      paid_models: paidModels.map((model) => ({
-        id: model.id,
-        name: model.name,
-        pricing: model.pricing
-      })),
-      recommended: [
-        "meta-llama/llama-3.1-8b-instruct:free",
-        "microsoft/wizardlm-2-8x22b",
-        "anthropic/claude-3-haiku",
-        "openai/gpt-3.5-turbo"
-      ]
+      provider: "Regolo AI",
+      models: models,
+      defaultModel: "Llama-3.3-70B-Instruct",
+      apiEndpoint: "https://api.regolo.ai/v1/chat/completions"
     });
   } catch (error) {
-    console.error("Error fetching OpenRouter models:", error);
+    console.error("Error in models handler:", error);
     res.status(500).json({
       error: `Failed to fetch models: ${error.message}`
     });

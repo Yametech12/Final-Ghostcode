@@ -1,23 +1,10 @@
 import "dotenv/config";
 
-let apiKey: string | null = null;
-let aiProvider: 'regolo' | 'openrouter' | 'none' = 'none';
-
-// Determine which AI provider to use
-const regoloKey = process.env.REGOLO_API_KEY;
-const openrouterKey = process.env.OPENROUTER_API_KEY;
-
-if (regoloKey) {
-  apiKey = regoloKey;
-  aiProvider = 'regolo';
-} else if (openrouterKey) {
-  apiKey = openrouterKey;
-  aiProvider = 'openrouter';
-}
+const apiKey: string | null = process.env.REGOLO_API_KEY || null;
 
 // Regolo AI models (from https://docs.regolo.ai/)
 export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
-export const VISION_MODEL = "Llama-3.3-70B-Instruct"; // Regolo's best vision-capable model
+export const VISION_MODEL = "Llama-3.3-70B-Instruct";
 export const FALLBACK_MODELS = [
   "Llama-3.3-70B-Instruct",
   "Llama-3.1-8B-Instruct",
@@ -25,47 +12,21 @@ export const FALLBACK_MODELS = [
   "mistral-small3.2"
 ];
 
-export function getAIProvider(): 'regolo' | 'openrouter' | 'none' {
-  return aiProvider;
-}
-
 export async function getApiKey(): Promise<string | null> {
   if (!apiKey) {
-    console.warn("WARNING: No AI API key configured (REGOLO_API_KEY or OPENROUTER_API_KEY). AI features will be disabled.");
+    console.warn("WARNING: No REGOLO_API_KEY configured. AI features will be disabled.");
     return null;
   }
   return apiKey;
 }
 
-// Base URLs for each provider
-const PROVIDER_BASE_URLS = {
-  regolo: 'https://api.regolo.ai/v1/chat/completions',
-  openrouter: 'https://openrouter.ai/api/v1/chat/completions'
-};
+const BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
 
-function getBaseUrl(): string {
-  if (aiProvider === 'regolo') {
-    return PROVIDER_BASE_URLS.regolo;
-  } else if (aiProvider === 'openrouter') {
-    return PROVIDER_BASE_URLS.openrouter;
-  }
-  throw new Error('No AI provider configured');
-}
-
-// Get provider-specific headers
 function getHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
+  return {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${apiKey}`
   };
-  
-  // OpenRouter requires these headers, Regolo does not
-  if (aiProvider === 'openrouter') {
-    headers['HTTP-Referer'] = process.env.APP_URL || 'http://localhost:5173';
-    headers['X-Title'] = 'Epimetheus AI';
-  }
-  
-  return headers;
 }
 
 // AI completion function with model fallback
@@ -92,13 +53,12 @@ export async function createCompletion({
   
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];
   let lastError: Error | null = null;
-  const baseUrl = getBaseUrl();
   const headers = getHeaders();
 
   for (const modelToTry of modelsToTry) {
     try {
-      console.log(`Trying model: ${modelToTry} via ${aiProvider}`);
-      
+      console.log(`Trying model: ${modelToTry}`);
+
       const payload: any = {
         model: modelToTry,
         messages,
@@ -113,7 +73,7 @@ export async function createCompletion({
 
       // Try up to 3 times per model for rate limits
       for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await fetch(baseUrl, {
+        const response = await fetch(BASE_URL, {
           method: 'POST',
           headers,
           body: JSON.stringify(payload)
@@ -122,7 +82,7 @@ export async function createCompletion({
         if (response.ok) {
           console.log(`Success with model: ${modelToTry}`);
           if (stream) {
-            return response.body; // Return readable stream
+            return response.body;
           }
           const data = await response.json();
           return data;
@@ -130,8 +90,7 @@ export async function createCompletion({
 
         const errorText = await response.text();
         console.warn(`Model ${modelToTry} failed (attempt ${attempt}/3): ${response.status}`, errorText.substring(0, 200));
-        
-        // Handle rate limits with exponential backoff
+
         if (response.status === 429 && attempt < 3) {
           const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
           const wait = Math.max(retryAfter * 1000, 1000 * Math.pow(2, attempt - 1));
@@ -139,23 +98,20 @@ export async function createCompletion({
           await new Promise(resolve => setTimeout(resolve, wait));
           continue;
         }
-        
-        // Don't retry on auth errors, payment required, etc.
+
         if (response.status === 401 || response.status === 402 || response.status === 403) {
-          throw new Error(`${aiProvider.toUpperCase()} API error: ${response.status} ${errorText}`);
+          throw new Error(`Regolo API error: ${response.status} ${errorText}`);
         }
-        
-        lastError = new Error(`${aiProvider.toUpperCase()} API error: ${response.status} ${errorText}`);
-        
-        // For 400/404 (model not found), try next model
+
+        lastError = new Error(`Regolo API error: ${response.status} ${errorText}`);
+
         if (response.status === 400 || response.status === 404) {
-          break; // Break retry loop and try next model
+          break;
         }
-        
-        // For other errors, break and try next model
+
         break;
       }
-      
+
     } catch (error) {
       lastError = error as Error;
       console.warn(`Model ${modelToTry} failed with error:`, error);

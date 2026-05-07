@@ -1,15 +1,16 @@
 import { serializeError } from '../utils/errorHandling';
 
-// OpenRouter model configuration - using reliable models
-export const DEFAULT_MODEL = "openai/gpt-4o-mini";
+// Regolo AI model configuration
+export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
 // Fallback models in order of preference
 export const FALLBACK_MODELS = [
-  "openai/gpt-4o-mini",
-  "anthropic/claude-3.5-sonnet-latest",
-  "meta-llama/llama-3.1-8b-instruct:free",
+  "Llama-3.3-70B-Instruct",
+  "Llama-3.1-8B-Instruct",
+  "gemma4-31b",
+  "mistral-small3.2"
 ];
-// Vision support enabled with OpenRouter
-export const VISION_MODEL = "openai/gpt-4o-mini";
+// Vision support enabled with Regolo
+export const VISION_MODEL = "Llama-3.3-70B-Instruct";
 
 function hasImageContent(messages: any[]): boolean {
   return messages.some((m: any) => {

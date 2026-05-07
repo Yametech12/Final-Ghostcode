@@ -22,16 +22,16 @@ import { Skeleton } from "../components/ui/Skeleton";
 interface UserData {
   id: string;
   email: string;
-  displayName: string;
+  display_name: string | null;
   role: string;
-  photoURL?: string;
-  createdAt?: any;
-  lastLoginAt?: any;
+  photo_url?: string;
+  created_at?: any;
+  last_login_at?: any;
 }
 
 interface FieldReport {
   id: string;
-  userId: string;
+  user_id: string;
   author: string;
   type: string;
   scenario: string;
@@ -39,19 +39,19 @@ interface FieldReport {
   result: string;
   timestamp: any;
   likes: number;
-  commentCount?: number;
+  comment_count?: number;
 }
 
 interface Feedback {
   id: string;
-  userId?: string;
-  userName?: string;
+  user_id?: string;
+  user_name?: string;
   email?: string;
   type: string;
   message: string;
-  createdAt: any;
+  created_at: any;
   url?: string;
-  userAgent?: string;
+  user_agent?: string;
 }
 
 export default function AdminDashboard() {
@@ -189,7 +189,7 @@ export default function AdminDashboard() {
       
       // Update local state
       setUsers(prev => prev.filter((u) => u.id !== userId));
-      setReports(prev => prev.filter((r) => r.userId !== userId));
+      setReports(prev => prev.filter((r) => r.user_id !== userId));
       
       toast.success("User account and all associated data deleted successfully.");
       setConfirmingDelete(null);
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
   const filteredUsers = users.filter(
     (u) =>
       u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      u.displayName?.toLowerCase().includes(searchQuery.toLowerCase()),
+      u.display_name?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const filteredReports = reports.filter(
@@ -282,7 +282,7 @@ export default function AdminDashboard() {
   const filteredFeedbacks = feedbacks.filter(
     (f) =>
       f.message?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      f.userName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      f.user_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       f.type?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
@@ -456,28 +456,28 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-mystic-800 flex items-center justify-center overflow-hidden">
-                          {u.photoURL ? (
+                          {u.photo_url ? (
                             <img
-                              src={u.photoURL}
-                              alt={u.displayName}
+                              src={u.photo_url}
+                              alt={u.display_name || "User"}
                               className="w-full h-full object-cover"
                             />
                           ) : (
                             <User className="w-4 h-4 text-slate-500" />
                           )}
                         </div>
-                        <div>
-                          <div className="text-sm font-medium text-white">
-                            {u.displayName || "Unknown"}
-                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-white">
+                              {u.display_name || "Unknown"}
+                            </div>
                           <div className="text-[10px] text-slate-500">
                             {u.email}
                           </div>
                         </div>
                       </div>
                       <div className="text-[10px] text-slate-500 font-mono">
-                        {u.createdAt?.toDate
-                          ? u.createdAt.toDate().toLocaleDateString()
+                        {u.created_at
+                          ? new Date(u.created_at).toLocaleDateString()
                           : "Unknown"}
                       </div>
                     </div>
@@ -503,12 +503,12 @@ export default function AdminDashboard() {
                       className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-bold text-white">
-                          {f.userName || "Anonymous"}
-                        </span>
+                         <span className="text-xs font-bold text-white">
+                           {f.user_name || "Anonymous"}
+                         </span>
                         <span className="text-[10px] text-slate-500">
-                          {f.createdAt?.toDate
-                            ? f.createdAt.toDate().toLocaleDateString()
+                          {f.created_at
+                            ? new Date(f.created_at).toLocaleDateString()
                             : "Unknown"}
                         </span>
                       </div>
@@ -563,10 +563,10 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-mystic-800 flex items-center justify-center overflow-hidden">
-                            {u.photoURL ? (
+                            {u.photo_url ? (
                               <img
-                                src={u.photoURL}
-                                alt={u.displayName}
+                                src={u.photo_url}
+                                alt={u.display_name || "User"}
                                 className="w-full h-full object-cover"
                               />
                             ) : (
@@ -574,22 +574,22 @@ export default function AdminDashboard() {
                             )}
                           </div>
                           <span className="font-medium text-white">
-                            {u.displayName || "Unknown User"}
+                            {u.display_name || "Unknown User"}
                           </span>
                         </div>
                       </td>
                       <td className="p-4 text-slate-300">{u.email}</td>
                       <td className="p-4">
                         <span className="text-xs text-slate-500">
-                          {u.createdAt?.toDate
-                            ? u.createdAt.toDate().toLocaleDateString()
+                          {u.created_at
+                            ? new Date(u.created_at).toLocaleDateString()
                             : "Unknown"}
                         </span>
                       </td>
                       <td className="p-4">
                         <span className="text-xs text-slate-500">
-                          {u.lastLoginAt?.toDate
-                            ? u.lastLoginAt.toDate().toLocaleString()
+                          {u.last_login_at
+                            ? new Date(u.last_login_at).toLocaleString()
                             : "Never"}
                         </span>
                       </td>
@@ -665,12 +665,12 @@ export default function AdminDashboard() {
                           {report.type}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-500">
-                        {report.timestamp?.toDate
-                          ? report.timestamp.toDate().toLocaleString()
-                          : "Unknown date"}{" "}
-                        • ID: {report.id} • User ID: {report.userId}
-                      </p>
+                       <p className="text-xs text-slate-500">
+                         {report.timestamp
+                           ? new Date(report.timestamp).toLocaleString()
+                           : "Unknown date"}{" "}
+                         • ID: {report.id} • User ID: {report.user_id}
+                       </p>
                     </div>
                   </div>
                   <button
@@ -715,7 +715,7 @@ export default function AdminDashboard() {
 
                 <div className="flex items-center gap-4 text-xs text-slate-500 pt-2">
                   <span>Likes: {report.likes || 0}</span>
-                  <span>Comments: {report.commentCount || 0}</span>
+                  <span>Comments: {report.comment_count || 0}</span>
                 </div>
               </div>
             ))
@@ -743,7 +743,7 @@ export default function AdminDashboard() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="font-bold text-white">
-                          {feedback.userName || "Anonymous"}
+                          {feedback.user_name || "Anonymous"}
                         </h3>
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
@@ -759,16 +759,16 @@ export default function AdminDashboard() {
                           {feedback.type}
                         </span>
                       </div>
-                      <p className="text-xs text-slate-400">
-                        {feedback.email || "No email provided"} •{" "}
-                        {feedback.createdAt?.toDate
-                          ? feedback.createdAt.toDate().toLocaleString()
-                          : "Unknown date"}
-                      </p>
-                      <p className="text-[10px] text-slate-500 font-mono mt-1">
-                        ID: {feedback.id}{" "}
-                        {feedback.userId ? `• User ID: ${feedback.userId}` : ""}
-                      </p>
+                       <p className="text-xs text-slate-400">
+                         {feedback.email || "No email provided"} •{" "}
+                         {feedback.created_at
+                           ? new Date(feedback.created_at).toLocaleString()
+                           : "Unknown date"}
+                       </p>
+                       <p className="text-[10px] text-slate-500 font-mono mt-1">
+                         ID: {feedback.id}{" "}
+                         {feedback.user_id ? `• User ID: ${feedback.user_id}` : ""}
+                       </p>
                     </div>
                   </div>
                   <button
@@ -784,19 +784,19 @@ export default function AdminDashboard() {
                     {feedback.message}
                   </p>
                 </div>
-                <div className="flex flex-col gap-1">
-                  {feedback.url && (
-                    <p className="text-xs text-slate-500 break-all">
-                      <span className="font-semibold">URL:</span> {feedback.url}
-                    </p>
-                  )}
-                  {feedback.userAgent && (
-                    <p className="text-xs text-slate-500 break-all">
-                      <span className="font-semibold">User Agent:</span>{" "}
-                      {feedback.userAgent}
-                    </p>
-                  )}
-                </div>
+                 <div className="flex flex-col gap-1">
+                   {feedback.url && (
+                     <p className="text-xs text-slate-500 break-all">
+                       <span className="font-semibold">URL:</span> {feedback.url}
+                     </p>
+                   )}
+                   {feedback.user_agent && (
+                     <p className="text-xs text-slate-500 break-all">
+                       <span className="font-semibold">User Agent:</span>{" "}
+                       {feedback.user_agent}
+                     </p>
+                   )}
+                 </div>
               </div>
             ))
           )}
