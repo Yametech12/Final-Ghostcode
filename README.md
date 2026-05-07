@@ -6,7 +6,7 @@ A comprehensive web application for personality assessment, analysis, and insigh
 
 ### Core Functionality
 - **Personality Assessments**: Comprehensive MBTI-based personality profiling
-- **AI-Powered Analysis**: Advanced insights using OpenRouter API with Gemini models
+- **AI-Powered Analysis**: Advanced insights using Regolo API with Llama models
 - **Field Reports**: Community-driven case studies and tactical analysis
 - **Profile Management**: User profiles with photo uploads and customization
 - **Real-time Chat**: AI advisor conversations with persistent sessions
@@ -36,7 +36,7 @@ A comprehensive web application for personality assessment, analysis, and insigh
 - **Supabase Storage** - File upload and management
 
 ### AI & Integrations
-- **OpenRouter API** - Multi-model AI provider (Gemini, GPT-4, Claude)
+- **Regolo API** - Multi-model AI provider (Gemini, GPT-4, Claude)
 - **Google OAuth** - Secure authentication
 - **Google reCAPTCHA** - Bot protection
 - **Google Cloud Storage** - Scalable file storage
@@ -52,7 +52,7 @@ A comprehensive web application for personality assessment, analysis, and insigh
 - Node.js 18+
 - npm or yarn
 - Supabase account
-- OpenRouter API key
+- Regolo API key
 - Gmail account (for email verification)
 
 ## 🚀 Quick Start

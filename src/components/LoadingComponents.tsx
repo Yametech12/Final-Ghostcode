@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import Logo from './Logo';
 import { Skeleton } from './ui/Skeleton';
 import LoadingScreen from './LoadingScreen';
+import '../styles/loading.css';
 
 export function LoadingSpinner({ size = "md", message, className }: { size?: "sm" | "md" | "lg"; message?: string; className?: string }) {
   const sizeClasses = {
@@ -13,8 +14,7 @@ export function LoadingSpinner({ size = "md", message, className }: { size?: "sm
   return (
     <div className={`flex flex-col items-center justify-center space-y-3 ${className || ''}`}>
       <div
-        className={`${sizeClasses[size]} border-2 border-accent-primary/30 border-t-accent-primary rounded-full animate-spin`}
-        style={{ animationDuration: '1s' }}
+        className={`${sizeClasses[size]} loading-spinner`}
       />
       {message && <p className="text-sm text-white/70">{message}</p>}
     </div>
@@ -26,13 +26,10 @@ export { LoadingScreen };
 export function InlineLoader({ message }: { message?: string }) {
   return (
     <div className="flex flex-col items-center justify-center py-12 gap-4">
-      <div className="relative w-16 h-16">
-        <div className="absolute inset-0 rounded-full bg-accent-primary/20 blur-md animate-pulse" />
-        <div
-          className="absolute inset-0 rounded-full border-4 border-accent-primary/30 border-t-accent-primary animate-spin"
-          style={{ animationDuration: '1s' }}
-        />
-        <div className="absolute inset-0 flex items-center justify-center">
+      <div className="inline-loader-container">
+        <div className="inline-loader-glow" />
+        <div className="inline-loader-ring" />
+        <div className="inline-loader-logo">
           <Logo size="md" />
         </div>
       </div>

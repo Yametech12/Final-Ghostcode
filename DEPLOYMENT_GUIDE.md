@@ -34,7 +34,7 @@ VITE_SUPABASE_ANON_KEY=[your-anon-key]
 SUPABASE_SERVICE_ROLE_KEY=[NEWLY-GENERATED-service-key]
 
 # AI API
-OPENROUTER_API_KEY=[your-openrouter-key]
+REGOLO_API_KEY=[your-openrouter-key]
 OPENROUTER_REFERER=https://epimetheus.ai
 OPENROUTER_TITLE=Epimetheus
 

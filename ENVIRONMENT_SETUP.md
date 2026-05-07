@@ -7,8 +7,8 @@
 - `VITE_SUPABASE_ANON_KEY` – Already configured ✅
 - `SUPABASE_SERVICE_ROLE_KEY` – **MISSING** (get from Supabase Dashboard → Settings → API → service_role key)
 
-### OpenRouter AI
-- `OPENROUTER_API_KEY` – Already configured ✅
+### Regolo AI
+- `REGOLO_API_KEY` – Already configured ✅
 
 ### Google reCAPTCHA
 - `VITE_RECAPTCHA_SITE_KEY` – **MISSING** (get from Google reCAPTCHA Admin Console)

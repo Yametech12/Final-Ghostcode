@@ -14,7 +14,22 @@ declare module 'virtual:pwa-register' {
 }
 
 interface ImportMetaEnv {
-  // Add env variables here if needed
+  // Supabase
+  readonly VITE_SUPABASE_URL: string;
+  readonly VITE_SUPABASE_ANON_KEY: string;
+  
+  // OpenRouter API
+  readonly VITE_OPENROUTER_API_KEY: string;
+  
+  // Regolo AI API
+  readonly VITE_REGOLO_API_KEY: string;
+  readonly VITE_REGOLO_ENDPOINT: string;
+  
+  // Google reCAPTCHA
+  readonly VITE_RECAPTCHA_SITE_KEY: string;
+  
+  // Google Cloud Storage
+  readonly VITE_GCP_BUCKET_NAME: string;
 }
 
 interface ImportMeta {
