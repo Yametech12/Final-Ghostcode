@@ -41,7 +41,6 @@ export default defineConfig({
       plugins: [
         visualizer({
           filename: 'dist/stats.html',
-          open: true,
           gzipSize: true,
           brotliSize: true,
         })
