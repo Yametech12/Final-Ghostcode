@@ -48,7 +48,7 @@ export async function createCompletion({
   const key = await getApiKey();
   
   if (!key) {
-    throw new Error(`${aiProvider.toUpperCase()} API key is not configured. AI features are unavailable.`);
+    throw new Error(`Regolo API key is not configured. AI features are unavailable.`);
   }
   
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];

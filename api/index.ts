@@ -328,7 +328,7 @@ app.get("/api/ai/test-key", async (_req, res) => {
     const key = await getApiKey();
     if (!key) return res.json({ configured: false, error: "API key not configured" });
     
-    res.json({ configured: true, provider: AI_PROVIDER });
+    res.json({ configured: true, provider: "Regolo AI" });
   } catch {
     res.status(500).json({ configured: false, error: "Test failed" });
   }
