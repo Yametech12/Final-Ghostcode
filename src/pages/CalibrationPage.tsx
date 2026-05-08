@@ -383,9 +383,12 @@ export default function CalibrationPage() {
 
   const filteredHistory = React.useMemo(() => {
     return history.filter(item => {
-      const matchesSearch = item.scenarioSummary.toLowerCase().includes(historySearch.toLowerCase()) ||
-                           item.primaryType.toLowerCase().includes(historySearch.toLowerCase());
-      const matchesType = historyTypeFilter === 'all' || item.primaryType === historyTypeFilter;
+      const searchLower = historySearch.toLowerCase();
+      const scenarioSummary = item.scenarioSummary ?? '';
+      const primaryType = item.primaryType ?? '';
+      const matchesSearch = scenarioSummary.toLowerCase().includes(searchLower) ||
+                           primaryType.toLowerCase().includes(searchLower);
+      const matchesType = historyTypeFilter === 'all' || primaryType === historyTypeFilter;
       return matchesSearch && matchesType;
     });
   }, [history, historySearch, historyTypeFilter]);

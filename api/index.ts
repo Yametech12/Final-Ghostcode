@@ -48,7 +48,9 @@ function isValidUUID(uuid: string): boolean {
 
 // UUID validation middleware
 function validateUUIDMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
-  const { userId, sessionId } = req.body || {};
+  // Support UUIDs from body (POST) or query (GET)
+  const userId = req.body?.userId ?? req.query?.userId;
+  const sessionId = req.body?.sessionId ?? req.params?.sessionId;
 
   if (userId && !isValidUUID(userId)) {
     return res.status(400).json({
@@ -370,7 +372,7 @@ app.post("/api/advisor/session", validateUUIDMiddleware, async (req, res) => {
 });
 
 app.get("/api/advisor/session", validateUUIDMiddleware, async (req, res) => {
-  const { userId } = req.query;
+  const userId = req.query.userId as string;
 
   try {
     // Get latest session with messages
@@ -380,13 +382,14 @@ app.get("/api/advisor/session", validateUUIDMiddleware, async (req, res) => {
       .eq('user_id', userId)
       .order('updated_at', { ascending: false })
       .limit(1)
-      .single();
+      .maybeSingle();
 
-    if (sessionError && sessionError.code !== 'PGRST116') throw sessionError;
-
+    // No session found — not an error, just return null
     if (!session) {
       return res.json({ sessionId: null, messages: [] });
     }
+
+    if (sessionError) throw sessionError;
 
     // Get recent messages
     const { data: messages, error: messagesError } = await supabase
