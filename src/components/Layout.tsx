@@ -37,7 +37,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
     label: 'Core',
     items: [
       { name: 'Home', path: '/', icon: Home, desc: 'Dashboard overview' },
-      { name: 'Profiles', path: '/profiles', icon: User, desc: 'Manage profiles' },
+      { name: 'Profile', path: '/profile', icon: User, desc: 'Manage profile' },
       { name: 'Dossiers', path: '/dossiers', icon: Users, desc: 'Saved contacts' },
       { name: 'Favorites', path: '/favorites', icon: Star, desc: 'Top picks' },
       { name: 'Insights', path: '/insights', icon: PieChart, desc: 'Analytics' },

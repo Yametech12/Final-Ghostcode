@@ -16,15 +16,5 @@ export function validateEnvironment() {
     throw new Error(`Missing required environment variables: ${missing.join(', ')}. Check your .env file.`);
   }
 
-  // Check for placeholder values (only client-exposed keys)
-  const placeholders = [];
-  if (import.meta.env.VITE_RECAPTCHA_SITE_KEY?.includes('your_recaptcha_site_key_here')) {
-    placeholders.push('VITE_RECAPTCHA_SITE_KEY');
-  }
-
-  if (placeholders.length > 0) {
-    console.warn(`Warning: Placeholder values detected for: ${placeholders.join(', ')}. Replace with real keys.`);
-  }
-
   return true;
 }

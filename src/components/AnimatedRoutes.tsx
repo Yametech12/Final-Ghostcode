@@ -12,7 +12,7 @@ const LoginPage = lazyWithRetry(() => import('../pages/LoginPage'));
 const RegisterPage = lazyWithRetry(() => import('../pages/RegisterPage'));
 
 // Core functionality pages - high priority
-const ProfilesPage = lazyWithRetry(() => import('../pages/ProfilesPage'));
+const ProfilePage = lazyWithRetry(() => import('../pages/ProfilePage'));
 const AdvisorPage = lazyWithRetry(() => import('../pages/AdvisorPage'));
 const AssessmentPage = lazyWithRetry(() => import('../pages/AssessmentPage'));
 const AssessmentResultPage = lazyWithRetry(() => import('../pages/AssessmentResultPage'));
@@ -125,10 +125,10 @@ export default function AnimatedRoutes() {
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="/profiles" element={
+          <Route path="/profile" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>
-                <PageWrapper><ProfilesPage /></PageWrapper>
+                <PageWrapper><ProfilePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />

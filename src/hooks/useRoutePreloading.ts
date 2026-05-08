@@ -11,13 +11,13 @@ export function useRoutePreloading() {
        const timeoutId = setTimeout(() => {
          // Preload core functionality when user is on home page
          if (location.pathname === '/') {
-           import('../pages/ProfilesPage');
+           import('../pages/ProfilePage');
            import('../pages/AdvisorPage');
            import('../pages/AssessmentPage');
          }
 
          // Preload tool pages when user is in core areas
-         if (['/profiles', '/advisor', '/assessment'].includes(location.pathname)) {
+         if (['/profile', '/advisor', '/assessment'].includes(location.pathname)) {
            import('../pages/CalibrationPage');
            import('../pages/ProfilerPage');
            import('../pages/QuizPage');

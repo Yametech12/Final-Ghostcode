@@ -25,9 +25,6 @@ interface ImportMetaEnv {
   readonly VITE_REGOLO_API_KEY: string;
   readonly VITE_REGOLO_ENDPOINT: string;
   
-  // Google reCAPTCHA
-  readonly VITE_RECAPTCHA_SITE_KEY: string;
-  
   // Google Cloud Storage
   readonly VITE_GCP_BUCKET_NAME: string;
 }

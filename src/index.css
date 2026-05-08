@@ -396,31 +396,4 @@ h1, h2, h3, h4, h5, h6 {
   background-size: 24px 24px;
 }
 
-/* ReCAPTCHA Alignment Fixes */
-.recaptcha-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-  transform: scale(0.9);
-  transform-origin: center center;
-}
-
-.recaptcha-container > div {
-  display: flex !important;
-  justify-content: center !important;
-  align-items: center !important;
-  width: 100% !important;
-}
-
-/* Fix for Google reCAPTCHA iframe alignment */
-.grecaptcha-badge {
-  z-index: 99999 !important;
-}
-
-@media (max-width: 640px) {
-  .recaptcha-container {
-    transform: scale(0.85);
-  }
-}
 

@@ -158,7 +158,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     setPhotoUrl(null);
     setPhotoPreview(null);
     if (userData?.id) {
-      updateUserProfile({ photoURL: null });
+      updateUserProfile({ photoURL: undefined });
     }
   };
 

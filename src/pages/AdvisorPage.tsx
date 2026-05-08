@@ -23,7 +23,7 @@ export default function AdvisorPage() {
 
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike'>>({});
+  const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike' | undefined>>({});
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 

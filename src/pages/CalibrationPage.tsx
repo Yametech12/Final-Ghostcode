@@ -580,12 +580,12 @@ export default function CalibrationPage() {
       });
 
       const jsonStr = completion.choices[0].message.content?.trim() || '{}';
-      const data = safeParseJSON(jsonStr, null);
+      const data = safeParseJSON(jsonStr, null as AnalysisResult | null);
       if (!data) throw new Error("The Oracle returned an unreadable response. Please try again.");
 
       // Ensure tasks have unique IDs
-      if (data.tasks && Array.isArray(data.tasks)) {
-        data.tasks = data.tasks.map((t: any, i: number) => ({
+      if ((data as AnalysisResult).tasks && Array.isArray((data as AnalysisResult).tasks)) {
+        (data as AnalysisResult).tasks = (data as AnalysisResult).tasks.map((t: any, i: number) => ({
           ...t,
           id: `task-${Date.now()}-${i}`
         }));
@@ -594,7 +594,7 @@ export default function CalibrationPage() {
       const scenarioSummary = structuredInput.additionalNotes.slice(0, 50) || structuredInput.clothingStyle || 'Guided Analysis';
 
       const newHistoryItem: AnalysisHistory = {
-        ...data,
+        ...(data as AnalysisResult),
         id: Date.now().toString(), // Temporary ID
         date: new Date().toLocaleDateString(),
         scenarioSummary

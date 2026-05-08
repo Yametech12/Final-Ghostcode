@@ -32,9 +32,9 @@ interface EnhancedAuthContextType {
   userData: UserData | null;
   loading: boolean;
   error: string | null;
-  signInWithEmail: (email: string, password: string, recaptchaToken?: string | null) => Promise<void>;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  signUp: (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => Promise<{ requiresVerification: boolean }>;
+  signUp: (email: string, password: string, displayName?: string) => Promise<{ requiresVerification: boolean }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
@@ -209,11 +209,10 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     }
   }, [loadUserData]);
 
-  const signInWithEmail = async (email: string, password: string, recaptchaToken?: string | null) => {
+  const signInWithEmail = async (email: string, password: string) => {
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
-      password,
-      options: recaptchaToken ? { captchaToken: recaptchaToken } : undefined
+      password
     });
     if (error) throw error;
     setSession(data.session);
@@ -223,14 +222,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const signUp = async (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => {
+  const signUp = async (email: string, password: string, displayName?: string) => {
     try {
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          data: { display_name: displayName },
-          ...(recaptchaToken ? { captchaToken: recaptchaToken } : {})
+          data: { display_name: displayName }
         }
       });
 

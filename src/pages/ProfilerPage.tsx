@@ -11,7 +11,7 @@ export default function ProfilerPage() {
   const auth = useEnhancedAuth();
   const [traits, setTraits] = useState(() => {
     const saved = localStorage.getItem('profiler_current_traits');
-    return safeParseJSON(saved, {
+    return safeParseJSON(saved ?? '', {
       time: null as 'Tester' | 'Investor' | null,
       sex: null as 'Denier' | 'Justifier' | null,
       relationship: null as 'Realist' | 'Idealist' | null,
@@ -46,7 +46,7 @@ export default function ProfilerPage() {
         }
       } else {
         const saved = localStorage.getItem('profiler_past_results');
-        setPastResults(safeParseJSON(saved, []));
+        setPastResults(safeParseJSON(saved ?? '', []));
       }
     };
     loadPastResults().catch(err => {

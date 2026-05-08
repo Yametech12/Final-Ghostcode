@@ -1,8 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import Logo from '../components/Logo';
 
 import { toast } from 'sonner';
@@ -51,7 +50,6 @@ export default function RegisterPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   const [verificationSent, setVerificationSent] = useState(false);
   const [acceptTerms, setAcceptTerms] = useState(false);
@@ -84,11 +82,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      let recaptchaToken = null;
-      if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-        recaptchaToken = await recaptchaRef.current?.executeAsync();
-      }
-      const result = await signUp(email, password, name, recaptchaToken);
+      const result = await signUp(email, password, name);
 
       if (result.requiresVerification) {
         setVerificationSent(true);
@@ -307,18 +301,7 @@ export default function RegisterPage() {
             </label>
            </div>
 
-           {/* ReCAPTCHA - Graceful degradation if not configured */}
-           <div className="flex justify-center">
-             {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
-               <ReCAPTCHA
-                 ref={recaptchaRef}
-                 sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                 size="invisible"
-                 className="recaptcha-container"
-               />
-             ) : null}
-           </div>
-
+           
           <button
             type="submit"
             disabled={loading || !isFormValid}

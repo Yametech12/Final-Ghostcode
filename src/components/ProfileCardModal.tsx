@@ -48,7 +48,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
   };
 
   const handleCopyLink = () => {
-    const profileLink = `${window.location.origin}/profiles`;
+    const profileLink = `${window.location.origin}/profile`;
     navigator.clipboard.writeText(profileLink);
     setCopied(true);
     toast.success('Profile link copied!');

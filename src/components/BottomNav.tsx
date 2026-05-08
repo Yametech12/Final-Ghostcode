@@ -9,7 +9,7 @@ interface BottomNavProps {
 export function BottomNav({ className = '' }: BottomNavProps) {
   const links = [
     { to: '/', icon: Home, label: 'Home', exact: true },
-    { to: '/profiles', icon: Users, label: 'Profiles', exact: false },
+    { to: '/profile', icon: Users, label: 'Profile', exact: false },
     { to: '/dossiers', icon: FileText, label: 'Dossiers', exact: false },
     { to: '/advisor', icon: Shield, label: 'Advisor', exact: false },
     { to: '/calibrate', icon: Target, label: 'Calibrate', exact: false },

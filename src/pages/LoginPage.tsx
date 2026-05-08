@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, Eye, EyeOff, Clock, Fingerprint } from 'lucide-react';
-import ReCAPTCHA from 'react-google-recaptcha';
 import { toast } from 'sonner';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { getSupabaseErrorMessage, isValidEmail } from '../utils/errorHandling';
@@ -25,7 +24,6 @@ export default function LoginPage() {
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
-  const recaptchaRef = useRef<ReCAPTCHA>(null);
 
   // Password strength calculation
   const passwordStrength = React.useMemo(() => {
@@ -152,11 +150,7 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
     try {
-      let recaptchaToken = null;
-      if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-        recaptchaToken = await recaptchaRef.current?.executeAsync();
-      }
-      await signInWithEmail(email, password, recaptchaToken);
+      await signInWithEmail(email, password);
       // Clear attempts on success
       localStorage.removeItem('loginAttempts');
       localStorage.removeItem('lockoutEndTime');
@@ -164,9 +158,6 @@ export default function LoginPage() {
     } catch (err: any) {
       handleFailedAttempt();
       setError(getSupabaseErrorMessage(err));
-      if (import.meta.env.VITE_RECAPTCHA_SITE_KEY) {
-        recaptchaRef.current?.reset();
-      }
     } finally {
       setLoading(false);
     }
@@ -291,18 +282,7 @@ export default function LoginPage() {
             </label>
           </div>
 
-          {/* ReCAPTCHA - Graceful degradation if not configured */}
-          {import.meta.env.VITE_RECAPTCHA_SITE_KEY ? (
-            <div className="flex justify-center items-center w-full overflow-hidden">
-              <ReCAPTCHA
-                ref={recaptchaRef}
-                sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-                size="invisible"
-                className="recaptcha-container"
-              />
-            </div>
-          ) : null}
-
+          
           {/* Attempts warning */}
           {loginAttempts > 0 && !isLocked && (
             <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm">

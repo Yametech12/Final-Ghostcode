@@ -9,8 +9,8 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)
 
-// Auth helpers
-export const auth = supabase.auth
+// Auth helpers - use 'as any' to avoid declaration errors with private properties
+export const auth: typeof supabase.auth = supabase.auth as any
 
 // Database helpers
 export const db = supabase

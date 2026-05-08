@@ -133,7 +133,7 @@ export default function AssessmentPage() {
   });
   const [answers, setAnswers] = useState<Record<string, string>>(() => {
     const saved = localStorage.getItem('assessment_current_answers');
-    return safeParseJSON(saved, {});
+    return safeParseJSON(saved ?? '', {});
   });
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);

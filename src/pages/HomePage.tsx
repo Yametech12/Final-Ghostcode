@@ -72,7 +72,7 @@ export default function HomePage() {
             <ChevronRight className="w-5 h-5 transition-transform" />
           </Link>
           <Link
-            to="/profiles"
+            to="/profile"
             className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all text-center hover:scale-105 active:scale-95"
           >
             Explore Profiles
@@ -113,7 +113,7 @@ export default function HomePage() {
           </motion.div>
           
           <div className="text-center">
-            <Link to="/profiles" className="text-accent-primary font-bold hover:underline inline-flex items-center gap-2">
+            <Link to="/profile" className="text-accent-primary font-bold hover:underline inline-flex items-center gap-2">
               View detailed profile directory <ChevronRight className="w-4 h-4" />
             </Link>
           </div>

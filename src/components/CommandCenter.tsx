@@ -31,7 +31,7 @@ interface SearchResult {
 
 const PAGES = [
   { title: 'Home', path: '/', icon: LogoIcon, desc: 'Dashboard and Profiler' },
-  { title: 'Profiles', path: '/profiles', icon: User, desc: 'Browse all archetypes' },
+  { title: 'Profile', path: '/profile', icon: User, desc: 'Manage profile' },
   { title: 'Dossiers', path: '/dossiers', icon: Users, desc: 'Saved profiles' },
   { title: 'Favorites', path: '/favorites', icon: Star, desc: 'Saved favorites' },
   { title: 'Insights', path: '/insights', icon: PieChart, desc: 'User insights' },

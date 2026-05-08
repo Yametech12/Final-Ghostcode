@@ -41,7 +41,7 @@ export function useAdvisor() {
       const { data, error } = await supabase
         .from('advisor_sessions')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', (user as any).id)
         .order('timestamp', { ascending: false });
 
       if (error) throw error;
@@ -91,7 +91,7 @@ export function useAdvisor() {
        const { data, error } = await supabase
          .from('advisor_sessions')
          .insert({
-           user_id: user.id,
+           user_id: (user as any).id,
            title,
            timestamp: new Date().toISOString()
          })
