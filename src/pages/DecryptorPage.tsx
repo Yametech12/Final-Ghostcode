@@ -39,9 +39,9 @@ CRITICAL INSTRUCTIONS:
 - Always identify which stage the user is currently in and how to progress
 
 TARGET PROFILE: ${selectedType.name} (${selectedType.id})
-Key Traits: ${selectedType.keyTraits.join(', ')}
+Key Traits: ${(selectedType.keyTraits || []).join(', ')}
 What She Wants: ${selectedType.whatSheWants}
-What to Avoid: ${selectedType.whatToAvoid.join(', ')}
+What to Avoid: ${(selectedType.whatToAvoid || []).join(', ')}
 
 RESPONSE FORMAT (follow exactly):
 ### 🔍 Subtext Analysis

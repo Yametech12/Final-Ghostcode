@@ -232,6 +232,7 @@ export default function FieldGuidePage() {
     setTimeout(() => setCopiedText(null), 2000);
   };
 
+  const reportSearchLower = reportSearch.toLowerCase();
   const filteredScenarios = personalityTypes
     .filter(type => !selectedType || type.id === selectedType)
     .flatMap(type => [
@@ -243,7 +244,7 @@ export default function FieldGuidePage() {
       { type: type.id, typeName: type.name, stage: 'Touch', scenario: type.physicality.touchScenario, example: type.physicality.touchExample },
       { type: type.id, typeName: type.name, stage: 'Sex', scenario: type.physicality.sexScenario, example: type.physicality.sexExample },
     ])
-    .filter(s => 
+    .filter(s =>
       s.scenario.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.stage.toLowerCase().includes(searchTerm.toLowerCase()) ||
       s.typeName.toLowerCase().includes(searchTerm.toLowerCase())
@@ -251,10 +252,10 @@ export default function FieldGuidePage() {
 
   const filteredReports = reports
     .filter(r => {
-      const matchesSearch = 
-        r.scenario.toLowerCase().includes(reportSearch.toLowerCase()) ||
-        r.action.toLowerCase().includes(reportSearch.toLowerCase()) ||
-        r.author.toLowerCase().includes(reportSearch.toLowerCase());
+      const matchesSearch =
+        (r.scenario ?? '').toLowerCase().includes(reportSearchLower) ||
+        (r.action ?? '').toLowerCase().includes(reportSearchLower) ||
+        (r.author ?? '').toLowerCase().includes(reportSearchLower);
       const matchesType = !reportFilter || r.type === reportFilter;
       return matchesSearch && matchesType;
     })
