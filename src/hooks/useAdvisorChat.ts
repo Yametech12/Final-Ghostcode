@@ -136,78 +136,80 @@ export function useAdvisorChat() {
 
         let assistantContent = '';
         const decoder = new TextDecoder();
+        let buffer = '';
 
         while (true) {
           try {
             const { done, value } = await reader.read();
             if (done) break;
 
-            const chunk = decoder.decode(value);
-            const lines = chunk.split('\n');
+            buffer += decoder.decode(value, { stream: true });
 
-            for (const line of lines) {
-              if (line.startsWith('data: ')) {
-                const data = line.slice(6);
-                if (data === '[DONE]') {
-                  setIsStreaming(false);
-                  return;
+            // SSE messages are separated by \n\n
+            while (true) {
+              const lineEnd = buffer.indexOf('\n\n');
+              if (lineEnd === -1) break;
+
+              const line = buffer.slice(0, lineEnd);
+              buffer = buffer.slice(lineEnd + 2);
+
+              if (!line.startsWith('data: ')) continue;
+              const data = line.slice(6);
+              if (data === '[DONE]') {
+                setIsStreaming(false);
+                return;
+              }
+
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.error) {
+                  throw new Error(parsed.error);
                 }
 
-                try {
-                  const parsed = JSON.parse(data);
-                  if (parsed.error) {
-                    throw new Error(parsed.error);
-                  }
+                if (parsed.content) {
+                  assistantContent += parsed.content;
 
-                  if (parsed.content) {
-                    assistantContent += parsed.content;
-
-                    // Update streaming message
-                    setMessages(prev => {
-                      const last = prev[prev.length - 1];
-                      if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
-                        // Replace streaming message
-                        return [
-                          ...prev.slice(0, -1),
-                          {
-                            id: `streaming-${Date.now()}`,
-                            role: 'model',
-                            content: assistantContent,
-                            timestamp: new Date()
-                          }
-                        ];
-                      } else if (last?.role !== 'model') {
-                        // Add new streaming message
-                        return [
-                          ...prev,
-                          {
-                            id: `streaming-${Date.now()}`,
-                            role: 'model',
-                            content: assistantContent,
-                            timestamp: new Date()
-                          }
-                        ];
-                      } else {
-                        // Update existing streaming message
-                        return [
-                          ...prev.slice(0, -1),
-                          {
-                            id: last.id,
-                            role: 'model',
-                            content: assistantContent,
-                            timestamp: new Date()
-                          }
-                        ];
-                      }
-                    });
-                  }
-                } catch (parseError) {
-                  console.error('Parse error:', parseError);
+                  // Update streaming message
+                  setMessages(prev => {
+                    const last = prev[prev.length - 1];
+                    if (last?.role === 'model' && !last.id.startsWith('streaming-')) {
+                      return [
+                        ...prev.slice(0, -1),
+                        {
+                          id: `streaming-${Date.now()}`,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    } else if (last?.role !== 'model') {
+                      return [
+                        ...prev,
+                        {
+                          id: `streaming-${Date.now()}`,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    } else {
+                      return [
+                        ...prev.slice(0, -1),
+                        {
+                          id: last.id,
+                          role: 'model',
+                          content: assistantContent,
+                          timestamp: new Date()
+                        }
+                      ];
+                    }
+                  });
                 }
+              } catch (parseError) {
+                // Skip malformed chunks
               }
             }
           } catch (readError) {
-            // If aborted, this is expected
             if (abortControllerRef.current?.signal.aborted) {
               return;
             }

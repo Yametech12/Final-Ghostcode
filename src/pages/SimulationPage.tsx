@@ -63,9 +63,9 @@ CRITICAL ROLEPLAY RULES:
 
 YOUR PROFILE:
 - Personality: ${selectedType.name} (${selectedType.id})
-- Key Traits: ${selectedType.keyTraits.join(', ')}
+- Key Traits: ${(selectedType.keyTraits || []).join(', ')}
 - What You Want: ${selectedType.whatSheWants}
-- What to Avoid: ${selectedType.whatToAvoid.join(', ')}
+- What to Avoid: ${(selectedType.whatToAvoid || []).join(', ')}
 
 STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with this guy. Start with a typical opening message that fits your personality type.`;
 
@@ -81,7 +81,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
         { role: 'user', content: 'Start the conversation as a typical opening message from your personality type.' }
       ], undefined, { max_tokens: 200 });
 
-      const aiResponse = response.choices[0]?.message?.content || 'Hey there! 😊';
+      const aiResponse = response.choices?.[0]?.message?.content || 'Hey there! 😊';
 
       setMessages([
         initialMessage,
@@ -124,7 +124,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
     try {
       // Find system message (always include it first)
       const systemMessage = messages.find(m => m.role === 'system');
-      
+
       // Get conversation history (last 10 messages, excluding system)
       const conversationHistory = messages
         .filter(m => m.role !== 'system')
@@ -142,36 +142,16 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
       fullContext.push(...conversationHistory);
       fullContext.push({ role: 'user', content: userMsg.content });
 
-      const response = await chatCompletion(fullContext, undefined, { stream: true, max_tokens: 300 });
-      
-      let aiResponse = '';
-      const streamId = `streaming-${Date.now()}`;
-      
-      // Add empty assistant message first
-      setMessages(prev => [...prev, {
-        id: streamId,
-        role: 'assistant',
-        content: '',
-        timestamp: new Date()
-      }]);
+      const response = await chatCompletion(fullContext, undefined, { max_tokens: 300 });
 
-      for await (const chunk of response) {
-        const content = chunk.choices[0]?.delta?.content || '';
-        aiResponse += content;
-        
-        setMessages(prev => prev.map(msg => 
-          msg.id === streamId 
-            ? { ...msg, content: aiResponse } 
-            : msg
-        ));
-      }
-      
-      // Final update with complete response
-      setMessages(prev => prev.map(msg => 
-        msg.id === streamId 
-          ? { ...msg, id: (Date.now() + 1).toString() } 
-          : msg
-      ));
+      const aiContent = response.choices?.[0]?.message?.content || '...';
+      const assistantMsg: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: aiContent,
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, assistantMsg]);
 
     } catch (error: any) {
       console.error("Simulation Error:", error);

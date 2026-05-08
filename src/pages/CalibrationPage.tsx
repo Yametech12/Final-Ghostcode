@@ -404,21 +404,10 @@ export default function CalibrationPage() {
       ];
 
       const completion = await chatCompletion(messages, undefined, {
-        response_format: {
-          type: "json_object",
-          schema: {
-            type: "object",
-            properties: {
-              text: { type: "string" },
-              correctType: { type: "string" },
-              explanation: { type: "string" }
-            },
-            required: ["text", "correctType", "explanation"]
-          }
-        }
+        response_format: { type: "json_object" }
       });
 
-      let jsonStr = completion.choices[0].message.content?.trim() || '{}';
+      let jsonStr = completion.choices?.[0]?.message?.content?.trim() || '{}';
       if (jsonStr.startsWith('```json')) {
         jsonStr = jsonStr.replace(/```json\n?/, '').replace(/```$/, '').trim();
       }
@@ -523,66 +512,10 @@ export default function CalibrationPage() {
         { role: "system", content: systemInstruction },
         { role: "user", content: `Scenario Details:\n${fullScenario}` }
       ], undefined, {
-        response_format: {
-          type: "json_object",
-          schema: {
-            type: "object",
-            properties: {
-              primaryType: { type: "string" },
-              confidence: { type: "number" },
-              analysis: { type: "string" },
-              timeAxis: { type: "string" },
-              sexAxis: { type: "string" },
-              relationshipAxis: { type: "string" },
-              redFlags: { type: "array", items: { type: "string" } },
-              tasks: {
-                type: "array",
-                items: {
-                  type: "object",
-                  properties: {
-                    id: { type: "string" },
-                    text: { type: "string" },
-                    priority: { type: "string", enum: ["high", "medium", "low"] },
-                    dueDate: { type: "string" },
-                    category: { type: "string", enum: ["communication", "physical", "logistics", "psychology"] },
-                    completed: { type: "boolean" }
-                  },
-                  required: ["id", "text", "priority", "category", "completed"]
-                }
-              },
-              whatToAvoid: { type: "array", items: { type: "string" } },
-              relationshipAdvice: {
-                type: "object",
-                properties: {
-                  vision: { type: "string" },
-                  investment: { type: "string" },
-                  potential: { type: "string" }
-                },
-                required: ["vision", "investment", "potential"]
-              },
-              freakDynamics: {
-                type: "object",
-                properties: {
-                  kink: { type: "string" },
-                  threesomes: { type: "string" },
-                  worship: { type: "string" }
-                },
-                required: ["kink", "threesomes", "worship"]
-              },
-              darkMindBreakdown: { type: "string" },
-              behavioralBlueprint: { type: "array", items: { type: "string" } },
-              interactionStrategy: { type: "string" }
-            },
-            required: [
-              "primaryType", "confidence", "analysis", "timeAxis", "sexAxis", "relationshipAxis",
-              "redFlags", "tasks", "whatToAvoid", "relationshipAdvice", "freakDynamics",
-              "darkMindBreakdown", "behavioralBlueprint", "interactionStrategy"
-            ]
-          }
-        }
+        response_format: { type: "json_object" }
       });
 
-      const jsonStr = completion.choices[0].message.content?.trim() || '{}';
+      const jsonStr = completion.choices?.[0]?.message?.content?.trim() || '{}';
       const data = safeParseJSON(jsonStr, null as AnalysisResult | null);
       if (!data) throw new Error("The Oracle returned an unreadable response. Please try again.");
 

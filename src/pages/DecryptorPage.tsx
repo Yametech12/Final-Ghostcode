@@ -60,25 +60,14 @@ Keep responses concise, professional, and highly strategic. Use EPIMETHEUS termi
       const response = await chatCompletion([
         { role: "system", content: systemInstruction },
         { role: "user", content: `Analyze this message: "${input.trim()}"` }
-      ], undefined, { stream: true, max_tokens: 800 });
+      ], undefined, { max_tokens: 800 });
 
-      let fullContent = '';
-      try {
-        for await (const chunk of response) {
-          try {
-            const content = chunk.choices[0]?.delta?.content || '';
-            fullContent += content;
-            setAnalysis(fullContent);
-          } catch (chunkError) {
-            console.error('Error processing stream chunk:', chunkError);
-            // Continue processing even if one chunk fails
-          }
-        }
-      } catch (streamError) {
-        console.error('Stream error:', streamError);
-        throw streamError; // Re-throw to be caught by outer catch
+      const content = response.choices?.[0]?.message?.content;
+      if (!content) {
+        throw new Error('No response from AI');
       }
 
+      setAnalysis(content);
       toast.success('Signal decrypted successfully!');
 
     } catch (error: any) {
