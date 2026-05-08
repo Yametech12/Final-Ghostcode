@@ -22,17 +22,17 @@ const steps: TourStep[] = [
     path: '/'
   },
   {
-    target: 'advisor',
-    title: 'AI Advisor',
-    description: 'Get real-time, strategic advice from the Oracle for specific scenarios and interactions.',
+    target: 'profiles',
+    title: 'Profiles',
+    description: 'Browse and manage all personality archetypes in the system.',
     icon: <Target className="w-6 h-6 text-accent-primary" />,
-    position: 'top',
+    position: 'bottom',
     path: '/'
   },
   {
-    target: 'field-guide',
-    title: 'Field Guide',
-    description: 'Access quick, actionable strategies and reference material while out in the field.',
+    target: 'dossiers',
+    title: 'Dossiers',
+    description: 'Track and manage your saved contacts and their profiles.',
     icon: <BookOpen className="w-6 h-6 text-blue-400" />,
     position: 'top',
     path: '/'

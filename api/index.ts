@@ -800,8 +800,13 @@ app.post("/api/ai/chat", validateUUIDMiddleware, async (req, res) => {
       });
     }
     if (!response.ok) {
-      return res.status(500).json({ 
-        error: errorData.error?.message || "Request failed",
+      // Use raw response text when JSON parsing fails, so the actual Regolo error is exposed
+      const rawError = responseText
+        ? responseText.substring(0, 500)
+        : errorData?.error?.message || response.statusText;
+      return res.status(500).json({
+        error: errorData?.error?.message || `Request failed (${response.status})`,
+        details: rawError,
         code: "UNKNOWN_ERROR"
       });
     }

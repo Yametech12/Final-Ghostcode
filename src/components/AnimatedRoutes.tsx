@@ -146,13 +146,6 @@ export default function AnimatedRoutes() {
               </Suspense>
             </ProtectedRoute>
           } />
-          {/* <Route path="/calibration" element={
-            <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
-                <PageWrapper><CalibrationPage /></PageWrapper>
-              </Suspense>
-            </ProtectedRoute>
-          } /> */}
           <Route path="/field-guide" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>

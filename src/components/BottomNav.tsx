@@ -1,5 +1,5 @@
 import { NavLink } from 'react-router-dom';
-import { Home, MessageCircle, BarChart3, FileText, User } from 'lucide-react';
+import { Home, Users, FileText, Shield, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 interface BottomNavProps {
@@ -9,10 +9,10 @@ interface BottomNavProps {
 export function BottomNav({ className = '' }: BottomNavProps) {
   const links = [
     { to: '/', icon: Home, label: 'Home', exact: true },
-    { to: '/advisor', icon: MessageCircle, label: 'Advisor' },
-    { to: '/calibrate', icon: BarChart3, label: 'Calibrate' },
-    { to: '/reports', icon: FileText, label: 'Reports' },
-    { to: '/profile', icon: User, label: 'Profile' },
+    { to: '/profiles', icon: Users, label: 'Profiles', exact: false },
+    { to: '/dossiers', icon: FileText, label: 'Dossiers', exact: false },
+    { to: '/advisor', icon: Shield, label: 'Advisor', exact: false },
+    { to: '/calibrate', icon: Target, label: 'Calibrate', exact: false },
   ];
 
   return (

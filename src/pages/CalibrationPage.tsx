@@ -605,6 +605,24 @@ export default function CalibrationPage() {
 
       if (user) {
         try {
+          // Ensure user record exists in users table first
+          const { data: userRecord } = await supabase
+            .from('users')
+            .select('id')
+            .eq('id', user.id)
+            .maybeSingle();
+
+          if (!userRecord) {
+            // Create the user record if it doesn't exist
+            const { error: createError } = await supabase
+              .from('users')
+              .insert({ id: user.id });
+            if (createError) {
+              console.error('Failed to create user record:', createError);
+              // Continue anyway - the insert below will also fail gracefully
+            }
+          }
+
           const { data: inserted, error } = await supabase.from('oracle_analyses').insert({
             user_id: user.id,
             input: structuredInput,

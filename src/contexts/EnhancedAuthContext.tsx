@@ -90,8 +90,44 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         };
         setUserData(mappedData);
       } else {
-        console.log('No profile record found for user:', userId);
-        setUserData(null);
+        // Attempt to create the user record if it doesn't exist
+        try {
+          const { error: insertError } = await supabase
+            .from('users')
+            .insert({
+              id: userId,
+              email: null, // will be updated on next session refresh if available
+              display_name: null,
+              photo_url: null
+            });
+          if (insertError) {
+            console.error('Failed to create user record:', insertError);
+            setUserData(null);
+          } else {
+            console.log('User record created successfully for:', userId);
+            // Reload user data to populate state
+            const { data: newData } = await supabase
+              .from('users')
+              .select('*')
+              .eq('id', userId)
+              .maybeSingle();
+            if (newData) {
+              setUserData({
+                ...newData,
+                displayName: newData.display_name,
+                photoURL: newData.photo_url,
+                contactInfo: newData.contact_info,
+                createdAt: newData.created_at,
+                lastLoginAt: newData.last_login_at
+              });
+            } else {
+              setUserData(null);
+            }
+          }
+        } catch (createErr) {
+          console.error('Error creating user record:', createErr);
+          setUserData(null);
+        }
       }
     } catch (error) {
       console.error('Unexpected error loading user data:', error);
@@ -165,10 +201,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       if (error) throw error;
       setSession(data.session);
       setUser(wrapUser(data.session?.user ?? null));
+      if (data.session?.user?.id) {
+        await loadUserData(data.session.user.id);
+      }
     } catch (err) {
       console.error('Force refresh failed:', serializeError(err));
     }
-  }, []);
+  }, [loadUserData]);
 
   const signInWithEmail = async (email: string, password: string, recaptchaToken?: string | null) => {
     const { data, error } = await supabase.auth.signInWithPassword({
@@ -177,8 +216,11 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       options: recaptchaToken ? { captchaToken: recaptchaToken } : undefined
     });
     if (error) throw error;
-      setSession(data.session);
-      setUser(wrapUser(data.session.user));
+    setSession(data.session);
+    setUser(wrapUser(data.session.user));
+    if (data.session.user?.id) {
+      await loadUserData(data.session.user.id);
+    }
   };
 
   const signUp = async (email: string, password: string, displayName?: string, recaptchaToken?: string | null) => {
