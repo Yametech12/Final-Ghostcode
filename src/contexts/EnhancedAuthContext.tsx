@@ -143,7 +143,10 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setSession(data.session);
         setUser(wrapUser(data.session.user));
         setError(null);
-        await loadUserData(data.session.user.id);
+        // Run loadUserData in parallel with completing the session load
+        loadUserData(data.session.user.id).catch(err =>
+          console.error('Background user data load failed:', err)
+        );
         return data.session;
       }
       return null;
@@ -156,7 +159,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       setError('Failed to load session. Please refresh.');
       return null;
     }
-  }, []);
+  }, [loadUserData]);
 
   useEffect(() => {
     let mounted = true;
@@ -173,7 +176,10 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setUser(wrapUser(newSession?.user ?? null));
         setError(null);
         if (newSession?.user?.id) {
-          await loadUserData(newSession.user.id);
+          // Run loadUserData in parallel without blocking the auth state update
+          loadUserData(newSession.user.id).catch(err =>
+            console.error('Background user data load failed:', err)
+          );
         }
       } else if (event === 'SIGNED_OUT') {
         setSession(null);

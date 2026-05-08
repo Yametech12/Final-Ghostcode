@@ -6,39 +6,31 @@ export function useRoutePreloading() {
   const location = useLocation();
 
   useEffect(() => {
-     const preloadRoutes = () => {
-       // Preload high-priority routes after initial page load
-       const timeoutId = setTimeout(() => {
-         // Preload core functionality when user is on home page
-         if (location.pathname === '/') {
-           import('../pages/ProfilePage');
-           import('../pages/AdvisorPage');
-           import('../pages/AssessmentPage');
-         }
+    // Preload high-priority routes immediately on mount
+    const preloadRoutes = () => {
+      // Preload core functionality when user is on home page
+      if (location.pathname === '/') {
+        import('../pages/ProfilePage');
+        import('../pages/AdvisorPage');
+        import('../pages/AssessmentPage');
+      }
 
-         // Preload tool pages when user is in core areas
-         if (['/profile', '/advisor', '/assessment'].includes(location.pathname)) {
-           import('../pages/CalibrationPage');
-           import('../pages/ProfilerPage');
-           import('../pages/QuizPage');
-         }
+      // Preload tool pages when user is in core areas
+      if (['/profile', '/advisor', '/assessment'].includes(location.pathname)) {
+        import('../pages/CalibrationPage');
+        import('../pages/ProfilerPage');
+        import('../pages/QuizPage');
+      }
 
-         // Preload reference pages when user shows interest in learning
-         if (['/guide', '/encyclopedia'].includes(location.pathname)) {
-           import('../pages/FieldGuidePage');
-           import('../pages/GlossaryPage');
-         }
-       }, 2000); // Delay to prioritize initial page load
+      // Preload reference pages when user shows interest in learning
+      if (['/guide', '/encyclopedia'].includes(location.pathname)) {
+        import('../pages/FieldGuidePage');
+        import('../pages/GlossaryPage');
+      }
+    };
 
-       return timeoutId;
-     };
-
-     const timeoutId = preloadRoutes();
-
-     return () => {
-       if (timeoutId) clearTimeout(timeoutId);
-     };
-   }, [location.pathname]);
+    preloadRoutes();
+  }, [location.pathname]);
 }
 
 // Intersection Observer for component-level preloading

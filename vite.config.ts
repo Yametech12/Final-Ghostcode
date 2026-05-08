@@ -1,22 +1,10 @@
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
-import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
-  plugins: [
-    react(),
-    VitePWA({
-      registerType: 'prompt',
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}']
-      },
-      includeAssets: ['favicon.ico', 'icon-192.png', 'icon-512.png'],
-      manifest: true
-    })
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.')
@@ -38,13 +26,6 @@ export default defineConfig({
   build: {
     target: 'esnext',
     rollupOptions: {
-      plugins: [
-        visualizer({
-          filename: 'dist/stats.html',
-          gzipSize: true,
-          brotliSize: true,
-        })
-      ],
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom', 'react-router-dom'],

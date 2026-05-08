@@ -1,42 +1,41 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import Layout from './Layout';
 import { LoadingScreen, InlineLoader } from './LoadingComponents';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { lazyWithRetry } from '../utils/lazyWithRetry';
 
-// Critical pages - loaded immediately on app start
-const HomePage = lazyWithRetry(() => import('../pages/HomePage'));
-const LoginPage = lazyWithRetry(() => import('../pages/LoginPage'));
-const RegisterPage = lazyWithRetry(() => import('../pages/RegisterPage'));
+// Critical pages - loaded immediately without retry wrapper
+const HomePage = lazy(() => import('../pages/HomePage'));
+const LoginPage = lazy(() => import('../pages/LoginPage'));
+const RegisterPage = lazy(() => import('../pages/RegisterPage'));
 
 // Core functionality pages - high priority
-const ProfilePage = lazyWithRetry(() => import('../pages/ProfilePage'));
-const AdvisorPage = lazyWithRetry(() => import('../pages/AdvisorPage'));
-const AssessmentPage = lazyWithRetry(() => import('../pages/AssessmentPage'));
-const AssessmentResultPage = lazyWithRetry(() => import('../pages/AssessmentResultPage'));
+const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const AdvisorPage = lazy(() => import('../pages/AdvisorPage'));
+const AssessmentPage = lazy(() => import('../pages/AssessmentPage'));
+const AssessmentResultPage = lazy(() => import('../pages/AssessmentResultPage'));
 
 // Tool pages - medium priority
-const CalibrationPage = lazyWithRetry(() => import('../pages/CalibrationPage'));
-const ProfilerPage = lazyWithRetry(() => import('../pages/ProfilerPage'));
-const QuizPage = lazyWithRetry(() => import('../pages/QuizPage'));
-const ComparePage = lazyWithRetry(() => import('../pages/ComparePage'));
-const SimulationPage = lazyWithRetry(() => import('../pages/SimulationPage'));
-const DecryptorPage = lazyWithRetry(() => import('../pages/DecryptorPage'));
+const CalibrationPage = lazy(() => import('../pages/CalibrationPage'));
+const ProfilerPage = lazy(() => import('../pages/ProfilerPage'));
+const QuizPage = lazy(() => import('../pages/QuizPage'));
+const ComparePage = lazy(() => import('../pages/ComparePage'));
+const SimulationPage = lazy(() => import('../pages/SimulationPage'));
+const DecryptorPage = lazy(() => import('../pages/DecryptorPage'));
 
 // Reference pages - lower priority
-const EncyclopediaPage = lazyWithRetry(() => import('../pages/EncyclopediaPage'));
-const GuidePage = lazyWithRetry(() => import('../pages/GuidePage'));
-const FieldGuidePage = lazyWithRetry(() => import('../pages/FieldGuidePage'));
-const GlossaryPage = lazyWithRetry(() => import('../pages/GlossaryPage'));
-const QuickReferencePage = lazyWithRetry(() => import('../pages/QuickReferencePage'));
+const EncyclopediaPage = lazy(() => import('../pages/EncyclopediaPage'));
+const GuidePage = lazy(() => import('../pages/GuidePage'));
+const FieldGuidePage = lazy(() => import('../pages/FieldGuidePage'));
+const GlossaryPage = lazy(() => import('../pages/GlossaryPage'));
+const QuickReferencePage = lazy(() => import('../pages/QuickReferencePage'));
 
 // Utility pages - lowest priority
-const FavoritesPage = lazyWithRetry(() => import('../pages/FavoritesPage'));
-const DossiersPage = lazyWithRetry(() => import('../pages/DossiersPage'));
-const InsightsPage = lazyWithRetry(() => import('../pages/InsightsPage'));
-const AdminDashboard = lazyWithRetry(() => import('../pages/AdminDashboard'));
+const FavoritesPage = lazy(() => import('../pages/FavoritesPage'));
+const DossiersPage = lazy(() => import('../pages/DossiersPage'));
+const InsightsPage = lazy(() => import('../pages/InsightsPage'));
+const AdminDashboard = lazy(() => import('../pages/AdminDashboard'));
 
 const pageVariants = {
   initial: { opacity: 0, y: 15, scale: 0.99 },
