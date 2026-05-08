@@ -147,6 +147,17 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         loadUserData(data.session.user.id).catch(err =>
           console.error('Background user data load failed:', err)
         );
+        // Sync email from Supabase auth to users table (fire and forget)
+        const userEmail = data.session.user?.email;
+        if (userEmail) {
+          supabase
+            .from('users')
+            .upsert({ id: data.session.user.id, email: userEmail }, { ignoreDuplicates: false })
+            .then(({ error: upsertErr }) => {
+              if (upsertErr) console.error('Email sync failed:', upsertErr);
+              else console.log('Email synced to users table:', userEmail);
+            });
+        }
         return data.session;
       }
       return null;
