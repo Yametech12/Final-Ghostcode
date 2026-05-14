@@ -174,16 +174,31 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
-    // Guard against React StrictMode double-invocation: only run init once.
     let initialized = false;
 
     const init = async () => {
       if (initialized) return;
       initialized = true;
-      await loadSession();
-      if (mounted) setLoading(false);
+      try {
+        await loadSession();
+      } catch (err) {
+        console.error('Auth init error:', err);
+      } finally {
+        // Always clear loading — even if session load fails.
+        if (mounted) setLoading(false);
+      }
     };
+
     init();
+
+    // Hard safety net: if loading is still true after 8s, force it off.
+    // This prevents the app from being permanently stuck on the loading screen.
+    const safetyTimer = setTimeout(() => {
+      if (mounted) {
+        console.warn('Auth loading timed out after 8s — forcing loading=false');
+        setLoading(false);
+      }
+    }, 8000);
 
     const { data: authListener } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (!mounted) return;
@@ -191,6 +206,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setSession(newSession);
         setUser(wrapUser(newSession?.user ?? null));
         setError(null);
+        // Always clear loading on auth state change too
+        setLoading(false);
         if (newSession?.user?.id) {
           loadUserData(newSession.user.id).catch(err =>
             console.error('Background user data load failed:', err)
@@ -200,11 +217,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setSession(null);
         setUser(null);
         setUserData(null);
+        setLoading(false);
       }
     });
 
     return () => {
       mounted = false;
+      clearTimeout(safetyTimer);
       authListener.subscription.unsubscribe();
     };
   }, [loadSession]);
