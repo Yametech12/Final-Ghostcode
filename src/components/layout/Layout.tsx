@@ -162,7 +162,7 @@ export default function Layout({ children }: LayoutProps) {
   const handleLogout = async () => {
     try {
       await signOut();
-      navigate('/', { replace: true });
+      navigate('/login', { replace: true });
       setIsMenuOpen(false);
     } catch {
       toast.error('Logout failed');

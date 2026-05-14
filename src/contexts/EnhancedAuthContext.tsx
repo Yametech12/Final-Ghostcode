@@ -174,7 +174,12 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     let mounted = true;
+    // Guard against React StrictMode double-invocation: only run init once.
+    let initialized = false;
+
     const init = async () => {
+      if (initialized) return;
+      initialized = true;
       await loadSession();
       if (mounted) setLoading(false);
     };
@@ -187,7 +192,6 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setUser(wrapUser(newSession?.user ?? null));
         setError(null);
         if (newSession?.user?.id) {
-          // Run loadUserData in parallel without blocking the auth state update
           loadUserData(newSession.user.id).catch(err =>
             console.error('Background user data load failed:', err)
           );
@@ -284,14 +288,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       toast.error('Failed to sign out');
       throw error;
     }
+    // Clear React state — the onAuthStateChange SIGNED_OUT event also does this,
+    // but we do it here too for immediate UI feedback.
     setSession(null);
     setUser(null);
     setUserData(null);
-    // Force clear all storage
-    localStorage.clear();
-    sessionStorage.clear();
-    // Clear any cached state
-    window.location.href = '/';
+    // Do NOT call localStorage.clear() — it wipes Supabase's own auth token
+    // before signOut() can clean it up properly, causing race conditions.
   };
 
   const resetPassword = async (email: string) => {
