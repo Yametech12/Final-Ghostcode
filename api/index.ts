@@ -37,6 +37,15 @@ if (!supabaseServiceKey) {
   process.exit(1);
 }
 
+// Detect placeholder values that were never replaced
+const PLACEHOLDERS = ['your_', 'YOUR_', 'placeholder', 'example', 'changeme'];
+const isPlaceholder = (val: string) => PLACEHOLDERS.some(p => val.includes(p));
+
+if (isPlaceholder(supabaseServiceKey)) {
+  console.error('SUPABASE_SERVICE_ROLE_KEY is still a placeholder value. Replace it with your real Supabase service role key from: https://supabase.com/dashboard/project/_/settings/api');
+  process.exit(1);
+}
+
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
 
