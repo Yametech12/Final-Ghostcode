@@ -1,25 +1,22 @@
-import React, { useEffect, Suspense, lazy } from 'react';
+import React, { useEffect, Suspense, lazy, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { useTheme } from '../context/ThemeContext';
-import { useIsMobile, useSwipeGesture, usePullToRefresh, useMobilePerformance } from '../hooks/useMobile';
-import { useSessionTimeout } from '../hooks/useSessionTimeout';
+import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
+import { useTheme } from '../../contexts/ThemeContext';
+import { useIsMobile, usePullToRefresh, useMobilePerformance } from '../../hooks/useMobile';
+import { useSessionTimeout } from '../../hooks/useSessionTimeout';
 import { toast } from 'sonner';
+import { cn } from '../../lib/utils';
+import { queryClient } from '../../lib/queryClient';
+import { BottomNav } from './BottomNav';
 
-import Logo from './Logo';
+import Logo from '../Logo';
 
 // Lazy load non-critical components to reduce initial bundle size and main thread work
-const FeedbackModal = lazy(() => import('./FeedbackModal'));
-const OnboardingModal = lazy(() => import('./OnboardingModal'));
-const OnboardingTour = lazy(() => import('./OnboardingTour'));
+const FeedbackModal = lazy(() => import('../FeedbackModal'));
+const OnboardingModal = lazy(() => import('../OnboardingModal'));
+const OnboardingTour = lazy(() => import('../OnboardingTour'));
 const CommandPalette = lazy(() => import('./CommandPalette'));
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -82,15 +79,14 @@ export default function Layout({ children }: LayoutProps) {
 
   // Mobile optimizations
   const isMobile = useIsMobile();
-  const { onTouchStart, onTouchMove, onTouchEnd } = useSwipeGesture(
-    () => setIsMenuOpen(false), // Swipe left to close menu
-    () => setIsMenuOpen(true)   // Swipe right to open menu
-  );
+  // Swipe gestures intentionally NOT wired to the whole layout — they conflict with vertical scroll
+  // on long pages. The mobile menu has explicit close button and Escape handler instead.
 
-  // Pull to refresh functionality
+  // Pull to refresh — invalidate React Query cache instead of nuking the SPA.
+  // Using window.location.reload() loses auth/session state and tears down React.
   const { pullDistance } = usePullToRefresh(async () => {
-    // Refresh current page data
-    window.location.reload();
+    await queryClient.invalidateQueries();
+    toast.success('Refreshed');
   });
 
   // Mobile performance optimizations
@@ -129,6 +125,39 @@ export default function Layout({ children }: LayoutProps) {
       setActiveDropdown(null);
     }, 500);
   };
+
+  // Toggle dropdown — used for click events (touch + keyboard friendly)
+  const toggleDropdown = (label: string) => {
+    setActiveDropdown(prev => (prev === label ? null : label));
+  };
+
+  // Track the nav element so we can close dropdowns on outside-click
+  const navRef = useRef<HTMLElement>(null);
+
+  // Close dropdowns when clicking outside the nav
+  useEffect(() => {
+    if (!activeDropdown) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (navRef.current && !navRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activeDropdown]);
+
+  // Close dropdowns and mobile menu on Escape
+  useEffect(() => {
+    if (!activeDropdown && !isMenuOpen) return;
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setActiveDropdown(null);
+        setIsMenuOpen(false);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+    return () => document.removeEventListener('keydown', handleEscape);
+  }, [activeDropdown, isMenuOpen]);
 
   const handleLogout = async () => {
     try {
@@ -228,9 +257,6 @@ export default function Layout({ children }: LayoutProps) {
         "min-h-screen bg-mystic-950 text-slate-300 selection:bg-accent-primary/30 selection:text-accent-primary relative overflow-x-hidden",
         location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden" : ""
       )}
-      onTouchStart={isMobile ? onTouchStart : undefined}
-      onTouchMove={isMobile ? onTouchMove : undefined}
-      onTouchEnd={isMobile ? onTouchEnd : undefined}
     >
       {/* Pull to Refresh Indicator */}
       {isMobile && pullDistance > 0 && (
@@ -269,12 +295,16 @@ export default function Layout({ children }: LayoutProps) {
       </div>
 
       {/* Navigation */}
-      <nav className={cn(
-        "fixed top-0 left-0 right-0 z-50 border-b",
-        scrolled 
-          ? "bg-mystic-950 border-white/10 py-1 shadow-2xl shadow-black/50" 
-          : "bg-mystic-950 border-transparent py-3"
-      )}>
+      <nav
+        ref={navRef}
+        aria-label="Primary"
+        className={cn(
+          "fixed top-0 left-0 right-0 z-50 border-b safe-area-x",
+          scrolled
+            ? "bg-mystic-950 border-white/10 py-1 shadow-2xl shadow-black/50"
+            : "bg-mystic-950 border-transparent py-3"
+        )}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center gap-8">
@@ -284,7 +314,7 @@ export default function Layout({ children }: LayoutProps) {
               </Link>
 
               {/* Desktop Nav Items */}
-              <div className="hidden xl:flex items-center space-x-1">
+              <div className="hidden lg:flex items-center space-x-1">
                 {/* Core Items */}
                 {filteredCoreItems.map((item) => (
                   <Link
@@ -315,16 +345,21 @@ export default function Layout({ children }: LayoutProps) {
                   { label: 'Reference', items: filteredRefItems }
                 ].map((group) => {
                   if (hasSearchResults && group.items.length === 0) return null;
-                  
+                  const isOpen = activeDropdown === group.label;
+
                   return (
-                    <div 
-                      key={group.label} 
+                    <div
+                      key={group.label}
                       className="relative"
                       onMouseEnter={() => handleMouseEnter(group.label)}
                       onMouseLeave={handleMouseLeave}
                     >
                       <button
+                        type="button"
                         data-tour={group.label.toLowerCase()}
+                        aria-haspopup="menu"
+                        aria-expanded={isOpen}
+                        onClick={() => toggleDropdown(group.label)}
                         className={cn(
                           "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none",
                           group.items.some(i => i.path === location.pathname)
@@ -333,18 +368,22 @@ export default function Layout({ children }: LayoutProps) {
                         )}
                       >
                         <span>{group.label}</span>
-                        <ChevronDown className={cn(
-                          "w-4 h-4 transition-transform duration-300",
-                          activeDropdown === group.label ? "rotate-180" : ""
-                        )} />
+                        <ChevronDown
+                          aria-hidden="true"
+                          className={cn(
+                            "w-4 h-4 transition-transform duration-300",
+                            isOpen ? "rotate-180" : ""
+                          )}
+                        />
                       </button>
 
-                      {activeDropdown === group.label && (
-                        <div className="absolute top-full left-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]">
+                      {isOpen && (
+                        <div role="menu" className="absolute top-full left-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]">
                           {group.items.map((item) => (
                             <Link
                               key={item.name}
                               to={item.path}
+                              role="menuitem"
                               data-tour={item.name.toLowerCase()}
                               onClick={() => setActiveDropdown(null)}
                               className={cn(
@@ -354,14 +393,17 @@ export default function Layout({ children }: LayoutProps) {
                                   : "text-slate-400 hover:text-white hover:bg-white/5"
                               )}
                             >
-                              <item.icon className={cn(
-                                "w-4 h-4",
-                                location.pathname === item.path ? "text-accent-primary" : "text-slate-500 group-hover:text-accent-primary"
-                              )} />
+                              <item.icon
+                                aria-hidden="true"
+                                className={cn(
+                                  "w-4 h-4",
+                                  location.pathname === item.path ? "text-accent-primary" : "text-slate-500 group-hover:text-accent-primary"
+                                )}
+                              />
                               <div className="flex-1">
                                 <div>{item.name}</div>
                                 {item.desc && (
-                                  <div className="text-xs text-slate-600">{item.desc}</div>
+                                  <div className="text-xs text-slate-500">{item.desc}</div>
                                 )}
                               </div>
                             </Link>
@@ -375,25 +417,36 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
               {/* Desktop Actions */}
-              <div className="hidden xl:flex items-center gap-4">
+              <div className="hidden lg:flex items-center gap-4">
                 <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="w-4 h-4 text-slate-500 group-focus-within:text-accent-primary transition-colors" />
+                  <Search aria-hidden="true" className="w-4 h-4 text-slate-500 group-focus-within:text-accent-primary transition-colors" />
                 </div>
+                <label htmlFor="nav-search" className="sr-only">Search system</label>
                 <input
+                  id="nav-search"
                   type="text"
                   placeholder="Search system..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-4 text-sm w-40 focus:outline-none focus:border-accent-primary/50 focus:w-56 transition-all leading-none"
+                  className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-16 text-sm w-56 focus:outline-none focus:border-accent-primary/50 transition-colors leading-none"
                 />
-                {searchQuery && (
-                  <button 
+                {searchQuery ? (
+                  <button
+                    type="button"
                     onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
                     className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-slate-500 hover:text-white transition-all"
                   >
-                    <X className="w-3 h-3" />
+                    <X aria-hidden="true" className="w-3 h-3" />
                   </button>
+                ) : (
+                  <kbd
+                    aria-hidden="true"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500 bg-white/5 border border-white/10 rounded"
+                  >
+                    ⌘K
+                  </kbd>
                 )}
               </div>
               
@@ -401,10 +454,11 @@ export default function Layout({ children }: LayoutProps) {
 
               <button
                 onClick={toggleTheme}
-                className="p-2 rounded-xl text-slate-500 hover:text-white hover:bg-white/5 transition-colors"
+                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
-                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {isDark ? <Sun className="w-5 h-5" aria-hidden="true" /> : <Moon className="w-5 h-5" aria-hidden="true" />}
               </button>
 
               {user ? (
@@ -413,29 +467,38 @@ export default function Layout({ children }: LayoutProps) {
                   onMouseEnter={() => handleMouseEnter('profile')}
                   onMouseLeave={handleMouseLeave}
                 >
-                  <button className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+                  <button
+                    type="button"
+                    aria-haspopup="menu"
+                    aria-expanded={activeDropdown === 'profile'}
+                    aria-label="Open user menu"
+                    onClick={() => toggleDropdown('profile')}
+                    className="tap-target rounded-full hover:opacity-80 transition-opacity"
+                  >
                     <img
                       src={user.photoURL || undefined}
-                      alt={user.displayName || 'User'}
+                      alt=""
                       className="w-8 h-8 rounded-full border border-white/10 shrink-0"
                       referrerPolicy="no-referrer"
                     />
                   </button>
 
                   {activeDropdown === 'profile' && (
-                    <div className="absolute top-full right-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-3 z-[60]">
+                    <div role="menu" className="absolute top-full right-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-3 z-[60]">
                       <div className="flex flex-col mb-3 pb-3 border-b border-white/10">
                         <span className="text-sm font-bold text-white break-words">{user.displayName}</span>
                         <span className="text-xs text-slate-400 break-words">{user.email}</span>
                       </div>
                       <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => {
                           setActiveDropdown(null);
                           handleLogout();
                         }}
                         className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all"
                       >
-                        <LogOut className="w-4 h-4" />
+                        <LogOut className="w-4 h-4" aria-hidden="true" />
                         Sign Out
                       </button>
                     </div>
@@ -457,15 +520,16 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
             {/* Mobile menu button */}
-            <div className="xl:hidden flex items-center gap-2">
+            <div className="lg:hidden flex items-center gap-2">
                 <button
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
+                  aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
+                  aria-expanded={isMenuOpen}
                   className={cn(
-                    "xl:hidden p-3 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors",
-                    isMobile ? "min-h-[44px] min-w-[44px]" : "" // Larger touch targets on mobile
+                    "lg:hidden tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors",
                   )}
                 >
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                  {isMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
                 </button>
             </div>
           </div>
@@ -473,24 +537,26 @@ export default function Layout({ children }: LayoutProps) {
 
         {/* Mobile Nav */}
         {isMenuOpen && (
-          <div className="fixed inset-0 h-[100dvh] w-full z-[60] xl:hidden bg-mystic-950 flex flex-col overflow-hidden">
+          <div className="fixed inset-0 h-screen h-[100dvh] w-full z-[60] lg:hidden bg-mystic-950 flex flex-col overflow-hidden safe-area-top safe-area-bottom safe-area-x">
             <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-white/5 shrink-0">
-              <Link to="/" onClick={() => setIsMenuOpen(false)} className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <Logo size="md" className="glow-accent" />
                 <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
-              </Link>
+              </div>
               <div className="flex items-center gap-2">
                 <button
                   onClick={toggleTheme}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                  className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 >
-                  {isDark ? <Sun className="w-6 h-6" /> : <Moon className="w-6 h-6" />}
+                  {isDark ? <Sun className="w-6 h-6" aria-hidden="true" /> : <Moon className="w-6 h-6" aria-hidden="true" />}
                 </button>
                 <button
                   onClick={() => setIsMenuOpen(false)}
-                  className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  aria-label="Close menu"
+                  className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-6 h-6" aria-hidden="true" />
                 </button>
               </div>
             </div>
@@ -499,9 +565,11 @@ export default function Layout({ children }: LayoutProps) {
               {/* Mobile Search */}
               <div className="relative group px-2">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                  <Search className="w-5 h-5 text-slate-500" />
+                  <Search aria-hidden="true" className="w-5 h-5 text-slate-500" />
                 </div>
+                <label htmlFor="mobile-search" className="sr-only">Search system</label>
                 <input
+                  id="mobile-search"
                   type="text"
                   placeholder="Search system..."
                   value={searchQuery}
@@ -509,11 +577,13 @@ export default function Layout({ children }: LayoutProps) {
                   className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-base focus:outline-none focus:border-accent-primary/50 transition-all"
                 />
                 {searchQuery && (
-                  <button 
+                  <button
+                    type="button"
                     onClick={() => setSearchQuery('')}
+                    aria-label="Clear search"
                     className="absolute right-5 top-1/2 -translate-y-1/2 p-2 rounded-full hover:bg-white/10 text-slate-500"
                   >
-                    <X className="w-4 h-4" />
+                    <X aria-hidden="true" className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -557,7 +627,7 @@ export default function Layout({ children }: LayoutProps) {
                               <div className="font-bold">{item.name}</div>
                               <div className={cn(
                                 "text-xs mt-0.5",
-                                location.pathname === item.path ? "text-accent-primary/70" : "text-slate-600"
+                                location.pathname === item.path ? "text-accent-primary/70" : "text-slate-400"
                               )}>{item.desc}</div>
                             </div>
                           </Link>
@@ -570,9 +640,9 @@ export default function Layout({ children }: LayoutProps) {
                 {searchQuery && navGroups.every(g => !g.items.some(i => i.name.toLowerCase().includes(searchQuery.toLowerCase()))) && (
                   <div className="px-6 py-12 text-center space-y-4">
                     <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto">
-                      <Search className="w-8 h-8 text-slate-600" />
+                      <Search aria-hidden="true" className="w-8 h-8 text-slate-400" />
                     </div>
-                    <p className="text-slate-500 italic">No matches found for "{searchQuery}"</p>
+                    <p className="text-slate-400 italic">No matches found for "{searchQuery}"</p>
                   </div>
                 )}
               </div>
@@ -581,7 +651,7 @@ export default function Layout({ children }: LayoutProps) {
                 <div className="flex items-center gap-3 mb-6">
                   <img
                     src={user.photoURL || undefined}
-                    alt={user.displayName || 'User'}
+                    alt=""
                     className="w-12 h-12 rounded-full border-2 border-white/20 shrink-0"
                     referrerPolicy="no-referrer"
                   />
@@ -591,9 +661,10 @@ export default function Layout({ children }: LayoutProps) {
                   </div>
                   <button
                     onClick={handleLogout}
-                    className="p-3 rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
+                    aria-label="Sign out"
+                    className="tap-target rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut aria-hidden="true" className="w-5 h-5" />
                   </button>
                 </div>
               ) : (
@@ -604,14 +675,14 @@ export default function Layout({ children }: LayoutProps) {
                   }}
                   className="w-full flex items-center justify-center gap-3 px-4 py-5 rounded-2xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20"
                 >
-                  <LogIn className="w-6 h-6" />
+                  <LogIn aria-hidden="true" className="w-6 h-6" />
                   Sign In
                 </button>
               )}
             </div>
 
-            <div className="p-6 border-t border-white/5 bg-white/5 shrink-0">
-              <p className="text-center text-xs text-slate-600 font-bold uppercase tracking-widest">
+            <div className="p-6 border-t border-white/5 bg-white/5 shrink-0 safe-area-bottom">
+              <p className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest">
                 © 2026 Epimetheus
               </p>
             </div>
@@ -619,8 +690,8 @@ export default function Layout({ children }: LayoutProps) {
         )}
       </nav>
 
-      {/* Main Content */}
-      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden pb-20" : "min-h-screen pb-20 lg:pb-0")}>
+      {/* Main Content — pt-24 reserves space for the fixed nav */}
+      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden pb-20" : "min-h-screen pb-24 lg:pb-0")}>
         <div className={cn(
           "mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col w-full",
           location.pathname === '/advisor' ? "max-w-[100rem] pt-4 pb-4 h-full overflow-hidden" : "max-w-7xl pt-12 pb-12"
@@ -639,29 +710,32 @@ export default function Layout({ children }: LayoutProps) {
                 <Logo size="md" className="glow-accent" />
                 <span className="text-xl font-bold tracking-tight text-gradient">EPIMETHEUS</span>
               </div>
-              <p className="text-slate-500 text-sm max-w-md">
-                The ultimate system for understanding female psychology and personality dynamics. 
+              <p className="text-slate-400 text-sm max-w-md">
+                The ultimate system for understanding female psychology and personality dynamics.
                 Based on the research of Vin DiCarlo & Brian Burke.
               </p>
             </div>
             <div className="text-left md:text-right">
               <button
                 onClick={() => setIsFeedbackOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-slate-300 text-sm font-bold hover:from-accent-primary/30 hover:to-accent-secondary/30 hover:border-accent-primary/50 hover:text-white transition-all hover:scale-105"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-slate-200 text-sm font-bold hover:from-accent-primary/30 hover:to-accent-secondary/30 hover:border-accent-primary/50 hover:text-white transition-all hover:scale-105"
               >
-                <MessageSquare className="w-4 h-4" />
+                <MessageSquare aria-hidden="true" className="w-4 h-4" />
                 Send Feedback
               </button>
             </div>
           </div>
           <div className="pt-8 text-center">
-            <p className="text-slate-500 text-sm font-medium">
+            <p className="text-slate-400 text-sm font-medium">
               © 2026 EPIMETHEUS
             </p>
           </div>
         </div>
       </footer>
       )}
+
+      {/* Mobile bottom nav — only shown when authenticated and not on Advisor */}
+      {user && location.pathname !== '/advisor' && <BottomNav />}
 
       <Suspense fallback={null}>
         <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

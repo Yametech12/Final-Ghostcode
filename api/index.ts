@@ -489,7 +489,12 @@ Message History: ${history?.length || 0} messages in this session
 
     const messages = [
       { role: 'system', content: systemPrompt },
-      ...(history || []).map(m => ({ role: m.role, content: m.content })),
+      // Regolo / OpenAI-compatible APIs expect 'assistant' for model replies.
+      // We store as 'model' in DB for legacy reasons, so map on the way out.
+      ...(history || []).map(m => ({
+        role: m.role === 'model' ? 'assistant' : m.role,
+        content: m.content,
+      })),
       { role: 'user', content: message }
     ];
 
@@ -582,13 +587,19 @@ Message History: ${history?.length || 0} messages in this session
     } catch (streamError: any) {
       console.error('Streaming error:', serializeError(streamError));
 
-      // Local rule-based fallback
-      const fallbackContent = "I'm having trouble connecting right now. Please try again in a moment, and I'll be here to help with your relationship questions.";
+      // Send a structured error so the client knows it was a backend issue, not a network drop
+      const errorMessage = streamError?.message?.includes('401')
+        ? 'AI service authentication failed. Check your Regolo API key.'
+        : streamError?.message?.includes('429')
+        ? 'AI service is rate-limited. Try again in a moment.'
+        : streamError?.message?.includes('insufficient')
+        ? 'AI service has insufficient credits. Top up your Regolo account.'
+        : "I'm having trouble connecting right now. Please try again in a moment.";
 
-      fullContent = fallbackContent;
+      fullContent = errorMessage;
 
       if (!res.destroyed) {
-        res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
+        res.write(`data: ${JSON.stringify({ content: errorMessage })}\n\n`);
         res.write(`data: [DONE]\n\n`);
         res.end();
       }

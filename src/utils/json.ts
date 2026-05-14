@@ -1,7 +1,7 @@
 /**
  * Safely extracts and parses JSON from a string that might contain markdown or be truncated.
  */
-export function safeParseJSON<T>(text: string, fallback: T): T {
+export function safeParseJSON<T>(text: string | null, fallback: T): T {
   if (!text) return fallback;
 
   try {

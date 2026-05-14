@@ -8,10 +8,10 @@ import { Search, Command, ArrowRight, User,
   Loader2, GripVertical
 } from 'lucide-react';
 import { useMotionValue } from 'motion/react';
-import { personalityTypes } from '../data/personalityTypes';
+import { personalityTypes } from '../../data/personalityTypes';
 import { motion, AnimatePresence } from 'motion/react';
 
-import { LogoIcon } from './Logo';
+import { LogoIcon } from '../Logo';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 

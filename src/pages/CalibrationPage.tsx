@@ -411,7 +411,7 @@ export default function CalibrationPage() {
       if (jsonStr.startsWith('```json')) {
         jsonStr = jsonStr.replace(/```json\n?/, '').replace(/```$/, '').trim();
       }
-      const result = safeParseJSON(jsonStr, null);
+      const result = safeParseJSON<{text: string, correctType: string, explanation: string} | null>(jsonStr, null);
       if (!result) throw new Error("The Oracle returned an unreadable response. Please try again.");
       setDynamicScenario(result);
     } catch (err) {
@@ -516,7 +516,7 @@ export default function CalibrationPage() {
       });
 
       const jsonStr = completion.choices?.[0]?.message?.content?.trim() || '{}';
-      const data = safeParseJSON(jsonStr, null as AnalysisResult | null);
+      const data = safeParseJSON<AnalysisResult | null>(jsonStr, null);
       if (!data) throw new Error("The Oracle returned an unreadable response. Please try again.");
 
       // Ensure tasks have unique IDs

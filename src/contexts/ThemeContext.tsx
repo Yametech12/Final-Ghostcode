@@ -7,18 +7,15 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [isDark, setIsDark] = useState(true);
+// Read initial theme from the document root (set by the inline script in index.html)
+// to avoid a flash of wrong theme on first paint.
+function getInitialTheme(): boolean {
+  if (typeof document === 'undefined') return true;
+  return !document.documentElement.classList.contains('light-theme');
+}
 
-  useEffect(() => {
-    const saved = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (saved === 'light') {
-      setIsDark(false);
-    } else if (saved === 'dark' || (!saved && prefersDark)) {
-      setIsDark(true);
-    }
-  }, []);
+export function ThemeProvider({ children }: { children: ReactNode }) {
+  const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
 
   useEffect(() => {
     localStorage.setItem('theme', isDark ? 'dark' : 'light');
@@ -45,4 +42,3 @@ export function useTheme() {
   }
   return context;
 }
-

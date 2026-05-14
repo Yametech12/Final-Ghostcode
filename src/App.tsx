@@ -1,10 +1,10 @@
 
 import { ReactLenis } from 'lenis/react';
 import { QueryClientProvider } from '@tanstack/react-query';
-import ScrollToTop from './components/ScrollToTop';
+import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
-import { ThemeProvider } from './context/ThemeContext';
-import AnimatedRoutes from './components/AnimatedRoutes';
+import { ThemeProvider } from './contexts/ThemeContext';
+import AnimatedRoutes from './components/layout/AnimatedRoutes';
 import { Suspense } from 'react';
 import { queryClient } from './lib/queryClient';
 import { useRoutePreloading } from './hooks/useRoutePreloading';

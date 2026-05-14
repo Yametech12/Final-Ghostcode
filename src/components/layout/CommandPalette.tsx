@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Command } from 'cmdk';
 import { useNavigate } from 'react-router-dom';
 import { Search, BookOpen, User, Target, Brain, Compass, FileText } from 'lucide-react';
-import { personalityTypes } from '../data/personalityTypes';
+import { personalityTypes } from '../../data/personalityTypes';
 
 export default function CommandPalette() {
   const [open, setOpen] = useState(false);

@@ -10,6 +10,13 @@ export default defineConfig({
       '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.')
     }
   },
+  // @ts-expect-error vitest config is read from vite config
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    css: false,
+  },
   server: {
     port: 5173,
     host: true,

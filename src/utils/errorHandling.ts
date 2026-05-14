@@ -132,12 +132,16 @@ export function sanitizeInput(input: string): string {
 // Helper function to properly serialize Error objects for logging
 export function serializeError(err: unknown): Record<string, any> {
   if (err instanceof Error) {
-    return {
+    const errorObj: Record<string, any> = {
       name: err.name,
       message: err.message,
       stack: err.stack,
-      ...(err as any) // Include any custom properties
     };
+    // Add any custom properties from the error object
+    Object.keys(err).forEach(key => {
+      errorObj[key] = (err as any)[key];
+    });
+    return errorObj;
   }
   return { error: err };
 }

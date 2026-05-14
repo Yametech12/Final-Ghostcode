@@ -138,6 +138,22 @@
   --color-rose-950: #4c0519;
 
   --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+
+  /* Design tokens — keep these consistent across components */
+  --radius-sm: 0.5rem;     /* 8px  — pills, badges */
+  --radius-md: 0.75rem;    /* 12px — buttons, inputs */
+  --radius-lg: 1rem;       /* 16px — cards */
+  --radius-xl: 1.5rem;     /* 24px — modals, large surfaces */
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.2);
+  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --shadow-glow: 0 0 24px rgba(255, 75, 107, 0.25);
+
+  /* Layout dimensions — used to keep nav height in sync with content padding */
+  --nav-height: 4rem;
+  --nav-height-scrolled: 3.25rem;
+  --bottom-nav-height: 4rem;
 }
 
 .light-theme {
@@ -259,7 +275,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .glass-card {
-  @apply bg-mystic-900/50 backdrop-blur-xl border border-slate-700/20 rounded-3xl shadow-2xl;
+  /* Fallback color for browsers without backdrop-filter */
+  background-color: rgba(18, 10, 18, 0.85);
+  @apply backdrop-blur-xl border border-slate-700/20 rounded-3xl shadow-2xl;
+}
+
+@supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
+  .glass-card {
+    @apply bg-mystic-900/50;
+  }
 }
 
 .accent-gradient {
@@ -397,3 +421,69 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
+
+/* ──────────────────────────────────────────────────────────────────────
+   Safe-area utilities (iPhone notch / home indicator support)
+   ────────────────────────────────────────────────────────────────────── */
+.safe-area-top    { padding-top: env(safe-area-inset-top); }
+.safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+.safe-area-left   { padding-left: env(safe-area-inset-left); }
+.safe-area-right  { padding-right: env(safe-area-inset-right); }
+.safe-area-x {
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Touch target helper — meets 44×44 WCAG / iOS / Android minimum
+   ────────────────────────────────────────────────────────────────────── */
+.tap-target {
+  min-height: 44px;
+  min-width: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Focus styles — visible keyboard focus ring on all interactive elements
+   ────────────────────────────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--color-accent-primary);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove the default focus outline only when :focus-visible is supported */
+:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Reduced motion — respect user preference
+   ────────────────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   Screen reader only — visually hidden but accessible to assistive tech
+   ────────────────────────────────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
