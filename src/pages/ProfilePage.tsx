@@ -1,15 +1,16 @@
 import { useEffect, useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  ChevronRight, Target, User, Plus, Clock, Search,
-  Edit3, Award, Star, BookOpen, Crown, Flame, Shield, Zap
+  ChevronRight, Target, User, Plus, Clock,
+  Edit3, Award, Star, BookOpen, Crown, Flame, Shield, Zap,
+  BarChart3, MessageSquare, Settings, Share2, ExternalLink, TrendingUp
 } from 'lucide-react';
 import ProfileCard from '../components/ProfileCard';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';
-import { motion } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import EditProfileModal from '../components/EditProfileModal';
 import { cn } from '../lib/utils';
 
@@ -17,6 +18,7 @@ type Assessment = {
   typeId: string;
   date: string;
   name: string;
+  traits?: Record<string, number>;
 };
 
 type FieldReport = {
@@ -41,34 +43,55 @@ export default function ProfilePage() {
   const achievements = useMemo(() => {
     const list = [];
     if (assessments.length >= 1) {
-      list.push({ id: 'first_blood', name: 'First Calibration', icon: Target, color: 'text-blue-400', bg: 'bg-blue-400' });
+      list.push({ id: 'first_blood', name: 'First Calibration', icon: Target, color: 'text-blue-400', bg: 'bg-blue-400', tier: 1 });
     }
     if (assessments.length >= 3) {
-      list.push({ id: 'explorer', name: 'Type Explorer', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400' });
+      list.push({ id: 'explorer', name: 'Type Explorer', icon: Zap, color: 'text-cyan-400', bg: 'bg-cyan-400', tier: 1 });
     }
     if (assessments.length >= 5) {
-      list.push({ id: 'apprentice', name: 'Apprentice Profiler', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-400' });
+      list.push({ id: 'apprentice', name: 'Apprentice Profiler', icon: Star, color: 'text-yellow-400', bg: 'bg-yellow-400', tier: 2 });
     }
     if (assessments.length >= 10) {
-      list.push({ id: 'master', name: 'Master Profiler', icon: Award, color: 'text-purple-400', bg: 'bg-purple-400' });
+      list.push({ id: 'master', name: 'Master Profiler', icon: Award, color: 'text-purple-400', bg: 'bg-purple-400', tier: 3 });
     }
     if (assessments.length >= 15) {
-      list.push({ id: 'grandmaster', name: 'Grandmaster', icon: Crown, color: 'text-yellow-500', bg: 'bg-yellow-500' });
+      list.push({ id: 'grandmaster', name: 'Grandmaster', icon: Crown, color: 'text-yellow-500', bg: 'bg-yellow-500', tier: 4 });
     }
     if (userData?.bio) {
-      list.push({ id: 'identity', name: 'Identity Established', icon: User, color: 'text-emerald-400', bg: 'bg-emerald-400' });
+      list.push({ id: 'identity', name: 'Identity Established', icon: User, color: 'text-emerald-400', bg: 'bg-emerald-400', tier: 1 });
     }
     if (fieldReports.length >= 1) {
-      list.push({ id: 'first_report', name: 'Field Operative', icon: BookOpen, color: 'text-orange-400', bg: 'bg-orange-400' });
+      list.push({ id: 'first_report', name: 'Field Operative', icon: BookOpen, color: 'text-orange-400', bg: 'bg-orange-400', tier: 1 });
     }
     if (fieldReports.length >= 3) {
-      list.push({ id: 'active_reporter', name: 'Active Reporter', icon: Shield, color: 'text-indigo-400', bg: 'bg-indigo-400' });
+      list.push({ id: 'active_reporter', name: 'Active Reporter', icon: Shield, color: 'text-indigo-400', bg: 'bg-indigo-400', tier: 2 });
     }
     if (fieldReports.length >= 5) {
-      list.push({ id: 'veteran_reporter', name: 'Veteran Reporter', icon: Flame, color: 'text-red-400', bg: 'bg-red-400' });
+      list.push({ id: 'veteran_reporter', name: 'Veteran Reporter', icon: Flame, color: 'text-red-400', bg: 'bg-red-400', tier: 3 });
     }
     return list;
   }, [assessments.length, userData, fieldReports.length]);
+
+  // Calculate total stats
+  const totalStats = useMemo(() => {
+    const totalLikes = fieldReports.reduce((sum, r) => sum + (r.likes || 0), 0);
+    const uniqueTypes = new Set(assessments.map(a => a.typeId)).size;
+    return { totalLikes, uniqueTypes };
+  }, [fieldReports, assessments]);
+
+  // Calculate rank progress
+  const rankProgress = useMemo(() => {
+    const ranks = [
+      { name: 'C', min: 0, next: 1 },
+      { name: 'B+', min: 1, next: 5 },
+      { name: 'A', min: 5, next: 10 },
+      { name: 'A+', min: 10, next: 15 },
+      { name: 'S', min: 15, next: Infinity }
+    ];
+    const currentRank = ranks.find(r => assessments.length >= r.min && assessments.length < r.next) || ranks[ranks.length - 1];
+    const progress = currentRank.next === Infinity ? 100 : ((assessments.length - currentRank.min) / (currentRank.next - currentRank.min)) * 100;
+    return { current: currentRank.name, progress, nextRank: ranks.find(r => r.min > assessments.length)?.name || null };
+  }, [assessments.length]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -81,7 +104,7 @@ export default function ProfilePage() {
       try {
         const { data: calibrations, error } = await supabase
           .from('calibrations')
-          .select('type_id, timestamp')
+          .select('type_id, timestamp, traits')
           .eq('user_id', user.id)
           .order('timestamp', { ascending: false });
 
@@ -95,7 +118,8 @@ export default function ProfilePage() {
             fetchedAssessments.push({
               typeId: data.type_id,
               date: data.timestamp || new Date().toISOString(),
-              name: profile.name
+              name: profile.name,
+              traits: data.traits
             });
           });
           setAssessments(fetchedAssessments);
@@ -132,230 +156,393 @@ export default function ProfilePage() {
 
   if (!auth) return <div>Loading...</div>;
 
+  const tabs = [
+    { id: 'assessments' as const, label: 'Calibrations', icon: Target, count: assessments.length },
+    { id: 'reports' as const, label: 'Field Reports', icon: MessageSquare, count: fieldReports.length },
+    { id: 'achievements' as const, label: 'Achievements', icon: Award, count: achievements.length }
+  ];
+
   return (
     <div className="space-y-8 pb-24 max-w-5xl mx-auto">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row gap-8">
-        <div className="w-full md:w-80 shrink-0">
+      {/* Header Section */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col lg:flex-row gap-8"
+      >
+        {/* Profile Card */}
+        <div className="w-full lg:w-80 shrink-0">
           <ProfileCard onEditProfile={() => setIsEditModalOpen(true)} />
         </div>
 
-        <div className="flex-grow glass-card p-8 flex flex-col justify-between relative overflow-hidden">
+        {/* Stats Dashboard */}
+        <div className="flex-grow glass-card p-6 lg:p-8 flex flex-col relative overflow-hidden">
           <div className="absolute top-[-20%] right-[-10%] w-[40%] h-[140%] bg-accent-primary opacity-10 blur-[100px] rounded-full pointer-events-none" />
 
           <div className="relative z-10 space-y-6">
-            <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-xs font-bold uppercase tracking-widest mb-2">
-                Operative Stats
+            {/* Header with badge */}
+            <div className="flex items-start justify-between">
+              <div>
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-xs font-bold uppercase tracking-widest mb-2">
+                  <BarChart3 className="w-3 h-3" />
+                  Operative Stats
+                </div>
+                <h2 className="text-2xl lg:text-3xl font-display font-bold text-white tracking-tight">
+                  Mission Progress
+                </h2>
+                {userData?.bio && (
+                  <p className="text-slate-400 text-sm leading-relaxed italic border-l-2 border-accent-primary/30 pl-4 py-2 mt-3 max-w-xl">
+                    "{userData.bio}"
+                  </p>
+                )}
               </div>
-              <h2 className="text-3xl font-display font-bold text-white tracking-tight">
-                Mission Progress
-              </h2>
-              {userData?.bio && (
-                <p className="text-slate-400 text-sm leading-relaxed italic border-l-2 border-accent-primary/30 pl-4 py-2 mt-2">
-                  "{userData.bio}"
-                </p>
-              )}
             </div>
 
-            <div className="grid grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Calibrations</div>
-                <div className="text-2xl font-black text-accent-primary">{assessments.length}</div>
-              </div>
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Reports</div>
-                <div className="text-2xl font-black text-accent-secondary">{fieldReports.length}</div>
-              </div>
-              <div className="p-4 rounded-xl bg-white/5 border border-white/10 text-center">
-                <div className="text-xs text-slate-500 uppercase tracking-wider mb-1">Rank</div>
-                <div className="text-2xl font-black text-yellow-400">
-                  {assessments.length >= 15 ? 'S' : assessments.length >= 10 ? 'A+' : assessments.length >= 5 ? 'A' : assessments.length >= 1 ? 'B+' : 'C'}
+            {/* Stats Grid */}
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent-primary/30 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Target className="w-4 h-4 text-accent-primary" />
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Calibrations</span>
+                </div>
+                <div className="text-3xl font-black text-white">{assessments.length}</div>
+                <div className="text-[10px] text-slate-500 mt-1">{rankProgress.current} Rank</div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-accent-secondary/30 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <MessageSquare className="w-4 h-4 text-accent-secondary" />
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Reports</span>
+                </div>
+                <div className="text-3xl font-black text-white">{fieldReports.length}</div>
+                <div className="text-[10px] text-slate-500 mt-1">{totalStats.totalLikes} Total Likes</div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Star className="w-4 h-4 text-purple-400" />
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Types</span>
+                </div>
+                <div className="text-3xl font-black text-white">{totalStats.uniqueTypes}</div>
+                <div className="text-[10px] text-slate-500 mt-1">Discovered</div>
+              </motion.div>
+
+              <motion.div
+                whileHover={{ scale: 1.02 }}
+                className="p-4 rounded-xl bg-white/5 border border-white/10 hover:border-yellow-500/30 transition-all"
+              >
+                <div className="flex items-center gap-2 mb-2">
+                  <Award className="w-4 h-4 text-yellow-400" />
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">Rank</span>
+                </div>
+                <div className="text-3xl font-black text-yellow-400">{rankProgress.current}</div>
+                {rankProgress.nextRank && (
+                  <div className="text-[10px] text-slate-500 mt-1">Next: {rankProgress.nextRank}</div>
+                )}
+              </motion.div>
+            </div>
+
+            {/* Rank Progress Bar */}
+            {rankProgress.nextRank && (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-slate-500">Rank Progress</span>
+                  <span className="text-yellow-400 font-mono">{assessments.length}/{assessments.length < 15 ? (assessments.length < 10 ? (assessments.length < 5 ? 1 : 5) : 10) : 15} calibrations</span>
+                </div>
+                <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${rankProgress.progress}%` }}
+                    transition={{ duration: 1, ease: 'easeOut' }}
+                    className="h-full bg-gradient-to-r from-accent-primary to-accent-secondary rounded-full"
+                  />
                 </div>
               </div>
-            </div>
+            )}
 
-            <div className="flex flex-wrap gap-3">
+            {/* Quick Actions */}
+            <div className="flex flex-wrap gap-3 pt-2">
               <button
                 onClick={() => setIsEditModalOpen(true)}
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-bold hover:bg-white/10 transition-all"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-slate-300 hover:text-white"
               >
-                <Edit3 className="w-4 h-4" />
-                Update Bio
+                <Settings className="w-4 h-4" />
+                Edit Profile
               </button>
               <Link
                 to="/assessment"
-                className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl accent-gradient text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl accent-gradient text-white text-sm font-semibold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
                 <Plus className="w-4 h-4" />
                 New Assessment
               </Link>
+              <button
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm font-semibold hover:bg-white/10 hover:border-white/20 transition-all text-slate-300 hover:text-white"
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href);
+                  toast.success('Profile link copied!');
+                }}
+              >
+                <Share2 className="w-4 h-4" />
+                Share
+              </button>
             </div>
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-white/10">
-        {(['assessments', 'reports', 'achievements'] as const).map((tab) => (
-          <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={cn(
-              "px-6 py-3 text-sm font-bold capitalize transition-all border-b-2",
-              activeTab === tab
-                ? "text-accent-primary border-accent-primary"
-                : "text-slate-400 border-transparent hover:text-white"
-            )}
-          >
-            {tab}
-            {tab === 'assessments' && assessments.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-accent-primary/20 text-xs">{assessments.length}</span>
-            )}
-            {tab === 'reports' && fieldReports.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-accent-secondary/20 text-xs">{fieldReports.length}</span>
-            )}
-            {tab === 'achievements' && achievements.length > 0 && (
-              <span className="ml-2 px-2 py-0.5 rounded-full bg-purple-500/20 text-xs">{achievements.length}</span>
-            )}
-          </button>
-        ))}
-      </div>
+      {/* Tab Navigation with animated indicator */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+        className="relative"
+      >
+        <div className="flex gap-1 p-1 bg-white/5 rounded-2xl w-fit">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  'relative px-5 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center gap-2',
+                  isActive ? 'text-white' : 'text-slate-400 hover:text-white'
+                )}
+              >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeTab"
+                    className="absolute inset-0 bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 rounded-xl"
+                    transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                  />
+                )}
+                <tab.icon className={cn('w-4 h-4 relative z-10', isActive ? 'text-accent-primary' : '')} />
+                <span className="relative z-10">{tab.label}</span>
+                {tab.count > 0 && (
+                  <span className={cn(
+                    'relative z-10 px-2 py-0.5 rounded-full text-xs font-mono',
+                    isActive ? 'bg-accent-primary/20 text-accent-primary' : 'bg-white/10 text-slate-400'
+                  )}>
+                    {tab.count}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
 
       {/* Tab Content */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="glass-card p-8 h-48 animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <>
-          {/* Assessments Tab */}
-          {activeTab === 'assessments' && (
-            <div>
-              {assessments.length === 0 ? (
-                <div className="glass-card p-20 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto">
-                    <Target className="w-8 h-8 text-slate-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">No Assessments Yet</h3>
-                    <p className="text-slate-400">Run your first target assessment to start building your tactical database.</p>
-                  </div>
-                  <Link to="/assessment" className="inline-flex items-center gap-2 text-accent-primary font-bold hover:underline">
-                    Start Calibration <ChevronRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {assessments.map((assessment, index) => (
-                    <motion.div
-                      key={assessment.typeId + index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="glass-card p-6 hover:border-accent-primary/30 transition-all group"
+      <AnimatePresence mode="wait">
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          >
+            {Array(6).fill(0).map((_, i) => (
+              <div key={i} className="glass-card p-8 h-48 animate-pulse rounded-2xl" />
+            ))}
+          </motion.div>
+        ) : (
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+            transition={{ duration: 0.3 }}
+          >
+            {/* Assessments Tab */}
+            {activeTab === 'assessments' && (
+              <div>
+                {assessments.length === 0 ? (
+                  <div className="glass-card p-16 text-center space-y-5 rounded-3xl">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-primary/20 to-accent-secondary/20 flex items-center justify-center mx-auto">
+                      <Target className="w-10 h-10 text-accent-primary/60" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">No Calibrations Yet</h3>
+                      <p className="text-slate-400 max-w-md mx-auto">Run your first target assessment to start building your tactical database and discover your personality type.</p>
+                    </div>
+                    <Link
+                      to="/assessment"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
                     >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-mono font-black text-lg">
-                          {assessment.typeId}
-                        </div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                          <Clock className="w-3 h-3" />
-                          {new Date(assessment.date).toLocaleDateString()}
-                        </div>
-                      </div>
-                      <h3 className="text-lg font-bold text-white mb-2 group-hover:text-accent-primary transition-colors">{assessment.name}</h3>
-                      <Link
-                        to={`/encyclopedia?type=${assessment.typeId}`}
-                        className="inline-flex items-center gap-1 text-xs text-accent-primary hover:underline"
+                      <Zap className="w-4 h-4" />
+                      Start First Calibration
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {assessments.map((assessment, index) => (
+                      <motion.div
+                        key={assessment.typeId + index}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ y: -4 }}
+                        className="glass-card p-6 hover:border-accent-primary/30 transition-all group cursor-pointer rounded-2xl"
                       >
-                        View Analysis <ChevronRight className="w-3 h-3" />
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Reports Tab */}
-          {activeTab === 'reports' && (
-            <div>
-              {fieldReports.length === 0 ? (
-                <div className="glass-card p-20 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto">
-                    <BookOpen className="w-8 h-8 text-slate-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">No Field Reports</h3>
-                    <p className="text-slate-400">Your field reports will appear here after you've created some.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {fieldReports.map((report) => (
-                    <motion.div
-                      key={report.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="glass-card p-6 hover:border-accent-secondary/30 transition-all"
-                    >
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <h3 className="text-lg font-bold text-white mb-1">{report.title}</h3>
-                          <div className="flex items-center gap-3 text-sm text-slate-400">
-                            <span className="px-2 py-0.5 rounded bg-white/5 text-xs">{report.type}</span>
-                            <span>{new Date(report.timestamp).toLocaleDateString()}</span>
+                        <div className="flex items-start justify-between mb-4">
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center text-white font-mono font-black text-xl shadow-lg shadow-accent-primary/20">
+                            {assessment.typeId}
+                          </div>
+                          <div className="flex items-center gap-1 text-[10px] text-slate-500 font-mono">
+                            <Clock className="w-3 h-3" />
+                            {new Date(assessment.date).toLocaleDateString()}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 text-slate-400">
-                          <span className="text-xs">{report.likes || 0} likes</span>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+                        <h3 className="text-lg font-bold text-white mb-2 group-hover:text-accent-primary transition-colors">{assessment.name}</h3>
+                        {assessment.traits && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {Object.keys(assessment.traits).slice(0, 3).map(trait => (
+                              <span key={trait} className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-slate-400 font-mono">
+                                {trait}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <Link
+                          to={`/encyclopedia?type=${assessment.typeId}`}
+                          className="inline-flex items-center gap-1.5 text-xs text-accent-primary hover:underline font-semibold"
+                        >
+                          View Analysis
+                          <ExternalLink className="w-3 h-3" />
+                        </Link>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
-          {/* Achievements Tab */}
-          {activeTab === 'achievements' && (
-            <div>
-              {achievements.length === 0 ? (
-                <div className="glass-card p-20 text-center space-y-4">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center mx-auto">
-                    <Award className="w-8 h-8 text-slate-600" />
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-bold text-white">No Achievements Yet</h3>
-                    <p className="text-slate-400">Complete assessments and create field reports to unlock badges.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  {achievements.map((achievement, index) => (
-                    <motion.div
-                      key={achievement.id}
-                      initial={{ opacity: 0, scale: 0.8 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="glass-card p-6 text-center hover:border-accent-primary/30 transition-all"
+            {/* Reports Tab */}
+            {activeTab === 'reports' && (
+              <div>
+                {fieldReports.length === 0 ? (
+                  <div className="glass-card p-16 text-center space-y-5 rounded-3xl">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-accent-secondary/20 to-accent-primary/20 flex items-center justify-center mx-auto">
+                      <BookOpen className="w-10 h-10 text-accent-secondary/60" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">No Field Reports Yet</h3>
+                      <p className="text-slate-400 max-w-md mx-auto">Create field reports to document your relationship observations and share insights with the community.</p>
+                    </div>
+                    <Link
+                      to="/simulation"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-white text-sm font-bold hover:bg-white/10 transition-all"
                     >
-                      <div className={cn("w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3", achievement.bg)}>
-                        <achievement.icon className={cn("w-6 h-6", achievement.color)} />
-                      </div>
-                      <span className="text-sm font-bold text-white">{achievement.name}</span>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-        </>
-      )}
+                      <TrendingUp className="w-4 h-4" />
+                      Create Field Report
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {fieldReports.map((report, index) => (
+                      <motion.div
+                        key={report.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ x: 4 }}
+                        className="glass-card p-6 hover:border-accent-secondary/30 transition-all rounded-2xl"
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-white mb-2">{report.title}</h3>
+                            <div className="flex items-center gap-3 text-sm text-slate-400">
+                              <span className="px-3 py-1 rounded-full bg-gradient-to-r from-accent-primary/10 to-accent-secondary/10 text-accent-primary text-xs font-mono border border-accent-primary/20">
+                                {report.type}
+                              </span>
+                              <span className="flex items-center gap-1 text-xs">
+                                <Clock className="w-3 h-3" />
+                                {new Date(report.timestamp).toLocaleDateString()}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-2 text-slate-400 bg-white/5 px-3 py-1.5 rounded-full">
+                            <span className="text-xs font-mono">{report.likes || 0}</span>
+                            <Star className="w-3.5 h-3.5 text-yellow-500" />
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Achievements Tab */}
+            {activeTab === 'achievements' && (
+              <div>
+                {achievements.length === 0 ? (
+                  <div className="glass-card p-16 text-center space-y-5 rounded-3xl">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-yellow-500/20 to-orange-500/20 flex items-center justify-center mx-auto">
+                      <Award className="w-10 h-10 text-yellow-500/60" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold text-white mb-2">No Achievements Yet</h3>
+                      <p className="text-slate-400 max-w-md mx-auto">Complete assessments and create field reports to unlock achievement badges and showcase your progress.</p>
+                    </div>
+                    <Link
+                      to="/assessment"
+                      className="inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-white text-sm font-bold shadow-lg hover:scale-[1.02] active:scale-[0.98] transition-all"
+                    >
+                      <Target className="w-4 h-4" />
+                      Start Earning Badges
+                    </Link>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {achievements.map((achievement, index) => (
+                      <motion.div
+                        key={achievement.id}
+                        initial={{ opacity: 0, scale: 0.8 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.05 }}
+                        whileHover={{ scale: 1.05, y: -4 }}
+                        className="glass-card p-5 text-center hover:border-accent-primary/30 transition-all rounded-2xl relative overflow-hidden"
+                      >
+                        {/* Tier indicator */}
+                        {[1, 2, 3, 4].includes(achievement.tier) && (
+                          <div className="absolute top-2 right-2">
+                            {[1, 2, 3, 4].map(t => (
+                              <Star
+                                key={t}
+                                className={cn(
+                                  'w-2.5 h-2.5',
+                                  t <= achievement.tier ? 'text-yellow-400 fill-yellow-400' : 'text-slate-600'
+                                )}
+                              />
+                            ))}
+                          </div>
+                        )}
+                        <div className={cn('w-14 h-14 rounded-full flex items-center justify-center mx-auto mb-3', achievement.bg)}>
+                          <achievement.icon className={cn('w-7 h-7', achievement.color)} />
+                        </div>
+                        <span className="text-sm font-bold text-white">{achievement.name}</span>
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <EditProfileModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} />
     </div>

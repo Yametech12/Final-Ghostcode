@@ -241,15 +241,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
+      // maybeSingle() returns null instead of throwing when no row exists
       const { data: session, error } = await supabase
         .from('advisor_sessions')
         .select('id, title, timestamp')
         .eq('user_id', userId)
         .order('updated_at', { ascending: false })
         .limit(1)
-        .single();
+        .maybeSingle();
 
-      if (error && error.code !== 'PGRST116') throw error;
+      if (error) throw error;
 
       if (!session) {
         return res.status(200).json({ sessionId: null, messages: [] });
@@ -268,6 +269,25 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     } catch (err) {
       console.error('Session fetch error:', serializeError(err));
       return res.status(500).json({ error: 'Failed to fetch session' });
+    }
+  }
+
+  // Advisor session deletion
+  if (pathname.startsWith('advisor/session/') && method === 'DELETE') {
+    if (!supabase) return res.status(500).json({ error: 'Database not configured' });
+
+    const sessionId = pathname.split('/').pop();
+    if (!sessionId || !isValidUUID(sessionId)) {
+      return res.status(400).json({ error: 'Valid sessionId required', code: 'INVALID_UUID' });
+    }
+
+    try {
+      await supabase.from('advisor_messages').delete().eq('session_id', sessionId);
+      await supabase.from('advisor_sessions').delete().eq('id', sessionId);
+      return res.status(200).json({ success: true });
+    } catch (err) {
+      console.error('Session deletion error:', serializeError(err));
+      return res.status(500).json({ error: 'Failed to delete session' });
     }
   }
 
@@ -290,23 +310,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     try {
-      const { data: calibrations } = await supabase
-        .from('calibrations')
-        .select('traits, type_id')
-        .eq('user_id', userId)
-        .order('timestamp', { ascending: false })
-        .limit(3);
+      // Pull the user's profile and the recent message history in parallel.
+      const [calibrationsResult, historyResult] = await Promise.all([
+        supabase
+          .from('calibrations')
+          .select('traits, type_id')
+          .eq('user_id', userId)
+          .order('timestamp', { ascending: false })
+          .limit(3),
+        supabase
+          .from('advisor_messages')
+          .select('role, content, timestamp')
+          .eq('session_id', sessionId)
+          .order('timestamp', { ascending: true })
+          .limit(15)
+      ]);
 
-      const { data: history } = await supabase
-        .from('advisor_messages')
-        .select('role, content, timestamp')
-        .eq('session_id', sessionId)
-        .order('timestamp', { ascending: true })
-        .limit(15);
+      const calibrations = calibrationsResult.data;
+      const history = historyResult.data;
 
       const latestCalibration = calibrations?.[0];
       const personalityType = latestCalibration?.type_id || 'Unknown';
-      const traits = latestCalibration?.traits || {};
+      const traits = latestCalibration?.traits;
+      const hasCalibration = traits && Object.keys(traits).length > 0;
 
       const systemPrompt = `You are Epimetheus, a relationship intelligence advisor.
 Your goal is to help users navigate interpersonal dynamics with empathy, psychological insight, and practical advice.
@@ -317,13 +343,13 @@ Your goal is to help users navigate interpersonal dynamics with empathy, psychol
 
 ## USER PROFILE
 Personality Type: ${personalityType}
-Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrated'}
+${hasCalibration ? `Traits Analysis: ${JSON.stringify(traits, null, 2)}` : 'User has not yet completed a calibration assessment.'}
 
 ## RESPONSE GUIDELINES
 - Keep responses under 250 words
 - Include 1-2 specific, actionable steps when giving advice
 - Ask thoughtful questions to deepen understanding
-- Reference user's calibration data when relevant
+- Reference user's calibration data when relevant${hasCalibration ? '' : ' (suggest calibration if it would help)'}
 - End with a forward-looking suggestion or question
 - Maintain professional, insightful tone`;
 
@@ -333,16 +359,9 @@ Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrate
         { role: 'user', content: message }
       ];
 
-      // Save user message
-      await supabase.from('advisor_messages').insert({
-        session_id: sessionId,
-        user_id: userId,
-        role: 'user',
-        content: message
-      });
-
-      // Get AI response
-      const completion = await createCompletion({
+      // Race the AI call against a 25 second timeout so the function does not
+      // hang the Vercel handler if Regolo stalls.
+      const completionPromise = createCompletion({
         model: DEFAULT_MODEL,
         messages,
         temperature: 0.7,
@@ -350,15 +369,23 @@ Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrate
         stream: false
       });
 
-      const fullContent = completion.choices?.[0]?.message?.content || "I'm having trouble connecting right now. Please try again.";
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('AI request timed out after 25s')), 25000)
+      );
 
-      // Save assistant response
-      await supabase.from('advisor_messages').insert({
-        session_id: sessionId,
-        user_id: userId,
-        role: 'model',
-        content: fullContent
-      });
+      const completion: any = await Promise.race([completionPromise, timeoutPromise]);
+
+      const fullContent = completion?.choices?.[0]?.message?.content?.trim();
+      if (!fullContent) {
+        throw new Error('Empty response from AI');
+      }
+
+      // Persist both messages only after a successful AI response so retries
+      // do not double-save the user's message.
+      await supabase.from('advisor_messages').insert([
+        { session_id: sessionId, user_id: userId, role: 'user', content: message },
+        { session_id: sessionId, user_id: userId, role: 'model', content: fullContent }
+      ]);
 
       await supabase
         .from('advisor_sessions')
@@ -368,7 +395,12 @@ Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrate
       return res.status(200).json({ content: fullContent });
     } catch (err) {
       console.error('Advisor chat error:', serializeError(err));
-      return res.status(500).json({ error: 'AI service unavailable' });
+      const errMsg = err instanceof Error ? err.message : String(err);
+      const isTimeout = errMsg.includes('timed out') || errMsg.includes('timeout');
+      return res.status(isTimeout ? 504 : 503).json({
+        error: isTimeout ? 'AI took too long to respond' : 'AI service unavailable',
+        details: 'Please try again in a moment'
+      });
     }
   }
 

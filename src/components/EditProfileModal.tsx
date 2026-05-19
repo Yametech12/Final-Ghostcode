@@ -108,49 +108,77 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       return;
     }
 
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
     setPhotoFile(file);
-    setPhotoPreview(URL.createObjectURL(file));
-    
+
     // Auto-upload when file is selected
-    await handleUploadPhoto();
+    await uploadPhoto(file, previewUrl);
   };
 
-  const handleUploadPhoto = async () => {
-    if (!photoFile || !userData?.id) return;
+  const uploadPhoto = async (fileToUpload: File, previewToSet: string) => {
+    if (!fileToUpload || !userData?.id) return;
 
     setUploadingPhoto(true);
     try {
-      const fileExt = photoFile.name.split('.').pop();
+      // Path format must match RLS policies: {userId}/profile-{timestamp}.{ext}
+      const fileExt = fileToUpload.name.split('.').pop() || 'jpg';
       const fileName = `${userData.id}/profile-${Date.now()}.${fileExt}`;
 
-      const { error } = await supabase
+      console.log('Uploading photo to Supabase:', { fileName, type: fileToUpload.type, size: fileToUpload.size });
+
+      const { data, error } = await supabase
         .storage
         .from('user-uploads')
-        .upload(fileName, photoFile, {
-          contentType: photoFile.type,
-          upsert: false
+        .upload(fileName, fileToUpload, {
+          contentType: fileToUpload.type,
+          upsert: true
         });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Supabase storage error:', error);
+        throw error;
+      }
 
-      const { data: { publicUrl } } = supabase
+      console.log('Upload successful, getting public URL');
+
+      const { data: urlData } = supabase
         .storage
         .from('user-uploads')
         .getPublicUrl(fileName);
 
+      console.log('Public URL:', urlData.publicUrl);
+
+      const publicUrl = urlData.publicUrl;
       setPhotoUrl(publicUrl);
       setPhotoPreview(publicUrl);
-      
+
       // Update user profile with new photo URL
       await updateUserProfile({ photoURL: publicUrl });
-      
+
       toast.success('Profile photo uploaded successfully');
     } catch (error: any) {
       console.error('Photo upload error:', error);
-      toast.error('Failed to upload photo');
+      // Provide more specific error messages
+      if (error.message?.includes('storage') || error.message?.includes('bucket')) {
+        toast.error('Storage error: Please check Supabase configuration');
+      } else if (error.message?.includes('unauthorized') || error.message?.includes('permission')) {
+        toast.error('Upload denied: Please check your permissions');
+      } else if (error.status === 413 || error.message?.includes('size')) {
+        toast.error('Image too large: Please choose a smaller file');
+      } else {
+        toast.error('Failed to upload photo. Please try again.');
+      }
+      // Reset preview on error - use existing user photo or clear
+      setPhotoPreview(userData?.photoURL || null);
     } finally {
       setUploadingPhoto(false);
     }
+  };
+
+  const handleUploadPhoto = async () => {
+    if (!photoFile || !userData?.id || !photoPreview) return;
+    await uploadPhoto(photoFile, photoPreview);
   };
 
   const handleRemovePhoto = () => {

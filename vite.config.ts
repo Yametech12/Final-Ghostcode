@@ -32,7 +32,6 @@ export default defineConfig({
           'animation-vendor': ['motion'],
           'ui-vendor': ['lucide-react', '@tanstack/react-query', 'sonner', 'clsx', 'tailwind-merge'],
           'charts-vendor': ['recharts'],
-          'image-vendor': ['browser-image-compression', 'html2canvas', 'html2pdf.js'],
           'utils-vendor': ['lenis'],
         },
         chunkFileNames: (chunkInfo) => {

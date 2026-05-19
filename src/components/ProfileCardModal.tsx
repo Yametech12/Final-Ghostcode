@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { X, Download, Share2, Check, Crown, Zap, FileText, Award, User } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { toPng } from 'html-to-image';
 import { toast } from 'sonner';
 import Logo from './Logo';
 
@@ -27,6 +26,8 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
     if (!cardRef.current) return;
     setIsExporting(true);
     try {
+      // Lazy-load html-to-image only when the user actually exports.
+      const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(cardRef.current, {
         backgroundColor: '#0f0f1a',
         pixelRatio: 2,

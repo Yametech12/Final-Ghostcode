@@ -1,35 +1,31 @@
 import "dotenv/config";
 
-const apiKey: string | null = process.env.REGOLO_API_KEY || null;
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || null;
+const REGOLO_API_KEY = process.env.REGOLO_API_KEY || null;
 
-// Regolo AI models (from https://docs.regolo.ai/)
-export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
-export const VISION_MODEL = "Llama-3.3-70B-Instruct";
-export const FALLBACK_MODELS = [
-  "Llama-3.3-70B-Instruct",
-  "Llama-3.1-8B-Instruct",
-  "gemma4-31b",
-  "mistral-small3.2"
+// OpenRouter models
+export const DEFAULT_MODEL = "anthropic/claude-3.5-sonnet";
+export const VISION_MODEL = "anthropic/claude-3.5-sonnet";
+const FALLBACK_MODELS = [
+  "anthropic/claude-3.5-sonnet",
+  "meta-llama/llama-3.3-70b-instruct",
+  "google/gemma-2-27b-instruct"
 ];
 
 export async function getApiKey(): Promise<string | null> {
-  if (!apiKey) {
-    console.warn("WARNING: No REGOLO_API_KEY configured. AI features will be disabled.");
-    return null;
-  }
-  return apiKey;
+  if (OPENROUTER_API_KEY) return OPENROUTER_API_KEY;
+  if (REGOLO_API_KEY) return REGOLO_API_KEY;
+  console.warn("WARNING: No OpenRouter or Regolo API key configured. AI features will be disabled.");
+  return null;
 }
 
-const BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
-
-function getHeaders(): Record<string, string> {
-  return {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${apiKey}`
-  };
+function getActiveProvider(): 'openrouter' | 'regolo' | null {
+  if (OPENROUTER_API_KEY) return 'openrouter';
+  if (REGOLO_API_KEY) return 'regolo';
+  return null;
 }
 
-// AI completion function with model fallback
+// AI completion function with model fallback across providers
 export async function createCompletion({
   model,
   messages,
@@ -46,71 +42,84 @@ export async function createCompletion({
   stream?: boolean;
 }) {
   const key = await getApiKey();
-  
   if (!key) {
-    throw new Error(`Regolo API key is not configured. AI features are unavailable.`);
+    throw new Error(`No AI API key configured. Please set OPENROUTER_API_KEY or REGOLO_API_KEY.`);
   }
-  
+
+  const provider = getActiveProvider();
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];
   let lastError: Error | null = null;
-  const headers = getHeaders();
 
   for (const modelToTry of modelsToTry) {
     try {
-      console.log(`Trying model: ${modelToTry}`);
+      console.log(`Trying model: ${modelToTry} via ${provider}`);
 
-      const payload: any = {
-        model: modelToTry,
-        messages,
-        temperature,
-        max_tokens,
-        stream
-      };
-
-      if (response_format) {
-        payload.response_format = response_format;
+      let response: Response;
+      if (provider === 'openrouter') {
+        response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`,
+            'HTTP-Referer': 'https://epimetheusproject.vercel.app',
+            'X-Title': 'Epimetheus'
+          },
+          body: JSON.stringify({
+            model: modelToTry,
+            messages,
+            temperature,
+            max_tokens,
+            stream
+          })
+        });
+      } else {
+        // Regolo
+        response = await fetch('https://api.regolo.ai/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${key}`
+          },
+          body: JSON.stringify({
+            model: modelToTry,
+            messages,
+            temperature,
+            max_tokens,
+            stream
+          })
+        });
       }
 
-      // Try up to 3 times per model for rate limits
-      for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await fetch(BASE_URL, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload)
-        });
-
-        if (response.ok) {
-          console.log(`Success with model: ${modelToTry}`);
-          if (stream) {
-            return response.body;
-          }
-          const data = await response.json();
-          return data;
+      if (response.ok) {
+        console.log(`Success with model: ${modelToTry}`);
+        if (stream) {
+          return response.body;
         }
+        const data = await response.json();
+        return data;
+      }
 
-        const errorText = await response.text();
-        console.warn(`Model ${modelToTry} failed (attempt ${attempt}/3): ${response.status}`, errorText.substring(0, 200));
+      const errorText = await response.text();
+      console.warn(`Model ${modelToTry} failed: ${response.status}`, errorText.substring(0, 200));
 
-        if (response.status === 429 && attempt < 3) {
-          const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
-          const wait = Math.max(retryAfter * 1000, 1000 * Math.pow(2, attempt - 1));
-          console.warn(`Rate limited, waiting ${wait}ms before retry`);
-          await new Promise(resolve => setTimeout(resolve, wait));
-          continue;
-        }
+      if (response.status === 429) {
+        const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
+        const wait = Math.max(retryAfter * 1000, 1000 * Math.pow(2, 1));
+        console.warn(`Rate limited, waiting ${wait}ms before retry`);
+        await new Promise(resolve => setTimeout(resolve, wait));
+        continue;
+      }
 
-        if (response.status === 401 || response.status === 402 || response.status === 403) {
-          throw new Error(`Regolo API error: ${response.status} ${errorText}`);
-        }
+      if (response.status === 401 || response.status === 402 || response.status === 403) {
+        throw new Error(`AI API error: ${response.status} ${errorText}`);
+      }
 
-        lastError = new Error(`Regolo API error: ${response.status} ${errorText}`);
-
-        if (response.status === 400 || response.status === 404) {
-          break;
-        }
-
+      if (response.status === 400 || response.status === 404) {
         break;
       }
+
+      lastError = new Error(`AI API error: ${response.status} ${errorText}`);
+      break;
 
     } catch (error) {
       lastError = error as Error;
@@ -123,7 +132,7 @@ export async function createCompletion({
   throw lastError || new Error("All AI models failed");
 }
 
-// Streaming completion helper (unchanged)
+// Streaming completion helper
 export async function* createStreamingCompletion({
   model,
   messages,
@@ -169,22 +178,22 @@ export async function* createStreamingCompletion({
       if (done) break;
 
       const chunk = decoder.decode(value);
-      const lines = chunk.split('\n');
+      // SSE: lines are separated by \n\n
+      const parts = chunk.split('\n\n');
+      for (const part of parts) {
+        const trimmed = part.trim();
+        if (!trimmed.startsWith('data: ')) continue;
+        const data = trimmed.slice(6);
+        if (data === '[DONE]') continue;
 
-      for (const line of lines) {
-        if (line.startsWith('data: ')) {
-          const data = line.slice(6);
-          if (data === '[DONE]') continue;
-
-          try {
-            const parsed = JSON.parse(data);
-            if (parsed.error) {
-              throw new Error(parsed.error.message || parsed.error);
-            }
-            yield parsed;
-          } catch (e) {
-            console.error('Failed to parse streaming chunk:', e, 'Chunk:', line);
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.error) {
+            throw new Error(parsed.error.message || parsed.error);
           }
+          yield parsed;
+        } catch (e) {
+          console.error('Failed to parse streaming chunk:', e, 'Chunk:', trimmed);
         }
       }
     }
@@ -196,4 +205,3 @@ export async function* createStreamingCompletion({
     }
   }
 }
-

@@ -308,28 +308,35 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateUserProfile = async (data: { displayName?: string, photoURL?: string }) => {
+  const updateUserProfile = async (data: { displayName?: string; photoURL?: string | null }) => {
     if (!user) return;
 
     try {
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          display_name: data.displayName,
-          avatar_url: data.photoURL
-        }
-      });
+      // Build update object for auth - only include defined values
+      const authData: Record<string, any> = {};
+      if (data.displayName !== undefined) authData.display_name = data.displayName;
+      if (data.photoURL !== undefined) authData.avatar_url = data.photoURL;
 
-      if (authError) throw authError;
+      // Only update auth if there are auth fields to update
+      if (Object.keys(authData).length > 0) {
+        const { error: authError } = await supabase.auth.updateUser({ data: authData });
+        if (authError) throw authError;
+      }
 
-      const { error: dbError } = await supabase
-        .from('users')
-        .update({
-          display_name: data.displayName,
-          photo_url: data.photoURL
-        })
-        .eq('id', user.id);
+      // Build update object for database - explicitly handle null vs undefined
+      const dbData: Record<string, any> = {};
+      if (data.displayName !== undefined) dbData.display_name = data.displayName;
+      if (data.photoURL !== undefined) dbData.photo_url = data.photoURL;
 
-      if (dbError) throw dbError;
+      // Only update database if there are db fields to update
+      if (Object.keys(dbData).length > 0) {
+        const { error: dbError } = await supabase
+          .from('users')
+          .update(dbData)
+          .eq('id', user.id);
+
+        if (dbError) throw dbError;
+      }
 
       if (userData) {
         setUserData({ ...userData, ...data });

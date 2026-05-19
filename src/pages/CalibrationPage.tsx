@@ -11,7 +11,6 @@ import { LogoIcon } from '../components/Logo';
 import { personalityTypes } from '../data/personalityTypes';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import html2canvas from 'html2canvas';
 import { useSearchParams } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import FavoriteButton from '../components/FavoriteButton';
@@ -274,6 +273,8 @@ export default function CalibrationPage() {
     if (!analysisRef.current) return;
     setIsCapturing(true);
     try {
+      // Lazy-load html2canvas only when the user actually exports an image.
+      const { default: html2canvas } = await import('html2canvas');
       const canvas = await html2canvas(analysisRef.current, {
         backgroundColor: '#0a0508',
         scale: 2,

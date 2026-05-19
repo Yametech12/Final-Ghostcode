@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Bot, Loader2, User, Sparkles, Copy, ThumbsUp, ThumbsDown, Trash2, Download } from 'lucide-react';
+import { Send, Bot, Loader2, User, Sparkles, Copy, ThumbsUp, ThumbsDown, Trash2, Download, Clock, Bookmark, BookmarkPlus, FolderOpen, ChevronRight, X } from 'lucide-react';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import ReactMarkdown from 'react-markdown';
@@ -17,6 +17,15 @@ interface Message {
   content: string;
   timestamp?: Date;
   failed?: boolean;
+}
+
+interface SavedConversation {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: Date;
+  updatedAt: Date;
+  messageCount: number;
 }
 
 const quickActions = [
@@ -40,20 +49,43 @@ const followUpSuggestions = [
   "What are your goals here?"
 ];
 
+const STORAGE_KEY = 'epimetheus_advisor_conversations';
+
 export default function AdvisorPage() {
   const {
     messages,
     sendMessage,
     isStreaming,
     isLoadingSession,
-    clearChat
+    clearChat,
+    setMessages
   } = useAdvisorChat();
 
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike' | undefined>>({});
+  const [currentSuggestions, setCurrentSuggestions] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [savedConversations, setSavedConversations] = useState<SavedConversation[]>([]);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Load saved conversations from localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem(STORAGE_KEY);
+    if (stored) {
+      try {
+        const parsed = JSON.parse(stored);
+        setSavedConversations(parsed.map((c: any) => ({
+          ...c,
+          createdAt: new Date(c.createdAt),
+          updatedAt: new Date(c.updatedAt)
+        })));
+      } catch (e) {
+        console.error('Failed to load saved conversations:', e);
+      }
+    }
+  }, []);
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -61,6 +93,50 @@ export default function AdvisorPage() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isStreaming]);
+
+  // Update suggestions based on last AI response
+  useEffect(() => {
+    if (messages.length > 0 && messages[messages.length - 1]?.role === 'model' && !isStreaming) {
+      const lastResponse = messages[messages.length - 1]?.content || '';
+      const contextualSuggestions = generateContextualSuggestions(lastResponse);
+      setCurrentSuggestions(contextualSuggestions);
+    }
+  }, [messages, isStreaming]);
+
+  const generateContextualSuggestions = (response: string): string[] => {
+    const suggestions: string[] = [];
+
+    if (response.includes('ETS') || response.includes('stage')) {
+      suggestions.push("How do I identify which ETS stage she's in?");
+      suggestions.push("What if I'm at the wrong stage?");
+    }
+    if (response.includes('intrigue') || response.includes('mystery')) {
+      suggestions.push("How do I create intrigue without being fake?");
+      suggestions.push("What kills intrigue in messaging?");
+    }
+    if (response.includes('comfort') || response.includes('connection')) {
+      suggestions.push("When should I shift to comfort building?");
+      suggestions.push("How much comfort is too much too soon?");
+    }
+    if (response.includes('escalate') || response.includes('direct')) {
+      suggestions.push("How do I know if she's ready to escalate?");
+      suggestions.push("What are signs I should back off?");
+    }
+    if (response.includes('test') || response.includes('tester')) {
+      suggestions.push("How do I pass her tests authentically?");
+      suggestions.push("What tests do different types run?");
+    }
+    if (response.includes('red flag') || response.includes('warning')) {
+      suggestions.push("When should I walk away?");
+      suggestions.push("How do I end things gracefully?");
+    }
+
+    if (suggestions.length === 0) {
+      suggestions.push(...followUpSuggestions);
+    }
+
+    return suggestions.slice(0, 4);
+  };
 
   const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
@@ -105,18 +181,64 @@ export default function AdvisorPage() {
     toast.success('Message copied to clipboard');
   };
 
-  const exportConversation = () => {
+  const exportConversation = (includeContext = true) => {
+    const header = includeContext ? `EPIMETHEUS ADVISOR SESSION\nExported: ${new Date().toLocaleString()}\n${'='.repeat(50)}\n\n` : '';
     const conversation = messages.map(m =>
-      `${m.role === 'user' ? 'You' : 'Epimetheus'}: ${m.content}`
+      `${m.role === 'user' ? 'YOU' : 'EPIMETHEUS'}: ${m.content}`
     ).join('\n\n');
-    const blob = new Blob([conversation], { type: 'text/plain' });
+
+    const fullText = header + conversation;
+    const blob = new Blob([fullText], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `advisor-conversation-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `advisor-session-${new Date().toISOString().split('T')[0]}.txt`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success('Conversation exported');
+    toast.success('Session exported');
+  };
+
+  const saveConversation = () => {
+    if (messages.length === 0) {
+      toast.error('Nothing to save');
+      return;
+    }
+
+    const title = `Session ${savedConversations.length + 1} - ${new Date().toLocaleDateString()}`;
+    const newConversation: SavedConversation = {
+      id: Date.now().toString(),
+      title,
+      messages: [...messages],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      messageCount: messages.filter(m => m.role !== ('system' as any) as any).length
+    };
+
+    const updated = [newConversation, ...savedConversations];
+    setSavedConversations(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    toast.success('Conversation saved');
+  };
+
+  const loadConversation = (conversation: SavedConversation) => {
+    // Restore the saved messages into the active chat view. This is local-only;
+    // it does not write to the backend session, so new messages will start a
+    // fresh assistant context unless the conversation is also saved server-side.
+    setMessages(
+      conversation.messages.map(m => ({
+        ...m,
+        timestamp: m.timestamp ? new Date(m.timestamp) : undefined
+      }))
+    );
+    toast.info(`Loaded: ${conversation.title}`);
+    setShowHistory(false);
+  };
+
+  const deleteConversation = (id: string) => {
+    const updated = savedConversations.filter(c => c.id !== id);
+    setSavedConversations(updated);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    toast.success('Conversation deleted');
   };
 
   const handleReaction = (messageId: string, reaction: 'like' | 'dislike') => {
@@ -165,7 +287,25 @@ export default function AdvisorPage() {
 
         <div className="flex items-center gap-2">
           <button
-            onClick={exportConversation}
+            onClick={() => setShowHistory(!showHistory)}
+            className={cn(
+              "p-2 rounded-lg transition-colors",
+              showHistory ? "bg-accent-primary/20 text-accent-primary" : "bg-white/5 hover:bg-white/10 text-slate-400"
+            )}
+            title="Conversation history"
+          >
+            <FolderOpen className="w-4 h-4" />
+          </button>
+          <button
+            onClick={saveConversation}
+            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-30"
+            disabled={messages.length === 0}
+            title="Save conversation"
+          >
+            <BookmarkPlus className="w-4 h-4 text-slate-400" />
+          </button>
+          <button
+            onClick={() => exportConversation(true)}
             className="p-2 rounded-lg bg-white/5 hover:bg-white/10 transition-colors disabled:opacity-30"
             disabled={messages.length === 0}
             title="Export conversation"
@@ -187,10 +327,59 @@ export default function AdvisorPage() {
         </div>
       </div>
 
+      {/* History Sidebar */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            className="mb-4 p-4 rounded-xl bg-mystic-900/80 border border-white/10 max-h-64 overflow-y-auto"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <Clock className="w-4 h-4 text-accent-primary" />
+                Saved Sessions
+              </h3>
+              <button onClick={() => setShowHistory(false)} className="text-slate-400 hover:text-white">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+            {savedConversations.length === 0 ? (
+              <p className="text-xs text-slate-500 text-center py-4">No saved sessions yet</p>
+            ) : (
+              <div className="space-y-2">
+                {savedConversations.map(conv => (
+                  <div
+                    key={conv.id}
+                    className="flex items-center justify-between p-2 rounded-lg bg-white/5 hover:bg-white/10 group cursor-pointer"
+                    onClick={() => loadConversation(conv)}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm text-white truncate">{conv.title}</p>
+                      <p className="text-xs text-slate-500">{conv.messageCount} messages</p>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteConversation(conv.id);
+                      }}
+                      className="p-1 opacity-0 group-hover:opacity-100 text-slate-400 hover:text-red-400"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Messages */}
       <div
         ref={scrollRef}
-        className="flex-1 overflow-y-auto space-y-3 mb-4"
+        className="flex-1 overflow-y-auto space-y-3 mb-4 scrollbar-hide"
       >
         {messages.length === 0 && (
           <div className="text-center text-slate-400 py-12">
@@ -259,7 +448,7 @@ export default function AdvisorPage() {
           </motion.div>
         )}
 
-        {messages.length > 0 && messages[messages.length - 1]?.role === 'model' && !isStreaming && (
+        {messages.length > 0 && messages[messages.length - 1]?.role === 'model' && !isStreaming && currentSuggestions.length > 0 && (
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -268,17 +457,18 @@ export default function AdvisorPage() {
           >
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-3.5 h-3.5 text-accent-primary" />
-              <span className="text-xs font-medium text-slate-300">Follow up</span>
+              <span className="text-xs font-medium text-slate-300">Suggested Follow-ups</span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              {followUpSuggestions.map((s, i) => (
+              {currentSuggestions.map((s, i) => (
                 <button
                   key={i}
                   onClick={() => handleQuickSend(s)}
                   disabled={isSending}
-                  className="px-3 py-1 bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/20 hover:border-accent-primary/50 rounded-full text-xs text-accent-primary hover:text-white transition-all disabled:opacity-40"
+                  className="px-3 py-1 bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/20 hover:border-accent-primary/50 rounded-full text-xs text-accent-primary hover:text-white transition-all disabled:opacity-40 flex items-center gap-1"
                 >
                   {s}
+                  <ChevronRight className="w-3 h-3" />
                 </button>
               ))}
             </div>

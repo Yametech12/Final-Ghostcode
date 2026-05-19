@@ -426,7 +426,7 @@ app.delete("/api/advisor/session/:sessionId", validateUUIDMiddleware, async (req
   }
 });
 
-// Advisor chat with streaming and context
+// Advisor chat (non-streaming, unified with Vercel handler in _server.ts)
 app.post("/api/advisor/chat", validateUUIDMiddleware, async (req, res) => {
   const { sessionId, message, userId } = req.body;
 
@@ -434,35 +434,34 @@ app.post("/api/advisor/chat", validateUUIDMiddleware, async (req, res) => {
     return res.status(400).json({ error: 'Message is required' });
   }
 
+  if (!sessionId) {
+    return res.status(400).json({ error: 'Valid sessionId required', code: 'INVALID_UUID' });
+  }
+
   try {
-    // Get user's calibration data for personalization
-    const { data: calibrations } = await supabase
-      .from('calibrations')
-      .select('traits, type_id')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: false })
-      .limit(3);
+    // Pull profile and history in parallel for speed.
+    const [calibrationsResult, historyResult] = await Promise.all([
+      supabase
+        .from('calibrations')
+        .select('traits, type_id')
+        .eq('user_id', userId)
+        .order('timestamp', { ascending: false })
+        .limit(3),
+      supabase
+        .from('advisor_messages')
+        .select('role, content, timestamp')
+        .eq('session_id', sessionId)
+        .order('timestamp', { ascending: true })
+        .limit(15)
+    ]);
 
-    // Get conversation history for context (last 15 messages)
-    const { data: history } = await supabase
-      .from('advisor_messages')
-      .select('role, content, timestamp')
-      .eq('session_id', sessionId)
-      .order('timestamp', { ascending: true })
-      .limit(15);
+    const calibrations = calibrationsResult.data;
+    const history = historyResult.data;
 
-    // Get user's recent activity patterns
-    const { data: recentActivity } = await supabase
-      .from('advisor_sessions')
-      .select('title, timestamp')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: false })
-      .limit(5);
-
-    // Build comprehensive system prompt
     const latestCalibration = calibrations?.[0];
     const personalityType = latestCalibration?.type_id || 'Unknown';
-    const traits = latestCalibration?.traits || {};
+    const traits = latestCalibration?.traits;
+    const hasCalibration = traits && Object.keys(traits).length > 0;
 
     const systemPrompt = `You are Epimetheus, a relationship intelligence advisor.
 Your goal is to help users navigate interpersonal dynamics with empathy, psychological insight, and practical advice.
@@ -473,154 +472,62 @@ Your goal is to help users navigate interpersonal dynamics with empathy, psychol
 
 ## USER PROFILE
 Personality Type: ${personalityType}
-Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrated'}
-
-## CONVERSATION CONTEXT
-Recent Sessions: ${recentActivity?.map(s => s.title).join(', ') || 'None'}
-Message History: ${history?.length || 0} messages in this session
+${hasCalibration ? `Traits Analysis: ${JSON.stringify(traits, null, 2)}` : 'User has not yet completed a calibration assessment.'}
 
 ## RESPONSE GUIDELINES
 - Keep responses under 250 words
 - Include 1-2 specific, actionable steps when giving advice
 - Ask thoughtful questions to deepen understanding
-- Reference user's calibration data when relevant
+- Reference user's calibration data when relevant${hasCalibration ? '' : ' (suggest calibration if it would help)'}
 - End with a forward-looking suggestion or question
 - Maintain professional, insightful tone`;
 
-    const messages = [
+    const aiMessages = [
       { role: 'system', content: systemPrompt },
       ...(history || []).map(m => ({ role: m.role, content: m.content })),
       { role: 'user', content: message }
     ];
 
-    // Save user message first
-    await supabase.from('advisor_messages').insert({
-      session_id: sessionId,
-      user_id: userId,
-      role: 'user',
-      content: message
+    // Race the AI call against a 25 second timeout.
+    const completionPromise = createCompletion({
+      model: DEFAULT_MODEL,
+      messages: aiMessages,
+      temperature: 0.7,
+      max_tokens: 600,
+      stream: false
     });
 
-    // Stream response back to client
-    res.setHeader('Content-Type', 'text/event-stream');
-    res.setHeader('Cache-Control', 'no-cache');
-    res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    const timeoutPromise = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('AI request timed out after 25s')), 25000)
+    );
 
-    let fullContent = '';
+    const completion: any = await Promise.race([completionPromise, timeoutPromise]);
 
-    try {
-      // Get stream directly and handle it properly without async generator
-      const stream = await createCompletion({
-        model: DEFAULT_MODEL,
-        messages,
-        temperature: 0.7,
-        max_tokens: 600,
-        stream: true
-      }) as ReadableStream;
-
-      const reader = stream.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      let chunkCount = 0;
-      const maxChunks = 500; // Prevent infinite streaming
-
-      try {
-        while (chunkCount++ < maxChunks) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          buffer += decoder.decode(value, { stream: true });
-          
-          // Proper SSE line handling - lines are terminated by \n\n
-          while (true) {
-            const lineEnd = buffer.indexOf('\n\n');
-            if (lineEnd === -1) break; // No complete line yet
-            
-            const line = buffer.slice(0, lineEnd);
-            buffer = buffer.slice(lineEnd + 2); // Remove processed line + separator
-            
-            if (line.startsWith('data: ')) {
-              const data = line.slice(6);
-              if (data === '[DONE]') {
-                continue;
-              }
-
-              try {
-                const parsed = JSON.parse(data);
-                const content = parsed.choices?.[0]?.delta?.content || '';
-                if (content) {
-                  fullContent += content;
-                  if (!res.destroyed) {
-                    res.write(`data: ${JSON.stringify({ content })}\n\n`);
-                  }
-                }
-
-                if (parsed.choices?.[0]?.finish_reason) {
-                  // Break out of all loops when stream completes
-                  chunkCount = maxChunks;
-                  break;
-                }
-              } catch (parseError) {
-                // Skip invalid chunks but log
-                console.warn('Skipping invalid stream chunk:', parseError, 'Line:', line.substring(0, 100));
-              }
-            }
-          }
-        }
-      } finally {
-        reader.releaseLock();
-      }
-
-      // Send completion signal
-      if (!res.destroyed) {
-        res.write(`data: [DONE]\n\n`);
-        res.end();
-      }
-
-    } catch (streamError: any) {
-      console.error('Streaming error:', serializeError(streamError));
-
-      // Local rule-based fallback
-      const fallbackContent = "I'm having trouble connecting right now. Please try again in a moment, and I'll be here to help with your relationship questions.";
-
-      fullContent = fallbackContent;
-
-      if (!res.destroyed) {
-        res.write(`data: ${JSON.stringify({ content: fallbackContent })}\n\n`);
-        res.write(`data: [DONE]\n\n`);
-        res.end();
-      }
+    const fullContent = completion?.choices?.[0]?.message?.content?.trim();
+    if (!fullContent) {
+      throw new Error('Empty response from AI');
     }
 
-    // Save assistant response
-    try {
-      await supabase.from('advisor_messages').insert({
-        session_id: sessionId,
-        user_id: userId,
-        role: 'model',
-        content: fullContent
-      });
+    // Persist both messages atomically only after a successful AI response.
+    await supabase.from('advisor_messages').insert([
+      { session_id: sessionId, user_id: userId, role: 'user', content: message },
+      { session_id: sessionId, user_id: userId, role: 'model', content: fullContent }
+    ]);
 
-      // Update session timestamp
-      await supabase
-        .from('advisor_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', sessionId);
-    } catch (dbError) {
-      console.error('Failed to save chat history:', serializeError(dbError));
-      // Don't fail the request if DB save fails - user already got the response
-    }
+    await supabase
+      .from('advisor_sessions')
+      .update({ updated_at: new Date().toISOString() })
+      .eq('id', sessionId);
 
+    return res.json({ content: fullContent });
   } catch (err) {
     console.error('Advisor chat error:', serializeError(err));
-
-    if (!res.headersSent && !res.destroyed) {
-      res.write(`data: ${JSON.stringify({ error: 'AI service unavailable' })}\n\n`);
-      res.write(`data: [DONE]\n\n`);
-      res.end();
-    }
+    const errMsg = err instanceof Error ? err.message : String(err);
+    const isTimeout = errMsg.includes('timed out') || errMsg.includes('timeout');
+    return res.status(isTimeout ? 504 : 503).json({
+      error: isTimeout ? 'AI took too long to respond' : 'AI service unavailable',
+      details: 'Please try again in a moment'
+    });
   }
 });
 
