@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "npm run clean:dev && concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
-    "dev:api": "tsx api/index.ts",
+    "dev:api": "tsx api/_index.ts",
     "dev:frontend": "vite --port 5173 --host",
-    "start": "tsx api/index.ts",
+    "start": "tsx api/_index.ts",
     "build": "vite build",
     "build:analyze": "vite build --mode analyze",
     "preview": "vite preview",

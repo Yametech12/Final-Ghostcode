@@ -9,7 +9,7 @@
  */
 
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../config.js';
+import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../_config.js';
 import { isValidUUID } from './auth.js';
 
 export interface NormalizedRequest {
