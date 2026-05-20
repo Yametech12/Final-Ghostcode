@@ -5,10 +5,10 @@
 ```
 Final-Ghostcode/
 ├── api/                          # Express + Vercel serverless backend
-│   ├── ai/                       # AI-related endpoints
-│   ├── auth/                     # Auth endpoints (send-code, verify-code)
-│   ├── lib/                      # Shared API helpers
-│   └── index.ts                  # Local dev server entry
+│   ├── ai/                       # AI-related endpoints (models, test-key, diagnostics)
+│   ├── lib/                      # Shared API helpers (auth, handlers, response)
+│   ├── _server.ts                # Vercel serverless entry (delegates to lib/handlers)
+│   └── index.ts                  # Local Express dev server entry (delegates to lib/handlers)
 │
 ├── scripts/                      # One-off scripts (diagnose, setup, debug)
 │   ├── debug-script.js
@@ -35,7 +35,7 @@ Final-Ghostcode/
 │   ├── hooks/                    # Custom React hooks
 │   ├── lib/                      # Cross-cutting libs (supabase, ai, queryClient, utils)
 │   ├── pages/                    # Route-level page components
-│   ├── services/                 # External service wrappers (regolo, errorMonitoring)
+│   ├── services/                 # External service wrappers (errorMonitoring)
 │   ├── stores/                   # Zustand stores
 │   ├── styles/                   # Standalone CSS
 │   ├── test/                     # Test setup

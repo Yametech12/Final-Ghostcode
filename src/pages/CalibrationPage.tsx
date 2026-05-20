@@ -11,7 +11,8 @@ import { LogoIcon } from '../components/Logo';
 import { personalityTypes } from '../data/personalityTypes';
 import { clsx, type ClassValue } from 'clsx';
 import { twMerge } from 'tailwind-merge';
-import html2canvas from 'html2canvas';
+// html2canvas is heavy (~400KB). Lazy-imported inside the export handler so it
+// doesn't ship with the main bundle.
 import { useSearchParams } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import FavoriteButton from '../components/FavoriteButton';
@@ -274,6 +275,8 @@ export default function CalibrationPage() {
     if (!analysisRef.current) return;
     setIsCapturing(true);
     try {
+      // Dynamic import keeps html2canvas out of the main bundle.
+      const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(analysisRef.current, {
         backgroundColor: '#0a0508',
         scale: 2,
@@ -673,7 +676,7 @@ export default function CalibrationPage() {
           <Sparkles className="w-4 h-4" />
           Calibration Lab
         </div>
-        <h1 className="text-4xl md:text-6xl font-bold">The Oracle</h1>
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">The Oracle</h1>
         <p className="text-slate-400 text-lg max-w-2xl mx-auto">
           Advanced personality analysis and type calibration. Use the AI Oracle, practice your skills, or review past analyses.
         </p>
@@ -943,7 +946,7 @@ export default function CalibrationPage() {
 
               <div ref={analysisRef} className="space-y-8 p-6 sm:p-8 bg-mystic-950 rounded-3xl border border-white/5 shadow-2xl">
                 <div className="text-center pb-6 border-b border-white/10">
-                  <h2 className="text-2xl font-black tracking-tight text-gradient uppercase">EPIMETHEUS ORACLE</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight text-gradient uppercase">EPIMETHEUS ORACLE</h2>
                   <p className="text-slate-500 text-sm mt-2">Analysis Report • {new Date().toLocaleDateString()}</p>
                 </div>
 

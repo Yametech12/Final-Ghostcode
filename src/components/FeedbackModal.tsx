@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
 import { X, Send, MessageSquare, Loader2, CheckCircle2, Bug, Sparkles, Heart, Lightbulb, FileText, Layout, Zap } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
@@ -86,14 +87,26 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
-      <div
-        onClick={onClose}
-        className="absolute inset-0 bg-mystic-950/90 backdrop-blur-md animate-fade-in"
-      />
-      
-      <div className="relative w-full max-w-lg bg-mystic-900/95 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent-primary via-accent-secondary to-accent-primary" />
+    <AnimatePresence>
+      <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          onClick={onClose}
+          className="absolute inset-0 bg-mystic-950/80 backdrop-blur-md"
+          aria-hidden="true"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96, y: 8 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+          className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+        >
+          <div className="absolute top-0 left-0 right-0 h-1 accent-gradient" />
         
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -186,7 +199,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             </button>
           </form>
         )}
+        </motion.div>
       </div>
-    </div>
+    </AnimatePresence>
   );
 }

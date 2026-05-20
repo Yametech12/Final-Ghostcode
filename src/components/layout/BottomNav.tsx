@@ -44,7 +44,21 @@ export function BottomNav({ className = '' }: BottomNavProps) {
             >
               {({ isActive }) => (
                 <>
-                  <Icon className="w-5 h-5" aria-hidden="true" />
+                  <div className="relative">
+                    <Icon
+                      className={cn(
+                        'w-5 h-5 transition-[filter] duration-200',
+                        isActive && 'drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]'
+                      )}
+                      aria-hidden="true"
+                    />
+                    {isActive && (
+                      <span
+                        aria-hidden="true"
+                        className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-accent-primary"
+                      />
+                    )}
+                  </div>
                   <span className={cn('text-[11px] leading-none', isActive && 'font-semibold')}>
                     {label}
                   </span>

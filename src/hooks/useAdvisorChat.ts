@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
 import { toast } from 'sonner';
+import { apiFetch } from '../lib/fetch';
 
 export interface AdvisorMessage {
   id: string;
@@ -52,7 +53,8 @@ export function useAdvisorChat() {
         return;
       }
       try {
-        const response = await fetch(`/api/advisor/session?userId=${user.id}`);
+        // userId is now derived server-side from the JWT; query param is no longer needed.
+        const response = await apiFetch('/api/advisor/session');
         if (response.ok) {
           const data = await response.json();
           if (data.sessionId) {
@@ -70,10 +72,10 @@ export function useAdvisorChat() {
           }
         }
         // No session yet — create one
-        const createResponse = await fetch('/api/advisor/session', {
+        const createResponse = await apiFetch('/api/advisor/session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userId: user.id, title: 'AI Advisor Session' }),
+          body: JSON.stringify({ title: 'AI Advisor Session' }),
         });
         if (createResponse.ok) {
           const data = await createResponse.json();
@@ -103,10 +105,12 @@ export function useAdvisorChat() {
     abortControllerRef.current?.abort();
     abortControllerRef.current = new AbortController();
 
-    const response = await fetch('/api/advisor/chat', {
+    // userId is derived server-side from JWT; only sessionId + message are needed.
+    void uid;
+    const response = await apiFetch('/api/advisor/chat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ sessionId: sid, message: content, userId: uid }),
+      body: JSON.stringify({ sessionId: sid, message: content }),
       signal: abortControllerRef.current.signal,
     });
 
@@ -241,7 +245,7 @@ export function useAdvisorChat() {
     const sid = sessionIdRef.current;
     if (!sid) return;
     try {
-      await fetch(`/api/advisor/session/${sid}`, { method: 'DELETE' });
+      await apiFetch(`/api/advisor/session/${sid}`, { method: 'DELETE' });
       setMessages([]);
       toast.success('Chat cleared');
     } catch (error) {

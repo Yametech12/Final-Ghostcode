@@ -1,9 +1,9 @@
-/* Loading Spinner Styles */
+/* Loading Spinner Styles — luxury gold theme */
 .loading-spinner {
-  border: 2px solid rgb(var(--color-accent-primary) / 0.3);
-  border-top-color: rgb(var(--color-accent-primary));
+  border: 2px solid rgba(232, 199, 126, 0.2);
+  border-top-color: #E8C77E;
   border-radius: 50%;
-  animation: spin-loading 1s linear infinite;
+  animation: spin-loading 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 @keyframes spin-loading {
@@ -24,20 +24,20 @@
 
 .inline-loader-glow {
   position: absolute;
-  inset: 0;
+  inset: -8px;
   border-radius: 50%;
-  background-color: rgb(var(--color-accent-primary) / 0.2);
-  filter: blur(1rem);
-  animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  background: radial-gradient(circle, rgba(232, 199, 126, 0.15) 0%, transparent 70%);
+  animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 .inline-loader-ring {
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 4px solid rgb(var(--color-accent-primary) / 0.3);
-  border-top-color: rgb(var(--color-accent-primary));
-  animation: spin-loading 1s linear infinite;
+  border: 2px solid rgba(232, 199, 126, 0.15);
+  border-top-color: #E8C77E;
+  border-right-color: rgba(184, 115, 51, 0.5);
+  animation: spin-loading 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
 .inline-loader-logo {
@@ -51,9 +51,11 @@
 
 @keyframes pulse-glow {
   0%, 100% {
-    opacity: 1;
+    opacity: 0.6;
+    transform: scale(1);
   }
   50% {
-    opacity: 0.5;
+    opacity: 1;
+    transform: scale(1.1);
   }
 }

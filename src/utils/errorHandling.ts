@@ -7,6 +7,8 @@ export enum OperationType {
   WRITE = 'write',
 }
 
+import { AppError } from '../lib/errors';
+
 export interface FirestoreErrorInfo {
   error: string;
   operationType: OperationType;
@@ -37,22 +39,9 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   }
 
   console.error('Error:', errorMessage);
-  // Error info is no longer Firebase-specific
-  const errInfo = {
-    error: errorMessage,
-    operationType,
-    path,
-    authInfo: {
-      userId: undefined,
-      email: undefined,
-      emailVerified: undefined,
-      isAnonymous: undefined,
-      tenantId: undefined,
-      providerInfo: []
-    }
-  };
-  console.error('Error info:', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  // Throw a structured AppError so global handlers can read fields directly
+  // instead of JSON.parse-ing the error message.
+  throw new AppError(errorMessage, { operationType, path, code: errorCode });
 }
 
 // Hook for handling async errors in components

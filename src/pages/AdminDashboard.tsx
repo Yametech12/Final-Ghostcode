@@ -425,7 +425,7 @@ export default function AdminDashboard() {
                     <stat.icon className={cn("w-6 h-6", stat.color)} />
                   </div>
                   <div>
-                    <div className="text-3xl font-black text-white">
+                    <div className="text-3xl font-semibold text-slate-50 tabular-nums">
                       {stat.value}
                     </div>
                     <div className="text-xs font-bold text-slate-500 uppercase tracking-widest mt-1">

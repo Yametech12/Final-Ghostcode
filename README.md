@@ -92,7 +92,7 @@ VITE_SUPABASE_URL=https://your-project.supabase.co
 VITE_SUPABASE_ANON_KEY=your_anon_key
 
 # AI
-OPENROUTER_API_KEY=your_openrouter_key
+REGOLO_API_KEY=your_regolo_key
 
 # Email
 GMAIL_USER=your-email@gmail.com

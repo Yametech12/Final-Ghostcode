@@ -16,8 +16,8 @@ export function AdvisorHeader({ isStreaming, hasMessages, onExport, onClear }: A
     <header className="flex items-center justify-between mb-4 shrink-0 gap-3">
       <div className="flex items-center gap-3 min-w-0">
         <div className="relative shrink-0">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center shadow-md shadow-accent-primary/20">
-            <Bot aria-hidden="true" className="w-5 h-5 text-white" />
+          <div className="w-9 h-9 rounded-xl accent-gradient flex items-center justify-center shadow-md shadow-accent-primary/15">
+            <Bot aria-hidden="true" className="w-5 h-5 text-mystic-950" strokeWidth={1.5} />
           </div>
           <AnimatePresence>
             {isStreaming && (
@@ -25,17 +25,17 @@ export function AdvisorHeader({ isStreaming, hasMessages, onExport, onClear }: A
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 exit={{ scale: 0 }}
-                className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-400 rounded-full ring-2 ring-mystic-950 animate-pulse"
+                className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 bg-status-success rounded-full ring-2 ring-mystic-950 animate-pulse"
                 aria-hidden="true"
               />
             )}
           </AnimatePresence>
         </div>
         <div className="min-w-0">
-          <h1 className="text-lg sm:text-xl font-bold text-white truncate">Epimetheus Advisor</h1>
+          <h1 className="text-lg sm:text-xl font-semibold tracking-tight text-slate-100 truncate">Epimetheus Advisor</h1>
           <p className="text-xs text-slate-400 truncate">
             {isStreaming ? (
-              <span className="text-emerald-400">Thinking…</span>
+              <span className="text-status-success">Thinking…</span>
             ) : (
               'AI-powered relationship intelligence'
             )}
@@ -50,9 +50,9 @@ export function AdvisorHeader({ isStreaming, hasMessages, onExport, onClear }: A
           disabled={!hasMessages}
           aria-label="Export conversation"
           title="Export conversation"
-          className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="tap-target rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <Download aria-hidden="true" className="w-4 h-4" />
+          <Download aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
         </button>
         <button
           type="button"
@@ -60,9 +60,9 @@ export function AdvisorHeader({ isStreaming, hasMessages, onExport, onClear }: A
           disabled={!hasMessages}
           aria-label="Clear conversation"
           title="Clear conversation"
-          className="tap-target rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          className="tap-target rounded-xl text-slate-400 hover:text-status-error hover:bg-status-error/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
         >
-          <Trash2 aria-hidden="true" className="w-4 h-4" />
+          <Trash2 aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
         </button>
       </div>
     </header>

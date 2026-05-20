@@ -124,7 +124,7 @@ export default function ProfilerPage() {
           <Target className="w-4 h-4" />
           Instant Profiler
         </div>
-        <h1 className="text-4xl md:text-6xl font-bold tracking-tight">Personality Profiler</h1>
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">Personality Profiler</h1>
         <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
           Quickly identify a woman's type by selecting her core traits. If you're unsure, use the <Link to="/assessment" className="text-accent-primary hover:underline">Full Assessment</Link>.
         </p>

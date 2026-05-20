@@ -68,9 +68,9 @@ export function MessageList({
           type="button"
           onClick={() => scrollToBottom(true)}
           aria-label="Scroll to latest message"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full bg-mystic-800/95 backdrop-blur border border-white/10 text-sm text-slate-200 shadow-lg hover:bg-mystic-700 transition-colors"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full bg-mystic-900/95 backdrop-blur border border-accent-primary/15 text-sm text-slate-200 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] hover:border-accent-primary/30 transition-colors"
         >
-          <ArrowDown aria-hidden="true" className="w-4 h-4" />
+          <ArrowDown aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
           <span>Latest</span>
         </button>
       )}

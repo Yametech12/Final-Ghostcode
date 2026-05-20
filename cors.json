@@ -4,8 +4,8 @@
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:3000",
-      "https://epimetheus-project.vercel.app",
-      "https://epimetheus.vercel.app",
+      "https://epimetheusproject.vercel.app",
+      "https://epimetheus.ai",
       "https://www.epimetheus.ai"
     ],
     "method": ["GET", "POST", "PUT", "DELETE", "HEAD", "OPTIONS"],

@@ -7,26 +7,36 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
   --font-serif: "Cormorant Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
 
-  --color-mystic-950: #0a0508;
-  --color-mystic-900: #120a12;
-  --color-mystic-800: #1a0f1a;
-  --color-mystic-700: #251525;
-  --color-accent-primary: #ff4b6b; /* Tinder Pink */
-  --color-accent-secondary: #ff8a5c; /* Tinder Orange */
-  --color-accent-glow: #ff2d55;
+  /* Phase 1A — Premium luxury palette
+     Q1: Champagne gold accent · Q2: Warm near-black base
+     See .kiro/specs/premium-ui-redesign/design.md §3 for rationale + contrast checks */
+  --color-mystic-950: #0E0B12; /* warm near-black — primary background */
+  --color-mystic-900: #161118; /* glass-card fill base */
+  --color-mystic-800: #1F1A22; /* raised card surface */
+  --color-mystic-700: #2A242F; /* hairline borders, dividers */
+  --color-accent-primary: #E8C77E;   /* champagne gold — CTAs, active states, key emphasis */
+  --color-accent-secondary: #B87333; /* antique copper — highlights, hover-deepens */
+  --color-accent-glow: #D4AF37;      /* deeper gold — used in glow box-shadows only */
 
-  /* Redefine slate palette as hex to avoid oklch issues with html2canvas */
-  --color-slate-50: #f8fafc;
-  --color-slate-100: #f1f5f9;
-  --color-slate-200: #e2e8f0;
-  --color-slate-300: #cbd5e1;
-  --color-slate-400: #94a3b8;
-  --color-slate-500: #64748b;
-  --color-slate-600: #475569;
-  --color-slate-700: #334155;
-  --color-slate-800: #1e293b;
-  --color-slate-900: #0f172a;
-  --color-slate-950: #020617;
+  /* Status colors — muted, harmonized with gold (Req 4.6) */
+  --color-status-success: #6FA083; /* sage green, desaturated */
+  --color-status-warning: #C99B5B; /* amber, harmonizes with gold */
+  --color-status-error: #C77A6F;   /* muted terracotta, not vibrant red */
+  --color-status-info: #7A93A8;    /* dusty blue */
+
+  /* Warm-undertone neutrals — replaces slate's cool blue cast (Req 4.4)
+     Numeric stops kept as `slate-*` token names for backward compat with existing consumers. */
+  --color-slate-50: #FAF7F2;  /* near-white, body text on dark */
+  --color-slate-100: #F0EBE3;
+  --color-slate-200: #DDD5C9;
+  --color-slate-300: #C4BAAB; /* default body text on dark — 10.8:1 vs mystic-950 (AAA) */
+  --color-slate-400: #9A8F80; /* muted body text — 5.8:1 vs mystic-950 (AA) */
+  --color-slate-500: #6E6358; /* hint, placeholder */
+  --color-slate-600: #4A4138;
+  --color-slate-700: #312A24; /* hairline border on dark */
+  --color-slate-800: #1F1A16;
+  --color-slate-900: #14110E;
+  --color-slate-950: #0A0806;
 
   /* Redefine red and emerald palettes as hex */
   --color-red-50: #fef2f2;
@@ -146,9 +156,22 @@
   --radius-xl: 1.5rem;     /* 24px — modals, large surfaces */
   --radius-pill: 9999px;
 
-  --shadow-card: 0 4px 12px rgba(0, 0, 0, 0.2);
-  --shadow-modal: 0 20px 60px rgba(0, 0, 0, 0.5);
-  --shadow-glow: 0 0 24px rgba(255, 75, 107, 0.25);
+  /* Elevation system — 4 levels (Req 7.1)
+     Soft, large-radius shadows — never tight or harsh (Req 7.6) */
+  --shadow-flat:     none;
+  --shadow-raised:   0 4px 24px -8px rgba(0, 0, 0, 0.4);
+  --shadow-floating: 0 12px 40px -12px rgba(0, 0, 0, 0.5);
+  --shadow-modal:    0 24px 80px -16px rgba(0, 0, 0, 0.65);
+  --shadow-glow:     0 0 32px -4px rgba(212, 175, 55, 0.18); /* gold glow, low intensity */
+  --shadow-card:     0 4px 24px -8px rgba(0, 0, 0, 0.4);     /* alias of --shadow-raised, kept for backward compat */
+
+  /* Motion tokens (Req 8.1, 8.6) */
+  --ease-soft:        cubic-bezier(0.32, 0.72, 0, 1); /* default — soft start, firm settle */
+  --ease-emphasis:    cubic-bezier(0.4, 0, 0.2, 1);   /* alternative — material standard */
+  --duration-fast:    150ms; /* hover color/border */
+  --duration-base:    250ms; /* default UI transitions */
+  --duration-slow:    400ms; /* page-level enters, modal scales */
+  --duration-shimmer: 2000ms; /* slowed shimmer cycle (Req 8.5) */
 
   /* Layout dimensions — used to keep nav height in sync with content padding */
   --nav-height: 4rem;
@@ -157,22 +180,29 @@
 }
 
 .light-theme {
-  --color-mystic-950: #f8fafc;
-  --color-mystic-900: #ffffff;
-  --color-mystic-800: #f1f5f9;
-  --color-mystic-700: #e2e8f0;
-  
-  --color-slate-50: #020617;
-  --color-slate-100: #0f172a;
-  --color-slate-200: #1e293b;
-  --color-slate-300: #334155;
-  --color-slate-400: #475569;
-  --color-slate-500: #64748b;
-  --color-slate-600: #94a3b8;
-  --color-slate-700: #cbd5e1;
-  --color-slate-800: #e2e8f0;
-  --color-slate-900: #f1f5f9;
-  --color-slate-950: #f8fafc;
+  /* Phase 1A — Warm cream base + deeper gold accents (Req 4.5) */
+  --color-mystic-950: #FAF7F2; /* warm ivory background */
+  --color-mystic-900: #F2EDE3; /* glass-card surface on light */
+  --color-mystic-800: #E8E0D2;
+  --color-mystic-700: #D8CFBE;
+
+  /* Accent shifts deeper for contrast on cream — passes WCAG AA on cream */
+  --color-accent-primary:   #B8860B; /* deeper gold — 4.7:1 vs cream */
+  --color-accent-secondary: #8B5A2B; /* deeper copper */
+  --color-accent-glow:      #9C7421;
+
+  /* Grayscale flips and warms — same names, inverted lightness */
+  --color-slate-50:  #14110E;
+  --color-slate-100: #2A2520;
+  --color-slate-200: #4A4138;
+  --color-slate-300: #6E6358; /* body text on cream — 5.6:1 (AA) */
+  --color-slate-400: #8C8174;
+  --color-slate-500: #A89C8E;
+  --color-slate-600: #C4BAAB;
+  --color-slate-700: #DDD5C9;
+  --color-slate-800: #EDE7DC;
+  --color-slate-900: #F5F0E6;
+  --color-slate-950: #FAF7F2;
 
   background-color: var(--color-mystic-950);
   color: var(--color-slate-300);
@@ -180,12 +210,12 @@
 
 :root {
   color-scheme: dark;
-  background-color: #0a0508;
-  color: #f8fafc;
+  background-color: #0E0B12;
+  color: #FAF7F2;
 }
 
 html {
-  background-color: var(--color-mystic-950, #0a0508);
+  background-color: var(--color-mystic-950, #0E0B12);
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -214,7 +244,7 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Sleek Custom Scrollbar */
+/* Sleek Custom Scrollbar — warm-tinted, gold on hover */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -225,34 +255,34 @@ html.lenis, html.lenis body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(196, 186, 171, 0.18);
   border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(232, 199, 126, 0.35);
 }
 
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  scrollbar-color: rgba(196, 186, 171, 0.18) transparent;
 }
 
 body {
   @apply font-sans antialiased bg-mystic-950 text-slate-300 selection:bg-accent-primary/30 selection:text-accent-primary;
-  background-color: var(--color-mystic-950, #0a0508);
+  background-color: var(--color-mystic-950, #0E0B12);
   overflow-x: hidden;
   width: 100%;
   position: relative;
 }
 
-/* Atmospheric background-layered gradients */
+/* Atmospheric background-layered gradients — gold + copper bloom (Req 4.7) */
 .atmosphere {
   background:
-    radial-gradient(circle at 50% 30%, rgba(255, 75, 107, 0.1) 0%, transparent 60%),
-    radial-gradient(circle at 10% 80%, rgba(255, 138, 92, 0.05) 0%, transparent 50%);
+    radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.06) 0%, transparent 60%),
+    radial-gradient(circle at 10% 80%, rgba(184, 115, 51, 0.04) 0%, transparent 50%);
   filter: blur(60px);
-  opacity: 0.82;
+  opacity: 0.7;
   position: fixed;
   top: 0;
   left: 0;
@@ -270,28 +300,82 @@ body {
   .glass-card { @apply p-6; }
 }
 
+/* Global heading rule — Inter for all H1–H6 (Q3 decision: serif is hero-only)
+   Hero blocks in Home/Login opt into serif via `.hero-headline` class below. */
 h1, h2, h3, h4, h5, h6 {
-  @apply font-display text-slate-50 tracking-tight;
+  @apply font-sans text-slate-50 tracking-tight;
+}
+
+/* Hero-only serif treatment — opt-in for Home/Login hero blocks (Q3 = b)
+   Apply via <h1 className="hero-headline">…</h1> */
+.hero-headline {
+  font-family: var(--font-serif);
+  font-weight: 300;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
+}
+
+.hero-headline-italic {
+  font-family: var(--font-serif);
+  font-style: italic;
+  font-weight: 400;
+}
+
+/* Editorial uppercase eyebrow label (Req 5.6) */
+.eyebrow {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--color-slate-500);
+}
+
+/* Tabular numerals for data displays (Req 5.3) */
+.tabular-nums {
+  font-feature-settings: "tnum" 1;
+  font-variant-numeric: tabular-nums;
 }
 
 .glass-card {
-  /* Fallback color for browsers without backdrop-filter */
-  background-color: rgba(18, 10, 18, 0.85);
-  @apply backdrop-blur-xl border border-slate-700/20 rounded-3xl shadow-2xl;
+  /* Fallback for browsers without backdrop-filter */
+  background-color: rgba(22, 17, 24, 0.85);
+  border: 1px solid rgba(232, 199, 126, 0.08); /* gold hairline at 8% (Req 7.2, 7.5) */
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  position: relative;
 }
 
 @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
   .glass-card {
-    @apply bg-mystic-900/50;
+    background-color: rgba(22, 17, 24, 0.55);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
   }
 }
 
+/* Inner top-edge highlight — the "polished glass" sheen (Req 7.2) */
+.glass-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 1px;
+  right: 1px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(232, 199, 126, 0.18), transparent);
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+  pointer-events: none;
+}
+
 .accent-gradient {
-  @apply bg-gradient-to-br from-accent-primary to-accent-secondary;
+  background-image: linear-gradient(135deg, #E8C77E 0%, #D4AF37 50%, #B87333 100%);
 }
 
 .text-gradient {
-  @apply bg-clip-text text-transparent bg-gradient-to-r from-accent-primary via-rose-400 to-accent-secondary;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(90deg, #E8C77E 0%, #F0D89A 50%, #D4AF37 100%);
 }
 
 .mystic-gradient {
@@ -299,7 +383,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .glow-accent {
-  box-shadow: 0 0 20px rgba(255, 75, 107, 0.15);
+  box-shadow: 0 0 24px -4px rgba(212, 175, 55, 0.18);
 }
 
 .shimmer-effect {
@@ -316,14 +400,14 @@ h1, h2, h3, h4, h5, h6 {
   height: 200%;
   background: linear-gradient(
     to bottom right,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0) 40%,
-    rgba(255, 255, 255, 0.08) 50%,
-    rgba(255, 255, 255, 0) 60%,
-    rgba(255, 255, 255, 0) 100%
+    rgba(232, 199, 126, 0) 0%,
+    rgba(232, 199, 126, 0) 40%,
+    rgba(232, 199, 126, 0.06) 50%,
+    rgba(232, 199, 126, 0) 60%,
+    rgba(232, 199, 126, 0) 100%
   );
   transform: rotate(45deg);
-  animation: shimmer 1.5s infinite;
+  animation: shimmer var(--duration-shimmer) infinite;
 }
 
 @keyframes shimmer {
@@ -340,6 +424,13 @@ h1, h2, h3, h4, h5, h6 {
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
+}
+
+/* Single-cycle pulse — used by nav search icon on focus (Req 10.5) */
+@keyframes pulse-once {
+  0%   { transform: scale(1);    opacity: 1; }
+  50%  { transform: scale(1.15); opacity: 0.8; }
+  100% { transform: scale(1);    opacity: 1; }
 }
 
 .mystic-border {

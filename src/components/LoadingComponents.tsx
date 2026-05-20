@@ -25,24 +25,30 @@ export { LoadingScreen };
 
 export function InlineLoader({ message }: { message?: string }) {
   return (
-    <div className="flex flex-col items-center justify-center py-12 gap-4">
-      <div className="inline-loader-container">
-        <div className="inline-loader-glow" />
-        <div className="inline-loader-ring" />
-        <div className="inline-loader-logo">
-          <Logo size="md" />
+    <div className="flex flex-col items-center justify-center py-16 gap-5">
+      <div className="relative">
+        {/* Outer pulsing ring */}
+        <motion.div
+          className="absolute -inset-3 rounded-2xl border border-accent-primary/20"
+          animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.05, 1] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+        />
+        <div className="inline-loader-container">
+          <div className="inline-loader-glow" />
+          <div className="inline-loader-ring" />
+          <div className="inline-loader-logo">
+            <Logo size="md" />
+          </div>
         </div>
       </div>
-      {message && (
-        <motion.p
-          className="text-sm text-white/60 font-mono tracking-wide"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          {message}
-        </motion.p>
-      )}
+      <motion.p
+        className="text-xs text-slate-400 font-mono tracking-wider"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+      >
+        {message || 'Loading...'}
+      </motion.p>
     </div>
   );
 }

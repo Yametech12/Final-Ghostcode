@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Radar,
   RadarChart,
@@ -11,6 +12,13 @@ import { PersonalityProfile } from '../types';
 
 interface ProfileRadarChartProps {
   profile: PersonalityProfile;
+}
+
+/** Read a CSS custom property from :root, with a safe fallback for SSR / first paint. */
+function getCssVar(name: string, fallback: string): string {
+  if (typeof window === 'undefined') return fallback;
+  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  return value || fallback;
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -29,6 +37,24 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
+  // Source colors from design tokens so theme + redesign updates flow through.
+  // Recharts/SVG can't consume CSS variables directly inside `stroke`/`stopColor`,
+  // so we read them once after mount and re-read when theme toggles.
+  const [accent, setAccent] = useState<string>('#E8C77E');
+  const [tickColor, setTickColor] = useState<string>('#C4BAAB');
+
+  useEffect(() => {
+    const refreshColors = () => {
+      setAccent(getCssVar('--color-accent-primary', '#E8C77E'));
+      setTickColor(getCssVar('--color-slate-300', '#C4BAAB'));
+    };
+    refreshColors();
+    // Re-read when the theme class on <html> flips (light/dark toggle).
+    const observer = new MutationObserver(refreshColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+
   const isTester = profile.combination.includes('Tester');
   const isJustifier = profile.combination.includes('Justifier');
   const isRealist = profile.combination.includes('Realist');
@@ -77,8 +103,8 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
         >
           <defs>
             <linearGradient id="radarGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#ff4b6b" stopOpacity={0.8}/>
-              <stop offset="100%" stopColor="#ff4b6b" stopOpacity={0.1}/>
+              <stop offset="0%" stopColor={accent} stopOpacity={0.8}/>
+              <stop offset="100%" stopColor={accent} stopOpacity={0.1}/>
             </linearGradient>
             <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
               <feGaussianBlur stdDeviation="4" result="blur" />
@@ -88,13 +114,13 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
           <PolarGrid stroke="rgba(255,255,255,0.08)" />
           <PolarAngleAxis 
             dataKey="subject" 
-            tick={{ fill: '#cbd5e1', fontSize: 11, fontWeight: 600, letterSpacing: '0.05em' }} 
+            tick={{ fill: tickColor, fontSize: 11, fontWeight: 600, letterSpacing: '0.05em' }} 
           />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
             name={profile.name}
             dataKey="A"
-            stroke="#ff4b6b"
+            stroke={accent}
             strokeWidth={2}
             fill="url(#radarGradient)"
             fillOpacity={1}

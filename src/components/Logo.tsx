@@ -12,7 +12,7 @@ interface LogoProps {
 
 export function LogoIcon({ className }: { className?: string }) {
   return (
-    <div className={cn("w-5 h-5 rounded-md overflow-hidden bg-black flex items-center justify-center border border-white/10", className)}>
+    <div className={cn("w-5 h-5 rounded-md overflow-hidden bg-black flex items-center justify-center border border-white/10 hover:border-accent-primary/15 transition-colors duration-200", className)}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full p-1 text-white fill-current">
         <path d="M50 20c-15 0-28 10-35 25 7 15 20 25 35 25s28-10 35-25c-7-15-20-25-35-25zm0 40c-8.3 0-15-6.7-15-15s6.7-15 15-15 15 6.7 15 15-6.7 15-15 15z" />
         <path d="M50 35c-5.5 0-10 4.5-10 10s4.5 10 10 10 10-4.5 10-10-4.5-10-10-10zm0 15c-2.8 0-5-2.2-5-5s2.2-5 5-5 5 2.2 5 5-2.2 5-5 5z" />
@@ -32,7 +32,7 @@ export default function Logo({ className, size = 'md' }: LogoProps) {
 
   return (
     <div className={cn(
-      "rounded-lg overflow-hidden flex items-center justify-center bg-black shadow-lg border border-white/10",
+      "rounded-lg overflow-hidden flex items-center justify-center bg-black shadow-lg border border-white/10 hover:border-accent-primary/15 transition-colors duration-200",
       sizeClasses[size],
       className
     )}>

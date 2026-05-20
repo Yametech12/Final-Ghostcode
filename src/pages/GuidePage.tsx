@@ -105,7 +105,7 @@ export default function GuidePage() {
           >
             <div className="flex items-start justify-between gap-4">
               <div className="space-y-2">
-                <h2 className="text-3xl md:text-4xl font-bold">{activeSection.title}</h2>
+                <h2 className="text-3xl md:text-4xl font-semibold tracking-tight text-slate-50">{activeSection.title}</h2>
                 <div className="h-1 accent-gradient rounded-full w-20" />
               </div>
               <FavoriteButton 
@@ -185,7 +185,7 @@ export default function GuidePage() {
               <div className="pt-6 flex justify-end">
                 <button 
                   onClick={() => markSectionComplete(activeTab)}
-                  className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-white font-bold flex items-center gap-2 transition-all hover:scale-105 active:scale-95"
+                  className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/8 border border-slate-700/30 hover:border-accent-primary/20 text-slate-100 font-semibold tracking-wide flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >
                   <CheckCircle2 className="w-5 h-5 text-emerald-500" />
                   Mark as Read

@@ -109,13 +109,13 @@ Keep responses concise, professional, and highly strategic. Use EPIMETHEUS termi
       animate={{ opacity: 1, y: 0 }}
       className="max-w-7xl mx-auto space-y-8"
     >
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-6 mb-8">
+      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/30 pb-6 mb-8">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" />
-            <span className="text-xs font-mono text-accent-primary tracking-widest uppercase">Signal Decryptor</span>
+            <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" aria-hidden="true" />
+            <span className="eyebrow text-accent-primary">Signal Decryptor</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white uppercase">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">
             Text Analysis
           </h1>
           <p className="text-lg text-slate-400 mt-2 max-w-2xl">
@@ -123,9 +123,7 @@ Keep responses concise, professional, and highly strategic. Use EPIMETHEUS termi
           </p>
         </div>
         <div className="text-left md:text-right mt-4 md:mt-0">
-          <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">
-            Subtext Extraction Engine
-          </p>
+          <span className="eyebrow">Subtext Extraction Engine</span>
           <p className="text-xs text-slate-600 mt-1">
             v2.1 • Enhanced AI Analysis
           </p>

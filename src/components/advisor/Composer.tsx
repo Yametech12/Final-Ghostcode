@@ -66,7 +66,7 @@ export function Composer({
               onClick={() => onSelectFollowUp(suggestion)}
               disabled={isSending}
               aria-label={`Send: ${suggestion}`}
-              className="shrink-0 px-3 py-1.5 rounded-full text-xs text-accent-primary bg-accent-primary/10 hover:bg-accent-primary/20 border border-accent-primary/20 hover:border-accent-primary/50 hover:text-white active:scale-95 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="shrink-0 px-3 py-1.5 rounded-full text-xs text-accent-primary bg-accent-primary/10 hover:bg-accent-primary/15 border border-accent-primary/20 hover:border-accent-primary/40 hover:text-slate-100 active:scale-[0.98] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {suggestion}
             </button>
@@ -74,7 +74,7 @@ export function Composer({
         </div>
       )}
 
-      <div className="relative flex items-end gap-2 bg-slate-800/80 border border-slate-600/60 focus-within:border-accent-primary/60 rounded-2xl p-2 transition-colors">
+      <div className="relative flex items-end gap-2 bg-mystic-900/50 border border-slate-700/30 focus-within:border-accent-primary/60 focus-within:shadow-[0_0_0_3px_rgba(232,199,126,0.10)] rounded-2xl p-2 transition-[border-color,box-shadow] duration-200">
         <label htmlFor="advisor-composer" className="sr-only">Message Epimetheus</label>
         <textarea
           id="advisor-composer"
@@ -85,7 +85,7 @@ export function Composer({
           placeholder="Ask Epimetheus for advice..."
           rows={1}
           aria-label="Message"
-          className="flex-1 bg-transparent border-0 px-2 py-1.5 text-sm text-white placeholder-slate-500 focus:outline-none resize-none leading-relaxed max-h-40"
+          className="flex-1 bg-transparent border-0 px-2 py-1.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none resize-none leading-relaxed max-h-40"
         />
 
         {isStreaming ? (
@@ -93,7 +93,7 @@ export function Composer({
             type="button"
             onClick={onStop}
             aria-label="Stop generating"
-            className="tap-target rounded-xl bg-white/10 hover:bg-white/20 text-white shrink-0 transition-colors"
+            className="tap-target rounded-xl bg-white/8 hover:bg-white/12 text-slate-100 shrink-0 transition-colors"
           >
             <Square aria-hidden="true" className="w-4 h-4 fill-current" />
           </button>
@@ -106,11 +106,11 @@ export function Composer({
             className={cn(
               'tap-target rounded-xl shrink-0 transition-colors',
               canSend
-                ? 'bg-accent-primary text-white hover:bg-accent-primary/90'
+                ? 'bg-accent-primary text-mystic-950 hover:bg-accent-glow'
                 : 'bg-white/5 text-slate-500 cursor-not-allowed',
             )}
           >
-            <Send aria-hidden="true" className="w-4 h-4" />
+            <Send aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
           </button>
         )}
       </div>
@@ -118,10 +118,10 @@ export function Composer({
       {/* Hint row: keyboard tip on left, char count on right */}
       <div className="flex items-center justify-between mt-1.5 px-1 text-[11px] text-slate-500">
         <span className="hidden sm:inline">
-          <kbd className="px-1 py-0.5 bg-white/5 border border-white/10 rounded font-mono">Enter</kbd> to send,{' '}
-          <kbd className="px-1 py-0.5 bg-white/5 border border-white/10 rounded font-mono">Shift+Enter</kbd> for new line
+          <kbd className="px-1 py-0.5 bg-white/5 border border-accent-primary/15 rounded font-mono">Enter</kbd> to send,{' '}
+          <kbd className="px-1 py-0.5 bg-white/5 border border-accent-primary/15 rounded font-mono">Shift+Enter</kbd> for new line
         </span>
-        <span className={cn('ml-auto', tooLong && 'text-red-400 font-semibold')}>
+        <span className={cn('ml-auto tabular-nums', tooLong && 'text-status-error font-semibold')}>
           {value.length}/{MAX_LENGTH}
         </span>
       </div>

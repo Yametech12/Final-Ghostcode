@@ -270,7 +270,7 @@ export default function FieldGuidePage() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient shadow-lg shadow-accent-primary/20 mb-4 glow-accent">
           <Map className="w-8 h-8 text-white" />
         </div>
-        <h1 className="text-4xl md:text-5xl font-bold">The Field Guide</h1>
+        <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">The Field Guide</h1>
         <p className="text-slate-400 max-w-2xl mx-auto">
           Quick-reference scenarios, tactical lines, and real-world field reports.
         </p>
@@ -766,7 +766,7 @@ export default function FieldGuidePage() {
 
             <div className="space-y-6">
               <div className="space-y-2">
-                <h2 className="text-3xl font-bold">Submit Field Report</h2>
+                <h2 className="text-3xl font-semibold tracking-tight text-slate-50">Submit Field Report</h2>
                 <p className="text-slate-400">Share your experience to help the community grow.</p>
               </div>
 

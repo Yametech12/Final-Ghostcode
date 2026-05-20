@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { apiFetch } from '../lib/fetch';
 
 interface UseAiWithRetryOptions {
   maxRetries?: number;
@@ -15,17 +16,20 @@ export function useAiWithRetry({
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
-  const sendMessage = useCallback(async (messages: any[], userId?: string) => {
+  const sendMessage = useCallback(async (messages: any[], _userId?: string) => {
+    // userId is derived server-side from the JWT; the param is kept for backwards
+    // compatibility with existing call sites but ignored.
+    void _userId;
     setIsRetrying(false);
     setError(null);
     setRetryCount(0);
 
     for (let attempt = 0; attempt <= maxRetries; attempt++) {
       try {
-        const response = await fetch('/api/advisor/chat', {
+        const response = await apiFetch('/api/advisor/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ messages, userId }),
+          body: JSON.stringify({ messages }),
         });
 
         if (response.ok) {

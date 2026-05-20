@@ -63,13 +63,19 @@ export function usePullToRefresh(onRefresh: () => Promise<void>) {
 
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!startY || isRefreshing) return;
+    // Only engage pull-to-refresh when scrolled to the very top, otherwise
+    // mid-page swipes during normal scrolling would trigger refreshes.
+    if (window.scrollY > 0) {
+      setPullDistance(0);
+      return;
+    }
 
     const currentY = e.touches[0].clientY;
     const distance = currentY - startY;
 
-    if (distance > 0 && window.scrollY === 0) {
+    if (distance > 0) {
       e.preventDefault();
-      setPullDistance(Math.min(distance * 0.5, 80)); // Limit pull distance
+      setPullDistance(Math.min(distance * 0.5, 80));
     }
   };
 

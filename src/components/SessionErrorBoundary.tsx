@@ -46,8 +46,23 @@ export default class SessionErrorBoundary extends Component<Props, State> {
   handleReset = () => {
     this.setState({ hasError: false, errorMessage: 'Something went wrong.', errorDetails: undefined });
     this.props.onReset?.();
-    // Clear any cached data and reload
-    localStorage.clear();
+    // Selective cleanup: clear app-specific cached state without wiping the
+    // Supabase auth token (key starts with `sb-` or `epimetheus-auth-`).
+    // Calling localStorage.clear() here used to log the user out unintentionally.
+    try {
+      const keysToRemove = Object.keys(localStorage).filter(
+        (k) =>
+          k.startsWith('epimetheus_') ||
+          k.startsWith('assessment_') ||
+          k.startsWith('profiler_') ||
+          k === 'oracleHistory' ||
+          k === 'hasSeenOnboarding' ||
+          k === 'hasSeenTour'
+      );
+      keysToRemove.forEach((k) => localStorage.removeItem(k));
+    } catch {
+      /* ignore */
+    }
     sessionStorage.clear();
     window.location.reload();
   };

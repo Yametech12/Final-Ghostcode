@@ -1,4 +1,5 @@
 import { serializeError } from '../utils/errorHandling';
+import { apiFetch } from './fetch';
 
 // Regolo AI model configuration
 export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
@@ -76,7 +77,7 @@ export async function chatCompletion(
       }
 
       const apiBase = import.meta.env.VITE_API_BASE_URL || "/api";
-      const response = await fetch(
+      const response = await apiFetch(
         `${apiBase}/ai/chat`,
         {
           method: "POST",

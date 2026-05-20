@@ -187,6 +187,12 @@ export default function CommandCenter() {
             className="absolute inset-0 bg-gradient-to-br from-accent-primary/50 to-accent-secondary/50 rounded-full"
           />
 
+          {/* Metallic sheen — polished gold disc highlight (Req 10.8) */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-0 rounded-full pointer-events-none bg-gradient-to-br from-white/20 via-white/5 to-transparent"
+          />
+
           {/* Drag indicator */}
           {!isOpen && (
             <motion.div
@@ -297,7 +303,7 @@ export default function CommandCenter() {
                       className={cn(
                         "w-full flex items-center gap-4 p-3 rounded-xl transition-all text-left group relative overflow-hidden",
                         selectedIndex === index
-                          ? "bg-accent-primary/10 border border-accent-primary/20 shadow-lg shadow-accent-primary/10"
+                          ? "bg-accent-primary/10 border border-accent-primary/15 shadow-lg shadow-accent-primary/10"
                           : "bg-transparent border border-transparent hover:bg-white/5"
                       )}
                     >

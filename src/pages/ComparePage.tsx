@@ -65,13 +65,13 @@ export default function ComparePage() {
           <GitCompare className="w-4 h-4" />
           Side-by-Side Analysis
         </div>
-        <h1 className="text-4xl md:text-7xl font-display font-bold tracking-tight">Compare Types</h1>
+        <h1 className="text-4xl md:text-6xl font-semibold tracking-tight text-slate-50">Compare Types</h1>
         <p className="text-slate-400 text-lg max-w-2xl mx-auto leading-relaxed">
           Understand the subtle differences between personality types to refine your calibration skills and tactical approach.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sticky top-24 z-30 bg-slate-950/80 backdrop-blur-xl p-4 -m-4 rounded-3xl border border-white/5 shadow-2xl">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sticky top-24 z-30 bg-mystic-950/80 backdrop-blur-xl p-4 -m-4 rounded-3xl border border-slate-700/30 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)]">
         <TypeSelector label="Subject Alpha" value={type1} onChange={setType1} />
         <TypeSelector label="Subject Beta" value={type2} onChange={setType2} />
       </div>

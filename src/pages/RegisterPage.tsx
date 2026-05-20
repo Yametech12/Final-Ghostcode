@@ -109,7 +109,7 @@ export default function RegisterPage() {
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
 
-          <h1 className="text-3xl font-bold text-white mb-4">Check Your Email</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-slate-50 mb-4">Check Your Email</h1>
           <p className="text-slate-400 mb-6 leading-relaxed">
             We've sent a verification link to <strong className="text-white">{email}</strong>.
             Please check your email and click the verification link to activate your account.
@@ -158,7 +158,7 @@ export default function RegisterPage() {
           <div className="flex justify-center mb-4">
             <Logo size="xl" />
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
+          <h1 className="hero-headline text-3xl text-slate-50 mb-2">Create Account</h1>
           <p className="text-slate-400">Join Epimetheus with email verification</p>
         </div>
 

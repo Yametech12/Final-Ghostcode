@@ -252,13 +252,13 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
       animate={{ opacity: 1, y: 0 }}
       className="max-w-7xl mx-auto space-y-8 min-h-[calc(100vh-12rem)] flex flex-col"
     >
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-white/10 pb-6 shrink-0">
+      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-slate-700/30 pb-6 shrink-0">
         <div>
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" />
-            <span className="text-xs font-mono text-accent-primary tracking-widest uppercase">Tactical Training</span>
+            <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" aria-hidden="true" />
+            <span className="eyebrow text-accent-primary">Tactical Training</span>
           </div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-white uppercase">
+          <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">
             Simulation Matrix
           </h1>
           <p className="text-lg text-slate-400 mt-2 max-w-2xl">
@@ -266,9 +266,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
           </p>
         </div>
         <div className="text-left md:text-right mt-4 md:mt-0">
-          <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">
-            Roleplay Training System
-          </p>
+          <span className="eyebrow">Roleplay Training System</span>
           <p className="text-xs text-slate-600 mt-1">
             v2.0 • Enhanced AI Simulation
           </p>
@@ -607,7 +605,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                       "px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2",
                       isLoading || !input.trim()
                         ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
-                        : "accent-gradient text-white hover:scale-105 active:scale-95 shadow-lg shadow-accent-primary/20"
+                        : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent-primary/15"
                     )}
                   >
                     {isLoading ? (

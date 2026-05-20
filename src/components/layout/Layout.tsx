@@ -1,5 +1,6 @@
 import React, { useEffect, Suspense, lazy, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
 import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
@@ -7,6 +8,7 @@ import { useIsMobile, usePullToRefresh, useMobilePerformance } from '../../hooks
 import { useSessionTimeout } from '../../hooks/useSessionTimeout';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
+import { isAppError } from '../../lib/errors';
 import { queryClient } from '../../lib/queryClient';
 import { BottomNav } from './BottomNav';
 
@@ -75,7 +77,7 @@ export default function Layout({ children }: LayoutProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const auth = useEnhancedAuth();
-  const { user, signOut } = auth || {};
+  const { user, signOut, userData } = auth || {};
 
   // Mobile optimizations
   const isMobile = useIsMobile();
@@ -196,20 +198,13 @@ export default function Layout({ children }: LayoutProps) {
       }
 
       console.error('Unhandled promise rejection:', reason || 'No reason provided', event);
-      
-      // Only toast if it's a meaningful error
-      let message = reason?.message || (typeof reason === 'string' ? reason : null);
-      
-      // Try to parse JSON error info from handleFirestoreError
-      try {
-        if (typeof message === 'string' && message.startsWith('{') && message.endsWith('}')) {
-          const errInfo = JSON.parse(message);
-          if (errInfo.error && errInfo.operationType) {
-            message = `System Error (${errInfo.operationType} on ${errInfo.path || 'unknown path'}): ${errInfo.error}`;
-          }
-        }
-      } catch {
-        // Not JSON, use original message
+
+      // Prefer structured AppError fields over JSON-parsing the message.
+      let message: string | null = null;
+      if (isAppError(reason)) {
+        message = `System Error (${reason.operationType ?? 'unknown'} on ${reason.path ?? 'unknown path'}): ${reason.message}`;
+      } else {
+        message = reason?.message || (typeof reason === 'string' ? reason : null);
       }
 
       if (message) {
@@ -239,11 +234,16 @@ export default function Layout({ children }: LayoutProps) {
 
   const navGroups = NAV_GROUPS;
 
-  // Dropdown items filtering
+  // Dropdown items filtering — match either an item name OR the group label,
+  // so searching "tools" reveals the whole Tools group instead of hiding it.
+  const matchesGroupOrItem = (groupLabel: string, itemName: string) => {
+    const q = searchQuery.toLowerCase();
+    if (!q) return true;
+    return groupLabel.toLowerCase().includes(q) || itemName.toLowerCase().includes(q);
+  };
+
   const getFilteredGroupItems = (group: typeof navGroups[0]) => {
-    return group.items.filter(item => 
-      item.name.toLowerCase().includes(searchQuery.toLowerCase())
-    );
+    return group.items.filter((item) => matchesGroupOrItem(group.label, item.name));
   };
 
   const hasSearchResults = searchQuery.length > 0;
@@ -300,9 +300,10 @@ export default function Layout({ children }: LayoutProps) {
         aria-label="Primary"
         className={cn(
           "fixed top-0 left-0 right-0 z-50 border-b safe-area-x",
+          "transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
           scrolled
-            ? "bg-mystic-950 border-white/10 py-1 shadow-2xl shadow-black/50"
-            : "bg-mystic-950 border-transparent py-3"
+            ? "bg-mystic-950/80 backdrop-blur-xl border-slate-700/20 py-1 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+            : "bg-mystic-950/0 backdrop-blur-md border-transparent py-3"
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -324,13 +325,15 @@ export default function Layout({ children }: LayoutProps) {
                     className={cn(
                       "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 relative group leading-none",
                       location.pathname === item.path
-                        ? "text-accent-primary bg-accent-primary/5"
+                        ? "text-accent-primary"
                         : "text-slate-400 hover:text-white hover:bg-white/5"
                     )}
                   >
                     <item.icon className={cn(
                       "w-4 h-4 transition-transform group-hover:scale-110",
-                      location.pathname === item.path ? "text-accent-primary" : "text-slate-500 group-hover:text-accent-primary"
+                      location.pathname === item.path
+                        ? "text-accent-primary drop-shadow-[0_0_8px_rgba(232,199,126,0.4)]"
+                        : "text-slate-500 group-hover:text-accent-primary"
                     )} />
                     <span>{item.name}</span>
                     {location.pathname === item.path && (
@@ -346,6 +349,7 @@ export default function Layout({ children }: LayoutProps) {
                 ].map((group) => {
                   if (hasSearchResults && group.items.length === 0) return null;
                   const isOpen = activeDropdown === group.label;
+                  const isGroupActive = group.items.some(i => i.path === location.pathname);
 
                   return (
                     <div
@@ -361,9 +365,9 @@ export default function Layout({ children }: LayoutProps) {
                         aria-expanded={isOpen}
                         onClick={() => toggleDropdown(group.label)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none",
-                          group.items.some(i => i.path === location.pathname)
-                            ? "text-accent-primary bg-accent-primary/5"
+                          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none relative",
+                          isGroupActive
+                            ? "text-accent-primary"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
                         )}
                       >
@@ -375,10 +379,22 @@ export default function Layout({ children }: LayoutProps) {
                             isOpen ? "rotate-180" : ""
                           )}
                         />
+                        {isGroupActive && (
+                          <div className="absolute bottom-0 left-3 right-3 h-0.5 bg-accent-primary rounded-full" />
+                        )}
                       </button>
 
                       {isOpen && (
-                        <div role="menu" className="absolute top-full left-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-2 z-[60]">
+                        <div
+                          role="menu"
+                          className={cn(
+                            "absolute top-full left-0 mt-2 w-56 z-[60]",
+                            "bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8",
+                            "rounded-2xl p-3",
+                            "shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)]",
+                            "animate-[fadeIn_200ms_cubic-bezier(0.32,0.72,0,1)]"
+                          )}
+                        >
                           {group.items.map((item) => (
                             <Link
                               key={item.name}
@@ -397,7 +413,9 @@ export default function Layout({ children }: LayoutProps) {
                                 aria-hidden="true"
                                 className={cn(
                                   "w-4 h-4",
-                                  location.pathname === item.path ? "text-accent-primary" : "text-slate-500 group-hover:text-accent-primary"
+                                  location.pathname === item.path
+                                    ? "text-accent-primary drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]"
+                                    : "text-slate-500 group-hover:text-accent-primary"
                                 )}
                               />
                               <div className="flex-1">
@@ -420,7 +438,14 @@ export default function Layout({ children }: LayoutProps) {
               <div className="hidden lg:flex items-center gap-4">
                 <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search aria-hidden="true" className="w-4 h-4 text-slate-500 group-focus-within:text-accent-primary transition-colors" />
+                  <Search
+                    aria-hidden="true"
+                    className={cn(
+                      "w-4 h-4 transition-colors",
+                      "text-slate-500 group-focus-within:text-accent-primary",
+                      "group-focus-within:animate-[pulse-once_600ms_ease-out]"
+                    )}
+                  />
                 </div>
                 <label htmlFor="nav-search" className="sr-only">Search system</label>
                 <input
@@ -429,7 +454,12 @@ export default function Layout({ children }: LayoutProps) {
                   placeholder="Search system..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-16 text-sm w-56 focus:outline-none focus:border-accent-primary/50 transition-colors leading-none"
+                  className={cn(
+                    "bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-16 text-sm w-56 leading-none",
+                    "focus:outline-none focus:border-accent-primary/60",
+                    "focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]",
+                    "transition-[border-color,box-shadow] duration-200"
+                  )}
                 />
                 {searchQuery ? (
                   <button
@@ -443,7 +473,7 @@ export default function Layout({ children }: LayoutProps) {
                 ) : (
                   <kbd
                     aria-hidden="true"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500 bg-white/5 border border-white/10 rounded"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500 bg-white/5 border border-accent-primary/15 rounded"
                   >
                     ⌘K
                   </kbd>
@@ -484,11 +514,22 @@ export default function Layout({ children }: LayoutProps) {
                   </button>
 
                   {activeDropdown === 'profile' && (
-                    <div role="menu" className="absolute top-full right-0 mt-1 w-56 bg-mystic-900/95 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl p-3 z-[60]">
-                      <div className="flex flex-col mb-3 pb-3 border-b border-white/10">
-                        <span className="text-sm font-bold text-white break-words">{user.displayName}</span>
+                    <div role="menu" className="absolute top-full right-0 mt-2 w-56 bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] p-3 z-[60] animate-[fadeIn_200ms_cubic-bezier(0.32,0.72,0,1)]">
+                      <div className="flex flex-col mb-3 pb-3 border-b border-slate-700/30">
+                        <span className="text-sm font-semibold text-slate-100 break-words">{user.displayName}</span>
                         <span className="text-xs text-slate-400 break-words">{user.email}</span>
                       </div>
+                      {userData?.role === 'admin' && (
+                        <Link
+                          to="/admin"
+                          role="menuitem"
+                          onClick={() => setActiveDropdown(null)}
+                          className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-accent-primary hover:bg-accent-primary/10 transition-colors mb-1"
+                        >
+                          <Shield className="w-4 h-4" aria-hidden="true" strokeWidth={1.5} />
+                          Admin Dashboard
+                        </Link>
+                      )}
                       <button
                         type="button"
                         role="menuitem"
@@ -496,9 +537,9 @@ export default function Layout({ children }: LayoutProps) {
                           setActiveDropdown(null);
                           handleLogout();
                         }}
-                        className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-red-400 hover:text-red-300 hover:bg-red-400/10 transition-all"
+                        className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-status-error hover:bg-status-error/10 transition-colors"
                       >
-                        <LogOut className="w-4 h-4" aria-hidden="true" />
+                        <LogOut className="w-4 h-4" aria-hidden="true" strokeWidth={1.5} />
                         Sign Out
                       </button>
                     </div>
@@ -536,9 +577,16 @@ export default function Layout({ children }: LayoutProps) {
         </div>
 
         {/* Mobile Nav */}
+        <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 h-screen h-[100dvh] w-full z-[60] lg:hidden bg-mystic-950 flex flex-col overflow-hidden safe-area-top safe-area-bottom safe-area-x">
-            <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-white/5 shrink-0">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 h-screen h-[100dvh] w-full z-[60] lg:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col overflow-hidden safe-area-top safe-area-bottom safe-area-x"
+          >
+            <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-slate-700/30 shrink-0">
               <div className="flex items-center gap-2">
                 <Logo size="md" className="glow-accent" />
                 <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
@@ -565,7 +613,7 @@ export default function Layout({ children }: LayoutProps) {
               {/* Mobile Search */}
               <div className="relative group px-2">
                 <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
-                  <Search aria-hidden="true" className="w-5 h-5 text-slate-500" />
+                  <Search aria-hidden="true" className="w-5 h-5 text-slate-500 group-focus-within:text-accent-primary transition-colors" />
                 </div>
                 <label htmlFor="mobile-search" className="sr-only">Search system</label>
                 <input
@@ -574,7 +622,12 @@ export default function Layout({ children }: LayoutProps) {
                   placeholder="Search system..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-base focus:outline-none focus:border-accent-primary/50 transition-all"
+                  className={cn(
+                    "w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-base",
+                    "focus:outline-none focus:border-accent-primary/60",
+                    "focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]",
+                    "transition-[border-color,box-shadow] duration-200"
+                  )}
                 />
                 {searchQuery && (
                   <button
@@ -601,7 +654,7 @@ export default function Layout({ children }: LayoutProps) {
 
                   return (
                     <div key={group.label} className="space-y-4">
-                      <h3 className="px-4 text-xs font-bold text-slate-600 uppercase tracking-[0.2em]">{group.label}</h3>
+                      <h3 className="px-4 eyebrow">{group.label}</h3>
                       <div className="grid grid-cols-1 gap-2">
                         {filteredItems.map((item) => (
                           <Link
@@ -609,22 +662,31 @@ export default function Layout({ children }: LayoutProps) {
                             to={item.path}
                             onClick={() => setIsMenuOpen(false)}
                             className={cn(
-                              "flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-medium transition-all border group",
+                              "relative flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-medium transition-all border group",
                               location.pathname === item.path
-                                ? "text-accent-primary bg-gradient-to-r from-accent-primary/10 to-transparent border-accent-primary/20"
-                                : "text-slate-300 hover:text-white hover:bg-white/5 border-transparent hover:border-white/5"
+                                ? "text-accent-primary bg-accent-primary/5 border-accent-primary/15"
+                                : "text-slate-300 hover:text-white hover:bg-white/5 border-transparent hover:border-slate-700/30"
                             )}
                           >
+                            {location.pathname === item.path && (
+                              <span
+                                aria-hidden="true"
+                                className="absolute left-0 top-1/2 -translate-y-1/2 w-0.5 h-8 rounded-r-full bg-accent-primary"
+                              />
+                            )}
                             <div className={cn(
                               "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
-                              location.pathname === item.path 
-                                ? "bg-gradient-to-br from-accent-primary to-accent-secondary text-white shadow-lg shadow-accent-primary/30" 
+                              location.pathname === item.path
+                                ? "bg-accent-primary/15 text-accent-primary border border-accent-primary/20"
                                 : "bg-white/5 text-slate-500 group-hover:bg-white/10 group-hover:text-white"
                             )}>
-                              <item.icon className="w-5 h-5" />
+                              <item.icon className={cn(
+                                "w-5 h-5",
+                                location.pathname === item.path && "drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]"
+                              )} />
                             </div>
                             <div className="flex-1">
-                              <div className="font-bold">{item.name}</div>
+                              <div className="font-semibold">{item.name}</div>
                               <div className={cn(
                                 "text-xs mt-0.5",
                                 location.pathname === item.path ? "text-accent-primary/70" : "text-slate-400"
@@ -648,24 +710,36 @@ export default function Layout({ children }: LayoutProps) {
               </div>
 
               {user ? (
-                <div className="flex items-center gap-3 mb-6">
-                  <img
-                    src={user.photoURL || undefined}
-                    alt=""
-                    className="w-12 h-12 rounded-full border-2 border-white/20 shrink-0"
-                    referrerPolicy="no-referrer"
-                  />
-                  <div className="flex-1 min-w-0">
-                    <div className="text-white font-bold text-lg truncate">{user.displayName}</div>
-                    <div className="text-slate-400 text-sm truncate">{user.email}</div>
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <img
+                      src={user.photoURL || undefined}
+                      alt=""
+                      className="w-12 h-12 rounded-full border-2 border-slate-700/30 shrink-0"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-slate-100 font-semibold text-lg truncate">{user.displayName}</div>
+                      <div className="text-slate-400 text-sm truncate">{user.email}</div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      aria-label="Sign out"
+                      className="tap-target rounded-xl text-slate-400 hover:text-status-error hover:bg-status-error/10 transition-colors"
+                    >
+                      <LogOut aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />
+                    </button>
                   </div>
-                  <button
-                    onClick={handleLogout}
-                    aria-label="Sign out"
-                    className="tap-target rounded-xl text-slate-400 hover:text-red-400 hover:bg-red-400/10 transition-colors"
-                  >
-                    <LogOut aria-hidden="true" className="w-5 h-5" />
-                  </button>
+                  {userData?.role === 'admin' && (
+                    <Link
+                      to="/admin"
+                      onClick={() => setIsMenuOpen(false)}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-semibold tracking-wide transition-colors hover:bg-accent-primary/15"
+                    >
+                      <Shield aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />
+                      Admin Dashboard
+                    </Link>
+                  )}
                 </div>
               ) : (
                 <button
@@ -681,17 +755,18 @@ export default function Layout({ children }: LayoutProps) {
               )}
             </div>
 
-            <div className="p-6 border-t border-white/5 bg-white/5 shrink-0 safe-area-bottom">
-              <p className="text-center text-xs text-slate-400 font-bold uppercase tracking-widest">
+            <div className="p-6 border-t border-slate-700/30 bg-white/[0.03] shrink-0 safe-area-bottom">
+              <p className="text-center eyebrow">
                 © 2026 Epimetheus
               </p>
             </div>
-          </div>
+          </motion.div>
         )}
+        </AnimatePresence>
       </nav>
 
       {/* Main Content — pt-24 reserves space for the fixed nav */}
-      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden pb-20" : "min-h-screen pb-24 lg:pb-0")}>
+      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden pb-16" : "min-h-screen pb-24 lg:pb-0")}>
         <div className={cn(
           "mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col w-full",
           location.pathname === '/advisor' ? "max-w-[100rem] pt-4 pb-4 h-full overflow-hidden" : "max-w-7xl pt-12 pb-12"
@@ -734,8 +809,8 @@ export default function Layout({ children }: LayoutProps) {
       </footer>
       )}
 
-      {/* Mobile bottom nav — only shown when authenticated and not on Advisor */}
-      {user && location.pathname !== '/advisor' && <BottomNav />}
+      {/* Mobile bottom nav — shown when authenticated */}
+      {user && <BottomNav />}
 
       <Suspense fallback={null}>
         <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />

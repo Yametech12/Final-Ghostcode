@@ -16,7 +16,9 @@ export function Skeleton({ className, variant = 'default', shimmer = true, ...pr
   return (
     <div
       className={cn(
-        "bg-gradient-to-r from-white/5 via-white/10 to-white/5",
+        // Warm-tinted base — pulls from the new slate-300 (#C4BAAB) at low alpha.
+        // Gold shimmer pass comes from .shimmer-effect (defined in index.css).
+        "bg-gradient-to-r from-[rgba(196,186,171,0.04)] via-[rgba(196,186,171,0.10)] to-[rgba(196,186,171,0.04)]",
         shimmer && "shimmer-effect",
         variantClasses[variant],
         className

@@ -151,13 +151,13 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
 
             {/* Online/Status Indicator with pulse animation */}
             <motion.div 
-              className="absolute bottom-2 right-2 w-6 h-6 bg-green-500 rounded-full border-4 border-mystic-900 shadow-lg shadow-green-500/50"
+              className="absolute bottom-2 right-2 w-6 h-6 bg-status-success rounded-full border-4 border-mystic-900 shadow-lg shadow-status-success/50"
               animate={{ 
                 scale: [1, 1.2, 1],
                 boxShadow: [
-                  '0 0 0 0 rgba(34, 197, 94, 0.4)',
-                  '0 0 0 10px rgba(34, 197, 94, 0)',
-                  '0 0 0 0 rgba(34, 197, 94, 0)'
+                  '0 0 0 0 rgba(111, 160, 131, 0.4)',
+                  '0 0 0 10px rgba(111, 160, 131, 0)',
+                  '0 0 0 0 rgba(111, 160, 131, 0)'
                 ]
               }}
               transition={{ 
@@ -168,6 +168,28 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
             />
           </motion.div>
         </div>
+
+        {/* User Name & Info */}
+        <div className="text-center space-y-2">
+          <h2 className="text-xl font-semibold tracking-tight text-slate-50">{displayName}</h2>
+          {userData?.email && (
+            <p className="text-sm text-slate-400 truncate">{userData.email}</p>
+          )}
+          {userData?.bio && (
+            <p className="text-sm text-slate-400 italic line-clamp-2 mt-2">"{userData.bio}"</p>
+          )}
+        </div>
+
+        {/* Edit Button */}
+        {onEditProfile && (
+          <button
+            onClick={onEditProfile}
+            className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-slate-700/30 text-sm font-medium text-slate-200 hover:bg-white/8 hover:border-accent-primary/20 transition-all"
+          >
+            <Edit3 aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
+            Edit Profile
+          </button>
+        )}
       </div>
     </motion.div>
   );

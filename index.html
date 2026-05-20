@@ -13,7 +13,12 @@
     <style>
       @keyframes pulse {
         0%, 100% { opacity: 1; }
-        50% { opacity: .5; }
+        50% { opacity: .4; }
+      }
+      @keyframes loading-bar {
+        0% { width: 10%; margin-left: 0; }
+        50% { width: 50%; margin-left: 25%; }
+        100% { width: 10%; margin-left: 90%; }
       }
     </style>
     <script>
@@ -32,18 +37,46 @@
   </head>
   <body>
     <div id="root">
-      <div style="position: fixed; inset: 0; background-color: #0a0508; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999;">
-        <div style="position: relative; display: flex; flex-direction: column; align-items: center;">
-          <div style="width: 48px; height: 48px; border-radius: 12px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: black; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);">
-            <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; padding: 6px; color: white; fill: currentColor;">
-              <path d="M50 20c-20 0-38 12-45 30 7 18 25 30 45 30s38-12 45-30c-7-18-25-30-45-30zm0 50c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z" />
-              <path d="M50 35c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 25c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" />
-              <circle cx="50" cy="50" r="4" />
-              <path d="M50 15c0-5 5-10 10-10s5 5 5 5-5 5-10 5z" opacity="0.5" />
-              <path d="M50 85c0 5-5 10-10 10s-5-5-5-5 5-5 10-5z" opacity="0.5" />
-            </svg>
+      <!-- Pre-React loading state — shown during JS bundle download/parse -->
+      <div style="position: fixed; inset: 0; background-color: #0E0B12; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; overflow: hidden;">
+        <!-- Grid background -->
+        <div style="position: absolute; inset: 0; opacity: 0.03; background-image: linear-gradient(rgba(232,199,126,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,199,126,0.3) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <!-- Gold glow orb -->
+        <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(232,199,126,0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(60px);"></div>
+
+        <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 24px;">
+          <!-- Logo with pulsing ring -->
+          <div style="position: relative;">
+            <div style="position: absolute; inset: -12px; border-radius: 20px; border: 1px solid rgba(232,199,126,0.15); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
+            <div style="width: 56px; height: 56px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #0A0806; box-shadow: 0 0 32px -4px rgba(212,175,55,0.18); border: 1px solid rgba(232,199,126,0.15);">
+              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; padding: 8px; color: #E8C77E; fill: currentColor;">
+                <path d="M50 20c-20 0-38 12-45 30 7 18 25 30 45 30s38-12 45-30c-7-18-25-30-45-30zm0 50c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z" />
+                <path d="M50 35c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 25c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" />
+                <circle cx="50" cy="50" r="4" />
+                <path d="M50 15c0-5 5-10 10-10s5 5 5 5-5 5-10 5z" opacity="0.5" />
+                <path d="M50 85c0 5-5 10-10 10s-5-5-5-5 5-5 10-5z" opacity="0.5" />
+              </svg>
+            </div>
           </div>
-          <div style="margin-top: 48px; text-align: center;">
+
+          <!-- Title -->
+          <div style="text-align: center;">
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: -0.01em; background: linear-gradient(90deg, #E8C77E, #F0D89A, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EPIMETHEUS</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(154,143,128,0.6); letter-spacing: 0.25em; text-transform: uppercase; margin-top: 6px;">Initializing System</div>
+          </div>
+
+          <!-- Progress bar -->
+          <div style="width: 200px;">
+            <div style="height: 2px; background: rgba(255,255,255,0.05); border-radius: 9999px; overflow: hidden; border: 1px solid rgba(42,36,47,0.8);">
+              <div style="height: 100%; width: 30%; background: linear-gradient(135deg, #E8C77E, #D4AF37, #B87333); border-radius: 9999px; animation: loading-bar 2s ease-in-out infinite;"></div>
+            </div>
+          </div>
+
+          <!-- Spinner dots -->
+          <div style="display: flex; gap: 6px; align-items: center;">
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out infinite;"></div>
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out 0.3s infinite;"></div>
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out 0.6s infinite;"></div>
           </div>
         </div>
       </div>

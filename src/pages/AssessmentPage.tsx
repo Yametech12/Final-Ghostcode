@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { ArrowLeft, Target, Shield, Flame, CheckCircle2, Clock, RotateCcw } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 
-import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { cn } from '../lib/utils';
 
 type Question = {
   id: string;
@@ -19,131 +19,203 @@ type Question = {
   }[];
 };
 
-const questions: Question[] = [
+// Expanded question bank — 6 per category. Each assessment picks 2 random from each.
+const QUESTION_BANK: Question[] = [
+  // ═══ TIME LINE (Tester vs Investor) ═══
   {
-    id: 'q1',
+    id: 't1',
     category: 'Time',
     text: 'How does she respond to your initial attention and attempts to spend time together?',
     options: [
-      {
-        text: 'She makes me work for it',
-        value: 'T',
-        description: 'She is hard to get, often busy, and requires persistence. (Tester)'
-      },
-      {
-        text: 'She is eager and available',
-        value: 'N',
-        description: 'She readily invests her time and is easy to get together with. (Investor)'
-      }
+      { text: 'She makes me work for it', value: 'T', description: 'She is hard to get, often busy, and requires persistence. (Tester)' },
+      { text: 'She is eager and available', value: 'N', description: 'She readily invests her time and is easy to get together with. (Investor)' }
     ]
   },
   {
-    id: 'q2',
+    id: 't2',
     category: 'Time',
     text: 'When it comes to maintaining the connection over time...',
     options: [
-      {
-        text: 'Once she commits, she is very loyal',
-        value: 'T',
-        description: 'She is hard to get, but easy to keep. (Tester)'
-      },
-      {
-        text: 'She can lose interest quickly if not stimulated',
-        value: 'N',
-        description: 'She is easy to get, but hard to keep. (Investor)'
-      }
+      { text: 'Once she commits, she is very loyal', value: 'T', description: 'She is hard to get, but easy to keep. (Tester)' },
+      { text: 'She can lose interest quickly if not stimulated', value: 'N', description: 'She is easy to get, but hard to keep. (Investor)' }
     ]
   },
   {
-    id: 'q3',
+    id: 't3',
+    category: 'Time',
+    text: 'How does she react to compliments early on?',
+    options: [
+      { text: 'Deflects or seems unaffected', value: 'T', description: 'Compliments don\'t faze her — she\'s heard it all before. (Tester)' },
+      { text: 'Lights up and reciprocates warmth', value: 'N', description: 'She takes compliments seriously and invests emotionally. (Investor)' }
+    ]
+  },
+  {
+    id: 't4',
+    category: 'Time',
+    text: 'When you cancel plans, how does she typically respond?',
+    options: [
+      { text: 'Unbothered — she has her own life', value: 'T', description: 'She doesn\'t chase or guilt-trip. Her attention is earned. (Tester)' },
+      { text: 'Disappointed and wants to reschedule immediately', value: 'N', description: 'She was looking forward to it and shows it. (Investor)' }
+    ]
+  },
+  {
+    id: 't5',
+    category: 'Time',
+    text: 'How quickly does she change conversation topics?',
+    options: [
+      { text: 'Rapidly — short attention span in conversation', value: 'T', description: 'She tests your ability to keep up and stay interesting. (Tester)' },
+      { text: 'She stays focused and goes deep on topics', value: 'N', description: 'She invests attention and wants meaningful exchange. (Investor)' }
+    ]
+  },
+  {
+    id: 't6',
+    category: 'Time',
+    text: 'How does she handle the early "getting to know you" phase?',
+    options: [
+      { text: 'She creates obstacles and watches how I react', value: 'T', description: 'She tests your resolve before opening up. (Tester)' },
+      { text: 'She opens up quickly and shares personal details', value: 'N', description: 'She invests trust early and expects the same. (Investor)' }
+    ]
+  },
+  // ═══ SEX LINE (Denier vs Justifier) ═══
+  {
+    id: 's1',
     category: 'Sex',
     text: 'What is her general attitude towards physical intimacy and sexuality?',
     options: [
-      {
-        text: 'Reserved and protective',
-        value: 'D',
-        description: 'She needs a strong emotional or logical reason TO have sex. (Denier)'
-      },
-      {
-        text: 'Open and impulsive',
-        value: 'J',
-        description: 'She needs a reason NOT to have sex; she enjoys the thrill. (Justifier)'
-      }
+      { text: 'Reserved and protective', value: 'D', description: 'She needs a strong emotional or logical reason TO have sex. (Denier)' },
+      { text: 'Open and impulsive', value: 'J', description: 'She needs a reason NOT to have sex; she enjoys the thrill. (Justifier)' }
     ]
   },
   {
-    id: 'q4',
+    id: 's2',
     category: 'Sex',
     text: 'How does she typically dress and present herself?',
     options: [
-      {
-        text: 'Modest or elegant',
-        value: 'D',
-        description: 'She doesn\'t usually flaunt her sexuality overtly. (Denier)'
-      },
-      {
-        text: 'Provocative or attention-grabbing',
-        value: 'J',
-        description: 'She is comfortable displaying her sexuality and enjoys the attention. (Justifier)'
-      }
+      { text: 'Modest or elegant', value: 'D', description: 'She doesn\'t usually flaunt her sexuality overtly. (Denier)' },
+      { text: 'Provocative or attention-grabbing', value: 'J', description: 'She is comfortable displaying her sexuality and enjoys the attention. (Justifier)' }
     ]
   },
   {
-    id: 'q5',
+    id: 's3',
+    category: 'Sex',
+    text: 'How does she talk about past relationships or hookups?',
+    options: [
+      { text: 'Rarely brings it up, keeps it private', value: 'D', description: 'Sex is something sacred or private to her. (Denier)' },
+      { text: 'Openly discusses it, sometimes brags', value: 'J', description: 'She\'s comfortable with her sexual history and owns it. (Justifier)' }
+    ]
+  },
+  {
+    id: 's4',
+    category: 'Sex',
+    text: 'How does she respond to sexual tension or flirting?',
+    options: [
+      { text: 'Gets shy, deflects, or changes the subject', value: 'D', description: 'She needs safety and trust before escalating. (Denier)' },
+      { text: 'Leans in, escalates, or matches the energy', value: 'J', description: 'She enjoys the charge and plays along. (Justifier)' }
+    ]
+  },
+  {
+    id: 's5',
+    category: 'Sex',
+    text: 'What role does alcohol or "party mode" play in her intimacy decisions?',
+    options: [
+      { text: 'She stays consistent — same boundaries drunk or sober', value: 'D', description: 'Her values around sex don\'t shift with context. (Denier)' },
+      { text: 'She uses it as permission to let loose', value: 'J', description: 'She uses external factors to justify acting on desire. (Justifier)' }
+    ]
+  },
+  {
+    id: 's6',
+    category: 'Sex',
+    text: 'How does she view casual sex or one-night stands?',
+    options: [
+      { text: 'Disapproves or says it\'s "not her thing"', value: 'D', description: 'She needs emotional connection as a prerequisite. (Denier)' },
+      { text: 'Doesn\'t judge it — "it happens" attitude', value: 'J', description: 'She sees sex as natural and doesn\'t overthink it. (Justifier)' }
+    ]
+  },
+  // ═══ RELATIONSHIP LINE (Idealist vs Realist) ═══
+  {
+    id: 'r1',
     category: 'Relationship',
     text: 'What does she value most in a potential long-term partner?',
     options: [
-      {
-        text: 'Romance, passion, and a "fairy tale" connection',
-        value: 'I',
-        description: 'She daydreams about "The One" and values emotional depth. (Idealist)'
-      },
-      {
-        text: 'Competence, stability, and practical teamwork',
-        value: 'R',
-        description: 'She values a partner who is reliable and successful in the real world. (Realist)'
-      }
+      { text: 'Romance, passion, and a "fairy tale" connection', value: 'I', description: 'She daydreams about "The One" and values emotional depth. (Idealist)' },
+      { text: 'Competence, stability, and practical teamwork', value: 'R', description: 'She values a partner who is reliable and successful in the real world. (Realist)' }
     ]
   },
   {
-    id: 'q6',
+    id: 'r2',
     category: 'Relationship',
     text: 'How does she handle conflict or disappointment in relationships?',
     options: [
-      {
-        text: 'She gets highly emotional and feels deeply hurt',
-        value: 'I',
-        description: 'She takes things to heart because she invests heavily in the ideal. (Idealist)'
-      },
-      {
-        text: 'She becomes cold, logical, or cuts her losses',
-        value: 'R',
-        description: 'She assesses the situation practically and protects her own interests. (Realist)'
-      }
+      { text: 'She gets highly emotional and feels deeply hurt', value: 'I', description: 'She takes things to heart because she invests heavily in the ideal. (Idealist)' },
+      { text: 'She becomes cold, logical, or cuts her losses', value: 'R', description: 'She assesses the situation practically and protects her own interests. (Realist)' }
     ]
-  }
+  },
+  {
+    id: 'r3',
+    category: 'Relationship',
+    text: 'What kind of future does she envision?',
+    options: [
+      { text: 'A romantic story — travel, passion, soulmate energy', value: 'I', description: 'She wants life to feel like a movie. (Idealist)' },
+      { text: 'A stable life — career, home, financial security', value: 'R', description: 'She prioritizes building something real and lasting. (Realist)' }
+    ]
+  },
+  {
+    id: 'r4',
+    category: 'Relationship',
+    text: 'How does she react when you do something thoughtful but impractical (surprise trip, expensive gift)?',
+    options: [
+      { text: 'Loves it — swept off her feet', value: 'I', description: 'Grand gestures feed her romantic imagination. (Idealist)' },
+      { text: 'Appreciates it but questions the practicality', value: 'R', description: 'She\'d rather you saved the money or planned something sensible. (Realist)' }
+    ]
+  },
+  {
+    id: 'r5',
+    category: 'Relationship',
+    text: 'How does she talk about her upbringing?',
+    options: [
+      { text: 'Sheltered, pampered, or "princess" energy', value: 'I', description: 'She expects to be treated specially — it\'s what she knows. (Idealist)' },
+      { text: 'Independent, self-made, or had to grow up fast', value: 'R', description: 'She learned to rely on herself and values equality. (Realist)' }
+    ]
+  },
+  {
+    id: 'r6',
+    category: 'Relationship',
+    text: 'When choosing between heart and head, she usually picks...',
+    options: [
+      { text: 'Heart — follows feelings even if risky', value: 'I', description: 'She believes in destiny and emotional truth. (Idealist)' },
+      { text: 'Head — makes the logical, safe choice', value: 'R', description: 'She trusts data over feelings when it matters. (Realist)' }
+    ]
+  },
 ];
+
+/** Pick N random items from an array (Fisher-Yates shuffle, take first N). */
+function pickRandom<T>(arr: T[], n: number): T[] {
+  const shuffled = [...arr];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled.slice(0, n);
+}
+
+/** Generate a fresh set of 6 questions (2 per category, randomized). */
+function generateQuestionSet(): Question[] {
+  const timeQs = pickRandom(QUESTION_BANK.filter(q => q.category === 'Time'), 2);
+  const sexQs = pickRandom(QUESTION_BANK.filter(q => q.category === 'Sex'), 2);
+  const relQs = pickRandom(QUESTION_BANK.filter(q => q.category === 'Relationship'), 2);
+  return [...timeQs, ...sexQs, ...relQs];
+}
 
 export default function AssessmentPage() {
   const auth = useEnhancedAuth();
   const { user } = auth || {};
-  const [currentStep, setCurrentStep] = useState(() => {
-    const saved = localStorage.getItem('assessment_current_step');
-    return saved ? parseInt(saved, 10) : 0;
-  });
-  const [answers, setAnswers] = useState<Record<string, string>>(() => {
-    const saved = localStorage.getItem('assessment_current_answers');
-    return safeParseJSON(saved ?? '', {});
-  });
+  const [questions, setQuestions] = useState<Question[]>(() => generateQuestionSet());
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>({});
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [pastResults, setPastResults] = useState<{typeId: string, date: string}[]>([]);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    localStorage.setItem('assessment_current_step', currentStep.toString());
-    localStorage.setItem('assessment_current_answers', JSON.stringify(answers));
-  }, [currentStep, answers]);
 
   // Past results disabled - authentication removed
   useEffect(() => {
@@ -189,10 +261,6 @@ export default function AssessmentPage() {
       localStorage.setItem('assessment_past_results', JSON.stringify(updated));
       return updated;
     });
-
-    // Clear current progress
-    localStorage.removeItem('assessment_current_step');
-    localStorage.removeItem('assessment_current_answers');
     
     // Save to database if user is logged in
     if (user) {
@@ -217,10 +285,9 @@ export default function AssessmentPage() {
   };
 
   const handleRestart = () => {
+    setQuestions(generateQuestionSet()); // Fresh random questions each time
     setCurrentStep(0);
     setAnswers({});
-    localStorage.removeItem('assessment_current_step');
-    localStorage.removeItem('assessment_current_answers');
   };
 
   const currentQuestion = questions[currentStep];
@@ -245,7 +312,7 @@ export default function AssessmentPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="text-center space-y-4">
-        <h1 className="text-3xl md:text-5xl font-bold">Target Assessment</h1>
+        <h1 className="text-3xl md:text-5xl font-semibold tracking-tight text-slate-50">Target Assessment</h1>
         <p className="text-slate-400 text-lg">
           Answer the following questions based on her behavior to determine her core archetype.
         </p>

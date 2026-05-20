@@ -102,7 +102,7 @@ export default function AssessmentResultPage() {
           </div>
           
           <div className="space-y-2">
-            <h1 className="text-5xl md:text-7xl font-black text-white tracking-tight">
+            <h1 className="text-5xl md:text-6xl font-semibold tracking-tight text-slate-50">
               {profile.id}
             </h1>
             <h2 className="text-3xl md:text-4xl font-bold text-gradient">

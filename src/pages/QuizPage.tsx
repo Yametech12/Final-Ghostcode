@@ -194,29 +194,29 @@ export default function QuizPage() {
             <Brain className="w-12 h-12 text-accent-primary" />
           </div>
 
-          <h1 className="text-5xl font-display font-bold text-gradient">Knowledge Check</h1>
+          <h1 className="text-5xl font-semibold tracking-tight text-gradient">Knowledge Check</h1>
           <p className="text-slate-400 text-xl max-w-2xl mx-auto leading-relaxed">
             Master the EPIMETHEUS system. Test your understanding with 10 random questions designed to sharpen your intuition and tactical knowledge.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <Target className="w-6 h-6 text-accent-primary mx-auto mb-3" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">10 Questions</h3>
+            <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
+              <Target className="w-6 h-6 text-accent-primary mx-auto mb-3" strokeWidth={1.5} />
+              <h3 className="eyebrow">10 Questions</h3>
             </div>
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <Timer className="w-6 h-6 text-accent-secondary mx-auto mb-3" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Timed Session</h3>
+            <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
+              <Timer className="w-6 h-6 text-accent-secondary mx-auto mb-3" strokeWidth={1.5} />
+              <h3 className="eyebrow">Timed Session</h3>
             </div>
-            <div className="p-6 rounded-2xl bg-white/5 border border-white/10">
-              <Star className="w-6 h-6 text-yellow-500 mx-auto mb-3" />
-              <h3 className="text-sm font-bold uppercase tracking-widest text-slate-500">Randomized</h3>
+            <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
+              <Star className="w-6 h-6 text-accent-primary mx-auto mb-3" strokeWidth={1.5} />
+              <h3 className="eyebrow">Randomized</h3>
             </div>
           </div>
 
           <button
             onClick={startQuiz}
-            className="px-12 py-5 rounded-2xl accent-gradient text-white font-bold text-lg shadow-2xl shadow-accent-primary/20 hover:scale-105 active:scale-95 transition-all"
+            className="px-12 py-5 rounded-2xl accent-gradient text-mystic-950 font-semibold tracking-wide text-lg shadow-2xl shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
             Begin Assessment
           </button>
@@ -234,7 +234,7 @@ export default function QuizPage() {
             <Trophy className="w-12 h-12 text-yellow-500" />
           </div>
 
-          <h1 className="text-4xl font-display font-bold">Assessment Complete</h1>
+          <h1 className="text-4xl font-semibold tracking-tight text-slate-100">Assessment Complete</h1>
           
           <div className="flex justify-center gap-12 py-8">
             <div className="text-center">

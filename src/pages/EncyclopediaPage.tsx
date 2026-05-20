@@ -113,7 +113,7 @@ export default function EncyclopediaPage() {
               <div className="inline-block px-3 py-1 rounded-lg bg-accent-primary/10 text-accent-primary text-xs font-mono font-bold tracking-widest uppercase">
                 {profile.combination}
               </div>
-              <h1 className="text-4xl md:text-6xl font-bold">{profile.name}</h1>
+              <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">{profile.name}</h1>
               <p className="text-xl text-accent-primary/80 font-medium italic">
                 {profile.tagline}
               </p>
