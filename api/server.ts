@@ -60,8 +60,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return;
   }
 
-  const { path } = req.query;
-  const pathname = Array.isArray(path) ? path.join('/') : path || '';
+  // Derive pathname from URL (req.query.path may not be set depending on rewrite mode)
+  const url = req.url || '';
+  // Strip query string and the /api/ prefix
+  const pathFromUrl = url.split('?')[0].replace(/^\/api\/?/, '');
+  const pathFromQuery = Array.isArray(req.query.path) ? req.query.path.join('/') : (req.query.path as string | undefined);
+  const pathname = pathFromUrl || pathFromQuery || '';
 
   const user = await getAuthenticatedUser(req.headers.authorization, supabase);
   const normReq: NormalizedRequest = {
