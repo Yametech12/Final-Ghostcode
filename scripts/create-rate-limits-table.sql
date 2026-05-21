@@ -11,26 +11,20 @@ CREATE TABLE IF NOT EXISTS rate_limits (
 CREATE INDEX IF NOT EXISTS idx_rate_limits_key_created 
   ON rate_limits (key, created_at DESC);
 
--- Auto-cleanup: delete entries older than 5 minutes (runs every minute)
--- This keeps the table small and performant.
-SELECT cron.schedule(
-  'cleanup-rate-limits',
-  '* * * * *',
-  $$DELETE FROM rate_limits WHERE created_at < now() - interval '5 minutes'$$
-);
+-- Auto-cleanup: delete old entries on every INSERT using a trigger.
+-- This keeps the table small without needing pg_cron.
+CREATE OR REPLACE FUNCTION cleanup_old_rate_limits() RETURNS trigger AS $$
+BEGIN
+  DELETE FROM rate_limits WHERE created_at < now() - interval '5 minutes';
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
 
--- If pg_cron is not available, use this alternative cleanup trigger:
--- CREATE OR REPLACE FUNCTION cleanup_old_rate_limits() RETURNS trigger AS $$
--- BEGIN
---   DELETE FROM rate_limits WHERE created_at < now() - interval '5 minutes';
---   RETURN NEW;
--- END;
--- $$ LANGUAGE plpgsql;
--- 
--- CREATE TRIGGER trigger_cleanup_rate_limits
---   AFTER INSERT ON rate_limits
---   FOR EACH STATEMENT
---   EXECUTE FUNCTION cleanup_old_rate_limits();
+DROP TRIGGER IF EXISTS trigger_cleanup_rate_limits ON rate_limits;
+CREATE TRIGGER trigger_cleanup_rate_limits
+  AFTER INSERT ON rate_limits
+  FOR EACH STATEMENT
+  EXECUTE FUNCTION cleanup_old_rate_limits();
 
 -- RLS: Only the service role key can access this table
 ALTER TABLE rate_limits ENABLE ROW LEVEL SECURITY;
