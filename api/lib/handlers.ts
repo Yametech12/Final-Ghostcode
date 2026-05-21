@@ -76,19 +76,25 @@ export async function handleTestKey(): Promise<NormalizedResponse> {
 /**
  * POST /api/security/log — public (best-effort logging).
  * In production this should write to a real log sink. For now, console only.
+ * Rate-limited by payload size to prevent abuse.
  */
 export async function handleSecurityLog(req: NormalizedRequest): Promise<NormalizedResponse> {
   const { event, userId, email, ip, userAgent, timestamp, details } = req.body || {};
-  if (!event) return badRequest('Event type is required');
+  if (!event || typeof event !== 'string') return badRequest('Event type is required');
+
+  // Limit payload size to prevent log injection / DoS
+  if (event.length > 100) return badRequest('Event type too long');
+  const detailsStr = details ? JSON.stringify(details) : '';
+  if (detailsStr.length > 2000) return badRequest('Details payload too large');
 
   const logEntry = {
-    event,
-    userId,
-    email,
-    ip,
+    event: event.slice(0, 100),
+    userId: typeof userId === 'string' ? userId.slice(0, 50) : undefined,
+    email: typeof email === 'string' ? email.slice(0, 100) : undefined,
+    ip: typeof ip === 'string' ? ip.slice(0, 45) : undefined,
     userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 200) : undefined,
     timestamp: timestamp || new Date().toISOString(),
-    details,
+    details: detailsStr.length <= 2000 ? details : undefined,
     platform: process.env.NODE_ENV || 'unknown',
   };
   console.log(`[SECURITY] ${JSON.stringify(logEntry)}`);
@@ -611,6 +617,21 @@ export async function handleAiChat(req: NormalizedRequest): Promise<NormalizedRe
   if (!apiKey) return serverError('API key not configured', 'NO_API_KEY');
 
   const { messages, model, temperature, max_tokens, stream } = req.body || {};
+
+  // Input validation: prevent abuse via oversized payloads
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return badRequest('messages must be a non-empty array');
+  }
+  if (messages.length > 30) {
+    return badRequest('Too many messages (max 30)');
+  }
+  const totalContentLength = messages.reduce((sum: number, m: any) => {
+    const content = typeof m?.content === 'string' ? m.content : JSON.stringify(m?.content || '');
+    return sum + content.length;
+  }, 0);
+  if (totalContentLength > 100_000) {
+    return badRequest('Total message content too large (max 100KB)');
+  }
 
   const hasImage = (messages || []).some((m: any) => {
     if (!m?.content) return false;

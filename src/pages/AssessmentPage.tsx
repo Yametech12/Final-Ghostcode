@@ -6,7 +6,6 @@ import { personalityTypes } from '../data/personalityTypes';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
-import { cn } from '../lib/utils';
 
 type Question = {
   id: string;
@@ -217,9 +216,16 @@ export default function AssessmentPage() {
   const [pastResults, setPastResults] = useState<{typeId: string, date: string}[]>([]);
   const navigate = useNavigate();
 
-  // Past results disabled - authentication removed
+  // Load past results from localStorage on mount
   useEffect(() => {
-    setPastResults([]);
+    try {
+      const cached = localStorage.getItem('assessment_past_results');
+      if (cached) {
+        setPastResults(JSON.parse(cached));
+      }
+    } catch {
+      // Ignore parse errors
+    }
   }, []);
 
   const handleAnswer = (questionId: string, value: string) => {
@@ -244,12 +250,15 @@ export default function AssessmentPage() {
   };
 
   const calculateResult = async (finalAnswers: Record<string, string>) => {
-    // Count T vs N
-    const timeScore = [finalAnswers.q1, finalAnswers.q2].filter(v => v === 'T').length >= 1 ? 'T' : 'N';
-    // Count D vs J
-    const sexScore = [finalAnswers.q3, finalAnswers.q4].filter(v => v === 'D').length >= 1 ? 'D' : 'J';
-    // Count I vs R
-    const relScore = [finalAnswers.q5, finalAnswers.q6].filter(v => v === 'I').length >= 1 ? 'I' : 'R';
+    // Score each axis by counting answers from the dynamically-selected questions.
+    // Questions are ordered: [time1, time2, sex1, sex2, rel1, rel2]
+    const timeAnswers = questions.filter(q => q.category === 'Time').map(q => finalAnswers[q.id]);
+    const sexAnswers = questions.filter(q => q.category === 'Sex').map(q => finalAnswers[q.id]);
+    const relAnswers = questions.filter(q => q.category === 'Relationship').map(q => finalAnswers[q.id]);
+
+    const timeScore = timeAnswers.filter(v => v === 'T').length >= 1 ? 'T' : 'N';
+    const sexScore = sexAnswers.filter(v => v === 'D').length >= 1 ? 'D' : 'J';
+    const relScore = relAnswers.filter(v => v === 'I').length >= 1 ? 'I' : 'R';
 
     const resultType = `${timeScore}${sexScore}${relScore}`;
     setIsComplete(true);

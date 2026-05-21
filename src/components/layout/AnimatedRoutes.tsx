@@ -50,12 +50,12 @@ const pageTransition = {
   mass: 1
 };
 
-function ProtectedRoute({ children }: { children: React.ReactNode }) {
+function ProtectedRoute({ children, requireAdmin }: { children: React.ReactNode; requireAdmin?: boolean }) {
   const auth = useEnhancedAuth();
   if (!auth) {
     return <LoadingScreen />;
   }
-  const { user, loading } = auth;
+  const { user, userData, loading } = auth;
 
   if (loading) {
     return <LoadingScreen />;
@@ -63,6 +63,10 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!user) {
     return <Navigate to="/login" replace />;
+  }
+
+  if (requireAdmin && userData?.role !== 'admin') {
+    return <Navigate to="/" replace />;
   }
 
   return <Layout>{children}</Layout>;
@@ -195,7 +199,7 @@ export default function AnimatedRoutes() {
             </ProtectedRoute>
           } />
           <Route path="/admin" element={
-            <ProtectedRoute>
+            <ProtectedRoute requireAdmin>
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><AdminDashboard /></PageWrapper>
               </Suspense>
