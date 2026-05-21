@@ -7,7 +7,7 @@ export default defineConfig({
   plugins: [react()],
   resolve: {
     alias: {
-      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), '.')
+      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src')
     }
   },
   // @ts-expect-error vitest config is read from vite config

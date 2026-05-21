@@ -140,12 +140,28 @@ app.use((req, res, next) => {
     res.header('Vary', 'Origin');
   }
   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
 app.options('/', (_req, res) => res.status(204).end());
+
+// ---------------------------------------------------------------------------
+// CSRF protection: state-changing requests must include Content-Type: application/json
+// or X-Requested-With header. Browsers won't send these in cross-origin form submissions.
+// ---------------------------------------------------------------------------
+app.use((req, res, next) => {
+  if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
+  if (req.path === '/api/security/log') return next(); // Public logging endpoint
+
+  const hasCustomHeader = req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                          req.headers['content-type']?.includes('application/json');
+  if (!hasCustomHeader) {
+    return res.status(403).json({ error: 'Forbidden: missing required headers', code: 'CSRF_CHECK_FAILED' });
+  }
+  next();
+});
 
 // ---------------------------------------------------------------------------
 // Helper: build NormalizedRequest from express.Request

@@ -107,7 +107,7 @@ export function useLazyImage(src: string, placeholder?: string) {
 //   // Not applicable in Vite environment
 // }
 
-// Memory usage monitor
+// Memory usage monitor (development only)
 export function useMemoryMonitor() {
   const [memoryUsage, setMemoryUsage] = useState({
     used: 0,
@@ -116,6 +116,9 @@ export function useMemoryMonitor() {
   });
 
   useEffect(() => {
+    // Only run in development to avoid unnecessary polling in production
+    if (typeof window === 'undefined' || !import.meta.env.DEV) return;
+
     const updateMemoryUsage = () => {
       if ('memory' in performance) {
         const memory = (performance as any).memory;

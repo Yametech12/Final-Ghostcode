@@ -67,6 +67,11 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Prom
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
   }
+  // CSRF protection: always include this custom header so the server knows
+  // the request came from our app, not a cross-origin form submission.
+  if (!headers.has('X-Requested-With')) {
+    headers.set('X-Requested-With', 'XMLHttpRequest');
+  }
   if (import.meta.env.DEV && !token) {
     console.warn('[apiFetch] Sending request WITHOUT auth token to:', typeof input === 'string' ? input : (input as Request).url);
   }

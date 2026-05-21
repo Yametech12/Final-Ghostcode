@@ -47,7 +47,7 @@ export function useAdvisorChat() {
 
   // Initialize session
   useEffect(() => {
-    const initializeSession = async () => {
+    const initializeSession = async (retryCount = 0) => {
       if (!user?.id || !isUUID(user.id)) {
         setIsLoadingSession(false);
         return;
@@ -85,6 +85,12 @@ export function useAdvisorChat() {
         }
       } catch (error) {
         console.error('Session initialization error:', error);
+        // Retry up to 3 times with exponential backoff
+        if (retryCount < 3) {
+          const delay = 1000 * Math.pow(2, retryCount);
+          setTimeout(() => initializeSession(retryCount + 1), delay);
+          return;
+        }
         toast.error('Failed to initialize chat session. Please refresh.');
       } finally {
         setIsLoadingSession(false);

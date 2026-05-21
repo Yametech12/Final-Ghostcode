@@ -135,7 +135,8 @@ class APIErrorMonitor {
 export const apiErrorMonitor = new APIErrorMonitor();
 
 /**
- * Wrap an API call with error monitoring
+ * Wrap an API call with error monitoring.
+ * Uses apiFetch internally so auth headers are included automatically.
  */
 export async function monitoredFetch<T>(
   endpoint: string,
@@ -145,11 +146,14 @@ export async function monitoredFetch<T>(
   const startTime = performance.now();
   const method = options?.method || 'GET';
 
+  // Lazy import to avoid circular dependency at module load time
+  const { apiFetch } = await import('../lib/fetch');
+
   try {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
-    const response = await fetch(endpoint, {
+    const response = await apiFetch(endpoint, {
       ...options,
       signal: controller.signal,
     });
@@ -158,7 +162,7 @@ export async function monitoredFetch<T>(
     const duration = performance.now() - startTime;
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      await response.json().catch(() => ({}));
       apiErrorMonitor.logApiCall(endpoint, method, response.status, duration);
       throw new Error(
         `API Error: ${response.status} ${response.statusText}`,

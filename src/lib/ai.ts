@@ -1,7 +1,8 @@
 import { serializeError } from '../utils/errorHandling';
 import { apiFetch } from './fetch';
 
-// Regolo AI model configuration
+// Regolo AI model configuration — shared with api/_config.ts
+// If you change models here, update api/_config.ts as well (or import from a shared module).
 export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
 // Fallback models in order of preference
 export const FALLBACK_MODELS = [

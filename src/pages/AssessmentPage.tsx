@@ -390,6 +390,7 @@ export default function AssessmentPage() {
             <button
               onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
               disabled={currentStep === 0}
+              aria-label="Go to previous question"
               className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-white disabled:opacity-50 disabled:hover:text-slate-500 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -399,6 +400,7 @@ export default function AssessmentPage() {
             {currentStep > 0 && (
               <button
                 onClick={handleRestart}
+                aria-label="Restart assessment"
                 className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-red-400 transition-colors"
               >
                 <RotateCcw className="w-4 h-4" />

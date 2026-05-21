@@ -38,7 +38,7 @@ function setCorsHeaders(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Vary', 'Origin');
   }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
   // Security headers
@@ -67,7 +67,54 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const pathFromQuery = Array.isArray(req.query.path) ? req.query.path.join('/') : (req.query.path as string | undefined);
   const pathname = pathFromUrl || pathFromQuery || '';
 
+  // Rate limiting for AI/advisor endpoints (Supabase-based, persists across cold starts)
+  if (pathname.startsWith('ai/') || pathname.startsWith('advisor/') || pathname.startsWith('calibration/')) {
+    const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 'unknown';
+    const rateLimitKey = `rate:${clientIp}`;
+    const RATE_LIMIT = 15; // requests per window
+    const RATE_WINDOW_MS = 60_000; // 1 minute
+
+    try {
+      // Use a simple approach: check recent requests from this IP in the last minute
+      // This uses a lightweight table or falls back to allowing the request
+      const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
+      const { count } = await supabase
+        .from('rate_limits')
+        .select('*', { count: 'exact', head: true })
+        .eq('key', rateLimitKey)
+        .gte('created_at', windowStart);
+
+      if (count !== null && count >= RATE_LIMIT) {
+        res.status(429).json({
+          error: 'Rate limited',
+          code: 'RATE_LIMITED',
+          retryAfter: 60,
+        });
+        return;
+      }
+
+      // Record this request (fire and forget)
+      supabase.from('rate_limits').insert({ key: rateLimitKey }).then(() => {});
+    } catch (rateLimitErr) {
+      // If rate_limits table doesn't exist or query fails, allow the request through
+      // This makes rate limiting best-effort without breaking the app
+      console.warn('Rate limit check failed (table may not exist):', rateLimitErr);
+    }
+  }
+
   const user = await getAuthenticatedUser(req.headers.authorization, supabase);
+
+  // CSRF protection: state-changing requests must include a custom header.
+  // Browsers won't send custom headers in cross-origin form submissions or simple requests.
+  if (req.method !== 'GET' && req.method !== 'HEAD' && pathname !== 'security/log') {
+    const hasCustomHeader = req.headers['x-requested-with'] === 'XMLHttpRequest' ||
+                            req.headers['content-type']?.includes('application/json');
+    if (!hasCustomHeader) {
+      res.status(403).json({ error: 'Forbidden: missing required headers', code: 'CSRF_CHECK_FAILED' });
+      return;
+    }
+  }
+
   const normReq: NormalizedRequest = {
     method: req.method || 'GET',
     body: req.body,

@@ -275,6 +275,7 @@ export async function handleDeleteAdvisorSession(
 /**
  * Build the system prompt + message history for the advisor.
  * Extracted so both streaming (Express) and non-streaming (Vercel) paths share it.
+ * Implements token-aware truncation to stay within model context limits.
  */
 async function buildAdvisorMessages(
   supabase: SupabaseClient,
@@ -294,7 +295,7 @@ async function buildAdvisorMessages(
       .select('role, content, timestamp')
       .eq('session_id', sessionId)
       .order('timestamp', { ascending: true })
-      .limit(15),
+      .limit(50),
     supabase
       .from('advisor_sessions')
       .select('title, timestamp')
@@ -330,13 +331,25 @@ Message History: ${history?.length || 0} messages in this session
 - End with a forward-looking suggestion or question
 - Maintain professional, insightful tone`;
 
+  // Token-aware truncation: approximate 1 token ≈ 4 chars.
+  // Reserve ~2000 tokens for system prompt + new user message + response.
+  // Llama 3.3 70B has 8192 context; leave room for the response (600 tokens max).
+  const MAX_HISTORY_CHARS = 20000; // ~5000 tokens for history
+  let historyMessages = (history || []).map((m) => ({
+    role: m.role === 'model' ? 'assistant' : m.role,
+    content: m.content,
+  }));
+
+  // Trim oldest messages if total exceeds budget
+  let totalChars = historyMessages.reduce((sum, m) => sum + m.content.length, 0);
+  while (totalChars > MAX_HISTORY_CHARS && historyMessages.length > 2) {
+    const removed = historyMessages.shift();
+    if (removed) totalChars -= removed.content.length;
+  }
+
   return [
     { role: 'system', content: systemPrompt },
-    // DB stores 'model' (legacy) but Regolo/OpenAI APIs require 'assistant'.
-    ...(history || []).map((m) => ({
-      role: m.role === 'model' ? 'assistant' : m.role,
-      content: m.content,
-    })),
+    ...historyMessages,
     { role: 'user', content: message },
   ];
 }
