@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Command } from 'cmdk';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Search, BookOpen, User, Target, Brain, Compass, FileText } from 'lucide-react';
+import { Search, BookOpen, User, Target, Brain, Compass, FileText, Sparkles } from 'lucide-react';
 import { personalityTypes } from '../../data/personalityTypes';
 
 export default function CommandPalette() {
@@ -139,6 +139,17 @@ export default function CommandPalette() {
                   >
                     <BookOpen aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
                     Glossary
+                  </Command.Item>
+                  <Command.Item
+                    onSelect={() => runCommand(() => {
+                      localStorage.removeItem('hasSeenOnboarding');
+                      localStorage.removeItem('hasSeenTour');
+                      window.dispatchEvent(new CustomEvent('open-onboarding'));
+                    })}
+                    className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
+                  >
+                    <Sparkles aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
+                    Replay Tutorial
                   </Command.Item>
                 </Command.Group>
               </Command.List>
