@@ -13,6 +13,7 @@ import { queryClient } from '../../lib/queryClient';
 import { BottomNav } from './BottomNav';
 
 import Logo from '../Logo';
+import LanguageToggle from '../LanguageToggle';
 
 // Lazy load non-critical components to reduce initial bundle size and main thread work
 const FeedbackModal = lazy(() => import('../FeedbackModal'));
@@ -482,6 +483,8 @@ export default function Layout({ children }: LayoutProps) {
               
               <div className="h-6 w-px bg-white/10 mx-2" />
 
+              <LanguageToggle />
+
               <button
                 onClick={toggleTheme}
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -592,6 +595,7 @@ export default function Layout({ children }: LayoutProps) {
                 <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
               </div>
               <div className="flex items-center gap-2">
+                <LanguageToggle />
                 <button
                   onClick={toggleTheme}
                   aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
+import { sanitizeAiResponse } from '../utils/sanitizeHtml';
 import { toast } from 'sonner';
 import { apiFetch } from '../lib/fetch';
 
@@ -165,7 +166,7 @@ export function useAdvisorChat() {
                 throw new Error(parsed.error);
               }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
-                assistantContent += parsed.content;
+                assistantContent += sanitizeAiResponse(parsed.content);
                 if (!placeholderAdded) {
                   placeholderAdded = true;
                   setMessages(prev => [
