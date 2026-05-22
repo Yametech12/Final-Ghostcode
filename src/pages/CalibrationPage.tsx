@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 import { chatCompletion } from '../lib/ai';
 
 import { motion, AnimatePresence } from 'framer-motion';
+import HistoryList from '../components/calibration/HistoryList';
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -1426,60 +1427,16 @@ export default function CalibrationPage() {
                 <p className="text-slate-400">Try adjusting your search or filters.</p>
               </div>
             ) : (
-              filteredHistory.map((item) => (
-              <div
-                key={item.id}
-                className="group glass-card p-6 space-y-4 cursor-pointer hover:bg-white/5 transition-all duration-300 border-white/5 hover:border-accent-primary/30 relative overflow-hidden"
-                onClick={() => {
-                  setAnalysis(item);
+              <HistoryList
+                items={filteredHistory}
+                onSelect={(item) => {
+                  setAnalysis(item as AnalysisHistory);
                   setMode('ai');
                   window.scrollTo({ top: 0, behavior: 'smooth' });
                 }}
-              >
-                {/* Background Glow */}
-                <div className="absolute -right-10 -top-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-3xl group-hover:bg-accent-primary/10 transition-all" />
-
-                <div className="flex items-start justify-between relative z-10">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-3">
-                      <span className="text-3xl font-black text-accent-primary italic tracking-tighter">{item.primaryType}</span>
-                      <div className="h-4 w-px bg-white/10" />
-                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{item.date}</span>
-                    </div>
-                    <h4 className="text-sm font-bold text-slate-200 line-clamp-1 group-hover:text-accent-primary transition-colors">
-                      {item.scenarioSummary}
-                    </h4>
-                  </div>
-                  <button
-                    onClick={(e) => deleteHistoryItem(e, item.id)}
-                    className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
-                    title="Delete analysis"
-                  >
-                    <RotateCcw className="w-4 h-4 rotate-45" />
-                  </button>
-                </div>
-
-                <div className="flex items-center justify-between pt-4 border-t border-white/5 relative z-10">
-                  <div className="flex items-center gap-4">
-                    <div className="space-y-0.5">
-                      <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Confidence</div>
-                      <div className="text-sm font-bold text-white">{item.confidence}%</div>
-                    </div>
-                    {item.secondaryType && (
-                      <div className="space-y-0.5">
-                        <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Secondary</div>
-                        <div className="text-sm font-bold text-slate-400">{item.secondaryType}</div>
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 text-accent-primary font-bold text-xs group-hover:translate-x-1 transition-transform">
-                    View Report
-                    <ChevronRight className="w-4 h-4" />
-                  </div>
-                </div>
-              </div>
-            ))
-          )}
+                onDelete={deleteHistoryItem}
+              />
+            )}
         </div>
       </div>
     )}

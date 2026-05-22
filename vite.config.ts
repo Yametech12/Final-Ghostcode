@@ -39,7 +39,9 @@ export default defineConfig({
           'animation-vendor': ['motion'],
           'ui-vendor': ['lucide-react', '@tanstack/react-query', 'sonner', 'clsx', 'tailwind-merge'],
           'charts-vendor': ['recharts'],
-          'image-vendor': ['browser-image-compression', 'html2canvas', 'html2pdf.js'],
+          // html2canvas and html-to-image are dynamically imported at the call site,
+          // so they get their own auto-generated chunks. Don't list them here.
+          'image-vendor': ['browser-image-compression'],
           'utils-vendor': ['lenis'],
         },
         chunkFileNames: (chunkInfo) => {

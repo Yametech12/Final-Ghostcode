@@ -2,6 +2,7 @@ import { ChevronRight, Target, Brain, Map, Heart, MessageSquare, User, Activity 
 import { personalityTypes } from '../data/personalityTypes';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
+import PrefetchLink from '../components/PrefetchLink';
 import { motion } from 'motion/react';
 
 const containerVariants = {
@@ -63,20 +64,20 @@ export default function HomePage() {
         </motion.div>
 
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
-          <Link
+          <PrefetchLink
             to="/assessment"
             data-tour="assessment"
             className="w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform flex items-center justify-center gap-2 group hover:scale-[1.02] active:scale-[0.98]"
           >
             Start Target Assessment
             <ChevronRight aria-hidden="true" className="w-5 h-5 transition-transform group-hover:translate-x-0.5" />
-          </Link>
-          <Link
+          </PrefetchLink>
+          <PrefetchLink
             to="/profile"
             className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-accent-primary/20 transition-all text-center"
           >
             Explore Profiles
-          </Link>
+          </PrefetchLink>
         </motion.div>
 
         {/* Personality Profiles Section */}
@@ -137,7 +138,7 @@ export default function HomePage() {
             { title: 'Knowledge Check', desc: 'Test your mastery of the system with randomized quizzes.', icon: Brain, link: '/quiz' },
           ].map((feature, i) => (
             <motion.div key={i} variants={itemVariants}>
-              <Link
+              <PrefetchLink
                 to={feature.link}
                 data-tour={feature.tour}
                 className="glass-card p-6 space-y-4 mystic-border group h-full block overflow-hidden"
@@ -147,7 +148,7 @@ export default function HomePage() {
                 </div>
                 <h3 className="text-xl font-semibold tracking-tight text-slate-100 group-hover:text-accent-primary transition-colors">{feature.title}</h3>
                 <p className="text-slate-400 text-sm leading-relaxed">{feature.desc}</p>
-              </Link>
+              </PrefetchLink>
             </motion.div>
           ))}
         </motion.div>

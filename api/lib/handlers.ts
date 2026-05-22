@@ -177,7 +177,6 @@ function sniffImageMime(buf: Buffer): string | null {
   if (buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
   return null;
 }
-
 /**
  * POST /api/advisor/session — authenticated.
  */

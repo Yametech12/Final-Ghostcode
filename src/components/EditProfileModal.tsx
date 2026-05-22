@@ -125,21 +125,33 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       setCropperImage(null);
     }
 
-    // Convert blob to File for upload
-    const croppedFile = new File([croppedBlob], `profile-${Date.now()}.jpg`, { type: 'image/jpeg' });
-    setPhotoFile(croppedFile);
-    setPhotoPreview(URL.createObjectURL(croppedBlob));
-
     // Auto-upload
     if (!userData?.id) return;
     setUploadingPhoto(true);
     try {
-      const fileName = `${userData.id}/profile-${Date.now()}.jpg`;
+      // Compress and convert to WebP for smaller upload size
+      const { compressImage } = await import('../utils/imageCompression');
+      const compressedDataUrl = await compressImage(croppedBlob, {
+        maxSizeMB: 0.5,
+        maxWidthOrHeight: 800,
+        preferWebP: true,
+      });
+
+      // Convert compressed data URL back to a File
+      const compressedResponse = await fetch(compressedDataUrl);
+      const compressedBlob = await compressedResponse.blob();
+      const ext = compressedBlob.type === 'image/webp' ? 'webp' : 'jpg';
+      const compressedFile = new File([compressedBlob], `profile-${Date.now()}.${ext}`, { type: compressedBlob.type });
+
+      setPhotoFile(compressedFile);
+      setPhotoPreview(URL.createObjectURL(compressedBlob));
+
+      const fileName = `${userData.id}/profile-${Date.now()}.${ext}`;
       const { error } = await supabase
         .storage
         .from('user-uploads')
-        .upload(fileName, croppedFile, {
-          contentType: 'image/jpeg',
+        .upload(fileName, compressedFile, {
+          contentType: compressedBlob.type,
           upsert: false
         });
       if (error) throw error;
