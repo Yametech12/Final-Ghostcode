@@ -55,9 +55,29 @@ export function Composer({
 
   return (
     <div className="shrink-0 max-w-3xl mx-auto w-full">
-      {/* Follow-up chips */}
+      {/* Follow-up chips — horizontally scrollable when they overflow */}
       {showFollowUps && (
-        <div className="mb-2 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-hide">
+        <div
+          className="mb-2 flex items-center gap-2 overflow-x-auto pb-1 pr-2 scrollbar-hide"
+          // Lenis (the smooth-scroll library wrapped around the app root)
+          // hijacks wheel events globally; this opt-out lets the chip row
+          // scroll horizontally with a trackpad / mouse wheel + Shift.
+          data-lenis-prevent
+          style={{
+            // Encourage native horizontal pan + momentum scroll on touch
+            // devices, and keep vertical page scroll on mobile from being
+            // hijacked when the user swipes inside the chip row.
+            WebkitOverflowScrolling: 'touch',
+            touchAction: 'pan-x',
+            overscrollBehaviorX: 'contain',
+            // Soft fade on the right edge so the trailing chip looks like
+            // "scrollable" rather than "clipped".
+            maskImage: 'linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%)',
+            WebkitMaskImage: 'linear-gradient(to right, black 0, black calc(100% - 24px), transparent 100%)',
+          }}
+          role="group"
+          aria-label="Suggested follow-ups"
+        >
           <Sparkles aria-hidden="true" className="w-3.5 h-3.5 text-accent-primary shrink-0" />
           {followUpSuggestions.map(suggestion => (
             <button
@@ -66,7 +86,7 @@ export function Composer({
               onClick={() => onSelectFollowUp(suggestion)}
               disabled={isSending}
               aria-label={`Send: ${suggestion}`}
-          className="shrink-0 px-3 py-1.5 rounded-full text-xs text-accent-primary bg-accent-primary/10 hover:bg-accent-primary/15 border border-accent-primary/20 hover:border-accent-primary/40 hover:text-slate-100 active:scale-[0.98] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+              className="shrink-0 whitespace-nowrap px-3 py-1.5 rounded-full text-xs text-accent-primary bg-accent-primary/10 hover:bg-accent-primary/15 border border-accent-primary/20 hover:border-accent-primary/40 hover:text-slate-100 active:scale-[0.98] transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {suggestion}
             </button>
