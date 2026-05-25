@@ -249,12 +249,21 @@ export default function TermsPage() {
           <p>
             Questions about these Terms? Contact us at{' '}
             <a
-              href="mailto:epimetheus.support@gmail.com"
+              href="mailto:epimetheus.support@gmail.com?subject=Question%20about%20the%20Epimetheus%20Terms%20of%20Service&body=Hi%20Epimetheus%20team%2C%0A%0A"
               className="text-accent-primary hover:underline"
             >
               epimetheus.support@gmail.com
             </a>
-            .
+            {' '}(or{' '}
+            <a
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=epimetheus.support@gmail.com&su=Question%20about%20the%20Epimetheus%20Terms%20of%20Service&body=Hi%20Epimetheus%20team%2C%0A%0A"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-primary hover:underline"
+            >
+              open in Gmail
+            </a>
+            ).
           </p>
         </Section>
 

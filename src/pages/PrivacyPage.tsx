@@ -292,12 +292,21 @@ export default function PrivacyPage() {
           <p className="mt-3">
             To exercise these rights, email{' '}
             <a
-              href="mailto:epimetheus.support@gmail.com"
+              href="mailto:epimetheus.support@gmail.com?subject=Data%20rights%20request%20%E2%80%94%20Epimetheus&body=Hi%20Epimetheus%20team%2C%0A%0AI%20am%20requesting%20%5Baccess%20%2F%20correction%20%2F%20deletion%20%2F%20portability%20%2F%20other%5D%20of%20my%20personal%20data.%0A%0AAccount%20email%3A%20%5Byour%20email%5D%0A%0AThanks%2C%0A"
               className="text-accent-primary hover:underline"
             >
               epimetheus.support@gmail.com
             </a>
-            . We may need to verify your identity before fulfilling the
+            {' '}(or{' '}
+            <a
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=epimetheus.support@gmail.com&su=Data%20rights%20request%20%E2%80%94%20Epimetheus&body=Hi%20Epimetheus%20team%2C%0A%0AI%20am%20requesting%20%5Baccess%20%2F%20correction%20%2F%20deletion%20%2F%20portability%20%2F%20other%5D%20of%20my%20personal%20data.%0A%0AAccount%20email%3A%20%5Byour%20email%5D%0A%0AThanks%2C%0A"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-primary hover:underline"
+            >
+              open in Gmail
+            </a>
+            ). We may need to verify your identity before fulfilling the
             request.
           </p>
         </Section>
@@ -342,12 +351,21 @@ export default function PrivacyPage() {
           <p>
             For privacy questions or requests, contact{' '}
             <a
-              href="mailto:epimetheus.support@gmail.com"
+              href="mailto:epimetheus.support@gmail.com?subject=Privacy%20question%20%E2%80%94%20Epimetheus&body=Hi%20Epimetheus%20team%2C%0A%0A"
               className="text-accent-primary hover:underline"
             >
               epimetheus.support@gmail.com
             </a>
-            .
+            {' '}(or{' '}
+            <a
+              href="https://mail.google.com/mail/?view=cm&fs=1&to=epimetheus.support@gmail.com&su=Privacy%20question%20%E2%80%94%20Epimetheus&body=Hi%20Epimetheus%20team%2C%0A%0A"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent-primary hover:underline"
+            >
+              open in Gmail
+            </a>
+            ).
           </p>
         </Section>
 
