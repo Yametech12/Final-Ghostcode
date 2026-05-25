@@ -24,6 +24,7 @@ import { cn } from '../lib/utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import HistoryList from '../components/calibration/HistoryList';
+import { ScanningOverlay } from '../components/calibration/ScanningOverlay';
 
 interface Task {
   id: string;
@@ -138,16 +139,21 @@ export default function CalibrationPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isScanning, setIsScanning] = React.useState(false);
 
-  React.useEffect(() => {
-    if (isScanning) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isScanning]);
+  // AbortController for the in-flight Oracle call. Lets the scanning overlay's
+  // Cancel button bail out of a long-running completion. The server-side
+  // request to Regolo continues but we discard the partial result.
+  const analyzeAbortRef = React.useRef<AbortController | null>(null);
+
+  const cancelAnalysis = React.useCallback(() => {
+    analyzeAbortRef.current?.abort();
+    analyzeAbortRef.current = null;
+    setIsScanning(false);
+    setIsLoading(false);
+  }, []);
+
+  // Cancel any in-flight analysis on unmount so it doesn't outlive the page.
+  React.useEffect(() => () => analyzeAbortRef.current?.abort(), []);
+
   const [isCapturing, setIsCapturing] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const analysisRef = React.useRef<HTMLDivElement>(null);
@@ -484,6 +490,12 @@ export default function CalibrationPage() {
     setIsScanning(true);
     setError(null);
 
+    // Wire a fresh AbortController for this run so the user's "Cancel" click
+    // on the scanning overlay can bail out of `chatCompletion`.
+    analyzeAbortRef.current?.abort();
+    const controller = new AbortController();
+    analyzeAbortRef.current = controller;
+
     const fullScenario = `
       Eye Contact: ${structuredInput.eyeContact || 'Not specified'}
       Conversation Topic: ${structuredInput.conversationTopic || 'Not specified'}
@@ -528,7 +540,8 @@ export default function CalibrationPage() {
         { role: "system", content: systemInstruction },
         { role: "user", content: `Scenario Details:\n${fullScenario}` }
       ], undefined, {
-        response_format: { type: "json_object" }
+        response_format: { type: "json_object" },
+        signal: controller.signal,
       });
 
       const jsonStr = completion.choices?.[0]?.message?.content?.trim() || '{}';
@@ -592,6 +605,10 @@ export default function CalibrationPage() {
       }
 
     } catch (err) {
+      // User-initiated cancellation — silently exit, no toast/error banner.
+      if (err instanceof Error && err.name === 'AbortError') {
+        return;
+      }
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -599,6 +616,7 @@ export default function CalibrationPage() {
       }
       console.error(err);
     } finally {
+      analyzeAbortRef.current = null;
       setIsLoading(false);
       setIsScanning(false);
     }
@@ -633,44 +651,7 @@ export default function CalibrationPage() {
       {/* Scanning Overlay */}
       <AnimatePresence>
         {isScanning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-mystic-950 backdrop-blur-xl flex items-center justify-center p-4"
-          >
-            <div className="relative z-10 flex flex-col items-center justify-center w-full max-w-sm mx-auto space-y-12">
-              {/* Logo */}
-              <motion.div
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.8, 1, 0.8]
-                }}
-                transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-              >
-                <LogoIcon className="w-24 h-24 sm:w-32 sm:h-32 text-accent-primary drop-shadow-[0_0_20px_rgba(255,75,107,0.6)]" />
-              </motion.div>
-
-              {/* Loading Bar & Text */}
-              <div className="flex flex-col items-center gap-6 w-full">
-                <div className="w-full h-1 bg-white/10 rounded-full overflow-hidden">
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 5, ease: "easeInOut" }}
-                    className="h-full accent-gradient shadow-[0_0_15px_rgba(255,75,107,0.8)]"
-                  />
-                </div>
-                <motion.div
-                  animate={{ opacity: [0.4, 1, 0.4] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="text-accent-primary font-mono text-xs tracking-[0.3em] uppercase text-center"
-                >
-                  Synthesizing Behavioral Matrix...
-                </motion.div>
-              </div>
-            </div>
-          </motion.div>
+          <ScanningOverlay visible={isScanning} onCancel={cancelAnalysis} />
         )}
       </AnimatePresence>
 

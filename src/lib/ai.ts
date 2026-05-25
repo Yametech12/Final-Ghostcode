@@ -56,9 +56,18 @@ export async function chatCompletion(
   const processedMessages = hasImages ? convertToVisionFormat(messages) : messages;
   const modelsToTry = [effectiveModel, ...FALLBACK_MODELS];
 
+  // Optional AbortSignal so callers can cancel a long-running completion.
+  // Used by CalibrationPage's "Cancel" button on the scanning overlay; the
+  // server-side request to Regolo continues but the client unblocks and the
+  // partial result is discarded.
+  const signal: AbortSignal | undefined = options.signal;
+
   let lastError: Error | null = null;
 
   for (const modelToTry of modelsToTry) {
+    if (signal?.aborted) {
+      throw new DOMException('Aborted', 'AbortError');
+    }
     try {
       const requestBody: any = {
         model: modelToTry,
@@ -86,6 +95,7 @@ export async function chatCompletion(
             "Content-Type": "application/json",
           },
           body: JSON.stringify(requestBody),
+          signal,
         },
       );
 
@@ -157,6 +167,12 @@ export async function chatCompletion(
     } catch (error) {
       lastError = error as Error;
       console.warn(`Failed with model ${modelToTry}:`, error);
+
+      // Caller-initiated cancellation — bubble up immediately, don't try
+      // fallback models.
+      if (error instanceof Error && error.name === 'AbortError') {
+        throw error;
+      }
 
       // If it's a network error or 5xx, don't try other models
       if (error instanceof Error &&
