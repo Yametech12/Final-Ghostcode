@@ -379,6 +379,28 @@ export default function LoginPage() {
             Create one
           </button>
         </div>
+
+        <div className="mt-4 text-center text-xs text-slate-500">
+          By using Epimetheus you agree to our{' '}
+          <a
+            href="/terms"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-slate-300 underline underline-offset-2"
+          >
+            Terms
+          </a>
+          {' '}and{' '}
+          <a
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="hover:text-slate-300 underline underline-offset-2"
+          >
+            Privacy Policy
+          </a>
+          .
+        </div>
       </div>
     </div>
   );

@@ -11,6 +11,10 @@ const LoginPage = lazy(() => import('../../pages/LoginPage'));
 const RegisterPage = lazy(() => import('../../pages/RegisterPage'));
 const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage'));
 
+// Legal pages - public, no auth required
+const TermsPage = lazy(() => import('../../pages/TermsPage'));
+const PrivacyPage = lazy(() => import('../../pages/PrivacyPage'));
+
 // Core functionality pages - high priority
 const ProfilePage = lazy(() => import('../../pages/ProfilePage'));
 const AdvisorPage = lazy(() => import('../../pages/AdvisorPage'));
@@ -124,6 +128,22 @@ export default function AnimatedRoutes() {
           <Route path="/reset-password" element={
             <Suspense fallback={<InlineLoader />}>
               <ResetPasswordPage />
+            </Suspense>
+          } />
+          {/*
+            Legal pages are public — anyone can read them, even when signed
+            out and even from the registration flow without losing their
+            in-progress form state. Not wrapped in PublicRoute so a signed-in
+            user who follows a footer link can still review them.
+          */}
+          <Route path="/terms" element={
+            <Suspense fallback={<InlineLoader />}>
+              <TermsPage />
+            </Suspense>
+          } />
+          <Route path="/privacy" element={
+            <Suspense fallback={<InlineLoader />}>
+              <PrivacyPage />
             </Suspense>
           } />
           <Route path="/calibration" element={

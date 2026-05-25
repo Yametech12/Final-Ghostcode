@@ -288,16 +288,28 @@ export default function RegisterPage() {
               onChange={(e) => setAcceptTerms(e.target.checked)}
               className="mt-1 rounded border-white/10 bg-white/5 text-accent-primary focus:ring-accent-primary"
               required
+              aria-required="true"
             />
             <label htmlFor="terms" className="text-sm text-slate-400 leading-relaxed">
               I agree to the{' '}
-              <button type="button" className="text-accent-primary hover:underline">
+              <a
+                href="/terms"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-primary hover:underline"
+              >
                 Terms of Service
-              </button>
+              </a>
               {' '}and{' '}
-              <button type="button" className="text-accent-primary hover:underline">
+              <a
+                href="/privacy"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-accent-primary hover:underline"
+              >
                 Privacy Policy
-              </button>
+              </a>
+              .
             </label>
            </div>
 
