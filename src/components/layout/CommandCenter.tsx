@@ -12,13 +12,7 @@ import { personalityTypes } from '../../data/personalityTypes';
 import { motion, AnimatePresence } from 'motion/react';
 
 import { LogoIcon } from '../Logo';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
-
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../../lib/utils';
 
 interface SearchResult {
   id: string;

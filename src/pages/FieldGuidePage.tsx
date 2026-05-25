@@ -7,16 +7,11 @@ import {
   Loader2, Send
 } from 'lucide-react';
 import { personalityTypes } from '../data/personalityTypes';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../lib/utils';
 
 interface FieldReport {
   id: string;
@@ -198,20 +193,26 @@ export default function FieldGuidePage() {
 
     setIsSubmittingComment(true);
     try {
+       if (!user) {
+         toast.error("You must be signed in to comment.");
+         return;
+       }
        const { error: insertError } = await supabase
          .from('field_report_comments')
          .insert({
            report_id: reportId,
+           user_id: user.id,
            author: 'Anonymous',
            content: newComment.trim(),
            timestamp: new Date().toISOString()
          });
       if (insertError) throw insertError;
 
-       const { error: updateError } = await supabase
-         .from('field_reports')
-         .update({ comment_count: (reports.find(r => r.id === reportId)?.comment_count || 0) + 1 })
-         .eq('id', reportId);
+      // Atomic increment via RPC. The previous read-modify-write raced under
+      // concurrent comments and also required UPDATE rights on rows the
+      // commenter doesn't own — RLS rightly rejected the latter.
+      const { error: updateError } = await supabase
+        .rpc('increment_field_report_comments', { report_id: reportId });
       if (updateError) throw updateError;
 
       setNewComment('');

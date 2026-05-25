@@ -15,6 +15,9 @@ import {
   handleAdvisorChatStream,
   handleCalibrationAnalyze,
   handleAiChat,
+  handleCreateOracleAnalysis,
+  handleUpdateOracleAnalysisTasks,
+  handleDeleteOracleAnalysis,
   type NormalizedRequest,
 } from './lib/handlers.js';
 
@@ -37,7 +40,7 @@ function setCorsHeaders(req: VercelRequest, res: VercelResponse) {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
 
@@ -62,43 +65,49 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Derive pathname from URL (req.query.path may not be set depending on rewrite mode)
   const url = req.url || '';
-  // Strip query string and the /api/ prefix
-  const pathFromUrl = url.split('?')[0].replace(/^\/api\/?/, '');
+  // Strip query string, the /api/ prefix, and optional /v1 version prefix.
+  // Supports both /api/health and /api/v1/health for forward compatibility.
+  const pathFromUrl = url.split('?')[0]
+    .replace(/^\/api\/?/, '')
+    .replace(/^v1\//, '');
   const pathFromQuery = Array.isArray(req.query.path) ? req.query.path.join('/') : (req.query.path as string | undefined);
-  const pathname = pathFromUrl || pathFromQuery || '';
+  const pathname = (pathFromUrl || pathFromQuery || '').replace(/^v1\//, '');
 
-  // Rate limiting for AI/advisor endpoints (Supabase-based, persists across cold starts)
-  if (pathname.startsWith('ai/') || pathname.startsWith('advisor/') || pathname.startsWith('calibration/')) {
+  // Rate limiting for AI/advisor/calibration endpoints AND the public
+  // /api/security/log path. The latter has no auth, so without a limiter
+  // anyone can flood the log sink.
+  const isAiPath = pathname.startsWith('ai/') || pathname.startsWith('advisor/') || pathname.startsWith('calibration/');
+  const isLogPath = pathname === 'security/log';
+  if (isAiPath || isLogPath) {
     const clientIp = (req.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() || 'unknown';
-    const rateLimitKey = `rate:${clientIp}`;
-    const RATE_LIMIT = 15; // requests per window
-    const RATE_WINDOW_MS = 60_000; // 1 minute
+    // Tighter limit for the public log endpoint to make abuse expensive.
+    const RATE_LIMIT = isLogPath ? 30 : 15;
+    const RATE_WINDOW_S = 60;
+    const rateLimitKey = isLogPath ? `log:${clientIp}` : `rate:${clientIp}`;
 
     try {
-      // Use a simple approach: check recent requests from this IP in the last minute
-      // This uses a lightweight table or falls back to allowing the request
-      const windowStart = new Date(Date.now() - RATE_WINDOW_MS).toISOString();
-      const { count } = await supabase
-        .from('rate_limits')
-        .select('*', { count: 'exact', head: true })
-        .eq('key', rateLimitKey)
-        .gte('created_at', windowStart);
+      // Atomic insert-and-count via RPC. Two concurrent callers cannot both
+      // see count<limit; the second's INSERT serializes after the first's,
+      // so one of them is guaranteed to see count>=limit and be rejected.
+      const { data: count, error: rpcErr } = await supabase.rpc(
+        'record_and_count_rate_limit',
+        { rl_key: rateLimitKey, window_seconds: RATE_WINDOW_S }
+      );
 
-      if (count !== null && count >= RATE_LIMIT) {
+      if (rpcErr) {
+        // RPC missing or query failed — fall back to allowing the request so
+        // a deploy without the migration doesn't break the app.
+        console.warn('Rate limit RPC failed (run supabase/migrations/ via `supabase db reset`):', rpcErr.message);
+      } else if (typeof count === 'number' && count > RATE_LIMIT) {
         res.status(429).json({
           error: 'Rate limited',
           code: 'RATE_LIMITED',
-          retryAfter: 60,
+          retryAfter: RATE_WINDOW_S,
         });
         return;
       }
-
-      // Record this request (fire and forget)
-      supabase.from('rate_limits').insert({ key: rateLimitKey }).then(() => {});
     } catch (rateLimitErr) {
-      // If rate_limits table doesn't exist or query fails, allow the request through
-      // This makes rate limiting best-effort without breaking the app
-      console.warn('Rate limit check failed (table may not exist):', rateLimitErr);
+      console.warn('Rate limit check failed:', rateLimitErr);
     }
   }
 
@@ -196,6 +205,32 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const r = await handleCalibrationAnalyze(normReq, supabase);
       res.status(r.status).json(r.body);
       return;
+    }
+    if (pathname === 'oracle/analyses' && req.method === 'POST') {
+      const r = await handleCreateOracleAnalysis(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+    // PATCH /api/oracle/analyses/:id/tasks  → server-validated task replace
+    if (pathname.startsWith('oracle/analyses/') && pathname.endsWith('/tasks') && req.method === 'PATCH') {
+      const segments = pathname.split('/');
+      // segments: ['oracle', 'analyses', '<id>', 'tasks']
+      if (segments.length === 4) {
+        normReq.params = { id: segments[2] };
+        const r = await handleUpdateOracleAnalysisTasks(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
+    }
+    // DELETE /api/oracle/analyses/:id  → owner-only delete
+    if (pathname.startsWith('oracle/analyses/') && req.method === 'DELETE') {
+      const segments = pathname.split('/');
+      if (segments.length === 3) {
+        normReq.params = { id: segments[2] };
+        const r = await handleDeleteOracleAnalysis(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
     }
 
     res.status(404).json({ error: 'Not found', path: pathname });

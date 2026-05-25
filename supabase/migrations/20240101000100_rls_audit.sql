@@ -1,52 +1,18 @@
 -- =====================================================================
--- DEPRECATED — kept on disk for one release cycle.
+-- RLS audit & refinements (consolidated from scripts/rls-audit.sql)
 --
--- The canonical schema source is now `supabase/migrations/`. The contents
--- of this file have been folded into:
---   supabase/migrations/20240101000100_rls_audit.sql
---
--- This file will be deleted after the next release.
+-- Idempotent: drops policies before recreating them. Adds tighter,
+-- per-operation policies that supersede the broad FOR ALL policies in
+-- the previous migration where they overlap.
 -- =====================================================================
 
--- =====================================================================
--- RLS (Row Level Security) Audit Script for Epimetheus
--- =====================================================================
--- Run this in your Supabase SQL Editor to verify all tables have proper
--- security policies. Any table flagged below should have RLS enabled.
--- =====================================================================
-
--- 1. Check which tables have RLS enabled
-SELECT 
-  schemaname,
-  tablename,
-  rowsecurity AS rls_enabled,
-  CASE WHEN rowsecurity THEN '✅' ELSE '❌ MISSING RLS' END AS status
-FROM pg_tables
-WHERE schemaname = 'public'
-ORDER BY rowsecurity DESC, tablename;
-
--- 2. Check existing policies per table
-SELECT 
-  schemaname,
-  tablename,
-  policyname,
-  permissive,
-  cmd AS operation,
-  qual AS using_clause,
-  with_check AS check_clause
-FROM pg_policies
-WHERE schemaname = 'public'
-ORDER BY tablename, policyname;
-
--- =====================================================================
--- ENABLE RLS + ADD POLICIES (if not already done)
--- =====================================================================
+-- Lock the admin helper down: only authenticated callers, never anon.
+REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
 
 -- ──────────────────────────────────────────────────────────────────────
--- USERS table
+-- USERS table — owner read/write + admin overrides
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own profile" ON users;
 CREATE POLICY "Users can view own profile" ON users
   FOR SELECT USING (auth.uid() = id);
@@ -60,10 +26,8 @@ CREATE POLICY "Users can insert own profile" ON users
   FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- ASSESSMENT_RESULTS table
+-- ASSESSMENT_RESULTS
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS assessment_results ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own assessments" ON assessment_results;
 CREATE POLICY "Users can view own assessments" ON assessment_results
   FOR SELECT USING (auth.uid() = user_id);
@@ -77,10 +41,8 @@ CREATE POLICY "Users can delete own assessments" ON assessment_results
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- CALIBRATIONS table
+-- CALIBRATIONS
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS calibrations ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own calibrations" ON calibrations;
 CREATE POLICY "Users can view own calibrations" ON calibrations
   FOR SELECT USING (auth.uid() = user_id);
@@ -94,10 +56,8 @@ CREATE POLICY "Users can delete own calibrations" ON calibrations
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- ORACLE_ANALYSES table
+-- ORACLE_ANALYSES
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS oracle_analyses ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own analyses" ON oracle_analyses;
 CREATE POLICY "Users can view own analyses" ON oracle_analyses
   FOR SELECT USING (auth.uid() = user_id);
@@ -115,10 +75,8 @@ CREATE POLICY "Users can delete own analyses" ON oracle_analyses
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- ADVISOR_SESSIONS table
+-- ADVISOR_SESSIONS
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS advisor_sessions ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own sessions" ON advisor_sessions;
 CREATE POLICY "Users can view own sessions" ON advisor_sessions
   FOR SELECT USING (auth.uid() = user_id);
@@ -136,10 +94,8 @@ CREATE POLICY "Users can delete own sessions" ON advisor_sessions
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- ADVISOR_MESSAGES table
+-- ADVISOR_MESSAGES
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS advisor_messages ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can view own messages" ON advisor_messages;
 CREATE POLICY "Users can view own messages" ON advisor_messages
   FOR SELECT USING (auth.uid() = user_id);
@@ -153,32 +109,25 @@ CREATE POLICY "Users can delete own messages" ON advisor_messages
   FOR DELETE USING (auth.uid() = user_id);
 
 -- ──────────────────────────────────────────────────────────────────────
--- FAVORITES table (if exists)
+-- FAVORITES + DOSSIERS (already covered by FOR ALL policies; reasserted
+-- here so the audit migration is self-contained when re-run on a fresh
+-- database that skipped the initial schema).
 -- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS favorites ENABLE ROW LEVEL SECURITY;
-
 DROP POLICY IF EXISTS "Users can manage own favorites" ON favorites;
 CREATE POLICY "Users can manage own favorites" ON favorites
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
-
--- ──────────────────────────────────────────────────────────────────────
--- DOSSIERS table (if exists)
--- ──────────────────────────────────────────────────────────────────────
-ALTER TABLE IF EXISTS dossiers ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Users can manage own dossiers" ON dossiers;
 CREATE POLICY "Users can manage own dossiers" ON dossiers
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 -- =====================================================================
--- STORAGE BUCKET POLICIES
+-- STORAGE BUCKET POLICIES — user-uploads
 -- =====================================================================
-
--- user-uploads bucket: users can only upload to their own folder
 DROP POLICY IF EXISTS "Users can upload to own folder" ON storage.objects;
 CREATE POLICY "Users can upload to own folder" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'user-uploads' 
+    bucket_id = 'user-uploads'
     AND (storage.foldername(name))[1] = 'users'
     AND (storage.foldername(name))[2] = auth.uid()::text
   );
@@ -204,55 +153,14 @@ CREATE POLICY "Public can view profile photos" ON storage.objects
   FOR SELECT USING (bucket_id = 'user-uploads');
 
 -- =====================================================================
--- VERIFICATION: Re-run the audit to confirm everything is locked down
+-- USERS — admin overrides (additive; original owner policies still apply)
 -- =====================================================================
-
-SELECT 
-  tablename,
-  rowsecurity AS rls_enabled,
-  (SELECT COUNT(*) FROM pg_policies WHERE schemaname = 'public' AND pg_policies.tablename = pg_tables.tablename) AS policy_count,
-  CASE 
-    WHEN NOT rowsecurity THEN '❌ RLS DISABLED'
-    WHEN (SELECT COUNT(*) FROM pg_policies WHERE schemaname = 'public' AND pg_policies.tablename = pg_tables.tablename) = 0 THEN '⚠️ RLS ON BUT NO POLICIES'
-    ELSE '✅ SECURED'
-  END AS status
-FROM pg_tables
-WHERE schemaname = 'public'
-ORDER BY tablename;
-
--- =====================================================================
--- ADMIN HELPER (recursion-safe)
--- =====================================================================
--- Reads users.role using SECURITY DEFINER so the function bypasses RLS on
--- the users table. Without this, an "admin can do X" policy on users would
--- evaluate is_admin() -> SELECT users -> RLS check -> is_admin() -> ...
--- which is the infinite recursion that previously broke this codebase.
--- The function is owned by postgres (default) and STABLE so the planner
--- can cache its result within a single statement.
-CREATE OR REPLACE FUNCTION public.is_admin()
-RETURNS boolean
-LANGUAGE sql
-SECURITY DEFINER
-SET search_path = public
-STABLE
-AS $$
-  SELECT EXISTS (
-    SELECT 1 FROM public.users
-    WHERE id = auth.uid() AND role = 'admin'
-  );
-$$;
-
--- Lock the function down: only authenticated callers, not anon.
-REVOKE ALL ON FUNCTION public.is_admin() FROM PUBLIC;
-GRANT EXECUTE ON FUNCTION public.is_admin() TO authenticated;
-
--- ──────────────────────────────────────────────────────────────────────
--- USERS table — admin override (kept additive; original owner policies above still apply)
--- ──────────────────────────────────────────────────────────────────────
 DROP POLICY IF EXISTS "Admins can view all users" ON users;
 CREATE POLICY "Admins can view all users" ON users
   FOR SELECT USING (public.is_admin());
 
+-- These two already exist from the initial schema migration but are
+-- restated here so this migration stays self-contained.
 DROP POLICY IF EXISTS "Admins can update any user" ON users;
 CREATE POLICY "Admins can update any user" ON users
   FOR UPDATE USING (public.is_admin());
@@ -261,15 +169,9 @@ DROP POLICY IF EXISTS "Admins can delete any user" ON users;
 CREATE POLICY "Admins can delete any user" ON users
   FOR DELETE USING (public.is_admin());
 
--- ──────────────────────────────────────────────────────────────────────
--- FIELD_REPORTS table
--- ──────────────────────────────────────────────────────────────────────
--- Public community feed: any signed-in user can read all reports, but only
--- the owner can create/update/delete their own. Admins can delete any report
--- for moderation. Comment-count bumping is delegated to a SECURITY DEFINER
--- RPC so non-owners don't need UPDATE rights on the row.
-ALTER TABLE IF EXISTS field_reports ENABLE ROW LEVEL SECURITY;
-
+-- =====================================================================
+-- FIELD_REPORTS — granular per-operation policies + atomic comment-count
+-- =====================================================================
 DROP POLICY IF EXISTS "Anyone authenticated can view field reports" ON field_reports;
 CREATE POLICY "Anyone authenticated can view field reports" ON field_reports
   FOR SELECT TO authenticated USING (true);
@@ -292,9 +194,9 @@ DROP POLICY IF EXISTS "Admins can delete any field report" ON field_reports;
 CREATE POLICY "Admins can delete any field report" ON field_reports
   FOR DELETE TO authenticated USING (public.is_admin());
 
--- RPC for atomic comment-count increments. The client previously did a
--- read-modify-write that (a) raced under concurrent comments and (b)
--- required UPDATE rights on rows the user doesn't own. This RPC fixes both.
+-- Atomic comment-count incrementer. Replaces a racy client-side
+-- read-modify-write that also required UPDATE rights on rows users
+-- don't own.
 CREATE OR REPLACE FUNCTION public.increment_field_report_comments(report_id uuid)
 RETURNS void
 LANGUAGE sql
@@ -308,14 +210,9 @@ $$;
 REVOKE ALL ON FUNCTION public.increment_field_report_comments(uuid) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.increment_field_report_comments(uuid) TO authenticated;
 
--- ──────────────────────────────────────────────────────────────────────
--- FIELD_REPORT_COMMENTS table
--- ──────────────────────────────────────────────────────────────────────
--- Visible to any authenticated user (comments belong to a public-ish feed).
--- Inserts must set user_id = auth.uid(). Owners can delete their own; admins
--- can delete any.
-ALTER TABLE IF EXISTS field_report_comments ENABLE ROW LEVEL SECURITY;
-
+-- =====================================================================
+-- FIELD_REPORT_COMMENTS — granular policies
+-- =====================================================================
 DROP POLICY IF EXISTS "Anyone authenticated can view comments" ON field_report_comments;
 CREATE POLICY "Anyone authenticated can view comments" ON field_report_comments
   FOR SELECT TO authenticated USING (true);
@@ -332,21 +229,13 @@ DROP POLICY IF EXISTS "Admins can delete any comment" ON field_report_comments;
 CREATE POLICY "Admins can delete any comment" ON field_report_comments
   FOR DELETE TO authenticated USING (public.is_admin());
 
--- ──────────────────────────────────────────────────────────────────────
--- FEEDBACK table
--- ──────────────────────────────────────────────────────────────────────
--- Allows anonymous submissions (user_id IS NULL) from unauthenticated users,
--- and authenticated submissions where user_id = auth.uid(). Reads are owner
--- or admin only. Deletes are admin only.
-ALTER TABLE IF EXISTS feedback ENABLE ROW LEVEL SECURITY;
-
--- Anonymous inserts (must set user_id to NULL — clients claiming someone
--- else's id are rejected by the WITH CHECK).
+-- =====================================================================
+-- FEEDBACK — anonymous + authenticated insert, owner/admin read
+-- =====================================================================
 DROP POLICY IF EXISTS "Anonymous can submit feedback" ON feedback;
 CREATE POLICY "Anonymous can submit feedback" ON feedback
   FOR INSERT TO anon WITH CHECK (user_id IS NULL);
 
--- Authenticated inserts: either anonymous (user_id IS NULL) or owned.
 DROP POLICY IF EXISTS "Authenticated can submit feedback" ON feedback;
 CREATE POLICY "Authenticated can submit feedback" ON feedback
   FOR INSERT TO authenticated
@@ -363,8 +252,3 @@ CREATE POLICY "Admins can view all feedback" ON feedback
 DROP POLICY IF EXISTS "Admins can delete feedback" ON feedback;
 CREATE POLICY "Admins can delete feedback" ON feedback
   FOR DELETE TO authenticated USING (public.is_admin());
-
--- Note: AdminDashboard.handleDeleteUser also calls
---   delete from feedback where user_id = $1
--- The "Admins can delete feedback" policy covers this. If that delete is
--- ever moved to a non-admin path, add a separate owner-delete policy.

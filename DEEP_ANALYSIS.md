@@ -1,453 +1,129 @@
-# 🔍 Deep Analysis: Epimetheus Webapp
+# Deep Analysis — Epimetheus
 
-## Executive Summary
+Snapshot of the architecture and security posture as of the most recent hardening pass.
 
-**Epimetheus** is a sophisticated personality profiling platform built with modern web technologies. The application is feature-rich but currently blocked by **5 critical TypeScript compilation errors** that prevent the dev server from starting.
+## Tech stack
 
----
+- React 19, Vite 6, TypeScript 5.8 (strict), Tailwind 4
+- React Router 7, Motion 12, Lenis (smooth scroll)
+- TanStack Query 5, Zustand 5, React Context (Auth/Theme/Language)
+- Supabase Postgres + Storage
+- Regolo AI (`Llama-3.3-70B-Instruct` default, with Llama 3.1 8B / gemma4-31b / mistral-small3.2 fallbacks)
+- Express 5 for the dev API; Vercel serverless for prod (shared handler module)
+- Sentry (optional), Workbox (PWA)
 
-## 1. Project Architecture
+## Architecture
 
-### Frontend Stack
-- **React 19** with concurrent features
-- **Vite 6** for fast development and optimized builds
-- **TypeScript** for type safety
-- **Tailwind CSS 4** for styling
-- **Framer Motion** for animations
-- **React Router 7** for navigation
-- **TanStack React Query** for data fetching
-
-### Backend Stack
-- **Express.js** API server (port 3000)
-- **Supabase** PostgreSQL database with RLS
-- **Supabase Storage** for file uploads
-- **Regolo API** for AI-powered analysis (multi-model: Gemini, GPT-4, Claude)
-
-### Key Features
-1. **Personality Assessments** - MBTI-based profiling
-2. **AI Advisor** - Real-time chat with persistent sessions
-3. **Field Reports** - Community case studies
-4. **Profile Management** - User profiles with photo uploads
-5. **Calibration Tool** - Accuracy testing with AI analysis
-6. **Profiler** - Target personality analysis
-7. **Decryptor** - Message interpretation
-8. **Simulation** - Practice scenarios
-9. **Analytics** - Progress tracking and insights
-
----
-
-## 2. Current Build Status
-
-### ❌ BLOCKING ISSUES (5 Critical TypeScript Errors)
-
-#### Issue 1: Missing `cn()` Import in Layout.tsx
-**File**: `src/components/Layout.tsx`
-**Problem**: The `cn()` function is defined locally (line 20) but should be imported from `src/lib/utils.ts`
-**Current Code**:
-```typescript
-// Line 20 - Local definition
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 ```
-**Fix**: Remove local definition and import from utils
-```typescript
-import { cn } from '../lib/utils';
+main.tsx
+  └─ SessionErrorBoundary
+       └─ EnhancedAuthProvider          ← Supabase auth + users-table sync
+            └─ App
+                 ├─ ErrorBoundary
+                 ├─ QueryClientProvider
+                 ├─ LanguageProvider
+                 ├─ ThemeProvider
+                 ├─ ReactLenis
+                 └─ AnimatedRoutes      ← 23 routes, all lazy()
+                      └─ ProtectedRoute → Layout → PageWrapper(motion)
+
+api/lib/handlers.ts  (framework-agnostic)
+   ├─ used by  api/_index.ts   (Express dev)
+   └─ used by  api/server.ts   (Vercel serverless)
 ```
 
-#### Issue 2: Reaction State Type Mismatch in AdvisorPage.tsx
-**File**: `src/pages/AdvisorPage.tsx`
-**Problem**: Line 52 - `setMessageReactions` state allows `undefined` but type doesn't match
-**Current Code**:
-```typescript
-const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike' | undefined>>({});
-```
-**Issue**: The type annotation includes `undefined` in the union, but the state setter expects the value to be either 'like', 'dislike', or not present in the record
-**Fix**: Change type to exclude undefined from the union
-```typescript
-const [messageReactions, setMessageReactions] = useState<Record<string, 'like' | 'dislike'>>({});
-```
-
-#### Issue 3: safeParseJSON Type Mismatch in AssessmentPage.tsx & ProfilerPage.tsx
-**File**: `src/pages/AssessmentPage.tsx` (line 136) and `src/pages/ProfilerPage.tsx` (line 14)
-**Problem**: `safeParseJSON` is called with `string | null` but function signature expects `string`
-**Current Code**:
-```typescript
-// AssessmentPage.tsx line 136
-const saved = localStorage.getItem('assessment_current_answers');
-return safeParseJSON(saved ?? '', {}); // saved is string | null
-```
-**Issue**: `localStorage.getItem()` returns `string | null`, and while `saved ?? ''` handles it, TypeScript still sees the potential null
-**Fix**: Update `safeParseJSON` signature to accept `string | null`
-```typescript
-export function safeParseJSON<T>(text: string | null, fallback: T): T {
-  if (!text) return fallback;
-  // ... rest of function
-}
-```
-
-#### Issue 4: Type Inference Issue in CalibrationPage.tsx
-**File**: `src/pages/CalibrationPage.tsx`
-**Problem**: `data.result?.tasks` is inferred as `never` type
-**Context**: After calling `safeParseJSON`, the result type inference fails
-**Fix**: Add explicit type annotation to the result
-```typescript
-const data = safeParseJSON<AnalysisResult>(jsonStr, null);
-```
-
-#### Issue 5: Error Serialization in errorHandling.ts
-**File**: `src/utils/errorHandling.ts`
-**Problem**: Line in `serializeError()` - spreading Error object with `as Record<string, unknown>` causes TS2352
-**Current Code**:
-```typescript
-export function serializeError(err: unknown): Record<string, any> {
-  if (err instanceof Error) {
-    return {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-      ...(err as any) // TS2352 - unsafe cast
-    };
-  }
-  return { error: err };
-}
-```
-**Fix**: Use proper type assertion or Object.assign
-```typescript
-export function serializeError(err: unknown): Record<string, any> {
-  if (err instanceof Error) {
-    const errorObj: Record<string, any> = {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-    };
-    // Add any custom properties
-    Object.keys(err).forEach(key => {
-      errorObj[key] = (err as any)[key];
-    });
-    return errorObj;
-  }
-  return { error: err };
-}
-```
-
----
-
-## 3. Project Structure Analysis
-
-### Frontend Organization
-```
-src/
-├── components/          # 30+ reusable UI components
-│   ├── Layout.tsx      # Main layout with navigation
-│   ├── CommandPalette.tsx
-│   ├── ProfileCard.tsx
-│   ├── MessageBubble.tsx
-│   └── ui/             # Base UI components
-├── pages/              # 22 page components
-│   ├── AdvisorPage.tsx
-│   ├── AssessmentPage.tsx
-│   ├── CalibrationPage.tsx
-│   ├── ProfilerPage.tsx
-│   └── ...
-├── hooks/              # Custom React hooks
-│   ├── useAdvisorChat.ts
-│   ├── useAiWithRetry.ts
-│   ├── useMobile.ts
-│   └── ...
-├── services/           # External service integrations
-│   ├── regolo.ts       # AI API wrapper
-│   └── errorMonitoring.ts
-├── lib/                # Utilities and configurations
-│   ├── supabase.ts
-│   ├── ai.ts
-│   ├── utils.ts        # cn() function defined here
-│   └── queryClient.ts
-├── utils/              # Helper functions
-│   ├── errorHandling.ts
-│   ├── json.ts         # safeParseJSON defined here
-│   ├── validation.ts
-│   └── ...
-├── stores/             # Zustand state management
-├── contexts/           # React Context
-└── data/               # Static data
-```
-
-### Backend Organization
-```
-api/
-├── index.ts            # Express server entry
-├── config.ts           # Configuration
-├── ai.ts               # AI endpoints
-├── ai/
-│   ├── models.js
-│   ├── diagnostics.js
-│   └── test-key.js
-├── auth/
-│   ├── send-code.js
-│   └── verify-code.js
-└── lib/
-    └── response.ts
-```
-
----
-
-## 4. Key Dependencies & Versions
-
-### Critical Dependencies
-- **React**: 19.0.0 (latest with concurrent features)
-- **Vite**: 6.2.0 (latest)
-- **TypeScript**: ~5.8.3
-- **Tailwind CSS**: 4.2.2 (latest)
-- **Supabase**: 2.103.3
-- **React Router**: 7.14.1
-- **TanStack Query**: 5.99.0
-
-### Potential Vulnerabilities
-- **9 vulnerabilities found** (5 low, 4 high)
-- Recommendation: Run `npm audit fix --force` (may include breaking changes)
-
----
-
-## 5. Database Schema
-
-### 16 Tables (Supabase PostgreSQL)
-1. **users** - User profiles and authentication
-2. **assessments** - Personality assessment results
-3. **assessment_responses** - Individual question responses
-4. **profiles** - Extended user profile data
-5. **ai_sessions** - Chat session history
-6. **ai_messages** - Individual messages in sessions
-7. **field_reports** - Community case studies
-8. **favorites** - User's favorite profiles/reports
-9. **calibration_results** - Calibration test results
-10. **profiler_results** - Profiler analysis results
-11. **comparisons** - Profile comparison data
-12. **achievements** - User achievements/badges
-13. **notifications** - User notifications
-14. **audit_logs** - System audit trail
-15. **storage_objects** - File upload metadata
-16. **rls_policies** - Row-level security policies
-
-### Security Features
-- **Row-Level Security (RLS)** - Database-level access control
-- **JWT Authentication** - Secure token-based auth
-- **Input Validation** - Comprehensive data sanitization
-- **reCAPTCHA Integration** - Bot protection
-- **CORS Configuration** - Proper cross-origin handling
-
----
-
-## 6. Component Analysis
-
-### High-Complexity Components
-1. **Layout.tsx** (674 lines)
-   - Main navigation with dropdowns
-   - Mobile responsive menu
-   - Theme toggle
-   - Session timeout management
-   - Pull-to-refresh functionality
-   - Search functionality
-
-2. **AdvisorPage.tsx** (400+ lines)
-   - Real-time chat interface
-   - Message streaming
-   - Reaction system
-   - Export functionality
-   - Quick action suggestions
-
-3. **CalibrationPage.tsx** (600+ lines)
-   - Dynamic scenario generation
-   - AI-powered analysis
-   - Task list generation
-   - Result visualization
-   - Export to PDF
-
-4. **ProfilerPage.tsx** (500+ lines)
-   - Target personality analysis
-   - Trait assessment
-   - Historical results tracking
-   - Comparison functionality
-
-### Reusable Components
-- **MessageBubble** - Chat message display
-- **ProfileCard** - User profile display
-- **ProfileRadarChart** - Personality visualization
-- **TraitRadarChart** - Trait comparison
-- **LoadingComponents** - Loading states
-- **ErrorBoundary** - Error handling
-
----
-
-## 7. State Management
-
-### Zustand Store
-- **uiStore** - Global UI state (theme, modals, etc.)
-
-### React Context
-- **ThemeContext** - Dark/light mode
-- **EnhancedAuthContext** - Authentication state
-
-### React Query
-- Handles server state and caching
-- Automatic refetching and synchronization
-
-### Local State
-- Component-level useState for UI state
-- localStorage for persistence
-
----
-
-## 8. Performance Optimizations
-
-### Implemented
-- ✅ Code splitting with lazy loading
-- ✅ Component-level code splitting
-- ✅ Image optimization
-- ✅ Service worker for PWA
-- ✅ Caching strategies
-- ✅ Hot Module Replacement (HMR)
-- ✅ Tree shaking and minification
-
-### Potential Improvements
-- Consider React.memo for expensive components
-- Implement virtual scrolling for long lists
-- Optimize bundle size (currently unknown)
-- Consider image lazy loading
-
----
-
-## 9. Security Analysis
-
-### Implemented Security Measures
-✅ Row-Level Security (RLS) at database level
-✅ JWT authentication
-✅ Input sanitization
-✅ reCAPTCHA integration
-✅ CORS configuration
-✅ Environment variable protection
-✅ Error handling without exposing sensitive data
-
-### Potential Vulnerabilities
-⚠️ 9 npm vulnerabilities (5 low, 4 high)
-⚠️ Deprecated dependencies (rimraf, glob, tar, npmlog)
-⚠️ Need to audit API endpoints for authorization
-
----
-
-## 10. Development Workflow
-
-### Available Scripts
-```bash
-npm run dev              # Start both frontend (5173) and API (3000)
-npm run dev:frontend    # Frontend only
-npm run dev:api         # API only
-npm run build           # Production build
-npm run build:analyze   # Bundle analysis
-npm run preview         # Preview production build
-npm run lint            # TypeScript type checking
-npm run lint:api        # API type checking
-npm run lint:all        # Both frontend and API
-npm run diagnose        # Run diagnostic script
-```
-
-### Current Blockers
-- ❌ `npm run dev` fails due to TypeScript errors
-- ❌ `npm run lint` fails with 5 compilation errors
-- ❌ Cannot start development server until errors are fixed
-
----
-
-## 11. Known Issues & Fixes Applied
-
-### ✅ Previously Fixed
-- Infinite recursion in `is_admin()` function
-- Upload failures (implemented direct Supabase storage)
-- TypeScript unused variables
-- JSX structure issues
-- Module import issues
-
-### ❌ Current Issues (TODO.md)
-1. Missing `cn()` import in Layout.tsx
-2. Reaction state typing in AdvisorPage.tsx
-3. safeParseJSON type mismatch in AssessmentPage.tsx & ProfilerPage.tsx
-4. Type inference in CalibrationPage.tsx
-5. Error serialization in errorHandling.ts
-
----
-
-## 12. Recommendations
-
-### Immediate Actions (Priority 1)
-1. **Fix TypeScript errors** - All 5 errors must be resolved to enable development
-2. **Run npm audit** - Address security vulnerabilities
-3. **Update deprecated dependencies** - Replace rimraf, glob, tar, npmlog
-
-### Short-term (Priority 2)
-1. **Add unit tests** - No test framework currently in place
-2. **Add E2E tests** - Test critical user flows
-3. **Performance monitoring** - Add analytics for real-world performance
-4. **Error tracking** - Implement Sentry or similar
-
-### Medium-term (Priority 3)
-1. **Refactor large components** - Break down 600+ line components
-2. **Extract business logic** - Move logic out of components
-3. **Add storybook** - Document components
-4. **Improve accessibility** - WCAG compliance audit
-
-### Long-term (Priority 4)
-1. **Migrate to TypeScript strict mode**
-2. **Add API documentation** - OpenAPI/Swagger
-3. **Implement feature flags** - For gradual rollouts
-4. **Add monitoring & logging** - Production observability
-
----
-
-## 13. Technology Debt
-
-### High Priority
-- 5 TypeScript compilation errors blocking development
-- 9 npm vulnerabilities
-- Deprecated dependencies
-
-### Medium Priority
-- Large component files (600+ lines)
-- Mixed state management approaches
-- Limited error handling in some areas
-- No test coverage
-
-### Low Priority
-- Code organization could be improved
-- Some duplicate code in utilities
-- Documentation could be more comprehensive
-
----
-
-## 14. Deployment Status
-
-### Current Environment
-- **Frontend**: Vite dev server (port 5173)
-- **API**: Express server (port 3000)
-- **Database**: Supabase (cloud)
-- **Deployment**: Vercel (configured)
-
-### Deployment Configuration
-- `.vercelignore` configured
-- `vercel.json` configured
-- Environment variables in `.env`
-- Automatic deployment on push to main
-
----
-
-## Summary
-
-**Epimetheus** is a well-architected, feature-rich personality profiling platform with modern tech stack and sophisticated features. The application is currently **blocked by 5 TypeScript compilation errors** that must be fixed before development can proceed. Once these errors are resolved, the application should be ready for development and testing.
-
-**Next Steps**:
-1. Fix the 5 TypeScript errors (estimated 30 minutes)
-2. Run `npm run lint` to verify clean compilation
-3. Start dev server with `npm run dev`
-4. Test all features in browser at `http://localhost:5173`
-5. Address npm vulnerabilities
-6. Begin feature development or bug fixes
+The shared handler module is the most important architectural choice: dev and prod use the same business logic, which prevents drift.
 
+## Routing
+
+23 lazy-loaded routes. Public: `/login`, `/register`, `/reset-password`. Admin-gated: `/admin`. Everything else requires auth. Catch-all redirects to `/`.
+
+## Authentication
+
+Supabase email/password and Google OAuth (with embedded-WebView detection). Sessions persist via localStorage with auto-refresh. The auth provider runs `loadSession` with up to 3 retries and an 8-second hard safety timer that forces `loading=false` so the app can never get stuck on the loading screen.
+
+A SECURITY DEFINER `is_admin()` helper reads `users.role = 'admin'` without triggering RLS recursion on the `users` table. Admin policies on `users`, `feedback`, and community tables consult this helper.
+
+## Server endpoints
+
+All under `/api/` (also reachable via `/api/v1/`):
+
+| Method | Path | Auth | Purpose |
+|---|---|---|---|
+| GET | `/api/health` | public | Status + flags |
+| GET | `/api/ai/test-key` | public | Reports whether `REGOLO_API_KEY` is set |
+| POST | `/api/security/log` | public (rate-limited) | Best-effort security event logging |
+| POST | `/api/upload/profile-photo` | required | Magic-byte sniffed, 1MB cap, JWT-derived path |
+| POST | `/api/advisor/session` | required | Create chat session |
+| GET | `/api/advisor/session` | required | Latest session + last 50 messages |
+| DELETE | `/api/advisor/session/:id` | required | Owner-only delete |
+| POST | `/api/advisor/chat` | required | SSE streaming with token-aware history truncation |
+| POST | `/api/calibration/analyze` | required | Server-validated trait analysis |
+| POST | `/api/oracle/analyses` | required | Server-validated Oracle insert (replaces direct client write) |
+| POST | `/api/ai/chat` | required | Generic Regolo proxy (validated, image-aware) |
+
+`getAuthenticatedUser` resolves the Supabase JWT on every request and supplies `req.user` to handlers. Handlers always use `req.user.id`, never a body/query userId.
+
+## AI integration
+
+- Provider: Regolo AI, `https://api.regolo.ai/v1/chat/completions`
+- Streaming: handler returns an `AsyncIterable<string>` of SSE chunks; both Express and Vercel iterate and flush. The client (`useAdvisorChat`) parses both `\n\n` and `\r\n\r\n` boundaries, sanitizes each chunk via `sanitizeAiResponse`, and supports abort.
+- Persistence: user message is saved before streaming starts; assistant reply is saved after the stream completes. Stream interruptions never lose the user's prompt.
+- Truncation: history is trimmed when total content exceeds ~5k tokens worth of chars, leaving headroom for the system prompt and a 600-token reply inside Llama 3.3 70B's 8192-token context.
+- Fallback: per-model retry chain in `createCompletion`. 429s honor `Retry-After`; 401/402/403 short-circuit.
+
+## Data layer
+
+Canonical schema lives in `supabase-schema-v2.sql`. Active tables:
+
+- `users`, `assessment_results`, `calibrations`, `oracle_analyses`
+- `advisor_sessions`, `advisor_messages`
+- `field_reports`, `field_report_comments`, `feedback`
+- `favorites`, `dossiers`
+- `rate_limits` (Vercel-only)
+- `verification_codes`, `public_config`, `private_config`
+
+RLS policies for all user-data tables are in `scripts/rls-audit.sql`. Storage policies restrict `user-uploads` writes to `users/<auth.uid()>/…`. The `feedback` table allows anonymous (`user_id IS NULL`) inserts; reads are owner or admin only.
+
+## Security posture
+
+Hardened in this pass:
+
+1. **RLS coverage** — `field_reports`, `field_report_comments`, `feedback` all have owner-scoped policies plus admin overrides. An atomic `increment_field_report_comments(uuid)` RPC replaces the racy client-side comment-count update.
+2. **Server-validated `oracle_analyses` writes** — the client previously wrote the AI JSON blob directly. Now it goes through `POST /api/oracle/analyses` which whitelists type codes, clamps every string, validates task enums, and caps array lengths.
+3. **Profile photo uploads through the API** — `EditProfileModal` no longer writes directly to storage. The endpoint sniffs magic bytes, enforces a 1MB cap, and derives the user folder from the JWT.
+4. **Atomic Vercel rate limiter** — `record_and_count_rate_limit(key, window_seconds)` RPC inserts and counts in a single statement, eliminating the SELECT-then-INSERT race that let bursts slip past the limit.
+5. **`/api/security/log` is rate-limited** — separate bucket per IP (30/min in dev, same on Vercel) so the public endpoint can't be flooded.
+6. **`/reset-password` route exists** — handles both the request-email step and the post-recovery set-new-password step. The faulty `origin + path || fallback` redirect logic in the auth context was fixed.
+7. **`is_admin()` SECURITY DEFINER helper** — recursion-safe admin check used by RLS policies.
+
+Pre-existing strengths kept:
+
+- JWT-derived `userId` everywhere on the server
+- Explicit CORS allow-list with `Vary: Origin`, never `*` + credentials
+- `X-Requested-With` / JSON content-type CSRF check
+- CSP without `unsafe-inline` on `script-src` (still required for `style-src` because Tailwind 4 inlines critical CSS)
+- HSTS in production
+- Server-side calibration validation with length clamps
+
+Remaining trade-offs:
+
+- The custom Supabase auth `lock` is a no-op — fine for single-tab SPA use, theoretically races on multi-tab token refresh. Not fixed.
+- Tailwind 4 still requires `style-src 'unsafe-inline'`. Move to nonce-based styling later.
+
+## Code-quality cleanups in this pass
+
+- **`cn()` consolidation** — six local copies in `CalibrationPage`, `EncyclopediaPage`, `FieldGuidePage`, `GuidePage`, `Logo`, `CommandCenter` were replaced with `import { cn } from '@/lib/utils'`. Single source of truth.
+- **`sanitizeInput` / `isValidEmail` consolidation** — `validation.ts` is canonical; `errorHandling.ts` re-exports from it so existing import paths keep working.
+- **`README.md` and this file** — rewritten to match what the code actually does. The old docs claimed Gemini/GPT-4/Claude as AI providers, listed nonexistent files (`services/regolo.ts`, `auth/send-code.js`, `ai/models.js`), and described a 16-table schema with names that don't exist.
+
+## What still warrants attention
+
+- **Test coverage** — Vitest is configured but only `src/utils/json.test.ts` exists. New work should ship with coverage.
+- **Large components** — `Layout.tsx` (~830 lines) and `CalibrationPage.tsx` (~1600 lines) still warrant splitting for HMR speed and readability.
+- **Streaming UI updates** — `useAdvisorChat.performSend` does `setMessages(prev => prev.map(...))` per token. Switch to ref + `flushSync` + RAF batching for long replies.
+- **`AdminDashboard`** — three unbounded `select('*')` calls in parallel. Add pagination + projections.
+- **`oracle_analyses` task toggles** — still round-trip per click via JSON-path update. Debounce or batch.
+- **`Layout.tsx`** — references Firebase error codes (`auth/popup-closed-by-user`) that Supabase never emits. Dead defensive code.
+- **`npm audit`** — re-run periodically.
+- **Schema sources of truth** — `supabase-schema-v2.sql` and `scripts/rls-audit.sql` need to be kept in sync manually. Worth migrating to a `supabase/migrations/` folder long term.

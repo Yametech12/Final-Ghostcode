@@ -9,6 +9,7 @@ import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 const HomePage = lazy(() => import('../../pages/HomePage'));
 const LoginPage = lazy(() => import('../../pages/LoginPage'));
 const RegisterPage = lazy(() => import('../../pages/RegisterPage'));
+const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage'));
 
 // Core functionality pages - high priority
 const ProfilePage = lazy(() => import('../../pages/ProfilePage'));
@@ -114,6 +115,17 @@ export default function AnimatedRoutes() {
         <Routes location={location} key={location.pathname}>
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
+          {/*
+            /reset-password is intentionally NOT wrapped in PublicRoute. The
+            recovery email link briefly authenticates the user (Supabase emits
+            PASSWORD_RECOVERY), and PublicRoute would immediately bounce them
+            home before they can set a new password.
+          */}
+          <Route path="/reset-password" element={
+            <Suspense fallback={<InlineLoader />}>
+              <ResetPasswordPage />
+            </Suspense>
+          } />
           <Route path="/calibration" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>

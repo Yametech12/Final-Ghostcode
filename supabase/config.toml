@@ -1,0 +1,11 @@
+# Minimum Supabase CLI config so `supabase db reset` recognizes
+# supabase/migrations/ as the schema source.
+project_id = "epimetheus"
+
+[db]
+port = 54322
+shadow_port = 54320
+major_version = 15
+
+[db.migrations]
+schema_paths = []

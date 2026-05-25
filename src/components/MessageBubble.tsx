@@ -32,10 +32,7 @@ export function MessageBubble({
 
   if (isStreaming) {
     return (
-      <div className={cn("flex gap-3 max-w-3xl", className)}>
-        <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-          <Bot className="w-4 h-4 text-white" />
-        </div>
+      <div className={cn("flex max-w-3xl", className)}>
         <TypingIndicator />
       </div>
     );

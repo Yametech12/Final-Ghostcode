@@ -103,6 +103,11 @@ export function useAdvisorChat() {
   /**
    * Send the request, stream the response, and update messages in place.
    * Reads sessionId/userId from refs to avoid stale closures.
+   *
+   * For the streaming bubble we batch updates with requestAnimationFrame
+   * instead of calling setMessages per token. The previous per-chunk
+   * `setMessages(prev => prev.map(...))` was O(messages × tokens) and made
+   * long replies janky on slower devices.
    */
   const performSend = useCallback(async (content: string) => {
     const sid = sessionIdRef.current;
@@ -139,6 +144,33 @@ export function useAdvisorChat() {
     let assistantContent = '';
     let placeholderAdded = false;
 
+    // RAF-batched flush: each token mutates the local accumulator and schedules
+    // at most one render per animation frame. The user still sees a smooth
+    // typing effect (60fps), but React only does work once per frame.
+    let rafId: number | null = null;
+    const flush = () => {
+      rafId = null;
+      const snapshot = assistantContent;
+      if (!placeholderAdded) {
+        placeholderAdded = true;
+        setMessages(prev => [
+          ...prev,
+          { id: assistantId, role: 'model', content: snapshot, timestamp: new Date() },
+        ]);
+      } else {
+        setMessages(prev =>
+          prev.map(m => (m.id === assistantId ? { ...m, content: snapshot } : m)),
+        );
+      }
+    };
+    const scheduleFlush = () => {
+      if (rafId === null) {
+        rafId = (typeof requestAnimationFrame === 'function'
+          ? requestAnimationFrame(flush)
+          : (setTimeout(flush, 16) as unknown as number));
+      }
+    };
+
     try {
       while (true) {
         const { done, value } = await reader.read();
@@ -157,6 +189,12 @@ export function useAdvisorChat() {
             const data = line.slice(5).trimStart();
             if (!data) continue;
             if (data === STREAM_DONE) {
+              // Final flush so we don't lose any tail tokens after [DONE].
+              if (rafId !== null) {
+                cancelAnimationFrame(rafId);
+                rafId = null;
+              }
+              flush();
               return;
             }
 
@@ -167,17 +205,7 @@ export function useAdvisorChat() {
               }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
                 assistantContent += sanitizeAiResponse(parsed.content);
-                if (!placeholderAdded) {
-                  placeholderAdded = true;
-                  setMessages(prev => [
-                    ...prev,
-                    { id: assistantId, role: 'model', content: assistantContent, timestamp: new Date() },
-                  ]);
-                } else {
-                  setMessages(prev =>
-                    prev.map(m => (m.id === assistantId ? { ...m, content: assistantContent } : m)),
-                  );
-                }
+                scheduleFlush();
               }
             } catch (err) {
               if (err instanceof Error && err.message && !err.message.startsWith('Unexpected')) {
@@ -190,6 +218,14 @@ export function useAdvisorChat() {
         }
       }
     } finally {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      // Ensure the user sees the final state even if the stream ended without [DONE].
+      if (assistantContent && (placeholderAdded || assistantContent.length > 0)) {
+        flush();
+      }
       try { reader.releaseLock(); } catch { /* ignore */ }
     }
   }, []);

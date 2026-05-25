@@ -1,21 +1,12 @@
 -- =====================================================================
--- DEPRECATED — kept on disk for one release cycle.
+-- Initial schema (consolidated from supabase-schema-v2.sql)
+-- Tables, enable-RLS, base policies, helper functions, triggers, indexes.
 --
--- The canonical schema source is now `supabase/migrations/`. Apply with
--- the Supabase CLI (`supabase db reset`) or by running the migrations in
--- lexicographic order in the SQL editor:
---
---   supabase/migrations/20240101000000_initial_schema.sql
---   supabase/migrations/20240101000100_rls_audit.sql
---   supabase/migrations/20240101000200_rate_limits.sql
---
--- This file will be deleted after the next release.
+-- Idempotent: drops policies before recreating them so re-running this
+-- migration on an already-migrated database is safe.
 -- =====================================================================
 
--- Supabase Database Schema (Version 2 - Fixed)
--- Copy this entire file into Supabase SQL Editor and run it
-
--- Drop all policies on all tables first
+-- Drop existing policies first so re-applying the migration is idempotent.
 DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
 DROP POLICY IF EXISTS "Admins can see all users" ON users;
 DROP POLICY IF EXISTS "Admins can update any user" ON users;
@@ -57,15 +48,13 @@ DROP POLICY IF EXISTS "Admins can manage public config" ON public_config;
 
 DROP POLICY IF EXISTS "Admins can manage private config" ON private_config;
 
--- Drop functions and triggers
-DROP FUNCTION IF EXISTS public.is_admin() CASCADE;
-DROP TRIGGER IF EXISTS update_advisor_sessions_updated_at ON advisor_sessions;
-DROP FUNCTION IF EXISTS update_updated_at_column() CASCADE;
-
--- Drop legacy uid column
+-- Drop legacy uid column if it lingers from an older schema version.
 ALTER TABLE IF EXISTS users DROP COLUMN IF EXISTS uid CASCADE;
 
--- Create tables
+-- =====================================================================
+-- TABLES
+-- =====================================================================
+
 CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   email TEXT UNIQUE,
@@ -203,11 +192,13 @@ CREATE TABLE IF NOT EXISTS private_config (
   data JSONB NOT NULL
 );
 
--- Backfill field_reports.title
+-- Backfill field_reports.title if it was added later.
 ALTER TABLE field_reports ADD COLUMN IF NOT EXISTS title TEXT;
 UPDATE field_reports SET title = scenario WHERE title IS NULL;
 
--- Enable RLS
+-- =====================================================================
+-- ENABLE RLS on every public table
+-- =====================================================================
 ALTER TABLE IF EXISTS users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS calibrations ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS oracle_analyses ENABLE ROW LEVEL SECURITY;
@@ -224,7 +215,13 @@ ALTER TABLE IF EXISTS verification_codes ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public_config ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS private_config ENABLE ROW LEVEL SECURITY;
 
--- Functions
+-- =====================================================================
+-- HELPER FUNCTIONS
+-- =====================================================================
+
+-- Recursion-safe admin check. SECURITY DEFINER so the function reads
+-- users.role bypassing RLS — without this, an "admin can do X" policy on
+-- users would call is_admin() → SELECT users → policy → is_admin() → ∞.
 CREATE OR REPLACE FUNCTION public.is_admin()
 RETURNS boolean
 LANGUAGE sql
@@ -250,7 +247,10 @@ CREATE TRIGGER update_advisor_sessions_updated_at
 BEFORE UPDATE ON advisor_sessions
 FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
--- RLS Policies
+-- =====================================================================
+-- BASE RLS POLICIES (refined further in 20240101000100_rls_audit.sql)
+-- =====================================================================
+
 CREATE POLICY "Users can read/write their own data" ON users FOR ALL
 USING (id = auth.uid());
 
@@ -344,7 +344,9 @@ USING (public.is_admin());
 CREATE POLICY "Admins can manage private config" ON private_config FOR ALL
 USING (public.is_admin());
 
--- Indexes
+-- =====================================================================
+-- INDEXES
+-- =====================================================================
 CREATE INDEX IF NOT EXISTS idx_calibrations_user_timestamp ON calibrations(user_id, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_oracle_analyses_user_timestamp ON oracle_analyses(user_id, timestamp DESC);
 CREATE INDEX IF NOT EXISTS idx_field_reports_timestamp ON field_reports(timestamp DESC);

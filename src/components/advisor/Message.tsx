@@ -19,6 +19,31 @@ function formatTime(date?: Date) {
 }
 
 /**
+ * Convert single newlines into CommonMark hard breaks so the AI's intended
+ * line-by-line layout survives the markdown renderer.
+ *
+ * Rules:
+ *   - Blank lines (paragraph breaks) are preserved as-is.
+ *   - Single newlines INSIDE fenced code blocks are preserved (code is
+ *     literal — adding two spaces would change the source).
+ *   - Single newlines between two non-blank lines get two trailing spaces
+ *     prepended, which is the CommonMark hard-break syntax (renders as <br>).
+ */
+function prepareMarkdown(input: string): string {
+  if (!input) return input;
+  const segments = input.split(/(```[\s\S]*?```|`[^`\n]*`)/g);
+  return segments
+    .map((seg, i) => {
+      // Odd indices are the captured code blocks / inline code — leave alone.
+      if (i % 2 === 1) return seg;
+      // For non-code segments, turn a lone "\n" between two non-blank chars
+      // into "  \n" (two spaces + newline = markdown hard break).
+      return seg.replace(/([^\n])\n([^\n])/g, '$1  \n$2');
+    })
+    .join('');
+}
+
+/**
  * A single message bubble. The action toolbar is anchored below the bubble
  * (not floated to the right) so it works on mobile without clipping.
  */
@@ -71,7 +96,7 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
               <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '300ms' }} />
             </span>
           ) : (
-            <div className="prose prose-invert prose-sm max-w-none break-words prose-a:text-accent-primary prose-a:underline hover:prose-a:text-accent-secondary prose-code:text-accent-primary prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-strong:text-white">
+            <div className="prose prose-invert prose-sm max-w-none break-words prose-a:text-accent-primary prose-a:underline hover:prose-a:text-accent-secondary prose-code:text-accent-primary prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-strong:text-white prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
               <ReactMarkdown
                 components={{
                   // Open every link in a new tab safely (treat AI output as untrusted).
@@ -87,7 +112,16 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
                   ),
                 }}
               >
-                {message.content}
+                {/*
+                  CommonMark treats a single \n between non-blank lines as a
+                  soft break (usually rendered as a space), so a model emitting
+                  "Line A\nLine B" would render as "Line A Line B". Here we
+                  convert single newlines that aren't already part of a blank
+                  line, list, heading, or code block into a hard break (two
+                  trailing spaces + \n) so the user sees one line per line as
+                  intended. Double-newlines (paragraph breaks) are preserved.
+                */}
+                {prepareMarkdown(message.content)}
               </ReactMarkdown>
             </div>
           )}

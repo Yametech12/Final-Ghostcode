@@ -22,6 +22,14 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+    // Forward to Sentry (no-op if not configured)
+    import('../lib/sentry').then(({ captureException }) => {
+      captureException(error, {
+        componentStack: errorInfo.componentStack,
+      });
+    }).catch(() => {
+      // Sentry unavailable — already logged to console
+    });
   }
 
   private handleReset = () => {

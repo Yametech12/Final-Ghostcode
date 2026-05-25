@@ -103,20 +103,9 @@ export function getSupabaseErrorMessage(error: unknown): string {
 }
 
 // Email validation utility
-export function isValidEmail(email: string): boolean {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return emailRegex.test(email);
-}
-
-// Input sanitization utility
-export function sanitizeInput(input: string): string {
-  // Remove potentially dangerous characters and trim
-  return input
-    .replace(/[<>]/g, '') // Remove angle brackets
-    .replace(/javascript:/gi, '') // Remove javascript: protocol
-    .replace(/on\w+=/gi, '') // Remove event handlers
-    .trim();
-}
+// Re-exported from validation.ts (the canonical implementation).
+// Kept here so existing imports of `from '../utils/errorHandling'` still work.
+export { isValidEmail, sanitizeInput } from './validation';
 
 // Helper function to properly serialize Error objects for logging
 export function serializeError(err: unknown): Record<string, any> {

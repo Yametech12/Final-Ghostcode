@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { X, User, Phone, Instagram, Twitter, Save, Loader2, Upload, Camera } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toast } from 'sonner';
-import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/fetch';
 import ImageCropper from './ImageCropper';
 
 interface EditProfileModalProps {
@@ -137,29 +137,37 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         preferWebP: true,
       });
 
-      // Convert compressed data URL back to a File
+      // Convert compressed data URL back to a File for the local preview state
+      // (the API takes the data URL directly, no need to re-roll a Blob).
       const compressedResponse = await fetch(compressedDataUrl);
       const compressedBlob = await compressedResponse.blob();
       const ext = compressedBlob.type === 'image/webp' ? 'webp' : 'jpg';
-      const compressedFile = new File([compressedBlob], `profile-${Date.now()}.${ext}`, { type: compressedBlob.type });
+      const compressedFile = new File(
+        [compressedBlob],
+        `profile-${Date.now()}.${ext}`,
+        { type: compressedBlob.type }
+      );
 
       setPhotoFile(compressedFile);
       setPhotoPreview(URL.createObjectURL(compressedBlob));
 
-      const fileName = `${userData.id}/profile-${Date.now()}.${ext}`;
-      const { error } = await supabase
-        .storage
-        .from('user-uploads')
-        .upload(fileName, compressedFile, {
-          contentType: compressedBlob.type,
-          upsert: false
-        });
-      if (error) throw error;
+      // Upload via the server endpoint instead of writing directly to storage.
+      // The server validates magic bytes, enforces a 1MB cap, and derives the
+      // user folder from the JWT — so a tampered client can't write to another
+      // user's path. The previous direct-to-storage path bypassed all of that.
+      const response = await apiFetch('/api/upload/profile-photo', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ base64Data: compressedDataUrl }),
+      });
 
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('user-uploads')
-        .getPublicUrl(fileName);
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || `Upload failed: ${response.status}`);
+      }
+
+      const { url: publicUrl } = await response.json();
+      if (!publicUrl) throw new Error('Upload succeeded but no URL was returned');
 
       setPhotoUrl(publicUrl);
       setPhotoPreview(publicUrl);
@@ -167,7 +175,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       toast.success('Profile photo updated!');
     } catch (error: any) {
       console.error('Photo upload error:', error);
-      toast.error('Failed to upload photo');
+      toast.error(error?.message || 'Failed to upload photo');
     } finally {
       setUploadingPhoto(false);
     }

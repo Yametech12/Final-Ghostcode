@@ -186,19 +186,10 @@ export default function Layout({ children }: LayoutProps) {
   // Global error handling for unhandled rejections
   useEffect(() => {
     const handleRejection = (event: PromiseRejectionEvent) => {
-      // Ignore empty rejections or specific Firebase Auth cancellations
       if (!event.reason) return;
-      
+
       const reason = event.reason;
-      const code = reason?.code || (typeof reason === 'string' ? reason : null);
-
-      if (code === 'auth/popup-closed-by-user' || 
-          code === 'auth/cancelled-popup-request' ||
-          code === 'auth/user-cancelled') {
-        return;
-      }
-
-      console.error('Unhandled promise rejection:', reason || 'No reason provided', event);
+      console.error('Unhandled promise rejection:', reason, event);
 
       // Prefer structured AppError fields over JSON-parsing the message.
       let message: string | null = null;

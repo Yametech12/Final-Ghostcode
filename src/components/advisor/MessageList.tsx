@@ -2,7 +2,7 @@ import { ArrowDown } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useSmartScroll } from '../../hooks/useSmartScroll';
 import { Message } from './Message';
-import { TypingIndicator } from './TypingIndicator';
+import { TypingIndicator } from '../TypingIndicator';
 import { EmptyState } from './EmptyState';
 import type { AdvisorMessage } from '../../hooks/useAdvisorChat';
 

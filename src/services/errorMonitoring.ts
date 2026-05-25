@@ -125,10 +125,22 @@ class APIErrorMonitor {
   /**
    * Send critical errors to monitoring service
    */
-  private sendToMonitoring(error: ErrorLog): void {
-    // This would integrate with services like Sentry, Rollbar, etc.
-    // For now, just log to console
-    console.error('Critical error detected:', error);
+  private async sendToMonitoring(error: ErrorLog): Promise<void> {
+    try {
+      const { captureException } = await import('../lib/sentry');
+      const err = new Error(`[${error.service}] ${error.message}`);
+      await captureException(err, {
+        severity: error.severity,
+        code: error.code,
+        endpoint: error.endpoint,
+        statusCode: error.statusCode,
+        userId: error.userId,
+        details: error.details,
+      });
+    } catch {
+      // Sentry unavailable — log to console as fallback
+      console.error('Critical error detected:', error);
+    }
   }
 }
 

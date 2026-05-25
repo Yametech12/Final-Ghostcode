@@ -7,6 +7,10 @@ import App from './App';
 import './index.css';
 import { Toaster } from 'sonner';
 import { validateEnvironment } from './utils/env';
+import { initSentry } from './lib/sentry';
+
+// Initialize Sentry early (no-op in dev or without DSN)
+initSentry();
 
 // Global unhandled promise rejection handler
 window.addEventListener('unhandledrejection', (event) => {

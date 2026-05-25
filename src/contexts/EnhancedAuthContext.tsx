@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, useCallback, ReactNode 
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { serializeError } from '../utils/errorHandling';
+import { setUser as setSentryUser, clearUser as clearSentryUser } from '../lib/sentry';
 import { toast } from 'sonner';
 
 // Extended User type with metadata properties
@@ -209,6 +210,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         // Always clear loading on auth state change too
         setLoading(false);
         if (newSession?.user?.id) {
+          // Set Sentry user context for error tracking
+          setSentryUser({ id: newSession.user.id, email: newSession.user.email });
           loadUserData(newSession.user.id).catch(err =>
             console.error('Background user data load failed:', err)
           );
@@ -218,6 +221,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setUserData(null);
         setLoading(false);
+        // Clear Sentry user context on sign out
+        clearSentryUser();
       }
     });
 
@@ -318,8 +323,15 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
   const resetPassword = async (email: string) => {
     try {
+      // window.location.origin is reliably set in any browser context, so use
+      // it directly. The previous expression `origin + '/reset-password' || fallback`
+      // never reached the fallback because the left side is always a truthy string.
+      const redirectTo =
+        (typeof window !== 'undefined' && window.location.origin
+          ? window.location.origin
+          : 'https://epimetheusproject.vercel.app') + '/reset-password';
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: window.location.origin + '/reset-password' || 'https://epimetheusproject.vercel.app/reset-password'
+        redirectTo,
       });
       if (error) throw error;
       toast.success('Password reset email sent');

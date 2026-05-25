@@ -28,6 +28,9 @@ export function escapeHtml(str: string): string {
 /**
  * Strip all HTML tags from a string.
  * More aggressive than escaping — removes tags entirely.
+ *
+ * Trims surrounding whitespace because callers of stripHtml hand in a complete
+ * snippet, not a stream of partial tokens.
  */
 export function stripHtml(str: string): string {
   if (!str) return '';
@@ -42,12 +45,17 @@ export function stripHtml(str: string): string {
 
 /**
  * Sanitize AI response content.
- * Strips dangerous patterns while preserving readable text.
- * Safe for rendering in React (which already escapes by default).
+ *
+ * IMPORTANT: this function is called *per SSE token* on the streaming path
+ * (see `useAdvisorChat.performSend`). Tokens often start or end with a single
+ * space or a newline — trimming them would silently glue words together
+ * ("Hello" + " world" → "Helloworld") and collapse paragraph breaks. So we
+ * deliberately do NOT trim here. Callers that hand in a *complete* string
+ * can `.trim()` themselves if needed.
  */
 export function sanitizeAiResponse(content: string): string {
   if (!content) return '';
-  
+
   return content
     // Remove script tags and their content
     .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
@@ -60,9 +68,8 @@ export function sanitizeAiResponse(content: string): string {
     // Remove javascript: protocol
     .replace(/javascript\s*:/gi, '')
     // Remove data: protocol (can be used for XSS)
-    .replace(/data\s*:\s*text\/html/gi, '')
-    // Keep the rest as-is (React escapes it during render)
-    .trim();
+    .replace(/data\s*:\s*text\/html/gi, '');
+  // No .trim() — whitespace between tokens is meaningful while streaming.
 }
 
 /**

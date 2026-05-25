@@ -282,6 +282,17 @@ export default function LoginPage() {
             </label>
           </div>
 
+          {/* Forgot password */}
+          <div className="flex justify-end -mt-2">
+            <button
+              type="button"
+              onClick={() => navigate('/reset-password')}
+              className="text-sm text-accent-primary hover:underline"
+            >
+              Forgot password?
+            </button>
+          </div>
+
           
           {/* Attempts warning */}
           {loginAttempts > 0 && !isLocked && (

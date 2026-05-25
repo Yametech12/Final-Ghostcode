@@ -2,13 +2,8 @@ import { useState, useEffect } from 'react';
 import { Book, ChevronRight, Star, Zap, CheckCircle2, Trophy } from 'lucide-react';
 import { guideSections } from '../data/guideSections';
 import FavoriteButton from '../components/FavoriteButton';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 import GlossaryText from '../components/GlossaryText';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
+import { cn } from '../lib/utils';
 
 export default function GuidePage() {
   const [activeTab, setActiveTab] = useState(guideSections[0].id);

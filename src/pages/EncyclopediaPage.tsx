@@ -24,17 +24,12 @@ import {
   Activity,
 } from "lucide-react";
 import { personalityTypes } from "../data/personalityTypes";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { cn } from "../lib/utils";
 import ReactMarkdown from "react-markdown";
 import FavoriteButton from "../components/FavoriteButton";
 import ProfileRadarChart from "../components/ProfileRadarChart";
 import Tooltip from "../components/Tooltip";
 import { glossaryTerms } from "../components/GlossaryText";
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 export default function EncyclopediaPage() {
   const [searchParams, setSearchParams] = useSearchParams();

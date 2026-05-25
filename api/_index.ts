@@ -19,6 +19,9 @@ import {
   handleAdvisorChatStream,
   handleCalibrationAnalyze,
   handleAiChat,
+  handleCreateOracleAnalysis,
+  handleUpdateOracleAnalysisTasks,
+  handleDeleteOracleAnalysis,
   type NormalizedRequest,
 } from './lib/handlers.js';
 
@@ -65,24 +68,32 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // Rate limiting (in-memory; best-effort only — see notes in shared handlers)
 // ---------------------------------------------------------------------------
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
-const RATE_LIMIT = 10;
+const AI_LIMIT = 10;
+const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
 const RATE_WINDOW = 60_000;
 
 function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
-  if (!req.path.startsWith('/api/ai') && !req.path.startsWith('/api/advisor')) return next();
+  // Decide which bucket (if any) applies. AI/advisor/calibration share one,
+  // /api/security/log gets its own with a higher allowance since legitimate
+  // clients can emit several events per page load.
+  const isAiPath = req.path.startsWith('/api/ai') || req.path.startsWith('/api/advisor') || req.path.startsWith('/api/calibration');
+  const isLogPath = req.path === '/api/security/log';
+  if (!isAiPath && !isLogPath) return next();
 
+  const limit = isLogPath ? LOG_LIMIT : AI_LIMIT;
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
+  const bucketKey = isLogPath ? `log:${ip}` : `ai:${ip}`;
   const now = Date.now();
-  const record = rateLimitStore.get(ip);
+  const record = rateLimitStore.get(bucketKey);
 
   if (!record || now > record.resetTime) {
-    rateLimitStore.set(ip, { count: 1, resetTime: now + RATE_WINDOW });
+    rateLimitStore.set(bucketKey, { count: 1, resetTime: now + RATE_WINDOW });
     return next();
   }
-  if (record.count >= RATE_LIMIT) {
+  if (record.count >= limit) {
     return res.status(429).json({
       error: 'Rate limited',
-      details: `Maximum ${RATE_LIMIT} requests per minute`,
+      details: `Maximum ${limit} requests per minute`,
       retryAfter: Math.ceil((record.resetTime - now) / 1000),
     });
   }
@@ -139,7 +150,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Origin', origin);
     res.header('Vary', 'Origin');
   }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.header('Access-Control-Allow-Credentials', 'true');
   next();
@@ -201,6 +212,17 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
 }
 
 // ---------------------------------------------------------------------------
+// API versioning: /api/v1/* is rewritten to /api/* for forward compatibility.
+// This lets clients optionally pin to v1 without us having to duplicate routes.
+// ---------------------------------------------------------------------------
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/api/v1/')) {
+    req.url = '/api/' + req.url.slice('/api/v1/'.length);
+  }
+  next();
+});
+
+// ---------------------------------------------------------------------------
 // Routes
 // ---------------------------------------------------------------------------
 app.get('/api/health', async (req, res) => {
@@ -250,6 +272,21 @@ app.post('/api/advisor/chat', async (req, res) => {
 app.post('/api/calibration/analyze', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleCalibrationAnalyze(nr, supabase));
+});
+
+app.post('/api/oracle/analyses', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleCreateOracleAnalysis(nr, supabase));
+});
+
+app.patch('/api/oracle/analyses/:id/tasks', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleUpdateOracleAnalysisTasks(nr, supabase));
+});
+
+app.delete('/api/oracle/analyses/:id', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleDeleteOracleAnalysis(nr, supabase));
 });
 
 app.post('/api/ai/chat', async (req, res) => {

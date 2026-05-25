@@ -9,8 +9,6 @@ import {
 import { safeParseJSON } from '../utils/json';
 import { LogoIcon } from '../components/Logo';
 import { personalityTypes } from '../data/personalityTypes';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
 // html2canvas is heavy (~400KB). Lazy-imported inside the export handler so it
 // doesn't ship with the main bundle.
 import { useSearchParams } from 'react-router-dom';
@@ -19,15 +17,13 @@ import FavoriteButton from '../components/FavoriteButton';
 import Tooltip from '../components/Tooltip';
 import { glossaryTerms } from '../components/GlossaryText';
 import { supabase } from '../lib/supabase';
+import { apiFetch } from '../lib/fetch';
 import { toast } from 'sonner';
 import { chatCompletion } from '../lib/ai';
+import { cn } from '../lib/utils';
 
 import { motion, AnimatePresence } from 'framer-motion';
 import HistoryList from '../components/calibration/HistoryList';
-
-function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}
 
 interface Task {
   id: string;
@@ -226,13 +222,21 @@ export default function CalibrationPage() {
       return item;
     }));
 
-    // Update Supabase if user is logged in
+    // Persist via the validated server endpoint. The previous direct
+    // supabase.from('oracle_analyses').update({ 'result.tasks': … }) call
+    // also wrote to a literal column named 'result.tasks' instead of patching
+    // the JSON column, so this also fixes that bug.
     if (user && currentAnalysisId) {
       try {
-        const { error } = await supabase.from('oracle_analyses').update({
-          'result.tasks': updatedTasks
-        }).eq('id', currentAnalysisId);
-        if (error) throw error;
+        const response = await apiFetch(`/api/oracle/analyses/${currentAnalysisId}/tasks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks: updatedTasks }),
+        });
+        if (!response.ok) {
+          const errBody = await response.json().catch(() => ({}));
+          throw new Error(errBody.error || `Update failed: ${response.status}`);
+        }
       } catch (err) {
         console.error('Failed to update task:', err);
         toast.error("Failed to update task. Please try again.");
@@ -260,10 +264,15 @@ export default function CalibrationPage() {
 
     if (user && currentAnalysisId) {
       try {
-        const { error } = await supabase.from('oracle_analyses').update({
-          'result.tasks': updatedTasks
-        }).eq('id', currentAnalysisId);
-        if (error) throw error;
+        const response = await apiFetch(`/api/oracle/analyses/${currentAnalysisId}/tasks`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ tasks: updatedTasks }),
+        });
+        if (!response.ok) {
+          const errBody = await response.json().catch(() => ({}));
+          throw new Error(errBody.error || `Update failed: ${response.status}`);
+        }
         toast.success(completed ? "All tasks marked as complete" : "All tasks marked as pending");
       } catch (err) {
         console.error('Failed to update tasks:', err);
@@ -448,8 +457,11 @@ export default function CalibrationPage() {
     if (!user) return;
 
     try {
-      const { error } = await supabase.from('oracle_analyses').delete().eq('id', id);
-      if (error) throw error;
+      const response = await apiFetch(`/api/oracle/analyses/${id}`, { method: 'DELETE' });
+      if (!response.ok) {
+        const errBody = await response.json().catch(() => ({}));
+        throw new Error(errBody.error || `Delete failed: ${response.status}`);
+      }
       setHistory(prev => prev.filter(item => item.id !== id));
       toast.success("Analysis deleted from history");
       if (analysis?.id === id) {
@@ -545,40 +557,36 @@ export default function CalibrationPage() {
 
       if (user) {
         try {
-          // Ensure user record exists in users table first
-          const { data: userRecord } = await supabase
-            .from('users')
-            .select('id')
-            .eq('id', user.id)
-            .maybeSingle();
+          // Persist via the server endpoint instead of writing directly to the
+          // table. The server validates and clamps the AI JSON shape so a
+          // compromised client can't push arbitrary data into the column.
+          const response = await apiFetch('/api/oracle/analyses', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              input: structuredInput,
+              result: data,
+              scenarioSummary,
+            }),
+          });
 
-          if (!userRecord) {
-            // Create the user record if it doesn't exist
-            const { error: createError } = await supabase
-              .from('users')
-              .insert({ id: user.id });
-            if (createError) {
-              console.error('Failed to create user record:', createError);
-              // Continue anyway - the insert below will also fail gracefully
-            }
+          if (!response.ok) {
+            const errBody = await response.json().catch(() => ({}));
+            throw new Error(errBody.error || `Save failed: ${response.status}`);
           }
 
-          const { data: inserted, error } = await supabase.from('oracle_analyses').insert({
-            user_id: user.id,
-            input: structuredInput,
-            result: data,
-            scenario_summary: scenarioSummary,
-            timestamp: new Date().toISOString()
-          }).select().single();
-          if (error) throw error;
+          const saved = await response.json();
+          const insertedId = saved?.id ?? saved?.analysis?.id;
 
-          // Update the history item with the real Supabase ID
-          setHistory(prev => prev.map(item =>
-            item.id === newHistoryItem.id ? { ...item, id: inserted.id } : item
-          ));
-          setAnalysis(prev => prev?.id === newHistoryItem.id ? { ...prev, id: inserted.id } : prev);
+          if (insertedId) {
+            // Update the history item with the real Supabase ID
+            setHistory(prev => prev.map(item =>
+              item.id === newHistoryItem.id ? { ...item, id: insertedId } : item
+            ));
+            setAnalysis(prev => prev?.id === newHistoryItem.id ? { ...prev, id: insertedId } : prev);
+          }
         } catch (dbErr) {
-          console.error('Failed to save analysis to Supabase:', dbErr);
+          console.error('Failed to save analysis to server:', dbErr);
           // Don't throw here, we still want to show the result to the user
         }
       }

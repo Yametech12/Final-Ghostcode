@@ -54,6 +54,17 @@ interface Feedback {
   user_agent?: string;
 }
 
+// Page size for paginated tabs. The UI surfaces a "Load more" button per tab
+// so admins reading large tables don't pay for a full table scan up front.
+const PAGE_SIZE = 25;
+
+// Column projections per table — tighter than select('*') and meaningfully
+// faster on tables with large JSON columns. Update these when adding new
+// fields the dashboard actually displays.
+const USER_COLUMNS = 'id, email, display_name, role, photo_url, created_at, last_login_at';
+const REPORT_COLUMNS = 'id, user_id, author, type, scenario, action, result, timestamp, likes, comment_count';
+const FEEDBACK_COLUMNS = 'id, user_id, user_name, email, type, message, created_at, url, user_agent';
+
 export default function AdminDashboard() {
   const auth = useEnhancedAuth();
   const navigate = useNavigate();
@@ -66,9 +77,90 @@ export default function AdminDashboard() {
   const [usersLoading, setUsersLoading] = useState(true);
   const [reportsLoading, setReportsLoading] = useState(true);
   const [feedbacksLoading, setFeedbacksLoading] = useState(true);
+  const [usersHasMore, setUsersHasMore] = useState(false);
+  const [reportsHasMore, setReportsHasMore] = useState(false);
+  const [feedbacksHasMore, setFeedbacksHasMore] = useState(false);
+  const [usersTotal, setUsersTotal] = useState<number | null>(null);
+  const [reportsTotal, setReportsTotal] = useState<number | null>(null);
+  const [feedbacksTotal, setFeedbacksTotal] = useState<number | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { userData } = auth || {};
+
+  /**
+   * Loaders are split per-table so a slow query on one table doesn't block
+   * the others. Each accepts an `append` flag for the "Load more" button —
+   * when true we keep existing rows and append the next page; when false we
+   * reset and load the first page.
+   */
+  const loadUsers = async (append = false) => {
+    setUsersLoading(true);
+    const offset = append ? users.length : 0;
+    try {
+      const { data, error, count } = await supabase
+        .from("users")
+        .select(USER_COLUMNS, { count: "exact" })
+        .order("created_at", { ascending: false, nullsFirst: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      const rows = (data || []) as UserData[];
+      setUsers(prev => (append ? [...prev, ...rows] : rows));
+      setUsersTotal(count ?? null);
+      setUsersHasMore((count ?? 0) > offset + rows.length);
+    } catch (error: any) {
+      console.error("Error fetching users:", error);
+      toast.error("Failed to load users.");
+      handleFirestoreError(error, OperationType.LIST, "users");
+    } finally {
+      setUsersLoading(false);
+    }
+  };
+
+  const loadReports = async (append = false) => {
+    setReportsLoading(true);
+    const offset = append ? reports.length : 0;
+    try {
+      const { data, error, count } = await supabase
+        .from("field_reports")
+        .select(REPORT_COLUMNS, { count: "exact" })
+        .order("timestamp", { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      const rows = (data || []) as FieldReport[];
+      setReports(prev => (append ? [...prev, ...rows] : rows));
+      setReportsTotal(count ?? null);
+      setReportsHasMore((count ?? 0) > offset + rows.length);
+    } catch (error: any) {
+      console.error("Error fetching reports:", error);
+      toast.error("Failed to load reports.");
+      handleFirestoreError(error, OperationType.LIST, "field_reports");
+    } finally {
+      setReportsLoading(false);
+    }
+  };
+
+  const loadFeedback = async (append = false) => {
+    setFeedbacksLoading(true);
+    const offset = append ? feedbacks.length : 0;
+    try {
+      const { data, error, count } = await supabase
+        .from("feedback")
+        .select(FEEDBACK_COLUMNS, { count: "exact" })
+        .order("created_at", { ascending: false })
+        .range(offset, offset + PAGE_SIZE - 1);
+      if (error) throw error;
+      const rows = (data || []) as Feedback[];
+      setFeedbacks(prev => (append ? [...prev, ...rows] : rows));
+      setFeedbacksTotal(count ?? null);
+      setFeedbacksHasMore((count ?? 0) > offset + rows.length);
+    } catch (error: any) {
+      console.error("Error fetching feedback:", error);
+      toast.error("Failed to load feedback.");
+      handleFirestoreError(error, OperationType.LIST, "feedback");
+    } finally {
+      setFeedbacksLoading(false);
+    }
+  };
 
   useEffect(() => {
     if (userData && userData.role !== "admin") {
@@ -76,57 +168,15 @@ export default function AdminDashboard() {
       navigate("/");
       return;
     }
-    fetchData().catch(err => {
-      console.error("Unhandled error in AdminDashboard fetchData:", err);
-    });
-  }, [userData, navigate]);
-
-  const fetchData = async () => {
-    setUsersLoading(true);
-    setReportsLoading(true);
-    setFeedbacksLoading(true);
-    try {
-      const [usersResult, reportsResult, feedbackResult] =
-        await Promise.all([
-          supabase.from("users").select("*"),
-          supabase.from("field_reports").select("*").order("timestamp", { ascending: false }),
-          supabase.from("feedback").select("*").order("created_at", { ascending: false }),
-        ]);
-
-      if (usersResult.error) throw usersResult.error;
-      if (reportsResult.error) throw reportsResult.error;
-      if (feedbackResult.error) throw feedbackResult.error;
-
-      const usersData = usersResult.data.map((user) => ({
-        id: user.id,
-        ...user,
-      })) as UserData[];
-      setUsers(usersData);
-      setUsersLoading(false);
-
-      const reportsData = reportsResult.data.map((report) => ({
-        id: report.id,
-        ...report,
-      })) as FieldReport[];
-      setReports(reportsData);
-      setReportsLoading(false);
-
-      const feedbackData = feedbackResult.data.map((feedback) => ({
-        id: feedback.id,
-        ...feedback,
-      })) as Feedback[];
-      setFeedbacks(feedbackData);
-      setFeedbacksLoading(false);
-    } catch (error: any) {
-      console.error("Error fetching admin data:", error);
-      toast.error("Failed to load data. Check permissions.");
-      handleFirestoreError(error, OperationType.LIST, "users");
-    } finally {
-      setUsersLoading(false);
-      setReportsLoading(false);
-      setFeedbacksLoading(false);
+    if (userData?.role === "admin") {
+      // Kick off all three loaders in parallel for the initial page only.
+      // Subsequent "Load more" calls are user-driven, one tab at a time.
+      Promise.all([loadUsers(false), loadReports(false), loadFeedback(false)]).catch(err => {
+        console.error("Unhandled error in AdminDashboard initial load:", err);
+      });
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userData, navigate]);
 
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
@@ -641,6 +691,19 @@ export default function AdminDashboard() {
               </tbody>
             </table>
           </div>
+          {/* Load more (users). Hidden while a search query is active because
+              the filter runs locally and "more" results may not match it. */}
+          {usersHasMore && !searchQuery && (
+            <div className="flex justify-center pt-4">
+              <button
+                onClick={() => loadUsers(true)}
+                disabled={usersLoading}
+                className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
+              >
+                {usersLoading ? 'Loading…' : `Load more (${users.length}${usersTotal != null ? ` / ${usersTotal}` : ''})`}
+              </button>
+            </div>
+          )}
         </div>
       ) : activeTab === "reports" ? (
         <div className="space-y-4">
@@ -725,6 +788,17 @@ export default function AdminDashboard() {
               No field reports found.
             </div>
           )}
+          {reportsHasMore && !searchQuery && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => loadReports(true)}
+                disabled={reportsLoading}
+                className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
+              >
+                {reportsLoading ? 'Loading…' : `Load more (${reports.length}${reportsTotal != null ? ` / ${reportsTotal}` : ''})`}
+              </button>
+            </div>
+          )}
         </div>
       ) : activeTab === "feedback" ? (
         <div className="space-y-4">
@@ -803,6 +877,17 @@ export default function AdminDashboard() {
           {!feedbacksLoading && filteredFeedbacks.length === 0 && (
             <div className="glass-card p-12 text-center text-slate-500">
               No feedback found.
+            </div>
+          )}
+          {feedbacksHasMore && !searchQuery && (
+            <div className="flex justify-center pt-2">
+              <button
+                onClick={() => loadFeedback(true)}
+                disabled={feedbacksLoading}
+                className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
+              >
+                {feedbacksLoading ? 'Loading…' : `Load more (${feedbacks.length}${feedbacksTotal != null ? ` / ${feedbacksTotal}` : ''})`}
+              </button>
             </div>
           )}
         </div>
