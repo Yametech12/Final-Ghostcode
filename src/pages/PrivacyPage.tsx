@@ -292,10 +292,10 @@ export default function PrivacyPage() {
           <p className="mt-3">
             To exercise these rights, email{' '}
             <a
-              href="mailto:privacy@epimetheus.ai"
+              href="mailto:epimetheus.support@gmail.com"
               className="text-accent-primary hover:underline"
             >
-              privacy@epimetheus.ai
+              epimetheus.support@gmail.com
             </a>
             . We may need to verify your identity before fulfilling the
             request.
@@ -342,10 +342,10 @@ export default function PrivacyPage() {
           <p>
             For privacy questions or requests, contact{' '}
             <a
-              href="mailto:privacy@epimetheus.ai"
+              href="mailto:epimetheus.support@gmail.com"
               className="text-accent-primary hover:underline"
             >
-              privacy@epimetheus.ai
+              epimetheus.support@gmail.com
             </a>
             .
           </p>

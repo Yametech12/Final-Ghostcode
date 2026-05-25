@@ -249,10 +249,10 @@ export default function TermsPage() {
           <p>
             Questions about these Terms? Contact us at{' '}
             <a
-              href="mailto:hello@epimetheus.ai"
+              href="mailto:epimetheus.support@gmail.com"
               className="text-accent-primary hover:underline"
             >
-              hello@epimetheus.ai
+              epimetheus.support@gmail.com
             </a>
             .
           </p>
