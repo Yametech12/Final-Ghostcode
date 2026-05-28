@@ -1,6 +1,42 @@
 import { serializeError } from '../utils/errorHandling';
 import { apiFetch } from './fetch';
 
+/**
+ * Structured error thrown when the AI proxy returns a non-OK response.
+ * Pages calling chatCompletion (Decryptor, Simulation, CalibrationPage)
+ * branch on `code` to surface the right UX — most importantly
+ * `PAYMENT_REQUIRED` which redirects to /pricing instead of toasting a
+ * raw English string. Previously we threw `new Error('AI API error: ...')`
+ * with the structured info collapsed into the message, so the paywall
+ * redirect was unreachable from those pages.
+ */
+export class AiApiError extends Error {
+  status: number;
+  code?: string;
+  requiredTier?: 'strategist' | 'oracle';
+  currentTier?: 'free' | 'strategist' | 'oracle';
+  retryAfter?: number | string | null;
+  requestId?: string;
+  constructor(opts: {
+    status: number;
+    message: string;
+    code?: string;
+    requiredTier?: 'strategist' | 'oracle';
+    currentTier?: 'free' | 'strategist' | 'oracle';
+    retryAfter?: number | string | null;
+    requestId?: string;
+  }) {
+    super(opts.message);
+    this.name = 'AiApiError';
+    this.status = opts.status;
+    this.code = opts.code;
+    this.requiredTier = opts.requiredTier;
+    this.currentTier = opts.currentTier;
+    this.retryAfter = opts.retryAfter ?? null;
+    this.requestId = opts.requestId;
+  }
+}
+
 // Regolo AI model configuration — shared with api/_config.ts
 // If you change models here, update api/_config.ts as well (or import from a shared module).
 export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
@@ -100,27 +136,76 @@ export async function chatCompletion(
       );
 
       if (!response.ok) {
-        let errorData: { error?: { message?: string }; details?: string } = {};
+        let errorBody: any = {};
         try {
-          errorData = await response.json();
+          errorBody = await response.json();
         } catch {}
 
+        // Server returns a structured shape:
+        //   { error: string, code?: string, requiredTier?, currentTier?, retryAfter?, requestId? }
+        // Older endpoints sometimes nest the message under .error.message
+        // or .details, so probe in priority order.
         const errorMessage =
-          errorData?.error?.message ||
-          errorData?.details ||
-          errorData?.error ||
+          (typeof errorBody?.error === 'string' && errorBody.error) ||
+          errorBody?.error?.message ||
+          errorBody?.details ||
           response.statusText ||
           "Unknown error";
+        const code = typeof errorBody?.code === 'string' ? errorBody.code : undefined;
+        const requiredTier = errorBody?.requiredTier;
+        const currentTier = errorBody?.currentTier;
+        const retryAfter = errorBody?.retryAfter ?? null;
+        const requestId = typeof errorBody?.requestId === 'string' ? errorBody.requestId : undefined;
+
+        // 402 PAYMENT_REQUIRED is the tier gate's "you need to upgrade"
+        // response. Don't treat it as a model-availability problem — fail
+        // fast so the calling page can redirect to /pricing.
+        if (response.status === 402 || code === 'PAYMENT_REQUIRED') {
+          throw new AiApiError({
+            status: response.status,
+            message: errorMessage,
+            code: code ?? 'PAYMENT_REQUIRED',
+            requiredTier,
+            currentTier,
+            retryAfter,
+            requestId,
+          });
+        }
+
+        // 429 rate-limited shouldn't fall through the model rotation —
+        // every model would hit the same limit. Surface immediately.
+        if (response.status === 429 || code === 'RATE_LIMITED' || code === 'USER_RATE_LIMITED') {
+          throw new AiApiError({
+            status: response.status,
+            message: errorMessage,
+            code: code ?? 'RATE_LIMITED',
+            retryAfter,
+            requestId,
+          });
+        }
 
         // If it's a 404 (model not found), try next model
         if (response.status === 404 || (typeof errorMessage === 'string' && errorMessage.includes('endpoints found'))) {
           console.warn(`Model ${modelToTry} not available, trying next model...`);
-          lastError = new Error(`AI API error: ${response.status} - ${errorMessage}`);
+          lastError = new AiApiError({
+            status: response.status,
+            message: `${errorMessage}`,
+            code: code ?? 'MODEL_UNAVAILABLE',
+            requestId,
+          });
           continue;
         }
 
-        // For other errors, throw immediately
-        throw new Error(`AI API error: ${response.status} - ${errorMessage}`);
+        // For other errors, throw immediately with structured info preserved.
+        throw new AiApiError({
+          status: response.status,
+          message: errorMessage,
+          code,
+          requiredTier,
+          currentTier,
+          retryAfter,
+          requestId,
+        });
       }
 
       console.log(`Successfully using model: ${modelToTry}`);
@@ -174,14 +259,43 @@ export async function chatCompletion(
         throw error;
       }
 
-      // If it's a network error or 5xx, don't try other models
-      if (error instanceof Error &&
-          (error.message.includes('fetch') ||
-           error.message.includes('network') ||
-           error.message.includes('500') ||
-           error.message.includes('502') ||
-           error.message.includes('503'))) {
-        throw error;
+      // Structured AiApiError handling — paywall and rate limits should
+      // never trigger fallback rotation, since every model hits the same
+      // gate. Bubble these up immediately so the calling page can route
+      // the user appropriately.
+      if (error instanceof AiApiError) {
+        if (
+          error.code === 'PAYMENT_REQUIRED' ||
+          error.code === 'RATE_LIMITED' ||
+          error.code === 'USER_RATE_LIMITED' ||
+          error.code === 'UNAUTHORIZED' ||
+          error.code === 'CSRF_CHECK_FAILED'
+        ) {
+          throw error;
+        }
+        if (error.code === 'MODEL_UNAVAILABLE') {
+          continue;
+        }
+      }
+
+      // Network errors and 5xx (other than 503) shouldn't try other
+      // models — they're not model-specific. 503 means "this model is
+      // momentarily unavailable", which is exactly what the fallback
+      // chain is for, so we DO continue on 503.
+      if (error instanceof Error) {
+        const msg = error.message;
+        if (msg.includes('503') || msg.includes('MODEL_UNAVAILABLE')) {
+          // try next model
+          continue;
+        }
+        if (
+          msg.includes('fetch') ||
+          msg.includes('network') ||
+          msg.includes('500') ||
+          msg.includes('502')
+        ) {
+          throw error;
+        }
       }
 
       // Continue to next model for 4xx errors (likely model-specific)

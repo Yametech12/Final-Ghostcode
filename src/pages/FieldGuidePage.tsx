@@ -62,7 +62,8 @@ export default function FieldGuidePage() {
         const { data: reports, error } = await supabase
           .from('field_reports')
           .select('*')
-          .order('timestamp', { ascending: false });
+          .order('timestamp', { ascending: false })
+          .limit(50);
         if (error) throw error;
          const fetchedReports = reports.map(report => ({
            id: report.id,
@@ -167,7 +168,8 @@ export default function FieldGuidePage() {
          .from('field_report_comments')
          .select('*')
          .eq('report_id', reportId)
-         .order('timestamp', { ascending: true });
+         .order('timestamp', { ascending: true })
+         .limit(100);
       if (error) throw error;
 
        const comments = fetchedComments.map(comment => ({

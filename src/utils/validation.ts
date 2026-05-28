@@ -168,7 +168,13 @@ export function validatePasswordSecurity(password: string): {
   const hasUppercase = /[A-Z]/.test(password);
   const hasLowercase = /[a-z]/.test(password);
   const hasNumber = /\d/.test(password);
-  const hasSpecial = /[!@#$%^&*()_+\-=\[]{} ;':"\\|,.<>?]/.test(password);
+  // Character class for "special characters". The previous regex closed the
+  // bracket class early at the literal `]`, so it only matched
+  //   !@#$%^&*()_+-=[
+  // and every otherwise-strong password came back failing the special-char
+  // check. Now both `[` and `]` are escaped and the full punctuation set
+  // works as advertised.
+  const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>?/ ]/.test(password);
 
   if (!hasUppercase) {
     errors.push('Password must contain at least one uppercase letter');

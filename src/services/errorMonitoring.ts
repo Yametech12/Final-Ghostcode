@@ -161,16 +161,15 @@ export async function monitoredFetch<T>(
   // Lazy import to avoid circular dependency at module load time
   const { apiFetch } = await import('../lib/fetch');
 
-  try {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
 
+  try {
     const response = await apiFetch(endpoint, {
       ...options,
       signal: controller.signal,
     });
 
-    clearTimeout(timeoutId);
     const duration = performance.now() - startTime;
 
     if (!response.ok) {
@@ -203,6 +202,11 @@ export async function monitoredFetch<T>(
     }
 
     throw error;
+  } finally {
+    // Always clear the timer so a request that errors out doesn't leak a
+    // pending setTimeout that would later abort an unrelated controller
+    // (no — controller is local — but the timer itself stays in the queue).
+    clearTimeout(timeoutId);
   }
 }
 

@@ -23,8 +23,13 @@ export async function initSentry(): Promise<void> {
 
     Sentry.init({
       dsn,
-      // Send default PII (IP address, user agent) for better debugging
-      sendDefaultPii: true,
+      // Privacy: don't send IP addresses or user agents by default. We
+      // attach a minimal user.id in setUser() so errors are still
+      // correlatable per account, but we don't ship browser fingerprint
+      // data to Sentry without explicit consent. Flip this back to true
+      // (or gate it behind a consent banner) when GDPR/DPA compliance
+      // copy is in place.
+      sendDefaultPii: false,
       environment: import.meta.env.MODE,
       // Sample rate for performance monitoring (0-1). Lower = fewer events.
       tracesSampleRate: 0.1,
@@ -89,12 +94,18 @@ export async function captureException(error: unknown, context?: Record<string, 
 /**
  * Set user context for Sentry events.
  * Call this after the user logs in.
+ *
+ * Privacy: only the opaque user.id is attached. Email is intentionally
+ * omitted so we don't ship account email addresses into Sentry without
+ * explicit consent. If you ever need email-level triage, gate it behind
+ * a consent flag.
  */
 export async function setUser(user: { id: string; email?: string | null }): Promise<void> {
   if (!initialized) return;
   try {
     const Sentry = await import('@sentry/react');
-    Sentry.setUser({ id: user.id, email: user.email || undefined });
+    Sentry.setUser({ id: user.id });
+    void user.email; // intentionally not forwarded
   } catch {
     // ignore
   }

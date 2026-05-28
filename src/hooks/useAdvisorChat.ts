@@ -4,6 +4,22 @@ import { isUUID } from '../utils/validation';
 import { sanitizeAiResponse } from '../utils/sanitizeHtml';
 import { toast } from 'sonner';
 import { apiFetch } from '../lib/fetch';
+import { parseApiError, type ParsedApiError } from '../lib/apiError';
+
+/**
+ * Subclass of Error that carries the parsed API error so the catch block
+ * in `sendMessage` can branch on `code` (PAYMENT_REQUIRED → redirect to
+ * /pricing, RATE_LIMITED → cooldown toast, etc.) instead of just
+ * displaying the raw message.
+ */
+class AdvisorChatError extends Error {
+  readonly parsed: ParsedApiError;
+  constructor(parsed: ParsedApiError) {
+    super(parsed.message);
+    this.name = 'AdvisorChatError';
+    this.parsed = parsed;
+  }
+}
 
 export interface AdvisorMessage {
   id: string;
@@ -127,12 +143,12 @@ export function useAdvisorChat() {
     });
 
     if (!response.ok) {
-      let errMsg = `Chat failed: ${response.status}`;
-      try {
-        const errJson = await response.json();
-        if (errJson.error) errMsg = errJson.error;
-      } catch { /* not json */ }
-      throw new Error(errMsg);
+      // Use the centralized parser so we capture the structured shape
+      // (code, requiredTier, retryAfter, requestId) instead of just the
+      // free-text message. The catch in sendMessage branches on
+      // parsed.code below.
+      const parsed = await parseApiError(response);
+      throw new AdvisorChatError(parsed);
     }
 
     const reader = response.body?.getReader();
@@ -147,9 +163,25 @@ export function useAdvisorChat() {
     // RAF-batched flush: each token mutates the local accumulator and schedules
     // at most one render per animation frame. The user still sees a smooth
     // typing effect (60fps), but React only does work once per frame.
+    //
+    // Timer kind is tracked separately because cancelAnimationFrame is a no-op
+    // on a setTimeout id (and vice versa). On environments without RAF (older
+    // SSR shims) we'd otherwise leak a setTimeout that fires after unmount.
     let rafId: number | null = null;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    const cancelScheduled = () => {
+      if (rafId !== null) {
+        cancelAnimationFrame(rafId);
+        rafId = null;
+      }
+      if (timeoutId !== null) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+      }
+    };
     const flush = () => {
       rafId = null;
+      timeoutId = null;
       const snapshot = assistantContent;
       if (!placeholderAdded) {
         placeholderAdded = true;
@@ -164,10 +196,11 @@ export function useAdvisorChat() {
       }
     };
     const scheduleFlush = () => {
-      if (rafId === null) {
-        rafId = (typeof requestAnimationFrame === 'function'
-          ? requestAnimationFrame(flush)
-          : (setTimeout(flush, 16) as unknown as number));
+      if (rafId !== null || timeoutId !== null) return;
+      if (typeof requestAnimationFrame === 'function') {
+        rafId = requestAnimationFrame(flush);
+      } else {
+        timeoutId = setTimeout(flush, 16);
       }
     };
 
@@ -190,10 +223,7 @@ export function useAdvisorChat() {
             if (!data) continue;
             if (data === STREAM_DONE) {
               // Final flush so we don't lose any tail tokens after [DONE].
-              if (rafId !== null) {
-                cancelAnimationFrame(rafId);
-                rafId = null;
-              }
+              cancelScheduled();
               flush();
               return;
             }
@@ -208,20 +238,19 @@ export function useAdvisorChat() {
                 scheduleFlush();
               }
             } catch (err) {
-              if (err instanceof Error && err.message && !err.message.startsWith('Unexpected')) {
-                // Re-throw real errors (like { error: "..." } from server). Ignore JSON parse errors.
-                throw err;
+              // SyntaxError messages are localized across browsers ("Unexpected"
+              // on V8, "JSON.parse:" on Firefox). Type-check is more robust.
+              if (err instanceof SyntaxError) {
+                // Ignore malformed JSON chunks
+                continue;
               }
-              // Ignore malformed JSON chunks
+              throw err;
             }
           }
         }
       }
     } finally {
-      if (rafId !== null) {
-        cancelAnimationFrame(rafId);
-        rafId = null;
-      }
+      cancelScheduled();
       // Ensure the user sees the final state even if the stream ended without [DONE].
       if (assistantContent && (placeholderAdded || assistantContent.length > 0)) {
         flush();
@@ -259,8 +288,55 @@ export function useAdvisorChat() {
         return;
       }
       console.error('Chat error:', error);
-      const msg = error instanceof Error ? error.message : 'Message failed to send';
-      toast.error(msg);
+
+      // Structured-error branch: route the user appropriately based on
+      // server-provided code rather than dumping the raw English string
+      // into a toast. PAYMENT_REQUIRED is the most important — without
+      // this, free users hitting the advisor saw a generic "This feature
+      // requires the strategist plan" toast and had to manually find the
+      // pricing page.
+      if (error instanceof AdvisorChatError) {
+        const { code, requiredTier, retryAfter, message } = error.parsed;
+        if (code === 'PAYMENT_REQUIRED') {
+          const tier = requiredTier ?? 'paid';
+          toast.error(`The advisor requires the ${tier} plan.`, {
+            description: 'Redirecting you to upgrade options…',
+            action: {
+              label: 'View plans',
+              onClick: () => { window.location.href = '/pricing'; },
+            },
+          });
+          // Soft redirect after a beat so the user sees the toast first.
+          setTimeout(() => {
+            if (typeof window !== 'undefined') {
+              window.location.href = '/pricing';
+            }
+          }, 1200);
+        } else if (code === 'RATE_LIMITED' || code === 'USER_RATE_LIMITED') {
+          const seconds = typeof retryAfter === 'number' ? retryAfter : null;
+          toast.error("You're going too fast.", {
+            description: seconds
+              ? `Try again in ${seconds} seconds.`
+              : 'Please wait a moment before retrying.',
+          });
+        } else if (code === 'AI_TIMEOUT') {
+          toast.error('The AI took too long to respond.', {
+            description: 'Try again — long prompts can be slow.',
+          });
+        } else if (code === 'MODEL_UNAVAILABLE') {
+          toast.error('The AI is temporarily unavailable.', {
+            description: 'Falling back automatically. Retry shortly.',
+          });
+        } else if (code === 'UNAUTHORIZED') {
+          toast.error('Please sign in again to continue.');
+        } else {
+          toast.error(message || 'Message failed to send');
+        }
+      } else {
+        const msg = error instanceof Error ? error.message : 'Message failed to send';
+        toast.error(msg);
+      }
+
       // Mark the user message as failed so the user can retry it.
       setMessages(prev => prev.map(m => (m.id === userMessage.id ? { ...m, failed: true } : m)));
     } finally {

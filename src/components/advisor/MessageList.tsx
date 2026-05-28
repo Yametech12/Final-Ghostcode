@@ -47,7 +47,17 @@ export function MessageList({
         {messages.length === 0 ? (
           <EmptyState onSelectPrompt={onSelectPrompt} disabled={isSending} />
         ) : (
-          <div className="flex flex-col gap-3 py-2 max-w-3xl mx-auto">
+          <div
+            className="flex flex-col gap-3 py-2 max-w-3xl mx-auto"
+            // aria-live announces new assistant tokens to screen readers as they
+            // stream in. "polite" so it doesn't interrupt the user mid-input;
+            // "atomic=false" so only newly added nodes are read, not the
+            // entire transcript on every chunk.
+            role="log"
+            aria-live="polite"
+            aria-atomic="false"
+            aria-relevant="additions text"
+          >
             {messages.map(message => (
               <Message
                 key={message.id}

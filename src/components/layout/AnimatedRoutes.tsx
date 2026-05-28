@@ -15,6 +15,13 @@ const ResetPasswordPage = lazy(() => import('../../pages/ResetPasswordPage'));
 const TermsPage = lazy(() => import('../../pages/TermsPage'));
 const PrivacyPage = lazy(() => import('../../pages/PrivacyPage'));
 
+// Marketing pages - public, no auth required
+const LandingPage = lazy(() => import('../../pages/LandingPage'));
+const PricingPage = lazy(() => import('../../pages/PricingPage'));
+
+// Paywall screen — shown when free user hits paid content
+const PaywallScreen = lazy(() => import('../../components/PaywallScreen'));
+
 // Core functionality pages - high priority
 const ProfilePage = lazy(() => import('../../pages/ProfilePage'));
 const AdvisorPage = lazy(() => import('../../pages/AdvisorPage'));
@@ -55,7 +62,21 @@ const pageTransition = {
   mass: 1
 };
 
-function ProtectedRoute({ children, requireAdmin }: { children: React.ReactNode; requireAdmin?: boolean }) {
+function ProtectedRoute({
+  children,
+  requireAdmin,
+  requireTier,
+  featureName,
+  featurePitch,
+}: {
+  children: React.ReactNode;
+  requireAdmin?: boolean;
+  /** If set, the user's subscription tier must meet this. Admins always pass. */
+  requireTier?: 'strategist' | 'oracle';
+  /** Used by the paywall screen when locked. */
+  featureName?: string;
+  featurePitch?: string;
+}) {
   const auth = useEnhancedAuth();
   if (!auth) {
     return <LoadingScreen />;
@@ -72,6 +93,33 @@ function ProtectedRoute({ children, requireAdmin }: { children: React.ReactNode;
 
   if (requireAdmin && userData?.role !== 'admin') {
     return <Navigate to="/" replace />;
+  }
+
+  // Subscription gate. Admins bypass — they need access to demo & debug
+  // every feature regardless of billing state.
+  if (requireTier && userData?.role !== 'admin') {
+    const userTier = userData?.subscriptionTier ?? 'free';
+    const expiresAt = userData?.subscriptionExpiresAt
+      ? new Date(userData.subscriptionExpiresAt).getTime()
+      : null;
+    const isExpired = expiresAt !== null && expiresAt < Date.now();
+
+    const tierRank: Record<string, number> = { free: 0, strategist: 1, oracle: 2 };
+    const meetsTier = !isExpired && tierRank[userTier] >= tierRank[requireTier];
+
+    if (!meetsTier) {
+      return (
+        <Layout forceScrollable>
+          <Suspense fallback={<InlineLoader />}>
+            <PaywallScreen
+              requiredTier={requireTier}
+              featureName={featureName ?? 'This feature'}
+              featurePitch={featurePitch}
+            />
+          </Suspense>
+        </Layout>
+      );
+    }
   }
 
   return <Layout>{children}</Layout>;
@@ -93,6 +141,41 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   }
 
   return <>{children}</>;
+}
+
+/**
+ * Root route splitter:
+ * - Signed-out visitors see the public LandingPage (marketing front door).
+ * - Signed-in users see the HomePage dashboard wrapped in Layout.
+ * Keeping both behind a single `/` URL means the marketing page is the
+ * default first impression without breaking signed-in deep links.
+ */
+function RootRoute() {
+  const auth = useEnhancedAuth();
+  if (!auth) {
+    return <LoadingScreen />;
+  }
+  const { user, loading } = auth;
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (!user) {
+    return (
+      <Suspense fallback={<InlineLoader />}>
+        <LandingPage />
+      </Suspense>
+    );
+  }
+
+  return (
+    <Layout>
+      <Suspense fallback={<InlineLoader />}>
+        <PageWrapper><HomePage /></PageWrapper>
+      </Suspense>
+    </Layout>
+  );
 }
 
 function PageWrapper({ children }: { children: React.ReactNode }) {
@@ -146,20 +229,39 @@ export default function AnimatedRoutes() {
               <PrivacyPage />
             </Suspense>
           } />
+          {/*
+            Public marketing pages — landing and pricing. Not wrapped in
+            PublicRoute so signed-in users following a footer or shared link
+            can still visit them without being bounced home.
+          */}
+          <Route path="/welcome" element={
+            <Suspense fallback={<InlineLoader />}>
+              <LandingPage />
+            </Suspense>
+          } />
+          <Route path="/pricing" element={
+            <Suspense fallback={<InlineLoader />}>
+              <PricingPage />
+            </Suspense>
+          } />
           <Route path="/calibration" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="Calibration"
+              featurePitch="Train your eye to read her archetype in thirty seconds. Drill the signals until they're second nature."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><CalibrationPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="/" element={
-            <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
-                <PageWrapper><HomePage /></PageWrapper>
-              </Suspense>
-            </ProtectedRoute>
-          } />
+          {/*
+            Root route is split by auth state:
+            - Signed out → public LandingPage (marketing front door)
+            - Signed in  → HomePage (the app dashboard)
+            This way new visitors see the marketing page first, not /login.
+          */}
+          <Route path="/" element={<RootRoute />} />
           <Route path="/profile" element={
             <ProtectedRoute>
               <Suspense fallback={<InlineLoader />}>
@@ -182,14 +284,22 @@ export default function AnimatedRoutes() {
             </ProtectedRoute>
           } />
           <Route path="/field-guide" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="Field Guide"
+              featurePitch="Quick-reference scenarios and tactical lines for the moments that move too fast to think."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><FieldGuidePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/advisor" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="AI Advisor"
+              featurePitch="Consult the Oracle in real time. Strategic guidance grounded in the EPIMETHEUS framework, on call 24/7."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><AdvisorPage /></PageWrapper>
               </Suspense>
@@ -259,21 +369,33 @@ export default function AnimatedRoutes() {
             </ProtectedRoute>
           } />
           <Route path="/dossiers" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="Subject Dossiers"
+              featurePitch="Profile the women in your orbit. Track interactions, log signals, spot patterns over time."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><DossiersPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/decryptor" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="Signal Decryptor"
+              featurePitch="Paste a message. Read the subtext, the emotional state, and the move beneath the words."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><DecryptorPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/simulation" element={
-            <ProtectedRoute>
+            <ProtectedRoute
+              requireTier="strategist"
+              featureName="Simulation Matrix"
+              featurePitch="Interactive roleplay. Rehearse the conversations that decide everything, before the real one happens."
+            >
               <Suspense fallback={<InlineLoader />}>
                 <PageWrapper><SimulationPage /></PageWrapper>
               </Suspense>

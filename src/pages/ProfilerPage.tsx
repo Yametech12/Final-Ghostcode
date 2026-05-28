@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Target, Shield, Flame, User, ArrowRight, CheckCircle2, Brain, Clock } from 'lucide-react';
 import { safeParseJSON } from '../utils/json';
 import { personalityTypes } from '../data/personalityTypes';
@@ -9,6 +9,9 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 
 export default function ProfilerPage() {
   const auth = useEnhancedAuth();
+  // Tracks the most recently persisted matchedType so we don't write a new
+  // calibration row on every trait toggle.
+  const lastSavedTypeIdRef = useRef<string | null>(null);
   const [traits, setTraits] = useState(() => {
     const saved = localStorage.getItem('profiler_current_traits');
     return safeParseJSON(saved ?? '', {
@@ -26,12 +29,12 @@ export default function ProfilerPage() {
     const loadPastResults = async () => {
       if (user) {
         try {
-           const { data: calibrations, error } = await supabase
-             .from('calibrations')
-             .select('*')
-             .eq('user_id', user.id)
-             .order('timestamp', { ascending: false })
-             .limit(5);
+         const { data: calibrations, error } = await supabase
+           .from('calibrations')
+           .select('id, user_id, type_id, traits, timestamp')
+           .eq('user_id', user.id)
+           .order('timestamp', { ascending: false })
+           .limit(5);
            if (error) throw error;
            const results: {typeId: string, date: string}[] = [];
            calibrations.forEach((data) => {
@@ -98,7 +101,12 @@ export default function ProfilerPage() {
       }
     };
 
-    if (matchedType) {
+    if (matchedType && lastSavedTypeIdRef.current !== matchedType.id) {
+      // Only persist a calibration row when the user lands on a *different*
+      // matched type than the one we already saved this session. Without this
+      // guard, toggling traits to explore matches would write a new row per
+      // click — the page wrote 1-3 rows for every "explore matches" session.
+      lastSavedTypeIdRef.current = matchedType.id;
       saveResult().catch(err => {
         console.error("Unhandled error in ProfilerPage saveResult:", err);
       });

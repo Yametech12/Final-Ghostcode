@@ -40,10 +40,39 @@ export default class SessionErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    // If a critical user flow is in flight, don't allow the error
+    // boundary to nuke React state and reload — the in-flight request
+    // would be cancelled mid-operation. The flag is set by the calling
+    // component (e.g. DeleteAccountSection during account deletion) and
+    // cleared in its `finally` block. We still log so the error is
+    // visible in Sentry.
+    if (typeof window !== 'undefined' && (window as any).__epimetheus_critical_flow_in_flight) {
+      console.error(
+        'SessionErrorBoundary suppressed during critical flow:',
+        error,
+        errorInfo,
+      );
+      // Reset our own state so the boundary doesn't render the error UI
+      // — let the critical flow finish (or fail) and surface its own
+      // message instead.
+      this.setState({ hasError: false, errorMessage: 'Something went wrong.', errorDetails: undefined });
+      return;
+    }
     console.error('SessionErrorBoundary caught an error:', error, errorInfo);
   }
 
   handleReset = () => {
+    // Defensive: if a critical flow is somehow in flight when the user
+    // clicks the recovery button (e.g. they hit it while a deletion
+    // request was still pending), don't blow away storage and reload.
+    // That would orphan the in-flight request mid-operation. Just clear
+    // the error state and let the underlying flow finish or fail with
+    // its own UI.
+    if (typeof window !== 'undefined' && (window as any).__epimetheus_critical_flow_in_flight) {
+      this.setState({ hasError: false, errorMessage: 'Something went wrong.', errorDetails: undefined });
+      this.props.onReset?.();
+      return;
+    }
     this.setState({ hasError: false, errorMessage: 'Something went wrong.', errorDetails: undefined });
     this.props.onReset?.();
     // Selective cleanup: clear app-specific cached state without wiping the

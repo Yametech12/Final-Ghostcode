@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useCallback, useRef, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { serializeError } from '../utils/errorHandling';
@@ -23,6 +23,8 @@ interface UserData {
     twitter?: string;
   };
   role: 'user' | 'admin';
+  subscriptionTier: 'free' | 'strategist' | 'oracle';
+  subscriptionExpiresAt?: string | null;
   createdAt: string;
   lastLoginAt?: string;
 }
@@ -37,6 +39,13 @@ interface EnhancedAuthContextType {
   signInWithGoogle: () => Promise<void>;
   signUp: (email: string, password: string, displayName?: string) => Promise<{ requiresVerification: boolean }>;
   signOut: () => Promise<void>;
+  /**
+   * Sign out and wait until the auth state has actually settled
+   * (user/session/userData cleared) — or the timeout elapses.
+   * Used by destructive flows (account deletion) where we need to be
+   * sure no stale auth state lingers before navigating.
+   */
+  signOutAndWait: (timeoutMs?: number) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
   updateUserData: (data: Partial<UserData>) => Promise<void>;
@@ -52,8 +61,29 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const MAX_RETRIES = 3;
-  const RETRY_DELAY = 2000;
+  // Mirror userData into a ref so callbacks (especially loadSession) can read
+  // the latest value without growing their dependency array — otherwise each
+  // userData change would re-create loadSession and re-fire the auth init
+  // useEffect, kicking off a fresh getSession round-trip every time.
+  const userDataRef = useRef<UserData | null>(null);
+  useEffect(() => { userDataRef.current = userData; }, [userData]);
+
+  // In-flight + recent-success dedup for loadUserData. Multiple call sites
+  // (loadSession, signInWithEmail, onAuthStateChange SIGNED_IN /
+  // TOKEN_REFRESHED, forceRefreshSession) can fire in quick succession for
+  // the same user — without dedup we saw 20+ identical SELECTs against the
+  // users table on a single sign-in. We keep both:
+  //   • An "in-flight" map: returns the same Promise for concurrent callers.
+  //   • A "recently-loaded" timestamp: skips a redundant fetch if the
+  //     same user was loaded within FRESH_USER_DATA_MS.
+  const inFlightUserLoadRef = useRef<Map<string, Promise<void>>>(new Map());
+  const lastUserLoadAtRef = useRef<Map<string, number>>(new Map());
+  const FRESH_USER_DATA_MS = 30_000;
+  // Retry budget tuned to fit inside the 8s safety timer below. Two
+  // retries with exponential backoff (1s, 2s) caps wall-clock at ~3s plus
+  // network time, leaving room for the initial getSession() call.
+  const MAX_RETRIES = 2;
+  const RETRY_DELAY = 1000;
 
   const wrapUser = (supabaseUser: User | null): ExtendedUser | null => {
     if (!supabaseUser) return null;
@@ -65,75 +95,99 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   };
 
   const loadUserData = useCallback(async (userId: string) => {
-    try {
-      console.log('Loading user data for:', userId);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Database error loading user data:', error.message, error.code);
-        setUserData(null);
-        return;
-      }
-
-      if (data) {
-        console.log('User data loaded successfully:', data);
-        const mappedData = {
-          ...data,
-          displayName: data.display_name,
-          photoURL: data.photo_url,
-          contactInfo: data.contact_info,
-          createdAt: data.created_at,
-          lastLoginAt: data.last_login_at
-        };
-        setUserData(mappedData);
-      } else {
-        // Attempt to create the user record if it doesn't exist
-        try {
-          const { error: insertError } = await supabase
-            .from('users')
-            .insert({
-              id: userId,
-              email: null, // will be updated on next session refresh if available
-              display_name: null,
-              photo_url: null
-            });
-          if (insertError) {
-            console.error('Failed to create user record:', insertError);
-            setUserData(null);
-          } else {
-            console.log('User record created successfully for:', userId);
-            // Reload user data to populate state
-            const { data: newData } = await supabase
-              .from('users')
-              .select('*')
-              .eq('id', userId)
-              .maybeSingle();
-            if (newData) {
-              setUserData({
-                ...newData,
-                displayName: newData.display_name,
-                photoURL: newData.photo_url,
-                contactInfo: newData.contact_info,
-                createdAt: newData.created_at,
-                lastLoginAt: newData.last_login_at
-              });
-            } else {
-              setUserData(null);
-            }
-          }
-        } catch (createErr) {
-          console.error('Error creating user record:', createErr);
-          setUserData(null);
-        }
-      }
-    } catch (error) {
-      console.error('Unexpected error loading user data:', error);
-      setUserData(null);
+    // Dedup: if the same user was already loaded within FRESH_USER_DATA_MS,
+    // reuse that result. If a load is already in flight, return that
+    // promise. Without this, sign-in spins up 5+ identical fetches because
+    // signInWithEmail, loadSession, onAuthStateChange all chain into here.
+    const now = Date.now();
+    const lastLoadAt = lastUserLoadAtRef.current.get(userId) ?? 0;
+    if (now - lastLoadAt < FRESH_USER_DATA_MS && userDataRef.current?.id === userId) {
+      return;
     }
+    const existing = inFlightUserLoadRef.current.get(userId);
+    if (existing) return existing;
+
+    const fetchPromise = (async () => {
+      try {
+        console.log('Loading user data for:', userId);
+        const { data, error } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', userId)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Database error loading user data:', error.message, error.code);
+          setUserData(null);
+          return;
+        }
+
+        if (data) {
+          console.log('User data loaded successfully:', data);
+          const mappedData = {
+            ...data,
+            displayName: data.display_name,
+            photoURL: data.photo_url,
+            contactInfo: data.contact_info,
+            createdAt: data.created_at,
+            lastLoginAt: data.last_login_at,
+            // Default to 'free' if column doesn't exist yet (pre-migration safety).
+            subscriptionTier: data.subscription_tier ?? 'free',
+            subscriptionExpiresAt: data.subscription_expires_at ?? null,
+          };
+          setUserData(mappedData);
+        } else {
+          // Attempt to create the user record if it doesn't exist
+          try {
+            const { error: insertError } = await supabase
+              .from('users')
+              .insert({
+                id: userId,
+                email: null, // will be updated on next session refresh if available
+                display_name: null,
+                photo_url: null,
+              });
+            if (insertError) {
+              console.error('Failed to create user record:', insertError);
+              setUserData(null);
+            } else {
+              console.log('User record created successfully for:', userId);
+              const { data: newData } = await supabase
+                .from('users')
+                .select('*')
+                .eq('id', userId)
+                .maybeSingle();
+              if (newData) {
+                setUserData({
+                  ...newData,
+                  displayName: newData.display_name,
+                  photoURL: newData.photo_url,
+                  contactInfo: newData.contact_info,
+                  createdAt: newData.created_at,
+                  lastLoginAt: newData.last_login_at,
+                  subscriptionTier: newData.subscription_tier ?? 'free',
+                  subscriptionExpiresAt: newData.subscription_expires_at ?? null,
+                });
+              } else {
+                setUserData(null);
+              }
+            }
+          } catch (createErr) {
+            console.error('Error creating user record:', createErr);
+            setUserData(null);
+          }
+        }
+        lastUserLoadAtRef.current.set(userId, Date.now());
+      } catch (error) {
+        console.error('Unexpected error loading user data:', error);
+        setUserData(null);
+      } finally {
+        inFlightUserLoadRef.current.delete(userId);
+      }
+    })();
+
+    inFlightUserLoadRef.current.set(userId, fetchPromise);
+    return fetchPromise;
   }, []);
 
   const loadSession = useCallback(async (retry = 0): Promise<Session | null> => {
@@ -148,15 +202,18 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         loadUserData(data.session.user.id).catch(err =>
           console.error('Background user data load failed:', err)
         );
-        // Sync email from Supabase auth to users table (fire and forget)
+        // Sync email from Supabase auth to users table (fire and forget).
+        // Skipped when local userData already has the right email — avoids
+        // a redundant write on every page load. The trigger added in
+        // 20240101000400 still allows id/email updates; only role and
+        // subscription_tier are pinned.
         const userEmail = data.session.user?.email;
-        if (userEmail) {
+        if (userEmail && userDataRef.current?.email !== userEmail) {
           supabase
             .from('users')
             .upsert({ id: data.session.user.id, email: userEmail }, { ignoreDuplicates: false })
             .then(({ error: upsertErr }) => {
               if (upsertErr) console.error('Email sync failed:', upsertErr);
-              else console.log('Email synced to users table:', userEmail);
             });
         }
         return data.session;
@@ -221,6 +278,10 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setUser(null);
         setUserData(null);
         setLoading(false);
+        // Clear the loadUserData dedup caches so a different user signing
+        // in next doesn't get a stale "skipped, recently loaded" hit.
+        inFlightUserLoadRef.current.clear();
+        lastUserLoadAtRef.current.clear();
         // Clear Sentry user context on sign out
         clearSentryUser();
       }
@@ -232,6 +293,45 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       authListener.subscription.unsubscribe();
     };
   }, [loadSession]);
+
+  // Refresh user data when the tab regains focus or visibility. The
+  // cached userData (including tier) can go stale if the user upgraded
+  // their subscription in another tab, or if a Stripe webhook updated
+  // their row server-side while this tab was hidden. The server-side
+  // tier cache TTL is 30s, so we refresh here only when the tab has
+  // been hidden for at least that long — quick task-switches don't
+  // trigger a fetch.
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    let lastHiddenAt = 0;
+    const TIER_REFRESH_THRESHOLD_MS = 30_000;
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        lastHiddenAt = Date.now();
+        return;
+      }
+      if (document.visibilityState !== 'visible') return;
+      if (!user?.id) return;
+      // Only refresh if the tab has been backgrounded long enough that
+      // the cached tier could plausibly be stale.
+      if (lastHiddenAt > 0 && Date.now() - lastHiddenAt < TIER_REFRESH_THRESHOLD_MS) {
+        return;
+      }
+      lastHiddenAt = 0;
+      // Bypass the recent-success cache by clearing the timestamp before
+      // invoking loadUserData. This forces a re-read so a Stripe-driven
+      // tier change from another device shows up here within one tab
+      // focus.
+      lastUserLoadAtRef.current.delete(user.id);
+      loadUserData(user.id).catch(err => {
+        console.error('Background tier refresh on tab focus failed:', err);
+      });
+    };
+
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [user, loadUserData]);
 
   const retrySession = useCallback(async () => {
     setLoading(true);
@@ -320,6 +420,53 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     // Do NOT call localStorage.clear() — it wipes Supabase's own auth token
     // before signOut() can clean it up properly, causing race conditions.
   };
+
+  /**
+   * Sign out and resolve only after the SIGNED_OUT auth event has
+   * propagated (or the timeout fires). Destructive flows like account
+   * deletion need this to avoid racing the redirect against the auth
+   * listener — without it, navigate('/') sometimes ran while user was
+   * still truthy, and the route guard re-rendered into a logged-in
+   * state for a frame.
+   *
+   * Implementation: we register a one-shot listener BEFORE calling
+   * supabase.auth.signOut, so we never miss the SIGNED_OUT event even
+   * if it fires synchronously on the same tick.
+   */
+  const signOutAndWait = useCallback(async (timeoutMs = 2500) => {
+    let resolved = false;
+    let unsubscribe: (() => void) | null = null;
+
+    const settled = new Promise<void>((resolve) => {
+      const listener = supabase.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT' && !resolved) {
+          resolved = true;
+          listener.data.subscription.unsubscribe();
+          resolve();
+        }
+      });
+      unsubscribe = () => listener.data.subscription.unsubscribe();
+    });
+
+    try {
+      await signOut();
+    } catch {
+      // even if signOut threw, wait briefly in case the event still fires
+    }
+
+    // If we already cleared local state in the SIGNED_OUT handler, this
+    // resolves immediately. Otherwise wait up to timeoutMs.
+    await Promise.race([
+      settled,
+      new Promise<void>((resolve) => setTimeout(() => {
+        if (!resolved) {
+          resolved = true;
+          if (unsubscribe) unsubscribe();
+        }
+        resolve();
+      }, timeoutMs)),
+    ]);
+  }, []);
 
   const resetPassword = async (email: string) => {
     try {
@@ -465,6 +612,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     signInWithGoogle,
     signUp,
     signOut,
+    signOutAndWait,
     resetPassword,
     updateUserProfile,
     updateUserData,

@@ -8,6 +8,7 @@ import {
   handleDeleteOracleAnalysis,
   type NormalizedRequest,
 } from './handlers';
+import { __resetTierCacheForTests } from './tierGate';
 
 // ---------------------------------------------------------------------------
 // Test doubles
@@ -34,6 +35,11 @@ function makeReq(over: Partial<NormalizedRequest> = {}): NormalizedRequest {
  * Tiny Supabase client double. Each test calls `setQueryResult` to enqueue
  * the next response, and the chainable mock returns `this` for every builder
  * method until a thenable terminator is reached.
+ *
+ * The double also fakes a `users` row with a paid (strategist) tier by
+ * default so the new server-side tier gate (`requireTier`) passes without
+ * every existing test having to wire up a row. Tests that exercise the
+ * gate itself can override via `setUsersRow({ ... })`.
  */
 function makeSupabase() {
   type Result = { data?: any; error?: any };
@@ -43,13 +49,28 @@ function makeSupabase() {
   let nextDelete: Result = { error: null };
   let nextUpsert: Result = { error: null };
 
+  // The tier-gate query (`from('users').select('role,subscription_tier,...')
+  // .eq('id', ...).maybeSingle()`) needs to return a paid row so existing
+  // handler tests don't get short-circuited with 402. Tests that want to
+  // assert the gate's behaviour can override this.
+  let usersRow: Result = {
+    data: { role: 'user', subscription_tier: 'strategist', subscription_expires_at: null },
+    error: null,
+  };
+
   const storageUploadResult: Result = { error: null };
 
-  const builder = (kind: 'select' | 'insert' | 'update' | 'delete' | 'upsert') => {
+  const builder = (kind: 'select' | 'insert' | 'update' | 'delete' | 'upsert', table: string | null) => {
     const chain: any = {
       select: () => chain,
       eq: () => chain,
-      maybeSingle: () => Promise.resolve(nextSelectMaybeSingle),
+      maybeSingle: () => {
+        // The tier gate reads `users` via select+eq+maybeSingle; serve the
+        // configured row instead of the generic `nextSelectMaybeSingle`
+        // bucket so it doesn't collide with handler-specific reads.
+        if (table === 'users' && kind === 'select') return Promise.resolve(usersRow);
+        return Promise.resolve(nextSelectMaybeSingle);
+      },
       single: () => {
         if (kind === 'insert') return Promise.resolve(nextInsertSingle);
         if (kind === 'update') return Promise.resolve(nextUpdateSingle);
@@ -65,20 +86,25 @@ function makeSupabase() {
   };
 
   const client: any = {
-    from: vi.fn(() => {
-      const table: any = {
-        select: () => builder('select'),
-        insert: () => builder('insert'),
-        update: () => builder('update'),
-        delete: () => builder('delete'),
-        upsert: () => builder('upsert'),
+    from: vi.fn((table: string) => {
+      const t: any = {
+        select: () => builder('select', table),
+        insert: () => builder('insert', table),
+        update: () => builder('update', table),
+        delete: () => builder('delete', table),
+        upsert: () => builder('upsert', table),
       };
-      return table;
+      return t;
     }),
     storage: {
       from: vi.fn(() => ({
         upload: vi.fn().mockImplementation(async () => storageUploadResult),
         getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://cdn/photo.png' } }),
+        // The upload handler now also lists+removes legacy timestamped
+        // photos for the same user. Stub these as no-ops so the cleanup
+        // step doesn't crash on `list is not a function`.
+        list: vi.fn().mockResolvedValue({ data: [], error: null }),
+        remove: vi.fn().mockResolvedValue({ data: [], error: null }),
       })),
     },
   };
@@ -90,6 +116,7 @@ function makeSupabase() {
     setUpdateSingle: (r: Result) => { nextUpdateSingle = r; },
     setDelete: (r: Result) => { nextDelete = r; },
     setUpsert: (r: Result) => { nextUpsert = r; },
+    setUsersRow: (r: Result) => { usersRow = r; },
   };
 }
 
@@ -190,7 +217,10 @@ describe('handleUploadProfilePhoto', () => {
     );
     expect(r.status).toBe(200);
     expect(r.body.success).toBe(true);
-    expect(r.body.url).toBe('https://cdn/photo.png');
+    // The handler now versions the public URL with `?v=<ts>` so caches
+    // refetch after each upload. The base URL portion comes from the
+    // mocked getPublicUrl.
+    expect(r.body.url.startsWith('https://cdn/photo.png?v=')).toBe(true);
     expect(r.body.fileName).toMatch(/^users\/550e8400-/);
   });
 });
@@ -499,5 +529,67 @@ describe('handleDeleteOracleAnalysis', () => {
     );
     expect(r.status).toBe(200);
     expect(r.body.success).toBe(true);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Server-side tier gate (requireTier via handlers)
+// ---------------------------------------------------------------------------
+
+describe('server-side tier gate', () => {
+  beforeEach(() => {
+    // The tier gate now caches per-userId for 30s; clear between tests
+    // so each one starts from a clean slate.
+    __resetTierCacheForTests();
+  });
+
+  it('returns 402 when a free-tier user calls a strategist-gated endpoint', async () => {
+    const { client, setUsersRow } = makeSupabase();
+    setUsersRow({
+      data: { role: 'user', subscription_tier: 'free', subscription_expires_at: null },
+      error: null,
+    });
+    const r = await handleCalibrationAnalyze(
+      makeReq({ body: { typeId: 'TDI', answers: { q1: 'a' } } }),
+      client,
+    );
+    expect(r.status).toBe(402);
+    expect(r.body.code).toBe('PAYMENT_REQUIRED');
+    expect(r.body.requiredTier).toBe('strategist');
+    expect(r.body.currentTier).toBe('free');
+  });
+
+  it('admins bypass tier gating regardless of subscription_tier', async () => {
+    const { client, setUsersRow, setSelectMaybeSingle, setInsertSingle } = makeSupabase();
+    setUsersRow({
+      data: { role: 'admin', subscription_tier: 'free', subscription_expires_at: null },
+      error: null,
+    });
+    // Calibration also performs an insert; stub it so the path completes.
+    setInsertSingle({ data: { id: 'cal-1' }, error: null });
+    // Avoid the AI call by sending an obviously invalid body — the gate
+    // should clear first, then a downstream validation error returns. We
+    // assert specifically that the response is NOT 402.
+    setSelectMaybeSingle({ data: null, error: null });
+    const r = await handleCalibrationAnalyze(makeReq({ body: {} }), client);
+    expect(r.status).not.toBe(402);
+  });
+
+  it('treats an expired paid tier as free', async () => {
+    const { client, setUsersRow } = makeSupabase();
+    setUsersRow({
+      data: {
+        role: 'user',
+        subscription_tier: 'strategist',
+        subscription_expires_at: new Date(Date.now() - 86_400_000).toISOString(),
+      },
+      error: null,
+    });
+    const r = await handleCalibrationAnalyze(
+      makeReq({ body: { typeId: 'TDI', answers: { q1: 'a' } } }),
+      client,
+    );
+    expect(r.status).toBe(402);
+    expect(r.body.currentTier).toBe('free');
   });
 });

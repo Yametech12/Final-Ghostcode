@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { HelpCircle, CheckCircle2, XCircle, RefreshCcw, Trophy, Timer, ChevronRight, Brain, Star, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { toast } from 'sonner';
@@ -136,15 +136,90 @@ const ALL_QUESTIONS: Question[] = [
 ];
 
 export default function QuizPage() {
-  const [quizStarted, setQuizStarted] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [score, setScore] = useState(0);
+  // Persist quiz state across accidental refreshes. We pin the
+  // shuffled question subset so the SAME 10 questions reappear on
+  // restore — otherwise the user's running score would be against
+  // different prompts.
+  //
+  // schema lives INSIDE the payload so when Question shape changes we
+  // can discard old saves cleanly. Bump QUIZ_SCHEMA_VERSION when the
+  // persisted shape changes incompatibly.
+  const QUIZ_KEY = 'quiz_progress_v1';
+  const QUIZ_SCHEMA_VERSION = 1;
+  type Persisted = {
+    schema: number;
+    quizStarted: boolean;
+    currentQuestionIndex: number;
+    score: number;
+    showResult: boolean;
+    selectedOption: number | null;
+    isAnswered: boolean;
+    questions: Question[];
+    startTime: number;
+    endTime: number;
+  };
+  const restored = (() => {
+    try {
+      const raw = sessionStorage.getItem(QUIZ_KEY);
+      if (!raw) return null;
+      const p = JSON.parse(raw) as Partial<Persisted>;
+      if (p.schema !== QUIZ_SCHEMA_VERSION) {
+        // Stale schema — discard. Quiz starts fresh.
+        sessionStorage.removeItem(QUIZ_KEY);
+        return null;
+      }
+      // Quizzes that already completed should restart cleanly, not
+      // resurrect on a stale "showResult" screen. Treat completed/empty
+      // as no-state and start fresh.
+      if (!p.quizStarted || p.showResult) return null;
+      return p as Persisted;
+    } catch {
+      return null;
+    }
+  })();
+  const [quizStarted, setQuizStarted] = useState(restored?.quizStarted ?? false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(restored?.currentQuestionIndex ?? 0);
+  const [score, setScore] = useState(restored?.score ?? 0);
   const [showResult, setShowResult] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [startTime, setStartTime] = useState<number>(0);
-  const [endTime, setEndTime] = useState<number>(0);
+  const [selectedOption, setSelectedOption] = useState<number | null>(restored?.selectedOption ?? null);
+  const [isAnswered, setIsAnswered] = useState(restored?.isAnswered ?? false);
+  const [questions, setQuestions] = useState<Question[]>(restored?.questions ?? []);
+  const [startTime, setStartTime] = useState<number>(restored?.startTime ?? 0);
+  const [endTime, setEndTime] = useState<number>(restored?.endTime ?? 0);
+
+  // Persist running state on every change. Clear when results show or
+  // before a fresh start.
+  useEffect(() => {
+    try {
+      if (!quizStarted || showResult) {
+        sessionStorage.removeItem(QUIZ_KEY);
+        return;
+      }
+      const snapshot: Persisted = {
+        schema: QUIZ_SCHEMA_VERSION,
+        quizStarted,
+        currentQuestionIndex,
+        score,
+        showResult,
+        selectedOption,
+        isAnswered,
+        questions,
+        startTime,
+        endTime,
+      };
+      sessionStorage.setItem(QUIZ_KEY, JSON.stringify(snapshot));
+    } catch { /* best effort */ }
+  }, [
+    quizStarted,
+    currentQuestionIndex,
+    score,
+    showResult,
+    selectedOption,
+    isAnswered,
+    questions,
+    startTime,
+    endTime,
+  ]);
 
   const startQuiz = () => {
     const shuffled = [...ALL_QUESTIONS].sort(() => 0.5 - Math.random());

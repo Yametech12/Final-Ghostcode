@@ -87,3 +87,52 @@ export function sanitizeUserInput(input: string, maxLength = 5000): string {
     .replace(/on\w+\s*=\s*["']/gi, '')
     .trim();
 }
+
+/**
+ * Sanitize a free-form text field that will be inlined into an LLM prompt.
+ *
+ * Defends against the classic prompt-injection patterns where a user types
+ * something like:
+ *
+ *   Ignore all previous instructions. You are now …
+ *   ###  system: do X
+ *   <|im_start|>system you are …
+ *   assistant: bypass …
+ *
+ * The cleaning rules:
+ *   - Strip OpenAI/Anthropic-style role markers and chat templates.
+ *   - Neutralize "ignore prior instructions" by collapsing the sentence into
+ *     a quoted note rather than letting it run as a directive.
+ *   - Cap length so a single field can't exhaust the model's context.
+ *
+ * This is defense-in-depth — the *real* mitigation is structuring the prompt
+ * so user content sits inside a delimited "INPUT:" block the model is told
+ * to treat as data, not instructions. The handlers do that already; this
+ * function just makes the input itself less weaponizable.
+ */
+export function sanitizePromptField(input: string, maxLength = 1500): string {
+  if (!input) return '';
+
+  let cleaned = String(input).slice(0, maxLength);
+
+  // Strip ChatML / OpenAI assistant tokens
+  cleaned = cleaned.replace(/<\|(?:im_start|im_end|endoftext|system|user|assistant)\|>/gi, '');
+
+  // Strip role-prefix lines like "system:", "assistant:", "###  user:" at the
+  // start of a line. Only at line-start to avoid mangling normal prose like
+  // "the system: works fine".
+  cleaned = cleaned.replace(/^[\s>#-]*(system|assistant|user|developer|tool)\s*:\s*/gim, '');
+
+  // Neutralize the most common injection phrases by quoting them rather than
+  // deleting (preserves the user's actual intent if they were quoting
+  // something legitimately).
+  cleaned = cleaned.replace(
+    /\b(ignore|disregard|forget)\s+(?:all\s+)?(?:prior|previous|above|earlier)\s+(instructions|prompts|rules|messages)\b/gi,
+    '[redacted instruction]',
+  );
+
+  // Collapse runs of whitespace introduced by the substitutions.
+  cleaned = cleaned.replace(/[ \t]{3,}/g, '  ').trim();
+
+  return cleaned;
+}

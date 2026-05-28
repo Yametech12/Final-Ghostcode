@@ -61,11 +61,12 @@ export default function InsightsPage() {
       try {
         const { data: calibrations, error } = await supabase
           .from('calibrations')
-          .select('*')
-          .eq('user_id', user.id);
+          .select('id, type_id, traits, timestamp')
+          .eq('user_id', user.id)
+          .order('timestamp', { ascending: false })
+          .limit(20);
         if (error) throw error;
         const data = calibrations.map(cal => ({
-          id: cal.id,
           ...cal,
           date: new Date(cal.timestamp)
         }));

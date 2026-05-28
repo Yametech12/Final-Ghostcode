@@ -99,16 +99,26 @@ interface GlossaryTextProps {
   text: string;
 }
 
-export default function GlossaryText({ text }: GlossaryTextProps) {
-  // Create a regex that matches any of the terms, word boundaries
-  const termsRegex = new RegExp(`\\b(${sortedTerms.map(t => t.term).join('|')})\\b`, 'gi');
+// Build the regex and term lookup map ONCE at module load instead of on every
+// render. Term names are static, so the regex never changes per-instance.
+const termsRegex = new RegExp(
+  `\\b(${sortedTerms.map((t) => t.term).join('|')})\\b`,
+  'gi',
+);
+const termLookup: Map<string, (typeof sortedTerms)[number]> = new Map(
+  sortedTerms.map((t) => [t.term.toLowerCase(), t]),
+);
 
-  const parts = text.split(termsRegex);
+export default function GlossaryText({ text }: GlossaryTextProps) {
+  // Memoize the parts split per-text so re-renders with the same input
+  // (common when a parent re-renders on unrelated state) don't re-run the
+  // O(parts × terms) walk.
+  const parts = React.useMemo(() => text.split(termsRegex), [text]);
 
   return (
     <>
       {parts.map((part, i) => {
-        const matchedTerm = sortedTerms.find(t => t.term.toLowerCase() === part.toLowerCase());
+        const matchedTerm = termLookup.get(part.toLowerCase());
         if (matchedTerm) {
           return (
             <Tooltip key={i} term={matchedTerm.term} definition={matchedTerm.definition}>

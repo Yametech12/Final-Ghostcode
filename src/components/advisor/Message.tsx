@@ -86,6 +86,15 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
               ? 'bg-accent-primary text-white rounded-tr-sm'
               : 'bg-slate-800/80 text-slate-100 rounded-tl-sm',
             message.failed && 'border border-red-500/40',
+            // Visually distinguish the persisted "stream interrupted"
+            // placeholder from a real model reply. Without this, the
+            // placeholder uses the same bubble styling as a normal
+            // assistant message and looks like the model literally said
+            // "[interrupted before reply]". Italic + muted + dashed
+            // border makes it read as system metadata.
+            !isUser &&
+              message.content === '[interrupted before reply]' &&
+              'italic text-slate-400 bg-slate-800/40 border border-dashed border-slate-600/40',
           )}
         >
           {/* Empty assistant placeholder while waiting for the first token */}
@@ -94,6 +103,11 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
               <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" />
               <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '150ms' }} />
               <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '300ms' }} />
+            </span>
+          ) : !isUser && message.content === '[interrupted before reply]' ? (
+            <span className="inline-flex items-center gap-1.5 text-xs">
+              <RotateCcw aria-hidden="true" className="w-3 h-3" />
+              Cancelled before the model replied.
             </span>
           ) : (
             <div className="prose prose-invert prose-sm max-w-none break-words prose-a:text-accent-primary prose-a:underline hover:prose-a:text-accent-secondary prose-code:text-accent-primary prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-strong:text-white prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">

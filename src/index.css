@@ -24,6 +24,12 @@
   --color-status-error: #C77A6F;   /* muted terracotta, not vibrant red */
   --color-status-info: #7A93A8;    /* dusty blue */
 
+  /* Custom breakpoint for very small phones (iPhone SE 1, old Androids).
+     Tailwind v4 default screens start at sm=640px which is too coarse for
+     decisions like "show full brand wordmark vs logo only". 360px catches
+     the common "320–360 cramped" zone without affecting anything else. */
+  --breakpoint-xs: 360px;
+
   /* Warm-undertone neutrals — replaces slate's cool blue cast (Req 4.4)
      Numeric stops kept as `slate-*` token names for backward compat with existing consumers. */
   --color-slate-50: #FAF7F2;  /* near-white, body text on dark */
@@ -244,23 +250,36 @@ html.lenis, html.lenis body {
   pointer-events: none;
 }
 
-/* Sleek Custom Scrollbar — warm-tinted, gold on hover */
+/* Sleek custom scrollbar — warm-tinted, gold on hover.
+   Width: 8px (was 6px) so the thumb has enough hit area to actually grab.
+   Track has a 1px hairline to ground it on the dark surface. */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
   background: transparent;
+  border-left: 1px solid rgba(232, 199, 126, 0.04);
 }
 
 ::-webkit-scrollbar-thumb {
   background: rgba(196, 186, 171, 0.18);
   border-radius: 10px;
+  /* Inset border so the thumb appears slightly narrower than the track,
+     giving it room to breathe — feels less "pegged to the edge". */
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  transition: background var(--duration-fast) var(--ease-soft);
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(232, 199, 126, 0.35);
+  background: rgba(232, 199, 126, 0.45);
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+  background: transparent;
 }
 
 * {
@@ -268,21 +287,49 @@ html.lenis, html.lenis body {
   scrollbar-color: rgba(196, 186, 171, 0.18) transparent;
 }
 
+.light-theme::-webkit-scrollbar-thumb,
+.light-theme ::-webkit-scrollbar-thumb {
+  background: rgba(110, 99, 88, 0.25);
+  background-clip: padding-box;
+}
+.light-theme::-webkit-scrollbar-thumb:hover,
+.light-theme ::-webkit-scrollbar-thumb:hover {
+  background: rgba(184, 134, 11, 0.5);
+  background-clip: padding-box;
+}
+
 body {
-  @apply font-sans antialiased bg-mystic-950 text-slate-300 selection:bg-accent-primary/30 selection:text-accent-primary;
+  @apply font-sans antialiased bg-mystic-950 text-slate-300;
   background-color: var(--color-mystic-950, #0E0B12);
   overflow-x: hidden;
   width: 100%;
   position: relative;
 }
 
-/* Atmospheric background-layered gradients — gold + copper bloom (Req 4.7) */
+/* Selection — solid gold-tinted background with cream foreground,
+   readable on every surface. Was using accent-primary/30 + accent-primary
+   text which became unreadable when selecting accent-tinted elements. */
+::selection {
+  background-color: rgba(232, 199, 126, 0.35);
+  color: #14110E;
+}
+.light-theme ::selection {
+  background-color: rgba(184, 134, 11, 0.32);
+  color: #14110E;
+}
+
+/* Atmospheric background-layered gradients — gold + copper bloom (Req 4.7).
+   Three layers now (was two): the new top-right cool dusty-blue layer adds
+   depth and stops the page feeling like a flat warm wash. The opacities and
+   blurs are tuned so the bloom still reads as ambient — never as a UI
+   element. */
 .atmosphere {
   background:
     radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.06) 0%, transparent 60%),
-    radial-gradient(circle at 10% 80%, rgba(184, 115, 51, 0.04) 0%, transparent 50%);
+    radial-gradient(circle at 10% 80%, rgba(184, 115, 51, 0.04) 0%, transparent 50%),
+    radial-gradient(circle at 90% 10%, rgba(122, 147, 168, 0.025) 0%, transparent 55%);
   filter: blur(60px);
-  opacity: 0.7;
+  opacity: 0.85;
   position: fixed;
   top: 0;
   left: 0;
@@ -290,6 +337,43 @@ body {
   bottom: 0;
   z-index: -1;
   pointer-events: none;
+}
+
+/* Subtle film-grain noise overlay — breaks up flat near-black fills so the
+   background doesn't band on OLED displays. ~1.5% opacity is enough to
+   add texture without being visible as noise. SVG fractalNoise data URL
+   keeps it dependency-free; one network request, ~0.4 KB cached. Light
+   theme overrides this to off. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.015;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+}
+
+.light-theme body::before {
+  opacity: 0;
+}
+
+/* Edge vignette — subtle radial fade at viewport corners draws the eye
+   toward content center. Especially helps on ultra-wide displays where
+   the content max-width leaves wide empty margins. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background: radial-gradient(ellipse at center, transparent 55%, rgba(0, 0, 0, 0.35) 100%);
+}
+
+.light-theme body::after {
+  background: radial-gradient(ellipse at center, transparent 60%, rgba(20, 17, 14, 0.06) 100%);
 }
 
 /* Mobile Typography Adjustments */
@@ -344,14 +428,46 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-raised);
   position: relative;
+  /* Smooth transitions for hover/focus state changes added by interactive
+     wrappers (e.g. .mystic-border). Targeting specific properties so
+     unrelated paint operations don't accidentally animate. */
+  transition:
+    border-color var(--duration-base) var(--ease-soft),
+    box-shadow var(--duration-base) var(--ease-soft),
+    background-color var(--duration-base) var(--ease-soft);
 }
 
 @supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
   .glass-card {
     background-color: rgba(22, 17, 24, 0.55);
-    backdrop-filter: blur(20px);
-    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px) saturate(140%);
+    -webkit-backdrop-filter: blur(20px) saturate(140%);
   }
+}
+
+/* Light-theme glass — keep the same translucency principle but on the
+   warm cream base. Saturation boost stays so the gold accents pop. */
+.light-theme .glass-card {
+  background-color: rgba(242, 237, 227, 0.85);
+  border-color: rgba(184, 134, 11, 0.12);
+}
+@supports (backdrop-filter: blur(0)) or (-webkit-backdrop-filter: blur(0)) {
+  .light-theme .glass-card {
+    background-color: rgba(242, 237, 227, 0.55);
+  }
+}
+
+/* Elevation variants — opt-in classes that override the default
+   .glass-card box-shadow to signal a clearer hierarchy. Use:
+     .glass-card             → default raised
+     .glass-card.elevation-floating  → modals, popovers (deeper shadow)
+     .glass-card.elevation-flat      → inline panels, embedded sections */
+.glass-card.elevation-floating {
+  box-shadow: var(--shadow-floating);
+}
+.glass-card.elevation-flat {
+  box-shadow: var(--shadow-flat);
+  border-color: rgba(232, 199, 126, 0.05);
 }
 
 /* Inner top-edge highlight — the "polished glass" sheen (Req 7.2) */
@@ -367,23 +483,46 @@ h1, h2, h3, h4, h5, h6 {
   pointer-events: none;
 }
 
+/* Linear champagne→gold→copper. Used on primary CTAs, the brand
+   wordmark, hero accent words. The diagonal angle gives a subtle
+   "metallic sheen" rather than a flat fill. */
 .accent-gradient {
   background-image: linear-gradient(135deg, #E8C77E 0%, #D4AF37 50%, #B87333 100%);
 }
 
+/* Text-only gradient — slightly different stops than the surface
+   gradient so the brightest tone (champagne, #E8C77E) lands toward the
+   top-left of glyphs where the eye reads first. */
 .text-gradient {
   background-clip: text;
   -webkit-background-clip: text;
   color: transparent;
-  background-image: linear-gradient(90deg, #E8C77E 0%, #F0D89A 50%, #D4AF37 100%);
+  background-image: linear-gradient(135deg, #F0D89A 0%, #E8C77E 40%, #D4AF37 80%, #B87333 100%);
+  /* Extremely subtle text-shadow simulates the metallic character of
+     the gradient on dark backgrounds. Disabled in reduced-motion users
+     don't need it, and on light theme the shadow inverts. */
+  text-shadow: 0 1px 0 rgba(232, 199, 126, 0.05);
+}
+
+.light-theme .text-gradient {
+  background-image: linear-gradient(135deg, #B8860B 0%, #9C7421 60%, #8B5A2B 100%);
+  text-shadow: 0 1px 0 rgba(20, 17, 14, 0.04);
 }
 
 .mystic-gradient {
   @apply bg-gradient-to-br from-mystic-900 via-mystic-950 to-mystic-900;
 }
 
+/* Multi-layer gold glow — simulates the glow of an actual light source
+   instead of a flat outer-shadow. Inner ring (1px, low spread) gives
+   the surface its "edge lit" quality; outer wash (24px) is the ambient
+   spill onto adjacent surfaces. Used on the brand logo, primary CTAs
+   when emphasized, and feature-spotlight cards. */
 .glow-accent {
-  box-shadow: 0 0 24px -4px rgba(212, 175, 55, 0.18);
+  box-shadow:
+    0 0 0 1px rgba(232, 199, 126, 0.12),
+    0 0 24px -4px rgba(212, 175, 55, 0.22),
+    0 0 48px -12px rgba(184, 115, 51, 0.12);
 }
 
 .shimmer-effect {
@@ -433,8 +572,33 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: scale(1);    opacity: 1; }
 }
 
+/* Card hover utility — applied to interactive cards. Now layers three
+   things on hover: brighter gold border, a soft gold glow, and a faint
+   background brightness lift. The 500ms duration is intentionally
+   slower than micro-interactions so the user reads it as "settling
+   into focus" rather than a click feedback. */
 .mystic-border {
-  @apply border border-slate-700/20 hover:border-accent-primary/30 transition-all duration-500;
+  border: 1px solid rgba(196, 186, 171, 0.12);
+  transition:
+    border-color 500ms var(--ease-soft),
+    box-shadow 500ms var(--ease-soft),
+    background-color 500ms var(--ease-soft);
+}
+.mystic-border:hover {
+  border-color: rgba(232, 199, 126, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(232, 199, 126, 0.05),
+    0 8px 32px -12px rgba(212, 175, 55, 0.18);
+}
+
+.light-theme .mystic-border {
+  border-color: rgba(110, 99, 88, 0.18);
+}
+.light-theme .mystic-border:hover {
+  border-color: rgba(184, 134, 11, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(184, 134, 11, 0.06),
+    0 8px 32px -12px rgba(184, 134, 11, 0.18);
 }
 
 .scrollbar-hide::-webkit-scrollbar {
@@ -537,12 +701,21 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
-   Focus styles — visible keyboard focus ring on all interactive elements
+   Focus styles — visible keyboard focus ring on all interactive elements.
+   The ring is a glow + 1px outline rather than a hard 2px solid line —
+   reads as "focused" without the harsh "selected text in a 90s OS" look.
+   The selection styles right above already match this softer treatment.
    ────────────────────────────────────────────────────────────────────── */
 :focus-visible {
-  outline: 2px solid var(--color-accent-primary);
+  outline: 1px solid var(--color-accent-primary);
   outline-offset: 2px;
   border-radius: 4px;
+  box-shadow: 0 0 0 4px rgba(232, 199, 126, 0.15);
+}
+
+.light-theme :focus-visible {
+  /* Slightly more visible halo on cream background */
+  box-shadow: 0 0 0 4px rgba(184, 134, 11, 0.18);
 }
 
 /* Remove the default focus outline only when :focus-visible is supported */

@@ -223,29 +223,37 @@ export default function AdminDashboard() {
     }
 
     try {
-      
-      // Delete data from all associated collections
-      // Note: Tables with CASCADE constraints will be deleted automatically when user is deleted
+      // Delete via the admin endpoint, which drives the deletion through
+      // supabase.auth.admin.deleteUser server-side. We can't do that from
+      // the client (admin API requires the service role key, which must
+      // never reach the browser), and deleting from public.users
+      // directly leaves the auth.users row alive after the FK migration —
+      // creating ghost accounts that can re-authenticate.
+      const { apiFetch } = await import('../lib/fetch');
+      const res = await apiFetch(`/api/admin/users/${encodeURIComponent(userId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!res.ok) {
+        let detail: string | undefined;
+        try {
+          const j = await res.json();
+          detail = typeof j?.error === 'string' ? j.error : undefined;
+        } catch { /* not JSON */ }
+        throw new Error(detail || `Delete failed (${res.status})`);
+      }
 
-      // Delete feedback separately (no CASCADE)
-      await supabase.from("feedback").delete().eq("user_id", userId);
-
-      // Delete the user (this will CASCADE delete related data)
-      const { error: deleteError } = await supabase
-        .from("users")
-        .delete()
-        .eq("id", userId);
-      if (deleteError) throw deleteError;
-      
-      // Update local state
+      // Update local state. The cascade on the server already removed
+      // the user's reports, so we filter them out here too to match.
       setUsers(prev => prev.filter((u) => u.id !== userId));
       setReports(prev => prev.filter((r) => r.user_id !== userId));
-      
+      setFeedbacks(prev => prev.filter((f) => f.user_id !== userId));
+
       toast.success("User account and all associated data deleted successfully.");
       setConfirmingDelete(null);
     } catch (error) {
       console.error("Error deleting user:", error);
-      toast.error("Failed to delete user.");
+      toast.error(error instanceof Error ? error.message : "Failed to delete user.");
       handleFirestoreError(error, OperationType.DELETE, `users/${userId}`);
     }
   };

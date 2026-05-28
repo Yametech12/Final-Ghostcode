@@ -8,6 +8,9 @@ import { createClient } from '@supabase/supabase-js';
 
 import { serializeError } from '../src/utils/errorHandling';
 import { getAuthenticatedUser } from './lib/auth.js';
+import { log, requestIdFrom, serializeErr } from './lib/log.js';
+import { initSentryNode, captureException } from './lib/sentryNode.js';
+import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
 import {
   handleHealth,
   handleTestKey,
@@ -17,15 +20,20 @@ import {
   handleGetAdvisorSession,
   handleDeleteAdvisorSession,
   handleAdvisorChatStream,
-  handleCalibrationAnalyze,
   handleAiChat,
   handleCreateOracleAnalysis,
   handleUpdateOracleAnalysisTasks,
   handleDeleteOracleAnalysis,
+  handleDeleteMyAccount,
+  handleAdminDeleteUser,
   type NormalizedRequest,
 } from './lib/handlers.js';
 
 console.log('Server starting...');
+
+// Initialize Sentry as early as possible so any throw during module
+// evaluation gets captured. No-op when SENTRY_DSN isn't set.
+void initSentryNode();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -70,31 +78,53 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const AI_LIMIT = 10;
 const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
+const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
 const RATE_WINDOW = 60_000;
+const ACCOUNT_DELETE_WINDOW = 5 * 60_000; // 5min window for account delete
 
 function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
   // Decide which bucket (if any) applies. AI/advisor/calibration share one,
   // /api/security/log gets its own with a higher allowance since legitimate
-  // clients can emit several events per page load.
+  // clients can emit several events per page load. Account deletion gets
+  // its own much tighter bucket since it's destructive and must match the
+  // Vercel-side gate (otherwise dev/self-host would have a wider hole than
+  // production).
   const isAiPath = req.path.startsWith('/api/ai') || req.path.startsWith('/api/advisor') || req.path.startsWith('/api/calibration');
   const isLogPath = req.path === '/api/security/log';
-  if (!isAiPath && !isLogPath) return next();
+  const isAccountDelete = req.method === 'DELETE' && req.path === '/api/users/me';
+  if (!isAiPath && !isLogPath && !isAccountDelete) return next();
 
-  const limit = isLogPath ? LOG_LIMIT : AI_LIMIT;
+  let limit: number;
+  let window: number;
+  let bucketPrefix: string;
+  if (isAccountDelete) {
+    limit = ACCOUNT_DELETE_LIMIT;
+    window = ACCOUNT_DELETE_WINDOW;
+    bucketPrefix = 'acctdel';
+  } else if (isLogPath) {
+    limit = LOG_LIMIT;
+    window = RATE_WINDOW;
+    bucketPrefix = 'log';
+  } else {
+    limit = AI_LIMIT;
+    window = RATE_WINDOW;
+    bucketPrefix = 'ai';
+  }
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
-  const bucketKey = isLogPath ? `log:${ip}` : `ai:${ip}`;
+  const bucketKey = `${bucketPrefix}:${ip}`;
   const now = Date.now();
   const record = rateLimitStore.get(bucketKey);
 
   if (!record || now > record.resetTime) {
-    rateLimitStore.set(bucketKey, { count: 1, resetTime: now + RATE_WINDOW });
+    rateLimitStore.set(bucketKey, { count: 1, resetTime: now + window });
     return next();
   }
   if (record.count >= limit) {
     return res.status(429).json({
       error: 'Rate limited',
-      details: `Maximum ${limit} requests per minute`,
+      details: `Maximum ${limit} requests per ${Math.round(window / 60_000)} minute(s)`,
       retryAfter: Math.ceil((record.resetTime - now) / 1000),
+      code: 'RATE_LIMITED',
     });
   }
   record.count++;
@@ -103,60 +133,40 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
 app.use(rateLimitMiddleware);
 
 // ---------------------------------------------------------------------------
-// Security & CORS headers
+// Security & CORS headers — both delegate to the shared helpers in
+// lib/http.ts so dev and prod stamp identical headers (especially CSP,
+// which previously only existed on this Express path).
 // ---------------------------------------------------------------------------
 app.use((req, res, next) => {
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  // Tightened CSP — removed 'unsafe-inline' from script-src.
-  // Keeping 'unsafe-inline' on style-src because Tailwind 4 inlines critical CSS;
-  // when you migrate to nonce-based styling, drop it.
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'self'; " +
-      "script-src 'self' https://www.google.com https://www.gstatic.com; " +
-      "style-src 'self' 'unsafe-inline'; " +
-      "img-src 'self' data: https:; " +
-      "connect-src 'self' https://*.supabase.co https://*.upstash.com https://api.regolo.ai https://*.anthropic.com https://*.openai.com https://*.google.com; " +
-      "font-src 'self' data:; " +
-      "object-src 'none'; " +
-      "frame-ancestors 'self'; " +
-      "base-uri 'self';"
-  );
-  if (req.secure || process.env.NODE_ENV === 'production') {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
-  }
+  applySecurityHeaders({
+    setHeader: (n, v) => res.setHeader(n, v),
+    isSecure: !!req.secure,
+  });
   next();
 });
 
 app.use((req, res, next) => {
-  const origin = req.headers.origin;
-  const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(',').map((o) => o.trim())
-    : [
-        'http://localhost:5173',
-        'http://localhost:5174',
-        'http://localhost:3000',
-        'https://epimetheusproject.vercel.app',
-        'https://epimetheus.ai',
-        'https://www.epimetheus.ai',
-      ];
-
-  // Echo only the requesting origin if it's in the allow-list.
-  // Never use '*' alongside Allow-Credentials: true (browsers reject the combo).
-  if (origin && allowedOrigins.includes(origin)) {
-    res.header('Access-Control-Allow-Origin', origin);
-    res.header('Vary', 'Origin');
-  }
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-  res.header('Access-Control-Allow-Credentials', 'true');
+  applyCorsHeaders({
+    origin: req.headers.origin,
+    setHeader: (n, v) => res.header(n, v),
+  });
   next();
 });
 
 app.options('/', (_req, res) => res.status(204).end());
+
+// ---------------------------------------------------------------------------
+// API versioning: /api/v1/* is rewritten to /api/* for forward compatibility.
+// This lets clients optionally pin to v1 without us having to duplicate routes.
+// Must run BEFORE the CSRF check so /api/v1/security/log gets the same
+// public-endpoint exemption as /api/security/log.
+// ---------------------------------------------------------------------------
+app.use((req, _res, next) => {
+  if (req.url.startsWith('/api/v1/')) {
+    req.url = '/api/' + req.url.slice('/api/v1/'.length);
+  }
+  next();
+});
 
 // ---------------------------------------------------------------------------
 // CSRF protection: state-changing requests must include Content-Type: application/json
@@ -197,30 +207,49 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
       res.setHeader('Cache-Control', 'no-cache');
       res.setHeader('Connection', 'keep-alive');
       res.status(result.status);
-      for await (const chunk of result.stream) {
-        if (res.destroyed) break;
-        res.write(chunk);
+
+      // Wire client-disconnect → handler cancellation so we stop reading
+      // (and stop billing) the upstream when the user closes their tab.
+      const onClose = () => {
+        if (typeof result.cancel === 'function') {
+          try { result.cancel(); } catch { /* ignore */ }
+        }
+      };
+      res.req.once('close', onClose);
+
+      try {
+        for await (const chunk of result.stream) {
+          if (res.destroyed) break;
+          try {
+            res.write(chunk);
+          } catch {
+            // EPIPE etc — client gone, bail.
+            break;
+          }
+        }
+      } finally {
+        res.req.off('close', onClose);
       }
       if (!res.destroyed) res.end();
       return;
     }
     res.status(result.status).json(result.body ?? {});
   } catch (err) {
-    console.error('Handler error:', serializeError(err));
-    if (!res.headersSent) res.status(500).json({ error: 'Internal error' });
+    const requestId = requestIdFrom(res.req.headers as Record<string, string | string[] | undefined>);
+    const route = `${res.req.method} ${res.req.path}`;
+    log.error('handler_unhandled', {
+      requestId,
+      route,
+      userId: normReq.user?.id,
+      err: serializeErr(err),
+      _skipSentry: true,
+    });
+    captureException(err, { requestId, route, userId: normReq.user?.id });
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Internal error', requestId: requestId.slice(-12) });
+    }
   }
 }
-
-// ---------------------------------------------------------------------------
-// API versioning: /api/v1/* is rewritten to /api/* for forward compatibility.
-// This lets clients optionally pin to v1 without us having to duplicate routes.
-// ---------------------------------------------------------------------------
-app.use((req, _res, next) => {
-  if (req.url.startsWith('/api/v1/')) {
-    req.url = '/api/' + req.url.slice('/api/v1/'.length);
-  }
-  next();
-});
 
 // ---------------------------------------------------------------------------
 // Routes
@@ -269,11 +298,6 @@ app.post('/api/advisor/chat', async (req, res) => {
   await send(res, n, (nr) => handleAdvisorChatStream(nr, supabase));
 });
 
-app.post('/api/calibration/analyze', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleCalibrationAnalyze(nr, supabase));
-});
-
 app.post('/api/oracle/analyses', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleCreateOracleAnalysis(nr, supabase));
@@ -291,7 +315,25 @@ app.delete('/api/oracle/analyses/:id', async (req, res) => {
 
 app.post('/api/ai/chat', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, handleAiChat);
+  await send(res, n, (nr) => handleAiChat(nr, supabase));
+});
+
+// Self-serve account deletion. Body: { confirm: "<email>" }. Cascades
+// through public.users → all child tables, and the storage trigger
+// handles the bucket files.
+app.delete('/api/users/me', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleDeleteMyAccount(nr, supabase));
+});
+
+// Admin-only user deletion. Required because AdminDashboard previously
+// deleted from `public.users` directly, which after the auth FK migration
+// leaves the auth row intact (ghost account). This handler verifies the
+// caller's admin role server-side and drives the deletion through
+// auth.admin.deleteUser so the FK cascade actually fires.
+app.delete('/api/admin/users/:id', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleAdminDeleteUser(nr, supabase));
 });
 
 // Static serving (production)
@@ -301,7 +343,21 @@ if (process.env.NODE_ENV === 'production') {
 
 // Generic error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error('Unhandled error:', serializeError(err));
+  const requestId = requestIdFrom(_req.headers as Record<string, string | string[] | undefined>);
+  const route = `${_req.method} ${_req.path}`;
+  log.error('express_unhandled', {
+    requestId,
+    route,
+    err: serializeErr(err),
+    _skipSentry: true,
+  });
+  // Direct capture in addition to the log forwarder so the unhandled
+  // path still has explicit Sentry coverage even if the forwarder import
+  // hasn't resolved yet on the first error of a cold start.
+  captureException(err, { requestId, route });
+  // Keep the legacy serializeError for the dev-only `details` payload — it
+  // matches the shape clients have come to expect from local dev.
+  void serializeError;
   const statusCode = err.statusCode || err.status || 500;
   res.status(statusCode).json({
     error: 'Internal server error',

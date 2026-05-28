@@ -22,6 +22,7 @@ import {
   MapPin,
   Shirt,
   Activity,
+  Lock,
 } from "lucide-react";
 import { personalityTypes } from "../data/personalityTypes";
 import { cn } from "../lib/utils";
@@ -30,12 +31,24 @@ import FavoriteButton from "../components/FavoriteButton";
 import ProfileRadarChart from "../components/ProfileRadarChart";
 import Tooltip from "../components/Tooltip";
 import { glossaryTerms } from "../components/GlossaryText";
+import { isFreeArchetype } from "../lib/archetypeAccess";
+import { useSubscription } from "../hooks/useSubscription";
+import ArchetypeLockedPreview from "../components/ArchetypeLockedPreview";
 
 export default function EncyclopediaPage() {
   const [searchParams, setSearchParams] = useSearchParams();
+  const sub = useSubscription();
+  /**
+   * Locked when: viewer is free-tier AND not admin AND archetype is not part
+   * of the free preview set. Admins always see everything.
+   */
+  const canAccessArchetype = (id: string) =>
+    sub.isAdmin || sub.tier !== 'free' || isFreeArchetype(id);
+
   const selectedType = searchParams.get("type") || personalityTypes[0].id;
   const profile =
     personalityTypes.find((p) => p.id === selectedType) || personalityTypes[0];
+  const profileLocked = !canAccessArchetype(profile.id);
   const profileRef = React.useRef<HTMLDivElement>(null);
 
   const tabs = [
@@ -61,32 +74,54 @@ export default function EncyclopediaPage() {
           Personality Types
         </h2>
         <div className="flex lg:flex-col gap-2 overflow-x-auto lg:overflow-x-visible pb-4 lg:pb-0 px-4 lg:px-0 scrollbar-hide">
-          {personalityTypes.map((type) => (
-            <button
-              key={type.id}
-              onClick={() => {
-                setSearchParams({ type: type.id });
-                setActiveTab("overview");
-                // On mobile, scroll to top when changing type
-                if (window.innerWidth < 1024) {
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+          {personalityTypes.map((type) => {
+            const locked = !canAccessArchetype(type.id);
+            return (
+              <button
+                key={type.id}
+                onClick={() => {
+                  setSearchParams({ type: type.id });
+                  setActiveTab("overview");
+                  // On mobile, scroll to top when changing type
+                  if (window.innerWidth < 1024) {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
+                className={cn(
+                  "flex-shrink-0 lg:w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all duration-200 group border lg:border-none relative",
+                  selectedType === type.id
+                    ? "bg-accent-primary/10 border-accent-primary lg:border-l-4 lg:border-accent-primary text-accent-primary"
+                    : "text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200",
+                )}
+                aria-label={
+                  locked
+                    ? `${type.name} — locked, requires Strategist plan`
+                    : type.name
                 }
-              }}
-              className={cn(
-                "flex-shrink-0 lg:w-full flex flex-col items-start px-4 py-3 rounded-xl transition-all duration-200 group border lg:border-none",
-                selectedType === type.id
-                  ? "bg-accent-primary/10 border-accent-primary lg:border-l-4 lg:border-accent-primary text-accent-primary"
-                  : "text-slate-400 border-white/5 hover:bg-white/5 hover:text-slate-200",
-              )}
-            >
-              <span className="font-bold text-base lg:text-lg whitespace-nowrap">
-                {type.name}
-              </span>
-              <span className="text-[10px] lg:text-xs font-mono opacity-60">
-                {type.id}
-              </span>
-            </button>
-          ))}
+              >
+                {locked && (
+                  <span
+                    className="absolute top-2 right-2 inline-flex items-center justify-center w-5 h-5 rounded-full bg-accent-primary/10 border border-accent-primary/30 text-accent-primary"
+                    aria-hidden="true"
+                    title="Strategist plan required"
+                  >
+                    <Lock className="w-2.5 h-2.5" strokeWidth={2.5} />
+                  </span>
+                )}
+                <span
+                  className={cn(
+                    "font-bold text-base lg:text-lg whitespace-nowrap",
+                    locked ? "pr-7" : ""
+                  )}
+                >
+                  {type.name}
+                </span>
+                <span className="text-[10px] lg:text-xs font-mono opacity-60">
+                  {type.id}
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -102,6 +137,9 @@ export default function EncyclopediaPage() {
             />
           </div>
         </div>
+        {profileLocked ? (
+          <ArchetypeLockedPreview profile={profile} />
+        ) : (
         <div ref={profileRef} className="glass-card p-8 md:p-12 space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div className="space-y-2">
@@ -856,6 +894,7 @@ export default function EncyclopediaPage() {
             )}
           </div>
         </div>
+        )}
       </div>
     </div>
   );

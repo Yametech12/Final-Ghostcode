@@ -11,6 +11,8 @@
 import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../_config.js';
 import { isValidUUID } from './auth.js';
+import { requireTier, getEffectiveTier } from './tierGate.js';
+import { log, serializeErr } from './log.js';
 
 export interface NormalizedRequest {
   method: string;
@@ -27,6 +29,9 @@ export interface NormalizedResponse {
   body?: any;
   /** SSE stream — when set, body is ignored and the caller streams via this iterable. */
   stream?: AsyncIterable<string>;
+  /** Optional cancellation hook. The HTTP layer should call this when the
+   *  client disconnects so the upstream Regolo stream stops being consumed. */
+  cancel?: () => void;
 }
 
 const REGOLO_BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
@@ -90,14 +95,23 @@ export async function handleSecurityLog(req: NormalizedRequest): Promise<Normali
   const logEntry = {
     event: event.slice(0, 100),
     userId: typeof userId === 'string' ? userId.slice(0, 50) : undefined,
-    email: typeof email === 'string' ? email.slice(0, 100) : undefined,
+    // Redact emails so log sinks (Vercel/Datadog) don't accumulate PII.
+    // Keep enough to correlate complaints (first char + domain) without
+    // storing the full address.
+    email: typeof email === 'string'
+      ? email.replace(/^([^@]).*@/, '$1***@').slice(0, 100)
+      : undefined,
     ip: typeof ip === 'string' ? ip.slice(0, 45) : undefined,
     userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 200) : undefined,
     timestamp: timestamp || new Date().toISOString(),
     details: detailsStr.length <= 2000 ? details : undefined,
     platform: process.env.NODE_ENV || 'unknown',
   };
-  console.log(`[SECURITY] ${JSON.stringify(logEntry)}`);
+  // The legacy console.log("[SECURITY] {...}") shape is preserved as a
+  // structured `securityEvent` field so log search keeps working. The
+  // top-level `event` field on the log line stays as our internal
+  // category marker.
+  log.info('security_log', { securityEvent: logEntry.event, payload: logEntry });
   return { status: 200, body: { success: true, logged: true } };
 }
 
@@ -148,21 +162,51 @@ export async function handleUploadProfilePhoto(
   const ext = sniffedMime.split('/')[1] || 'jpg';
   void mimeSubtype; // accepted but not trusted
 
-  const fileName = `users/${userId}/profile-${Date.now()}.${ext}`;
+  // Stable filename per user — `upsert: true` overwrites the previous
+  // upload in place, instead of accumulating one file per change. This
+  // means a user with 100 profile updates has 1 file in storage, not 100,
+  // and an overwritten photo is genuinely gone (subject to CDN cache TTL)
+  // rather than retrievable via its old timestamped URL forever.
+  //
+  // We still version the *URL* with a `?v=<ts>` query so cache layers
+  // (Supabase CDN, the user's browser) refetch on update without us
+  // having to bust the cache by changing the path.
+  const fileName = `users/${userId}/profile.${ext}`;
   const { error } = await supabase.storage
     .from('user-uploads')
-    .upload(fileName, buffer, { contentType: sniffedMime });
+    .upload(fileName, buffer, { contentType: sniffedMime, upsert: true });
 
   if (error) {
-    console.error('Supabase upload error:', error);
+    log.error('storage_upload_failed', { userId, err: serializeErr(error) });
     return serverError('Storage upload failed', 'STORAGE_ERROR');
+  }
+
+  // Best-effort cleanup of legacy timestamped uploads from the previous
+  // path scheme (`profile-<ts>.ext`). This runs once per upload and the
+  // result is non-fatal — if the list/delete fails, the new file is still
+  // saved correctly. Skipping on error keeps the happy path fast.
+  try {
+    const { data: existing } = await supabase.storage
+      .from('user-uploads')
+      .list(`users/${userId}`, { limit: 100 });
+    const stale = (existing ?? [])
+      .filter((f) => f.name.startsWith('profile-'))
+      .map((f) => `users/${userId}/${f.name}`);
+    if (stale.length > 0) {
+      await supabase.storage.from('user-uploads').remove(stale);
+    }
+  } catch (cleanupErr) {
+    log.warn('profile_photo_cleanup_skipped', { userId, err: serializeErr(cleanupErr) });
   }
 
   const {
     data: { publicUrl },
   } = supabase.storage.from('user-uploads').getPublicUrl(fileName);
 
-  return { status: 200, body: { success: true, url: publicUrl, fileName } };
+  // Version the URL so caches refetch on next update.
+  const versioned = `${publicUrl}?v=${Date.now()}`;
+
+  return { status: 200, body: { success: true, url: versioned, fileName } };
 }
 
 function sniffImageMime(buf: Buffer): string | null {
@@ -185,6 +229,10 @@ export async function handleCreateAdvisorSession(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  // Server-side tier gate. The React route guard already blocks free
+  // users from /advisor, but a direct API call would otherwise bypass it.
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
   const title = (req.body?.title as string) || 'AI Advisor Session';
 
@@ -200,7 +248,7 @@ export async function handleCreateAdvisorSession(
     .single();
 
   if (error) {
-    console.error('Session creation error:', error);
+    log.error('advisor_session_create_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to create session');
   }
   return { status: 200, body: { sessionId: session.id } };
@@ -215,6 +263,8 @@ export async function handleGetAdvisorSession(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
 
   const { data: session } = await supabase
@@ -237,7 +287,7 @@ export async function handleGetAdvisorSession(
     .limit(50);
 
   if (messagesError) {
-    console.error('Messages fetch error:', messagesError);
+    log.error('advisor_messages_fetch_failed', { userId, err: serializeErr(messagesError) });
     return serverError('Failed to fetch messages');
   }
 
@@ -252,6 +302,9 @@ export async function handleDeleteAdvisorSession(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  // No tier check on DELETE — we always let users clean up their own
+  // data even if they downgrade (otherwise tier expiry would strand
+  // sessions they can no longer manage).
   const sessionId = req.params.sessionId;
   if (!isValidUUID(sessionId)) return badRequest('Invalid sessionId', 'INVALID_UUID');
 
@@ -280,7 +333,14 @@ async function buildAdvisorMessages(
   supabase: SupabaseClient,
   userId: string,
   sessionId: string,
-  message: string
+  message: string,
+  /**
+   * Effective tier for the caller. Oracle gets a deeper history budget so
+   * the model carries more context across long conversations. Strategist
+   * uses the default. Free shouldn't reach this code path (route gate
+   * blocks it) but treats free as Strategist if it does.
+   */
+  tier: 'free' | 'strategist' | 'oracle' = 'strategist',
 ): Promise<Array<{ role: string; content: string }>> {
   const [{ data: calibrations }, { data: history }, { data: recentActivity }] = await Promise.all([
     supabase
@@ -333,7 +393,13 @@ Message History: ${history?.length || 0} messages in this session
   // Token-aware truncation: approximate 1 token ≈ 4 chars.
   // Reserve ~2000 tokens for system prompt + new user message + response.
   // Llama 3.3 70B has 8192 context; leave room for the response (600 tokens max).
-  const MAX_HISTORY_CHARS = 20000; // ~5000 tokens for history
+  //
+  // Tier-aware history budget — Oracle gets ~7.5k chars more (≈1.8k tokens
+  // more conversation context), backing the "deep-dive AI sessions
+  // (extended context)" Oracle promise on the pricing page. Strategist
+  // stays at 20k chars (~5k tokens). Both leave headroom for system
+  // prompt + new message + response within the 8192 context.
+  const MAX_HISTORY_CHARS = tier === 'oracle' ? 27500 : 20000;
   let historyMessages = (history || []).map((m) => ({
     role: m.role === 'model' ? 'assistant' : m.role,
     content: m.content,
@@ -362,6 +428,8 @@ export async function handleAdvisorChatStream(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
   const { sessionId, message } = req.body || {};
 
@@ -378,7 +446,24 @@ export async function handleAdvisorChatStream(
     return { status: 404, body: { error: 'Session not found', code: 'NOT_FOUND' } };
   }
 
-  const messages = await buildAdvisorMessages(supabase, userId, sessionId, message);
+  // Tier-aware budgets. Oracle gets:
+  //   - More conversation history kept in-context (handled inside
+  //     buildAdvisorMessages via the `tier` arg)
+  //   - More output tokens, so longer multi-paragraph answers don't get
+  //     cut mid-sentence
+  // Strategist keeps the previous 600-token budget which is plenty for
+  // the existing under-250-words system prompt cap.
+  const { tier, isAdmin } = await getEffectiveTier(req, supabase);
+  const effectiveTier = isAdmin ? 'oracle' : tier;
+  const ADVISOR_MAX_TOKENS = effectiveTier === 'oracle' ? 1200 : 600;
+
+  const messages = await buildAdvisorMessages(
+    supabase,
+    userId,
+    sessionId,
+    message,
+    effectiveTier,
+  );
 
   // Save user message first, before streaming.
   await supabase.from('advisor_messages').insert({
@@ -388,28 +473,63 @@ export async function handleAdvisorChatStream(
     content: message,
   });
 
+  // Cancellation token shared between the generator and the response writer.
+  // The Express/Vercel layer can flip cancelled=true when the client closes
+  // the connection; the generator polls it and exits early so we stop reading
+  // (and stop billing) Regolo tokens for an audience that's gone.
+  const cancelToken: { cancelled: boolean; reader?: ReadableStreamDefaultReader<Uint8Array> } = {
+    cancelled: false,
+  };
+
   const stream = (async function* (): AsyncGenerator<string> {
     let fullContent = '';
+    let sourceReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
     try {
       const sourceStream = (await createCompletion({
         model: DEFAULT_MODEL,
         messages,
         temperature: 0.7,
-        max_tokens: 600,
+        max_tokens: ADVISOR_MAX_TOKENS,
         stream: true,
       })) as ReadableStream;
 
-      const reader = sourceStream.getReader();
+      sourceReader = sourceStream.getReader();
+      cancelToken.reader = sourceReader;
       const decoder = new TextDecoder();
       let buffer = '';
       let chunkCount = 0;
       const maxChunks = 500;
+      // Defensive cap: if the upstream ever sends a giant payload without
+      // any \n\n delimiter, we don't want `buffer` to grow without bound.
+      // 1 MB is far above any reasonable single SSE event from Regolo.
+      const MAX_BUFFER_BYTES = 1_000_000;
+      // Inactivity guard: if no chunks arrive for INACTIVITY_MS, treat the
+      // stream as stalled and bail. The fetch in createCompletion uses a
+      // connect-only timeout for streams (STREAM_CONNECT_MS) so we own the
+      // body-phase deadline here.
+      const INACTIVITY_MS = 30_000;
+      let lastChunkAt = Date.now();
 
       try {
         while (chunkCount++ < maxChunks) {
-          const { done, value } = await reader.read();
+          if (cancelToken.cancelled) break;
+          if (Date.now() - lastChunkAt > INACTIVITY_MS) {
+            log.warn('advisor_stream_inactive', { userId, sessionId });
+            break;
+          }
+          const { done, value } = await sourceReader.read();
           if (done) break;
+          lastChunkAt = Date.now();
           buffer += decoder.decode(value, { stream: true });
+          if (buffer.length > MAX_BUFFER_BYTES) {
+            log.warn('advisor_stream_buffer_overflow', {
+              userId,
+              sessionId,
+              bufferBytes: buffer.length,
+              maxBufferBytes: MAX_BUFFER_BYTES,
+            });
+            break;
+          }
 
           while (true) {
             const lineEnd = buffer.indexOf('\n\n');
@@ -438,10 +558,16 @@ export async function handleAdvisorChatStream(
           }
         }
       } finally {
-        reader.releaseLock();
+        try {
+          sourceReader.releaseLock();
+        } catch {
+          // best-effort
+        }
       }
 
-      yield `data: [DONE]\n\n`;
+      if (!cancelToken.cancelled) {
+        yield `data: [DONE]\n\n`;
+      }
     } catch (streamError: any) {
       const errMsg: string = streamError?.message || '';
       const errorMessage = errMsg.includes('401')
@@ -452,28 +578,53 @@ export async function handleAdvisorChatStream(
             ? 'AI service has insufficient credits. Top up your Regolo account.'
             : "I'm having trouble connecting right now. Please try again in a moment.";
       fullContent = errorMessage;
-      yield `data: ${JSON.stringify({ content: errorMessage })}\n\n`;
-      yield `data: [DONE]\n\n`;
-    }
+      if (!cancelToken.cancelled) {
+        yield `data: ${JSON.stringify({ content: errorMessage })}\n\n`;
+        yield `data: [DONE]\n\n`;
+      }
+    } finally {
+      // Persist whatever we have. Even partial content from a client
+      // disconnect is worth saving so the user sees their reply on reload.
+      // If the cancel happened BEFORE the first token arrived, we'd
+      // otherwise leave the user's message paired with no model reply,
+      // which distorts buildAdvisorMessages on the next turn (model sees
+      // a lopsided history). Insert a placeholder so the conversation
+      // shape stays balanced.
+      const wasCancelledEarly =
+        cancelToken.cancelled && fullContent.length === 0;
+      const persistedContent = wasCancelledEarly
+        ? '[interrupted before reply]'
+        : fullContent;
 
-    // Persist the assistant reply (best-effort, do not block the stream consumer).
-    try {
-      await supabase.from('advisor_messages').insert({
-        session_id: sessionId,
-        user_id: userId,
-        role: 'model',
-        content: fullContent,
-      });
-      await supabase
-        .from('advisor_sessions')
-        .update({ updated_at: new Date().toISOString() })
-        .eq('id', sessionId);
-    } catch (dbError) {
-      console.error('Failed to save chat history:', dbError);
+      if (persistedContent.length > 0) {
+        try {
+          await supabase.from('advisor_messages').insert({
+            session_id: sessionId,
+            user_id: userId,
+            role: 'model',
+            content: persistedContent,
+          });
+          await supabase
+            .from('advisor_sessions')
+            .update({ updated_at: new Date().toISOString() })
+            .eq('id', sessionId);
+        } catch (dbError) {
+          log.error('advisor_chat_persist_failed', {
+            userId,
+            sessionId,
+            err: serializeErr(dbError),
+          });
+        }
+      }
     }
   })();
 
-  return { status: 200, stream };
+  return { status: 200, stream, cancel: () => {
+    cancelToken.cancelled = true;
+    if (cancelToken.reader) {
+      try { cancelToken.reader.cancel(); } catch { /* ignore */ }
+    }
+  } };
 }
 
 /**
@@ -552,6 +703,8 @@ export async function handleCreateOracleAnalysis(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {  if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
 
   const { input, result, scenarioSummary } = req.body || {};
@@ -594,7 +747,7 @@ export async function handleCreateOracleAnalysis(
     .single();
 
   if (error) {
-    console.error('Oracle analysis insert error:', error);
+    log.error('oracle_analysis_insert_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to save analysis', 'DB_INSERT_ERROR');
   }
 
@@ -646,6 +799,8 @@ export async function handleUpdateOracleAnalysisTasks(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
   const id = req.params.id;
   if (!isValidUUID(id)) return badRequest('Invalid analysis id', 'INVALID_UUID');
@@ -685,7 +840,7 @@ export async function handleUpdateOracleAnalysisTasks(
     .single();
 
   if (error) {
-    console.error('Oracle analysis tasks update error:', error);
+    log.error('oracle_tasks_update_failed', { userId, analysisId: id, err: serializeErr(error) });
     return serverError('Failed to update tasks', 'DB_UPDATE_ERROR');
   }
 
@@ -704,6 +859,8 @@ export async function handleDeleteOracleAnalysis(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  // No tier gate on DELETE — owners can always clean up after themselves
+  // even after a tier downgrade. Mirrors handleDeleteAdvisorSession.
   const userId = req.user.id;
   const id = req.params.id;
   if (!isValidUUID(id)) return badRequest('Invalid analysis id', 'INVALID_UUID');
@@ -720,7 +877,7 @@ export async function handleDeleteOracleAnalysis(
 
   const { error } = await supabase.from('oracle_analyses').delete().eq('id', id);
   if (error) {
-    console.error('Oracle analysis delete error:', error);
+    log.error('oracle_analysis_delete_failed', { userId, analysisId: id, err: serializeErr(error) });
     return serverError('Failed to delete analysis', 'DB_DELETE_ERROR');
   }
   return { status: 200, body: { success: true } };
@@ -734,6 +891,8 @@ export async function handleCalibrationAnalyze(
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
   const userId = req.user.id;
   const { typeId, answers } = req.body || {};
 
@@ -797,7 +956,7 @@ Return ONLY valid JSON:
 
     return { status: 200, body: { success: true, calibration: data, traits: parsed } };
   } catch (err) {
-    console.error('Calibration analysis error:', err);
+    log.error('calibration_analysis_failed', { userId, err: serializeErr(err) });
     return serverError(
       'Failed to analyze calibration',
       'CALIBRATION_ERROR'
@@ -809,8 +968,18 @@ Return ONLY valid JSON:
  * POST /api/ai/chat — authenticated.
  * Generic Regolo proxy used by the various analysis pages.
  */
-export async function handleAiChat(req: NormalizedRequest): Promise<NormalizedResponse> {
+export async function handleAiChat(
+  req: NormalizedRequest,
+  supabase: SupabaseClient
+): Promise<NormalizedResponse> {
   if (!req.user) return unauthorized();
+
+  // Tier gate. Every page that calls /api/ai/chat (Decryptor, Simulation,
+  // CalibrationPage Oracle) is Strategist-tier or higher in the React
+  // route guard, so the API needs to enforce the same. Otherwise a free
+  // user could hit this endpoint directly with curl + their JWT.
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
 
   const apiKey = process.env.REGOLO_API_KEY;
   if (!apiKey) return serverError('API key not configured', 'NO_API_KEY');
@@ -841,6 +1010,24 @@ export async function handleAiChat(req: NormalizedRequest): Promise<NormalizedRe
     return false;
   });
 
+  // Image attachments are an Oracle-tier feature (matches PricingPage).
+  // We already passed the strategist gate above; this second gate runs
+  // only when the request actually carries an image, so non-image
+  // requests on Strategist still go through normally.
+  if (hasImage) {
+    const oracleDenied = await requireTier(req, supabase, 'oracle');
+    if (oracleDenied) {
+      return {
+        status: oracleDenied.status,
+        body: {
+          ...oracleDenied.body,
+          error: 'Image attachments require the Oracle plan',
+          feature: 'image_attachments',
+        },
+      };
+    }
+  }
+
   const effectiveModel = hasImage ? VISION_MODEL : model || DEFAULT_MODEL;
 
   const requestBody: any = {
@@ -869,14 +1056,43 @@ export async function handleAiChat(req: NormalizedRequest): Promise<NormalizedRe
   }
 
   try {
-    const response = await fetch(REGOLO_BASE_URL, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestBody),
-    });
+    // Hard timeout on the upstream call so a hung Regolo connection can't
+    // burn the entire Vercel function budget. AbortSignal.timeout is the
+    // modern path; fall back to a manual AbortController if unavailable.
+    //
+    // We give non-streaming completions almost the full Vercel budget
+    // (30s default for the deployed function). The Oracle calibration
+    // prompt is big and Llama-3.3-70B can take 25s+ for the structured
+    // JSON response — anything tighter cascades into the fallback model
+    // chain and confuses the user. The remaining 2s headroom covers
+    // response.text() + parsing on our side.
+    const TIMEOUT_MS = 28_000;
+    const signal: AbortSignal =
+      typeof AbortSignal.timeout === 'function'
+        ? AbortSignal.timeout(TIMEOUT_MS)
+        : (() => {
+            const c = new AbortController();
+            setTimeout(() => c.abort(), TIMEOUT_MS);
+            return c.signal;
+          })();
+
+    let response: Response;
+    try {
+      response = await fetch(REGOLO_BASE_URL, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+        signal,
+      });
+    } catch (fetchErr: any) {
+      if (fetchErr?.name === 'AbortError' || fetchErr?.name === 'TimeoutError') {
+        return { status: 504, body: { error: 'AI service timed out', code: 'AI_TIMEOUT' } };
+      }
+      throw fetchErr;
+    }
 
     const status = response.status;
     const responseText = await response.text();
@@ -899,7 +1115,194 @@ export async function handleAiChat(req: NormalizedRequest): Promise<NormalizedRe
 
     return { status: 200, body: parsed };
   } catch (err) {
-    console.error('AI chat error:', err);
+    log.error('ai_chat_failed', { userId: req.user?.id, err: serializeErr(err) });
     return serverError('Chat request failed');
   }
+}
+
+
+/**
+ * DELETE /api/users/me — authenticated.
+ *
+ * Self-serve account deletion. The user submits a confirmation phrase
+ * (their own email, lowercased) so a single accidental click can't wipe
+ * the account; the request body must include `{ confirm: <email> }`.
+ *
+ * Order of operations:
+ *   1. Verify the auth header → req.user (already done by the caller).
+ *   2. Verify the confirmation phrase matches the authenticated email.
+ *   3. Call supabase.auth.admin.deleteUser(uid). This deletes the row in
+ *      auth.users, which cascades to public.users via the FK, which in
+ *      turn cascades to every child table (advisor_*, calibrations,
+ *      oracle_analyses, dossiers, favorites, assessment_results, …) and
+ *      fires the trg_purge_user_storage_objects trigger so files in
+ *      `users/<uid>/` get deleted from storage.
+ *
+ * After this returns, the client should:
+ *   - Drop its local auth state (signOut + clear localStorage scoped
+ *     keys; in this codebase that means letting the SIGNED_OUT event
+ *     fire, which the auth context already handles).
+ *   - Redirect to the public landing page.
+ *
+ * Privacy Policy section 8 promises the user can delete their account
+ * from inside the app; this endpoint is what makes that promise truthful.
+ */
+export async function handleDeleteMyAccount(
+  req: NormalizedRequest,
+  supabase: SupabaseClient
+): Promise<NormalizedResponse> {
+  if (!req.user) return unauthorized();
+  const userId = req.user.id;
+  const userEmail = (req.user.email || '').toLowerCase();
+
+  const confirmRaw = req.body?.confirm;
+  if (typeof confirmRaw !== 'string') {
+    return badRequest('Confirmation phrase is required', 'CONFIRM_REQUIRED');
+  }
+  // The user must type their email back at us to delete. This is enough
+  // friction to prevent fat-finger account loss without being annoying.
+  if (confirmRaw.trim().toLowerCase() !== userEmail) {
+    return badRequest(
+      'Confirmation phrase does not match the account email',
+      'CONFIRM_MISMATCH'
+    );
+  }
+  if (!userEmail) {
+    // No email on file (shouldn't happen for a verified user, but guard
+    // anyway — the empty-string equality above would let the user past).
+    return badRequest('Account has no email; contact support', 'NO_EMAIL');
+  }
+
+  // supabase.auth.admin.* requires the service role client, which is what
+  // the API server uses by construction. Do not expose this surface to
+  // anon-keyed clients.
+  //
+  // Order:
+  //   1. DELETE FROM public.users — this fires the storage cleanup
+  //      trigger AND cascades to every child table via FKs. If it fails,
+  //      the auth row still exists and the user can retry. We avoid the
+  //      reverse order (auth first, then public) because a failure
+  //      between them leaves an orphan: auth gone, public present, no
+  //      way for the user to retry because they can no longer sign in.
+  //   2. supabase.auth.admin.deleteUser — once public is gone the auth
+  //      row has nothing to point at; the auth.users → public.users FK
+  //      added by 20240101000700 cascades the other way too on auth
+  //      delete, so this final step also acts as belt-and-braces for
+  //      anyone who hit this endpoint pre-FK migration.
+  try {
+    const { error: dbErr } = await supabase.from('users').delete().eq('id', userId);
+    if (dbErr) throw dbErr;
+  } catch (dbErr) {
+    log.error('account_delete_db_step_failed', { userId, err: serializeErr(dbErr) });
+    return serverError('Failed to delete account', 'DELETE_FAILED');
+  }
+
+  const { error: authErr } = await supabase.auth.admin.deleteUser(userId);
+  if (authErr) {
+    // public.users is already gone; the user can't sign in anymore. Log
+    // loudly so an operator can clean up the orphan auth row manually,
+    // but report success to the client because the user-visible state
+    // (no app data, can't sign in) matches "deleted".
+    log.warn('account_delete_auth_step_orphan', { userId, err: serializeErr(authErr) });
+  }
+
+  log.info('account_deleted', { userId });
+  return { status: 200, body: { success: true } };
+}
+
+/**
+ * DELETE /api/admin/users/:id — admin-only.
+ *
+ * Companion to handleDeleteMyAccount, but for AdminDashboard. Without
+ * this endpoint, AdminDashboard.tsx was deleting only `public.users`
+ * directly via the supabase client. After 20240101000700 added the
+ * `public.users.id → auth.users.id ON DELETE CASCADE` foreign key, that
+ * delete-from-public path leaves the auth.users row intact (the FK
+ * cascade is one-way: auth → public). Result: a "ghost" account that
+ * can still authenticate, can recreate its public.users row on next
+ * sign-in, and bypasses every audit trail.
+ *
+ * This handler:
+ *   1. Verifies the caller is an admin (role === 'admin' in public.users).
+ *   2. Refuses to delete the caller's own account (the operator should
+ *      use the self-serve endpoint with proper email confirmation).
+ *   3. Deletes via supabase.auth.admin.deleteUser(targetId), which
+ *      cascades through the FK to public.users → child tables → storage
+ *      cleanup trigger. Same cascade semantics as the self-serve flow,
+ *      just without the email confirmation step (admins are trusted to
+ *      know what they're doing).
+ */
+export async function handleAdminDeleteUser(
+  req: NormalizedRequest,
+  supabase: SupabaseClient
+): Promise<NormalizedResponse> {
+  if (!req.user) return unauthorized();
+  const adminId = req.user.id;
+  const targetId = req.params?.id;
+  if (!targetId || !isValidUUID(targetId)) {
+    return badRequest('Valid user ID required', 'INVALID_USER_ID');
+  }
+  if (targetId === adminId) {
+    return {
+      status: 400,
+      body: {
+        error: 'Admins cannot delete their own account here. Use the self-serve flow on your profile page.',
+        code: 'CANNOT_SELF_DELETE',
+      },
+    };
+  }
+
+  // Verify the caller is actually an admin. The route guard on the
+  // client checks this, but the client guard runs in the user's
+  // browser — anyone with a valid JWT could call this endpoint
+  // directly with curl. The server is the only enforcement that
+  // matters.
+  const { data: callerRow, error: callerErr } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', adminId)
+    .maybeSingle();
+  if (callerErr) {
+    log.error('admin_delete_caller_lookup_failed', {
+      adminId,
+      err: serializeErr(callerErr),
+    });
+    return serverError('Authorization check failed', 'AUTH_CHECK_FAILED');
+  }
+  if (!callerRow || callerRow.role !== 'admin') {
+    return { status: 403, body: { error: 'Admin role required', code: 'FORBIDDEN' } };
+  }
+
+  // Drive the cascade from the auth side. The FK added in
+  // 20240101000700 makes `public.users` (and every child table that
+  // FKs to it) cascade automatically, AND the storage purge trigger
+  // fires on `public.users` AFTER DELETE. Doing the auth delete first
+  // here is the inverse order vs handleDeleteMyAccount because the
+  // admin path doesn't worry about a "user can't sign in to retry"
+  // scenario — if it fails, the operator just retries.
+  const { error: authErr } = await supabase.auth.admin.deleteUser(targetId);
+  if (authErr) {
+    log.error('admin_delete_auth_failed', {
+      adminId,
+      targetId,
+      err: serializeErr(authErr),
+    });
+    return serverError('Failed to delete user', 'DELETE_FAILED');
+  }
+
+  // Belt-and-braces: if for any reason the FK cascade didn't fire
+  // (e.g. the user was created before 20240101000700 and the row
+  // somehow escaped that migration's backfill), explicitly delete the
+  // public row. This is a no-op when the cascade already worked.
+  const { error: dbErr } = await supabase.from('users').delete().eq('id', targetId);
+  if (dbErr) {
+    log.warn('admin_delete_public_cleanup_failed', {
+      adminId,
+      targetId,
+      err: serializeErr(dbErr),
+    });
+  }
+
+  log.info('admin_user_deleted', { adminId, targetId });
+  return { status: 200, body: { success: true } };
 }

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Target, Brain, Shield, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface OnboardingStep {
   title: string;
@@ -119,6 +120,7 @@ export default function OnboardingModal() {
   };
 
   const currentStep = steps[step];
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, handleClose);
 
   return (
     <AnimatePresence>
@@ -133,6 +135,10 @@ export default function OnboardingModal() {
           />
           
           <motion.div
+            ref={trapRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="onboarding-step-title"
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}

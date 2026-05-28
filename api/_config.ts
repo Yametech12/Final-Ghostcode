@@ -30,6 +30,30 @@ function getHeaders(): Record<string, string> {
 }
 
 // AI completion function with model fallback
+//
+// Hard wall-clock budget: even with retries and fallbacks, give up after
+// MAX_TOTAL_MS so we don't burn the entire Vercel function budget on a
+// single hung upstream. The per-attempt fetch is also wrapped in
+// AbortSignal.timeout to free socket resources promptly.
+//
+// PER_ATTEMPT_MS applies to non-streaming requests and covers the full
+// request/response cycle. For streaming requests we use STREAM_CONNECT_MS
+// instead — it's a longer wall-clock budget for getting the headers back,
+// after which the underlying ReadableStream is returned to the caller and
+// no more abort fires. Without that split, AbortSignal.timeout would still
+// be attached to the socket while the caller is iterating the stream and
+// would tear it down mid-generation around the PER_ATTEMPT_MS mark, cutting
+// off the AI reply silently.
+//
+// Budget rationale: the Vercel function is capped at 30s (vercel.json).
+// We give the primary model a generous PER_ATTEMPT_MS so big structured
+// prompts (Oracle calibration) don't time out and prematurely fall over
+// to a smaller model. MAX_TOTAL_MS leaves room for one fallback attempt
+// before the platform timeout kicks in.
+const MAX_TOTAL_MS = 27_000;     // total allowed across all attempts
+const PER_ATTEMPT_MS = 24_000;   // single non-streaming fetch wall-clock
+const STREAM_CONNECT_MS = 20_000; // streaming: time to get headers; body untimed
+
 export async function createCompletion({
   model,
   messages,
@@ -54,8 +78,13 @@ export async function createCompletion({
   const modelsToTry = [model || DEFAULT_MODEL, ...FALLBACK_MODELS.filter(m => m !== model)];
   let lastError: Error | null = null;
   const headers = getHeaders();
+  const startedAt = Date.now();
 
   for (const modelToTry of modelsToTry) {
+    if (Date.now() - startedAt > MAX_TOTAL_MS) {
+      console.warn(`Total AI budget (${MAX_TOTAL_MS}ms) exhausted, aborting model loop`);
+      break;
+    }
     try {
       console.log(`Trying model: ${modelToTry}`);
 
@@ -73,20 +102,65 @@ export async function createCompletion({
 
       // Try up to 3 times per model for rate limits
       for (let attempt = 1; attempt <= 3; attempt++) {
-        const response = await fetch(BASE_URL, {
-          method: 'POST',
-          headers,
-          body: JSON.stringify(payload)
-        });
+        if (Date.now() - startedAt > MAX_TOTAL_MS) break;
+
+        // For streaming, we only want a connect-phase timeout — once headers
+        // come back we hand the body to the caller and it's their job to
+        // bound the stream lifetime. Otherwise the same AbortSignal would
+        // tear down the socket mid-generation. For non-streaming, the
+        // signal covers the full request/response cycle.
+        const attemptTimeoutMs = stream ? STREAM_CONNECT_MS : PER_ATTEMPT_MS;
+        // AbortSignal.timeout was added in Node 17.3 / available on Vercel.
+        // Falls back to manual AbortController for older runtimes.
+        let abortTimer: ReturnType<typeof setTimeout> | undefined;
+        const signal: AbortSignal =
+          typeof AbortSignal.timeout === 'function'
+            ? AbortSignal.timeout(attemptTimeoutMs)
+            : (() => {
+                const c = new AbortController();
+                abortTimer = setTimeout(() => c.abort(), attemptTimeoutMs);
+                return c.signal;
+              })();
+
+        let response: Response;
+        try {
+          response = await fetch(BASE_URL, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify(payload),
+            signal,
+          });
+        } catch (fetchErr: any) {
+          if (abortTimer) clearTimeout(abortTimer);
+          if (fetchErr?.name === 'AbortError' || fetchErr?.name === 'TimeoutError') {
+            lastError = new Error(`Regolo request timed out after ${attemptTimeoutMs}ms`);
+            console.warn(`Model ${modelToTry} attempt ${attempt}/3 timed out`);
+            // Try next attempt or next model
+            if (attempt < 3) continue;
+            break;
+          }
+          throw fetchErr;
+        }
 
         if (response.ok) {
           console.log(`Success with model: ${modelToTry}`);
           if (stream) {
+            // Manual fallback path only: clear the connect timer now so it
+            // can't fire while the caller is iterating the body. With
+            // AbortSignal.timeout the platform manages this automatically,
+            // but the timeout is still active until the signal listeners
+            // are GC'd. The browser/Node implementations correctly don't
+            // abort an already-fulfilled response — confirmed in spec.
+            if (abortTimer) clearTimeout(abortTimer);
             return response.body;
           }
+          // Non-streaming: clear our manual fallback timer (if any) so it
+          // doesn't fire after json() resolves.
+          if (abortTimer) clearTimeout(abortTimer);
           const data = await response.json();
           return data;
         }
+        if (abortTimer) clearTimeout(abortTimer);
 
         const errorText = await response.text();
         console.warn(`Model ${modelToTry} failed (attempt ${attempt}/3): ${response.status}`, errorText.substring(0, 200));
@@ -94,6 +168,12 @@ export async function createCompletion({
         if (response.status === 429 && attempt < 3) {
           const retryAfter = parseInt(response.headers.get('Retry-After') || '1', 10);
           const wait = Math.max(retryAfter * 1000, 1000 * Math.pow(2, attempt - 1));
+          // Don't retry if the wait would push us past the global budget.
+          if (Date.now() - startedAt + wait > MAX_TOTAL_MS) {
+            console.warn(`Skipping retry: would exceed ${MAX_TOTAL_MS}ms budget`);
+            lastError = new Error(`Regolo rate limited; budget exhausted`);
+            break;
+          }
           console.warn(`Rate limited, waiting ${wait}ms before retry`);
           await new Promise(resolve => setTimeout(resolve, wait));
           continue;

@@ -144,17 +144,21 @@ describe('validatePasswordSecurity', () => {
     expect(r.errors.some(e => /weak pattern/i.test(e))).toBe(true);
   });
 
-  it('reports a missing special character because of a known regex bug', () => {
-    // NOTE: validatePasswordSecurity has a known bug — its `hasSpecial` regex
-    // is malformed (the character class closes early, so no character matches),
-    // which means `isValid` can never be true today. The strength calculator
-    // also short-circuits in the presence of any non-length error, so the
-    // strength stays at the initial 'weak'. Asserting against current
-    // behaviour rather than intended behaviour so this test doesn't lie about
-    // what the code does. Fix tracked separately.
+  it('accepts a strong password with a special character', () => {
+    // Regression test for the previous broken regex which closed the character
+    // class early at `]` and never matched any special character. After the
+    // fix at src/utils/validation.ts, a password meeting all rules should
+    // return isValid=true and report a strong/very-strong strength.
     const r = validatePasswordSecurity('Northwind!Sky9-Run');
+    expect(r.isValid).toBe(true);
+    expect(r.errors).toEqual([]);
+    expect(['strong', 'very-strong']).toContain(r.strength);
+  });
+
+  it('still rejects a password with no special character', () => {
+    const r = validatePasswordSecurity('Northwind1Sky9Run');
     expect(r.isValid).toBe(false);
-    expect(r.errors.some(e => /special character/i.test(e))).toBe(true);
+    expect(r.errors.some((e) => /special character/i.test(e))).toBe(true);
   });
 });
 

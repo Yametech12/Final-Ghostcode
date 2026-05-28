@@ -60,7 +60,11 @@ All under `/api/` (also reachable via `/api/v1/`):
 | POST | `/api/advisor/chat` | required | SSE streaming with token-aware history truncation |
 | POST | `/api/calibration/analyze` | required | Server-validated trait analysis |
 | POST | `/api/oracle/analyses` | required | Server-validated Oracle insert (replaces direct client write) |
+| PATCH | `/api/oracle/analyses/:id/tasks` | required (owner) | Server-validated task replacement |
+| DELETE | `/api/oracle/analyses/:id` | required (owner) | Owner-only Oracle analysis delete |
 | POST | `/api/ai/chat` | required | Generic Regolo proxy (validated, image-aware) |
+| DELETE | `/api/users/me` | required | Self-serve account deletion (rate-limited 3/5min). Body `{ confirm: <email> }`. Cascades through public.users → child tables → storage trigger. |
+| DELETE | `/api/admin/users/:id` | required (admin) | Admin user deletion. Drives the deletion through `auth.admin.deleteUser` so the FK cascade fires; replaces the previous direct-DB-delete in AdminDashboard which left auth.users orphans. |
 
 `getAuthenticatedUser` resolves the Supabase JWT on every request and supplies `req.user` to handlers. Handlers always use `req.user.id`, never a body/query userId.
 
@@ -84,6 +88,8 @@ Canonical schema lives in `supabase-schema-v2.sql`. Active tables:
 - `verification_codes`, `public_config`, `private_config`
 
 RLS policies for all user-data tables are in `scripts/rls-audit.sql`. Storage policies restrict `user-uploads` writes to `users/<auth.uid()>/…`. The `feedback` table allows anonymous (`user_id IS NULL`) inserts; reads are owner or admin only.
+
+`public.users.id` has a `FOREIGN KEY ... REFERENCES auth.users(id) ON DELETE CASCADE` (added in `20240101000700_users_auth_fk.sql`). This is what makes both self-serve account deletion and admin user deletion actually purge user data: deleting the auth row cascades to `public.users`, which cascades to every child table (advisor_*, calibrations, oracle_analyses, dossiers, favorites, assessment_results, …) and fires the `trg_purge_user_storage_objects` AFTER DELETE trigger to clean storage. Before this migration, a deletion via `auth.admin.deleteUser` left the public row (and all its children) orphaned, and a deletion via `DELETE FROM public.users` left the auth row alive — creating ghost accounts that could re-authenticate.
 
 ## Security posture
 

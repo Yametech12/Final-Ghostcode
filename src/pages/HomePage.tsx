@@ -1,9 +1,11 @@
-import { ChevronRight, Target, Brain, Map, Heart, MessageSquare, User, Activity } from 'lucide-react';
+import { ChevronRight, Target, Brain, Map, Heart, MessageSquare, User, Activity, Lock } from 'lucide-react';
 import { personalityTypes } from '../data/personalityTypes';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo';
 import PrefetchLink from '../components/PrefetchLink';
 import { motion } from 'motion/react';
+import { isFreeArchetype } from '../lib/archetypeAccess';
+import { useSubscription } from '../hooks/useSubscription';
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -19,6 +21,10 @@ const itemVariants = {
 };
 
 export default function HomePage() {
+  const sub = useSubscription();
+  const canAccessArchetype = (id: string) =>
+    sub.isAdmin || sub.tier !== 'free' || isFreeArchetype(id);
+
   return (
     <motion.div
       variants={containerVariants}
@@ -66,7 +72,6 @@ export default function HomePage() {
         <motion.div variants={itemVariants} className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-8">
           <PrefetchLink
             to="/assessment"
-            data-tour="assessment"
             className="w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform flex items-center justify-center gap-2 group hover:scale-[1.02] active:scale-[0.98]"
           >
             Start Target Assessment
@@ -97,21 +102,39 @@ export default function HomePage() {
             viewport={{ once: true, margin: '-100px' }}
             className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
           >
-            {personalityTypes.map((profile) => (
-              <motion.div key={profile.id} variants={itemVariants}>
-                <Link
-                  to={`/encyclopedia?type=${profile.id}`}
-                  className="glass-card p-6 text-left hover:border-accent-primary/25 transition-colors duration-200 group h-full block"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <span className="text-xs font-mono font-semibold text-accent-primary tracking-widest">{profile.id}</span>
-                    <ChevronRight aria-hidden="true" className="w-4 h-4 text-slate-600 group-hover:text-accent-primary transition-colors" />
-                  </div>
-                  <h3 className="font-semibold text-lg mb-1 text-slate-100 group-hover:text-accent-primary transition-colors">{profile.name}</h3>
-                  <p className="text-xs text-slate-500 line-clamp-2">{profile.tagline}</p>
-                </Link>
-              </motion.div>
-            ))}
+            {personalityTypes.map((profile) => {
+              const locked = !canAccessArchetype(profile.id);
+              return (
+                <motion.div key={profile.id} variants={itemVariants}>
+                  <Link
+                    to={`/encyclopedia?type=${profile.id}`}
+                    className="glass-card p-6 text-left hover:border-accent-primary/25 transition-colors duration-200 group h-full block relative"
+                    aria-label={
+                      locked
+                        ? `${profile.name} — locked, requires Strategist plan`
+                        : profile.name
+                    }
+                  >
+                    <div className="flex justify-between items-start mb-4">
+                      <span className="text-xs font-mono font-semibold text-accent-primary tracking-widest">{profile.id}</span>
+                      {locked ? (
+                        <span
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[9px] font-mono tracking-[0.15em] uppercase text-accent-primary"
+                          title="Strategist plan required"
+                        >
+                          <Lock className="w-2.5 h-2.5" aria-hidden="true" />
+                          Locked
+                        </span>
+                      ) : (
+                        <ChevronRight aria-hidden="true" className="w-4 h-4 text-slate-600 group-hover:text-accent-primary transition-colors" />
+                      )}
+                    </div>
+                    <h3 className="font-semibold text-lg mb-1 text-slate-100 group-hover:text-accent-primary transition-colors">{profile.name}</h3>
+                    <p className="text-xs text-slate-500 line-clamp-2">{profile.tagline}</p>
+                  </Link>
+                </motion.div>
+              );
+            })}
           </motion.div>
 
           <div className="text-center">
@@ -129,18 +152,17 @@ export default function HomePage() {
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-24 text-left"
         >
           {[
-            { title: 'AI Advisor', desc: 'Consult the Oracle for real-time strategic intelligence.', icon: Brain, link: '/advisor', tour: 'advisor' },
+            { title: 'AI Advisor', desc: 'Consult the Oracle for real-time strategic intelligence.', icon: Brain, link: '/advisor' },
             { title: 'Signal Decryptor', desc: 'Analyze text messages to decode subtext and emotional state.', icon: MessageSquare, link: '/decryptor' },
             { title: 'Simulation Matrix', desc: 'Interactive roleplay trainer to practice conversation skills.', icon: Activity, link: '/simulation' },
             { title: 'Subject Dossiers', desc: 'Track individuals, log interactions, and store profiles.', icon: User, link: '/dossiers' },
-            { title: 'Field Guide', desc: 'Quick-reference scenarios and tactical lines for any situation.', icon: Map, link: '/field-guide', tour: 'field-guide' },
+            { title: 'Field Guide', desc: 'Quick-reference scenarios and tactical lines for any situation.', icon: Map, link: '/field-guide' },
             { title: 'Calibration', desc: 'Master the art of reading her type in 30 seconds or less.', icon: Target, link: '/calibration' },
             { title: 'Knowledge Check', desc: 'Test your mastery of the system with randomized quizzes.', icon: Brain, link: '/quiz' },
           ].map((feature, i) => (
             <motion.div key={i} variants={itemVariants}>
               <PrefetchLink
                 to={feature.link}
-                data-tour={feature.tour}
                 className="glass-card p-6 space-y-4 mystic-border group h-full block overflow-hidden"
               >
                 <div className="w-12 h-12 rounded-xl bg-accent-primary/10 border border-accent-primary/15 flex items-center justify-center text-accent-primary transition-colors group-hover:bg-accent-primary/15">

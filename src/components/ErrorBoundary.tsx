@@ -1,5 +1,6 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
+import { isAppError } from '../lib/errors';
 
 interface Props {
   children: ReactNode;
@@ -52,17 +53,39 @@ class ErrorBoundary extends Component<Props, State> {
         if (this.state.error?.message) {
           if (this.state.error.message.includes('Failed to fetch dynamically imported module')) {
             errorMessage = "A new version of the application is available. Please refresh the page to update.";
-          } else {
-            const parsed = JSON.parse(this.state.error.message);
-            if (parsed.error && parsed.operationType) {
+          } else if (isAppError(this.state.error)) {
+            // Structured AppError — pull fields directly instead of JSON-parsing
+            // the message string.
+            const ae = this.state.error;
+            if (ae.operationType) {
               isFirestoreError = true;
-              firestoreDetails = parsed;
-              errorMessage = `Database Error: ${parsed.error}`;
+              firestoreDetails = {
+                error: ae.message,
+                operationType: ae.operationType,
+                path: ae.path,
+              };
+              errorMessage = `Database Error: ${ae.message}`;
+            } else {
+              errorMessage = ae.message;
+            }
+          } else {
+            // Legacy path: some old code stringified JSON into Error.message.
+            // Try to parse, fall through silently if it isn't JSON.
+            try {
+              const parsed = JSON.parse(this.state.error.message);
+              if (parsed.error && parsed.operationType) {
+                isFirestoreError = true;
+                firestoreDetails = parsed;
+                errorMessage = `Database Error: ${parsed.error}`;
+              } else {
+                errorMessage = this.state.error.message;
+              }
+            } catch {
+              errorMessage = this.state.error.message;
             }
           }
         }
       } catch {
-        // Not a JSON error message
         errorMessage = this.state.error?.message || errorMessage;
       }
 

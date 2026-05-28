@@ -63,13 +63,24 @@ export default function Tooltip({ children, term, definition, content }: Tooltip
   };
 
   useEffect(() => {
-    if (isVisible) {
-      window.addEventListener('scroll', updatePosition, true);
-      window.addEventListener('resize', updatePosition);
-    }
+    if (!isVisible) return;
+    // RAF-batch scroll/resize updates so we don't pay for getBoundingClientRect
+    // on every wheel tick. The position only needs to settle after the user
+    // stops scrolling for it to look smooth.
+    let rafPending = false;
+    const onScrollOrResize = () => {
+      if (rafPending) return;
+      rafPending = true;
+      requestAnimationFrame(() => {
+        rafPending = false;
+        updatePosition();
+      });
+    };
+    window.addEventListener('scroll', onScrollOrResize, true);
+    window.addEventListener('resize', onScrollOrResize);
     return () => {
-      window.removeEventListener('scroll', updatePosition, true);
-      window.removeEventListener('resize', updatePosition);
+      window.removeEventListener('scroll', onScrollOrResize, true);
+      window.removeEventListener('resize', onScrollOrResize);
     };
   }, [isVisible]);
 

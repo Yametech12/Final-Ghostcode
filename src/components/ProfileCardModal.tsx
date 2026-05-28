@@ -5,6 +5,7 @@ import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 // out of the main bundle.
 import { toast } from 'sonner';
 import Logo from './Logo';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface ProfileCardModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
   const [copied, setCopied] = useState(false);
 
   const { user, userData } = auth || {};
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -58,7 +60,13 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90 backdrop-blur-md">
+    <div
+      ref={trapRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Profile card"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90 backdrop-blur-md"
+    >
       <div className="w-full max-w-md space-y-4">
         <div className="flex justify-end">
           <button 

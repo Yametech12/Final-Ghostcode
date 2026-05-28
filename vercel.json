@@ -12,28 +12,5 @@
     { "src": "/api/(.*)", "dest": "/api/server.ts" },
     { "handle": "filesystem" },
     { "src": "/(.*)", "dest": "/index.html" }
-  ],
-  "headers": [
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "https://epimetheusproject.vercel.app"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization"
-        },
-        {
-          "key": "Access-Control-Allow-Credentials",
-          "value": "true"
-        }
-      ]
-    }
   ]
 }

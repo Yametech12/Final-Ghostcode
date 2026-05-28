@@ -11,6 +11,8 @@ import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import EditProfileModal from '../components/EditProfileModal';
+import SubscriptionCard from '../components/SubscriptionCard';
+import DeleteAccountSection from '../components/DeleteAccountSection';
 import { cn } from '../lib/utils';
 
 type Assessment = {
@@ -257,6 +259,9 @@ export default function ProfilePage() {
         </div>
       </div>
 
+      {/* Subscription card */}
+      <SubscriptionCard />
+
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-slate-700/30 overflow-x-auto scrollbar-hide">
         {(['assessments', 'reports', 'achievements'] as const).map((tab) => (
@@ -420,6 +425,9 @@ export default function ProfilePage() {
       )}
 
       <EditProfileModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} />
+
+      {/* Self-serve account deletion. Renders its own button + confirmation modal. */}
+      <DeleteAccountSection />
     </div>
   );
 }

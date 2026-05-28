@@ -1,12 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Loader2 } from 'lucide-react';
+import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Loader2, Crown } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { personalityTypes } from '../data/personalityTypes';
 import { toast } from 'sonner';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
+import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 import { handleFirestoreError, OperationType } from '../utils/errorHandling';
 import { cn } from '../lib/utils';
+
+/**
+ * Tier-based dossier caps. Strategist has a soft ceiling at 25 — past that
+ * the user gets nudged to Oracle which is unlimited. Admins always pass.
+ *
+ * The cap is enforced client-side here AND would be re-enforced server-side
+ * if/when dossier creation moves behind an API endpoint. Right now dossiers
+ * insert directly via supabase RLS, so this is the only enforcement point.
+ * That's fine for a soft tier limit (the goal is conversion, not security),
+ * but a determined free-tier user with the Supabase token could bypass it.
+ *
+ * Keep these in sync with the limits announced on PricingPage.tsx and the
+ * detailed comparison table.
+ */
+const DOSSIER_LIMITS: Record<'free' | 'strategist' | 'oracle', number> = {
+  free: 0,        // free can't even reach this page; route gate sends them to PaywallScreen
+  strategist: 25, // matches "Up to 25 Subject Dossiers" copy
+  oracle: Infinity,
+};
 
 interface Dossier {
   id: string;
@@ -20,6 +41,7 @@ interface Dossier {
 
 export default function DossiersPage() {
   const auth = useEnhancedAuth();
+  const sub = useSubscription();
   const [dossiers, setDossiers] = useState<Dossier[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -42,7 +64,9 @@ export default function DossiersPage() {
            const { data: dossiers, error } = await supabase
              .from('dossiers')
              .select('*')
-             .eq('user_id', user.id);
+             .eq('user_id', user.id)
+             .order('created_at', { ascending: false })
+             .limit(100);
           if (error) throw error;
            const loadedDossiers: Dossier[] = [];
            dossiers.forEach((data) => {
@@ -123,6 +147,32 @@ export default function DossiersPage() {
       
       saveDossiers(dossiers.map(d => d.id === editingId ? { ...d, ...updatedDossier } : d));
     } else {
+       // Tier-based cap. Editing existing dossiers is always allowed —
+       // only NEW creations check the limit. Admins skip the gate via
+       // sub.isAdmin (matches the route-level admin override).
+       const cap = sub.isAdmin ? Infinity : DOSSIER_LIMITS[sub.tier] ?? 0;
+       if (dossiers.length >= cap) {
+         toast.error(
+           sub.tier === 'strategist'
+             ? `You've reached the Strategist limit of ${cap} dossiers.`
+             : `Dossier limit reached.`,
+           {
+             description:
+               sub.tier === 'strategist'
+                 ? 'Upgrade to Oracle for unlimited dossiers.'
+                 : 'Upgrade your plan to add more.',
+             action: {
+               label: 'View plans',
+               onClick: () => {
+                 window.location.href = '/pricing';
+               },
+             },
+             duration: 6000,
+           },
+         );
+         return;
+       }
+
        const newDossierData = {
          name,
          type_id: typeId,
@@ -241,8 +291,30 @@ export default function DossiersPage() {
         </div>
         <div className="text-left md:text-right mt-4 md:mt-0 w-full md:w-auto">
           <p className="eyebrow">
-            Active Targets: <span className="tabular-nums">{dossiers.length}</span>
+            Active Targets:{' '}
+            <span className="tabular-nums">{dossiers.length}</span>
+            {!sub.isAdmin && Number.isFinite(DOSSIER_LIMITS[sub.tier]) && (
+              <>
+                {' '}
+                <span className="text-slate-600">/ {DOSSIER_LIMITS[sub.tier]}</span>
+              </>
+            )}
           </p>
+          {/* Show "Upgrade for unlimited" pitch only on Strategist when
+              the user is within 5 of the cap. Doesn't shout at users
+              who have plenty of headroom; gives the upgrade signal
+              right when they need it. */}
+          {sub.tier === 'strategist' &&
+            !sub.isAdmin &&
+            dossiers.length >= DOSSIER_LIMITS.strategist - 5 && (
+              <Link
+                to="/pricing"
+                className="mt-1 inline-flex items-center gap-1 text-[10px] font-mono tracking-wider uppercase text-accent-primary hover:underline"
+              >
+                <Crown aria-hidden="true" className="w-3 h-3" />
+                Upgrade to Oracle for unlimited
+              </Link>
+            )}
           <button
             onClick={() => setIsModalOpen(true)}
             className="w-full md:w-auto mt-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl accent-gradient text-mystic-950 text-sm font-semibold tracking-wide shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform"

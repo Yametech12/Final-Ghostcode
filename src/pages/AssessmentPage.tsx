@@ -208,12 +208,86 @@ function generateQuestionSet(): Question[] {
 export default function AssessmentPage() {
   const auth = useEnhancedAuth();
   const { user } = auth || {};
-  const [questions, setQuestions] = useState<Question[]>(() => generateQuestionSet());
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>({});
+
+  // Persist quiz progress to sessionStorage so an accidental refresh
+  // mid-assessment doesn't wipe state. Stored under a single key so we
+  // can serialize/clear atomically. The randomized question set is
+  // included so a refresh restores the SAME questions — otherwise the
+  // user's previous answers would be associated with different prompts
+  // and the type result would shift.
+  //
+  // The schema version is INSIDE the JSON payload (not just suffixing
+  // the key) so when we change the Question shape (adding fields,
+  // splitting categories, etc.) old payloads get discarded cleanly
+  // instead of restoring with a missing/mismatched shape that crashes
+  // the render. Bump SCHEMA_VERSION whenever Question or the saved
+  // shape changes incompatibly.
+  const PROGRESS_KEY = 'assessment_progress_v1';
+  const SCHEMA_VERSION = 1;
+  type Progress = {
+    schema: number;
+    questions: Question[];
+    currentStep: number;
+    answers: Record<string, string>;
+  };
+  function readProgress(): Progress | null {
+    try {
+      const raw = sessionStorage.getItem(PROGRESS_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed?.schema !== SCHEMA_VERSION) {
+        // Stale schema — drop silently. The user just starts fresh.
+        sessionStorage.removeItem(PROGRESS_KEY);
+        return null;
+      }
+      if (
+        Array.isArray(parsed.questions) &&
+        parsed.questions.length === 6 &&
+        typeof parsed.currentStep === 'number' &&
+        parsed.answers &&
+        typeof parsed.answers === 'object'
+      ) {
+        return parsed as Progress;
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+  const initialProgress = readProgress();
+  const [questions, setQuestions] = useState<Question[]>(
+    initialProgress?.questions ?? generateQuestionSet(),
+  );
+  const [currentStep, setCurrentStep] = useState<number>(
+    initialProgress ? Math.max(0, Math.min(5, initialProgress.currentStep)) : 0,
+  );
+  const [answers, setAnswers] = useState<Record<string, string>>(
+    initialProgress?.answers ?? {},
+  );
   const [isComplete, setIsComplete] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [pastResults, setPastResults] = useState<{typeId: string, date: string}[]>([]);
+
+  // Sync progress to sessionStorage on every change so a refresh restores it.
+  // Cleared when the assessment completes (see handleRestart and the
+  // post-result navigation in the existing flow).
+  useEffect(() => {
+    try {
+      if (isComplete) {
+        sessionStorage.removeItem(PROGRESS_KEY);
+        return;
+      }
+      sessionStorage.setItem(
+        PROGRESS_KEY,
+        JSON.stringify({
+          schema: SCHEMA_VERSION,
+          questions,
+          currentStep,
+          answers,
+        }),
+      );
+    } catch { /* quota or disabled storage — best effort */ }
+  }, [questions, currentStep, answers, isComplete]);
   const navigate = useNavigate();
 
   // Load past results from localStorage on mount
@@ -297,6 +371,7 @@ export default function AssessmentPage() {
     setQuestions(generateQuestionSet()); // Fresh random questions each time
     setCurrentStep(0);
     setAnswers({});
+    try { sessionStorage.removeItem(PROGRESS_KEY); } catch { /* ignore */ }
   };
 
   const currentQuestion = questions[currentStep];

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
+import { captureException } from '../lib/sentry';
 
 export function EnvironmentDebug() {
   const [envInfo, setEnvInfo] = useState<any>({});
   const [minimized, setMinimized] = useState(false);
+  const [sentryStatus, setSentryStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const showDebug = import.meta.env.DEV || window.location.search.includes('debug=1');
@@ -51,6 +53,40 @@ export function EnvironmentDebug() {
               <span className="text-green-400 ml-2 truncate">{String(value)}</span>
             </div>
           ))}
+
+          {/*
+            Sentry verification button — dev-only (this whole component
+            is gated by import.meta.env.DEV in App.tsx). Throws an error
+            inside a try/catch and forwards via captureException so we
+            can confirm the DSN is wired without actually breaking the
+            page. The literal "throw without catch" pattern from Sentry's
+            onboarding guide tears down React for the rest of the
+            session — handy once, painful while iterating.
+          */}
+          <div className="mt-3 pt-2 border-t border-white/10 px-2 space-y-1">
+            <div className="text-yellow-400 font-bold">Sentry test</div>
+            <button
+              type="button"
+              onClick={() => {
+                try {
+                  throw new Error('Epimetheus dev Sentry probe — ignore');
+                } catch (e) {
+                  captureException(e, { source: 'EnvironmentDebug.probe' });
+                  setSentryStatus(
+                    import.meta.env.PROD
+                      ? 'Captured (check Sentry inbox)'
+                      : 'Skipped: Sentry is disabled in dev',
+                  );
+                }
+              }}
+              className="w-full bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 rounded px-2 py-1 text-[10px]"
+            >
+              Send test event
+            </button>
+            {sentryStatus && (
+              <div className="text-[10px] text-gray-300">{sentryStatus}</div>
+            )}
+          </div>
         </div>
       )}
     </div>

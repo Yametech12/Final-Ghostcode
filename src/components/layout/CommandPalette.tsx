@@ -143,13 +143,12 @@ export default function CommandPalette() {
                   <Command.Item
                     onSelect={() => runCommand(() => {
                       localStorage.removeItem('hasSeenOnboarding');
-                      localStorage.removeItem('hasSeenTour');
                       window.dispatchEvent(new CustomEvent('open-onboarding'));
                     })}
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <Sparkles aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
-                    Replay Tutorial
+                    Replay Welcome
                   </Command.Item>
                 </Command.Group>
               </Command.List>

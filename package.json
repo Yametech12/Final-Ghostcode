@@ -8,8 +8,8 @@
     "dev:api": "tsx api/_index.ts",
     "dev:frontend": "vite --port 5173 --host",
     "start": "tsx api/_index.ts",
-    "build": "vite build",
-    "build:analyze": "vite build --mode analyze",
+    "build": "vite build && node scripts/inject-sw-version.mjs",
+    "build:analyze": "vite build --mode analyze && node scripts/inject-sw-version.mjs",
     "preview": "vite preview",
     "clean": "rimraf dist",
     "clean:dev": "kill-port 3000 5173 || node -e \"\"",
@@ -22,12 +22,11 @@
     "diagnose": "tsx scripts/diagnostic.ts"
   },
   "dependencies": {
+    "@sentry/node": "^10.53.1",
     "@sentry/react": "^10.53.1",
     "@supabase/supabase-js": "^2.103.3",
     "@tanstack/react-query": "^5.99.0",
-    "@types/react-window": "^1.8.8",
     "@vercel/node": "^3.2.0",
-    "@vitejs/plugin-react": "^5.0.4",
     "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -47,9 +46,6 @@
     "recharts": "^3.8.0",
     "sonner": "^2.0.7",
     "tailwind-merge": "^3.5.0",
-    "vite": "^6.2.0",
-    "workbox-core": "^7.4.0",
-    "workbox-window": "^7.4.0",
     "zustand": "^5.0.12"
   },
   "devDependencies": {
@@ -61,8 +57,10 @@
     "@types/node": "^22.19.17",
     "@types/react": "^19.2.14",
     "@types/react-dom": "^19.2.3",
+    "@types/react-window": "^1.8.8",
     "@typescript-eslint/eslint-plugin": "^8.58.2",
     "@typescript-eslint/parser": "^8.58.2",
+    "@vitejs/plugin-react": "^5.0.4",
     "@vitest/ui": "^4.1.6",
     "autoprefixer": "^10.5.0",
     "concurrently": "^9.2.1",
@@ -76,6 +74,7 @@
     "tailwindcss": "^4.2.2",
     "tsx": "^4.21.0",
     "typescript": "~5.8.3",
+    "vite": "^6.2.0",
     "vitest": "^4.1.6"
   }
 }

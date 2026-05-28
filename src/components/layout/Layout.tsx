@@ -1,7 +1,7 @@
 import React, { useEffect, Suspense, lazy, useRef } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut } from 'lucide-react';
+import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut, Sparkles } from 'lucide-react';
 import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useIsMobile, usePullToRefresh, useMobilePerformance } from '../../hooks/useMobile';
@@ -18,11 +18,17 @@ import LanguageToggle from '../LanguageToggle';
 // Lazy load non-critical components to reduce initial bundle size and main thread work
 const FeedbackModal = lazy(() => import('../FeedbackModal'));
 const OnboardingModal = lazy(() => import('../OnboardingModal'));
-const OnboardingTour = lazy(() => import('../OnboardingTour'));
 const CommandPalette = lazy(() => import('./CommandPalette'));
 
 interface LayoutProps {
   children: React.ReactNode;
+  /**
+   * When true, overrides the route-based scroll locks (e.g. `/advisor` is
+   * normally fixed-height/no-scroll because the chat manages its own scroll).
+   * Set this when rendering a fallback inside that route — like a paywall —
+   * so the user can read content longer than the viewport.
+   */
+  forceScrollable?: boolean;
 }
 
 interface NavItem {
@@ -40,7 +46,6 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: 'Profile', path: '/profile', icon: User, desc: 'Manage profile' },
       { name: 'Dossiers', path: '/dossiers', icon: Users, desc: 'Saved contacts' },
       { name: 'Favorites', path: '/favorites', icon: Star, desc: 'Top picks' },
-      { name: 'Insights', path: '/insights', icon: PieChart, desc: 'Analytics' },
     ]
   },
   {
@@ -53,6 +58,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
       { name: 'Advisor', path: '/advisor', icon: Shield, desc: 'AI strategist' },
       { name: 'Compare', path: '/compare', icon: GitCompare, desc: 'Side by side' },
       { name: 'Quiz', path: '/quiz', icon: Brain, desc: 'Knowledge check' },
+      { name: 'Insights', path: '/insights', icon: PieChart, desc: 'Analytics & patterns' },
     ]
   },
   {
@@ -67,7 +73,7 @@ const NAV_GROUPS: { label: string; items: NavItem[] }[] = [
   }
 ];
 
-export default function Layout({ children }: LayoutProps) {
+export default function Layout({ children, forceScrollable = false }: LayoutProps) {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [scrolled, setScrolled] = React.useState(false);
@@ -87,7 +93,7 @@ export default function Layout({ children }: LayoutProps) {
 
   // Pull to refresh — invalidate React Query cache instead of nuking the SPA.
   // Using window.location.reload() loses auth/session state and tears down React.
-  const { pullDistance } = usePullToRefresh(async () => {
+  const { pullDistance, handlers: pullHandlers } = usePullToRefresh(async () => {
     await queryClient.invalidateQueries();
     toast.success('Refreshed');
   });
@@ -247,8 +253,14 @@ export default function Layout({ children }: LayoutProps) {
     <div
       className={cn(
         "min-h-screen bg-mystic-950 text-slate-300 selection:bg-accent-primary/30 selection:text-accent-primary relative overflow-x-hidden",
-        location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden" : ""
+        location.pathname === '/advisor' && !forceScrollable ? "h-[100dvh] overflow-hidden" : ""
       )}
+      // Pull-to-refresh handlers only attach on mobile. The hook short-circuits
+      // when window.scrollY > 0 so this can't accidentally trigger during a
+      // normal mid-page swipe.
+      onTouchStart={isMobile ? pullHandlers.handleTouchStart : undefined}
+      onTouchMove={isMobile ? pullHandlers.handleTouchMove : undefined}
+      onTouchEnd={isMobile ? pullHandlers.handleTouchEnd : undefined}
     >
       {/* Pull to Refresh Indicator */}
       {isMobile && pullDistance > 0 && (
@@ -299,23 +311,36 @@ export default function Layout({ children }: LayoutProps) {
         )}
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-8">
+          {/* Outer row: brand+nav cluster on the left, actions on the right.
+              Both clusters are intrinsic-width (no flex-1) so neither
+              grows into the other. justify-between handles the remaining
+              space. gap-10 (40px) is the minimum that prevents the
+              "Reference" dropdown chevron from visually merging with
+              the search icon next to it — anything tighter looks like
+              the chevron belongs to the search field. */}
+          <div className="flex items-center justify-between h-16 gap-10">
+            <div className="flex items-center gap-4 xl:gap-8 min-w-0">
               <Link to="/" className="flex items-center gap-2 group shrink-0">
                 <Logo size="md" className="group-hover:scale-110 transition-transform glow-accent" />
-                <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
+                <span className="hidden xs:inline text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
               </Link>
 
-              {/* Desktop Nav Items */}
-              <div className="hidden lg:flex items-center space-x-1">
+              {/* Desktop Nav Items.
+                  Spacing scales with viewport: tighter at lg (1024-1279px)
+                  where there's barely enough room next to the brand + right
+                  cluster, looser at xl (1280px+) for breathing room.
+                  Each item is `shrink-0` so the chevron and text never get
+                  clipped — if total width exceeds the cluster, the
+                  outer flex container pushes the right cluster instead
+                  of compressing individual buttons. */}
+              <div className="hidden lg:flex items-center gap-0.5 xl:gap-1 min-w-0">
                 {/* Core Items */}
                 {filteredCoreItems.map((item) => (
                   <Link
                     key={item.name}
                     to={item.path}
-                    data-tour={item.name.toLowerCase()}
                     className={cn(
-                      "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 relative group leading-none",
+                      "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 relative group leading-none shrink-0",
                       location.pathname === item.path
                         ? "text-accent-primary"
                         : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -346,18 +371,17 @@ export default function Layout({ children }: LayoutProps) {
                   return (
                     <div
                       key={group.label}
-                      className="relative"
+                      className="relative shrink-0"
                       onMouseEnter={() => handleMouseEnter(group.label)}
                       onMouseLeave={handleMouseLeave}
                     >
                       <button
                         type="button"
-                        data-tour={group.label.toLowerCase()}
                         aria-haspopup="menu"
                         aria-expanded={isOpen}
                         onClick={() => toggleDropdown(group.label)}
                         className={cn(
-                          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none relative",
+                          "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none relative whitespace-nowrap",
                           isGroupActive
                             ? "text-accent-primary"
                             : "text-slate-400 hover:text-white hover:bg-white/5"
@@ -367,8 +391,9 @@ export default function Layout({ children }: LayoutProps) {
                         <ChevronDown
                           aria-hidden="true"
                           className={cn(
-                            "w-4 h-4 transition-transform duration-300",
-                            isOpen ? "rotate-180" : ""
+                            "w-3.5 h-3.5 text-slate-500 transition-transform duration-300",
+                            isOpen ? "rotate-180" : "",
+                            isGroupActive && "text-accent-primary"
                           )}
                         />
                         {isGroupActive && (
@@ -392,7 +417,6 @@ export default function Layout({ children }: LayoutProps) {
                               key={item.name}
                               to={item.path}
                               role="menuitem"
-                              data-tour={item.name.toLowerCase()}
                               onClick={() => setActiveDropdown(null)}
                               className={cn(
                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group",
@@ -427,8 +451,28 @@ export default function Layout({ children }: LayoutProps) {
             </div>
 
               {/* Desktop Actions */}
-              <div className="hidden lg:flex items-center gap-4">
-                <div className="relative group">
+              <div className="hidden lg:flex items-center gap-2 xl:gap-3 shrink-0">
+                {/* Vertical divider between nav cluster and actions.
+                    The chevron next to "Reference" was visually merging
+                    with the search icon on screenshots — a strong divider
+                    is the cleanest fix. Always visible at lg+ (not just
+                    xl) so the visual grouping holds at every desktop
+                    breakpoint. mx-3 gives 12px breathing room on either
+                    side; bg-white/20 is intentionally brighter than the
+                    nav border so the divider actually reads. */}
+                <div
+                  className="h-6 w-px bg-white/20 mx-3 shrink-0"
+                  aria-hidden="true"
+                />
+
+                {/* Inline search field — only shown at xl (1280px+) where
+                    there's actually room. At lg (1024-1279px) the search
+                    field collides with the dropdown labels, so we hide it
+                    and rely on the ⌘K command palette (CommandPalette
+                    component, opened via Cmd/Ctrl+K) which is faster
+                    anyway for keyboard-first users. The kbd hint stays
+                    visible elsewhere in the UI to teach the shortcut. */}
+                <div className="relative group shrink-0 hidden xl:block">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search
                     aria-hidden="true"
@@ -447,10 +491,10 @@ export default function Layout({ children }: LayoutProps) {
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className={cn(
-                    "bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-16 text-sm w-56 leading-none",
+                    "bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-12 text-sm w-32 xl:w-44 leading-none",
                     "focus:outline-none focus:border-accent-primary/60",
                     "focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]",
-                    "transition-[border-color,box-shadow] duration-200"
+                    "transition-[border-color,box-shadow,width] duration-200"
                   )}
                 />
                 {searchQuery ? (
@@ -471,8 +515,6 @@ export default function Layout({ children }: LayoutProps) {
                   </kbd>
                 )}
               </div>
-              
-              <div className="h-6 w-px bg-white/10 mx-2" />
 
               <LanguageToggle />
 
@@ -497,14 +539,32 @@ export default function Layout({ children }: LayoutProps) {
                     aria-expanded={activeDropdown === 'profile'}
                     aria-label="Open user menu"
                     onClick={() => toggleDropdown('profile')}
-                    className="tap-target rounded-full hover:opacity-80 transition-opacity"
+                    className="tap-target rounded-full hover:opacity-80 transition-opacity shrink-0"
                   >
-                    <img
-                      src={user.photoURL || undefined}
-                      alt=""
-                      className="w-8 h-8 rounded-full border border-white/10 shrink-0"
-                      referrerPolicy="no-referrer"
-                    />
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt=""
+                        className="w-8 h-8 rounded-full border border-white/10 shrink-0 object-cover"
+                        referrerPolicy="no-referrer"
+                        onError={(e) => {
+                          // If the photo URL 404s or is rate-limited (common
+                          // with Google avatar URLs after the OAuth provider
+                          // rotates them), drop the broken icon and let the
+                          // initial-letter fallback below render on next
+                          // re-render. Setting src='' first keeps Chrome
+                          // from re-firing the broken-icon paint.
+                          (e.currentTarget as HTMLImageElement).style.display = 'none';
+                        }}
+                      />
+                    ) : (
+                      <span
+                        className="w-8 h-8 rounded-full border border-white/10 bg-mystic-800 text-slate-300 text-sm font-semibold flex items-center justify-center shrink-0"
+                        aria-hidden="true"
+                      >
+                        {(user.displayName || user.email || '?').slice(0, 1).toUpperCase()}
+                      </span>
+                    )}
                   </button>
 
                   {activeDropdown === 'profile' && (
@@ -524,6 +584,15 @@ export default function Layout({ children }: LayoutProps) {
                           Admin Dashboard
                         </Link>
                       )}
+                      <Link
+                        to="/pricing"
+                        role="menuitem"
+                        onClick={() => setActiveDropdown(null)}
+                        className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium text-slate-300 hover:text-accent-primary hover:bg-accent-primary/10 transition-colors mb-1"
+                      >
+                        <Sparkles className="w-4 h-4" aria-hidden="true" strokeWidth={1.5} />
+                        Plans &amp; pricing
+                      </Link>
                       <button
                         type="button"
                         role="menuitem"
@@ -735,6 +804,14 @@ export default function Layout({ children }: LayoutProps) {
                       Admin Dashboard
                     </Link>
                   )}
+                  <Link
+                    to="/pricing"
+                    onClick={() => setIsMenuOpen(false)}
+                    className="flex items-center gap-3 px-4 py-3 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide transition-colors hover:bg-white/8 hover:border-accent-primary/25"
+                  >
+                    <Sparkles aria-hidden="true" className="w-5 h-5 text-accent-primary" strokeWidth={1.5} />
+                    Plans &amp; pricing
+                  </Link>
                 </div>
               ) : (
                 <button
@@ -761,10 +838,10 @@ export default function Layout({ children }: LayoutProps) {
       </nav>
 
       {/* Main Content — pt-24 reserves space for the fixed nav */}
-      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' ? "h-[100dvh] overflow-hidden pb-16" : "min-h-screen pb-24 lg:pb-0")}>
+      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' && !forceScrollable ? "h-[100dvh] overflow-hidden pb-16" : "min-h-screen pb-24 lg:pb-0")}>
         <div className={cn(
           "mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col w-full",
-          location.pathname === '/advisor' ? "max-w-[100rem] pt-4 pb-4 h-full overflow-hidden" : "max-w-7xl pt-12 pb-12"
+          location.pathname === '/advisor' && !forceScrollable ? "max-w-[100rem] pt-4 pb-4 h-full overflow-hidden" : "max-w-7xl pt-12 pb-12"
         )}>
           {children}
         </div>
@@ -810,7 +887,6 @@ export default function Layout({ children }: LayoutProps) {
       <Suspense fallback={null}>
         <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
         <OnboardingModal />
-        <OnboardingTour />
       </Suspense>
     </div>
   );

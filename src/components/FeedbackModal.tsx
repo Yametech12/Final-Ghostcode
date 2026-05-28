@@ -4,6 +4,7 @@ import { X, Send, MessageSquare, Loader2, CheckCircle2, Bug, Sparkles, Heart, Li
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { toast } from 'sonner';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -31,6 +32,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   if (!auth) return null;
   const { user } = auth;
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,12 +46,15 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         .from('feedback')
         .insert({
           user_id: user?.id || null,
-          user_name: user?.user_metadata?.display_name || 'Anonymous',
-          email: email || user?.email || 'anonymous',
+          user_name: (user?.user_metadata?.display_name || 'Anonymous').slice(0, 100),
+          // Match the DB CHECK constraints in 20240101000400_security_hardening.sql.
+          // Trimming on the client is just nice UX — the constraints are the
+          // authoritative defense.
+          email: (email || user?.email || 'anonymous').slice(0, 254),
           type: feedbackType,
-          message: message.trim(),
-          url: window.location.href,
-          user_agent: navigator.userAgent
+          message: message.trim().slice(0, 5000),
+          url: window.location.href.slice(0, 500),
+          user_agent: navigator.userAgent.slice(0, 500),
         });
 
       if (error) throw error;
@@ -100,6 +105,10 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         />
 
         <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="feedback-modal-title"
           initial={{ opacity: 0, scale: 0.96, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -114,7 +123,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               <MessageSquare className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-white">Send Feedback</h2>
+              <h2 id="feedback-modal-title" className="text-xl font-bold text-white">Send Feedback</h2>
               <p className="text-xs text-slate-500">Help us improve EPIMETHEUS</p>
             </div>
           </div>

@@ -6,6 +6,7 @@ import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { toast } from 'sonner';
 import { apiFetch } from '../lib/fetch';
 import ImageCropper from './ImageCropper';
+import { useFocusTrap } from '../hooks/useFocusTrap';
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -30,6 +31,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
   const [cropperImage, setCropperImage] = useState<string | null>(null); // URL for cropper
 
   const { userData, updateUserData, updateUserProfile } = auth || {};
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
   // Cleanup object URLs on unmount to prevent memory leaks
   useEffect(() => {
@@ -39,6 +41,19 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       }
     };
   }, [photoPreview]);
+
+  // Same cleanup for the cropper preview URL. handleCropComplete and
+  // handleCropCancel revoke this on the happy paths, but if the modal
+  // unmounts (parent collapses, route change, browser back) before
+  // either fires, the URL would otherwise leak. The unmount cleanup
+  // handles that case.
+  useEffect(() => {
+    return () => {
+      if (cropperImage && cropperImage.startsWith('blob:')) {
+        URL.revokeObjectURL(cropperImage);
+      }
+    };
+  }, [cropperImage]);
 
   const validateField = (name: string, value: string) => {
     const newErrors = { ...errors };
@@ -149,7 +164,11 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       );
 
       setPhotoFile(compressedFile);
-      setPhotoPreview(URL.createObjectURL(compressedBlob));
+      // Local preview URL — track separately so we can revoke it after
+      // the public URL replaces it. Without this, every upload leaked
+      // one blob URL for the lifetime of the modal.
+      const localPreviewUrl = URL.createObjectURL(compressedBlob);
+      setPhotoPreview(localPreviewUrl);
 
       // Upload via the server endpoint instead of writing directly to storage.
       // The server validates magic bytes, enforces a 1MB cap, and derives the
@@ -162,15 +181,23 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
       });
 
       if (!response.ok) {
+        // Free the temporary preview URL even on failure paths.
+        URL.revokeObjectURL(localPreviewUrl);
         const errBody = await response.json().catch(() => ({}));
         throw new Error(errBody.error || `Upload failed: ${response.status}`);
       }
 
       const { url: publicUrl } = await response.json();
-      if (!publicUrl) throw new Error('Upload succeeded but no URL was returned');
+      if (!publicUrl) {
+        URL.revokeObjectURL(localPreviewUrl);
+        throw new Error('Upload succeeded but no URL was returned');
+      }
 
       setPhotoUrl(publicUrl);
       setPhotoPreview(publicUrl);
+      // Now that the HTTPS URL is showing, the local blob URL is no
+      // longer referenced by any <img>. Free it.
+      URL.revokeObjectURL(localPreviewUrl);
       await updateUserProfile({ photoURL: publicUrl });
       toast.success('Profile photo updated!');
     } catch (error: any) {
@@ -266,6 +293,10 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         />
 
         <motion.div
+          ref={trapRef}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="edit-profile-modal-title"
           initial={{ opacity: 0, scale: 0.96, y: 8 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
@@ -273,7 +304,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
         >
           <div className="p-6 border-b border-slate-700/30 flex items-center justify-between">
-            <h2 className="text-xl font-semibold flex items-center gap-2 text-slate-100">
+            <h2 id="edit-profile-modal-title" className="text-xl font-semibold flex items-center gap-2 text-slate-100">
               <User aria-hidden="true" className="w-5 h-5 text-accent-primary" />
               Edit Profile
             </h2>
