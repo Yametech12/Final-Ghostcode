@@ -75,7 +75,7 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
         )}
         aria-hidden="true"
       >
-        {isUser ? <UserIcon className="w-3.5 h-3.5 text-white" /> : <Bot className="w-3.5 h-3.5 text-white" />}
+        {isUser ? <UserIcon className="w-3.5 h-3.5 text-mystic-950" /> : <Bot className="w-3.5 h-3.5 text-white" />}
       </div>
 
       <div className={cn('flex-1 min-w-0 max-w-[85%] sm:max-w-2xl space-y-1.5', isUser && 'items-end')}>
@@ -83,7 +83,7 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
           className={cn(
             'rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed',
             isUser
-              ? 'bg-accent-primary text-white rounded-tr-sm'
+              ? 'bg-accent-primary text-mystic-950 rounded-tr-sm'
               : 'bg-slate-800/80 text-slate-100 rounded-tl-sm',
             message.failed && 'border border-red-500/40',
             // Visually distinguish the persisted "stream interrupted"
