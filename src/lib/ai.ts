@@ -40,12 +40,11 @@ export class AiApiError extends Error {
 // Regolo AI model configuration — shared with api/_config.ts
 // If you change models here, update api/_config.ts as well (or import from a shared module).
 export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
-// Fallback models in order of preference
+// Fallback models in order of preference — Llama-3.1-8B removed (invalid on Regolo)
 export const FALLBACK_MODELS = [
   "Llama-3.3-70B-Instruct",
-  "Llama-3.1-8B-Instruct",
   "gemma4-31b",
-  "mistral-small3.2"
+  "mistral-small3.2",
 ];
 // Vision support enabled with Regolo
 export const VISION_MODEL = "Llama-3.3-70B-Instruct";
@@ -184,6 +183,18 @@ export async function chatCompletion(
           });
         }
 
+        // 504 (AI_TIMEOUT) and 503 (MODEL_UNAVAILABLE) — try next model.
+        if (response.status === 504 || response.status === 503 || code === 'AI_TIMEOUT' || code === 'MODEL_UNAVAILABLE') {
+          console.warn(`Model ${modelToTry} timed out or unavailable (${response.status}), trying next model...`);
+          lastError = new AiApiError({
+            status: response.status,
+            message: errorMessage,
+            code: code ?? (response.status === 504 ? 'AI_TIMEOUT' : 'MODEL_UNAVAILABLE'),
+            requestId,
+          });
+          continue;
+        }
+
         // If it's a 404 (model not found), try next model
         if (response.status === 404 || (typeof errorMessage === 'string' && errorMessage.includes('endpoints found'))) {
           console.warn(`Model ${modelToTry} not available, trying next model...`);
@@ -273,7 +284,7 @@ export async function chatCompletion(
         ) {
           throw error;
         }
-        if (error.code === 'MODEL_UNAVAILABLE') {
+        if (error.code === 'MODEL_UNAVAILABLE' || error.code === 'AI_TIMEOUT') {
           continue;
         }
       }

@@ -744,6 +744,8 @@ export default function CalibrationPage() {
       ], undefined, {
         response_format: { type: "json_object" },
         signal: controller.signal,
+        max_tokens: 2000,  // Reduced from 4096 — keeps response within Vercel's 28s budget
+        temperature: 0.5,  // Lower temp = faster, more deterministic JSON output
       });
 
       const jsonStr = completion.choices?.[0]?.message?.content?.trim() || '{}';

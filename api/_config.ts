@@ -7,9 +7,8 @@ export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
 export const VISION_MODEL = "Llama-3.3-70B-Instruct";
 export const FALLBACK_MODELS = [
   "Llama-3.3-70B-Instruct",
-  "Llama-3.1-8B-Instruct",
   "gemma4-31b",
-  "mistral-small3.2"
+  "mistral-small3.2",
 ];
 
 export async function getApiKey(): Promise<string | null> {
