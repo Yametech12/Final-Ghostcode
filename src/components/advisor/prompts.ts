@@ -41,9 +41,10 @@ export const promptCategories: PromptCategory[] = [
 ];
 
 export const followUpSuggestions: string[] = [
-  'Tell me more',
-  'What happened next?',
-  'How did you feel about that?',
-  'What would you do differently?',
-  'What are your goals here?',
+  'Give me a specific example',
+  'What should I say to her?',
+  'How do I escalate this?',
+  'What does my personality type say about this?',
+  'What are the red flags here?',
+  'When should I walk away?',
 ];

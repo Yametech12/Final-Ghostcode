@@ -371,12 +371,19 @@ async function buildAdvisorMessages(
 Your goal is to help users navigate interpersonal dynamics with empathy, psychological insight, and practical advice.
 - Never be generic; ask clarifying questions when needed.
 - Use attachment theory, communication frameworks (NVC), and emotional intelligence concepts.
-- Keep responses warm but professional, max 3 paragraphs.
+- Keep responses under 250 words.
 - If the user mentions a specific person ("she/her"), infer possible intentions based on behavior patterns, but avoid assumptions.
 
 ## USER PROFILE
 Personality Type: ${personalityType}
-Traits Analysis: ${traits ? JSON.stringify(traits, null, 2) : 'Not yet calibrated'}
+Traits Analysis:
+${traits && Object.keys(traits).length > 0
+  ? [
+      `  Time Orientation: ${Math.round(traits.timeOrientation ?? 50)}/100 (0 = Investor, 100 = Tester)`,
+      `  Emotional Style:  ${Math.round(traits.emotionalStyle ?? 50)}/100 (0 = Justifier, 100 = Denier)`,
+      `  Relationship Focus: ${Math.round(traits.relationshipFocus ?? 50)}/100 (0 = Idealist, 100 = Realist)`,
+    ].join('\n')
+  : '  Not yet calibrated'}
 
 ## CONVERSATION CONTEXT
 Recent Sessions: ${recentActivity?.map((s) => s.title).join(', ') || 'None'}
