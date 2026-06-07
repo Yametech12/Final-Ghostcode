@@ -44,7 +44,8 @@ export function analyzeCalibrationAnswers(answers: Record<string, any>): Calibra
   const relationshipAxis = relationshipFocus > 50 ? 'R' : 'I';
 
   const primaryType = `${timeAxis}${sexAxis}${relationshipAxis}`;
-  const confidence = Math.round((Math.abs(timeOrientation - 50) + Math.abs(emotionalStyle - 50) + Math.abs(relationshipFocus - 50)) / 3);
+  // Sum of deviations from 50 ranges 0–150. Divide by 1.5 to map to 0–100.
+  const confidence = Math.round((Math.abs(timeOrientation - 50) + Math.abs(emotionalStyle - 50) + Math.abs(relationshipFocus - 50)) / 1.5);
 
   // Generate analysis and recommendations
   const { analysis, recommendations, strengths, growthAreas } = generatePersonalityInsights(primaryType);

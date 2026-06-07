@@ -593,6 +593,8 @@ export default function CalibrationPage() {
       setDynamicScenario(result);
     } catch (err) {
       console.error("Failed to generate scenario:", err);
+      const msg = err instanceof Error ? err.message : 'Failed to generate scenario';
+      toast.error(msg);
     } finally {
       setIsGeneratingScenario(false);
     }
@@ -756,7 +758,7 @@ export default function CalibrationPage() {
         tasks: coerced.tasks.map((t, i) => ({ ...t, id: `task-${Date.now()}-${i}` })),
       };
 
-      const scenarioSummary = structuredInput.additionalNotes.slice(0, 50) || structuredInput.clothingStyle || 'Guided Analysis';
+      const scenarioSummary = structuredInput.additionalNotes.slice(0, 50) || structuredInput.conversationTopic || structuredInput.clothingStyle || 'Guided Analysis';
 
       const newHistoryItem: AnalysisHistory = {
         ...data,
