@@ -36,7 +36,7 @@ export function CalibrationWizard({
   const isLast = step === questions.length - 1;
 
   const handleNext = () => {
-    if (!answers[current.id] && current.type !== 'text') {
+    if (answers[current.id] === undefined && current.type !== 'text') {
       // Require an answer for non-text questions
       return;
     }
@@ -198,7 +198,7 @@ export function CalibrationWizard({
           )}
           <button
             onClick={handleNext}
-            disabled={current.type !== 'text' && !answers[current.id]}
+            disabled={current.type !== 'text' && answers[current.id] === undefined}
             className="flex items-center gap-2 px-6 py-2 bg-accent-primary rounded-lg hover:bg-accent-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             {isLast ? 'Complete' : 'Next'}

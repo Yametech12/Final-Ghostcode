@@ -341,7 +341,8 @@ export default function CalibrationPage() {
       if (taskSort === 'category') {
         return a.category.localeCompare(b.category);
       }
-      return a.dueDate.localeCompare(b.dueDate);
+      const dueDateOrder: Record<string, number> = { 'Day 1': 1, 'Day 3': 2, 'Week 1': 3, 'Week 2': 4, 'Month 1': 5 };
+      return (dueDateOrder[a.dueDate] ?? 99) - (dueDateOrder[b.dueDate] ?? 99);
     });
   }, [analysis, taskFilter, taskSort, taskCategory, taskSearch]);
 
@@ -684,15 +685,20 @@ export default function CalibrationPage() {
     try {
       const systemInstruction = `You are the EPIMETHEUS Oracle, a master of female psychology and behavioral profiling. Analyze social scenarios using the EPIMETHEUS system.
 
-      TYPES:
-      - TDI (The Playette): Tester, Denier, Idealist.
-      - TJI (The Social Butterfly): Tester, Justifier, Idealist.
-      - TDR (The Private Dancer): Tester, Denier, Realist.
-      - TJR (The Seductress): Tester, Justifier, Realist.
-      - NDI (The Hopeful Romantic): Investor, Denier, Idealist.
-      - NJI (The Cinderella): Investor, Justifier, Idealist.
-      - NDR (The Connoisseur): Investor, Denier, Realist.
-      - NJR (The Modern Woman): Investor, Justifier, Realist.
+      EPIMETHEUS FRAMEWORK — 3 AXES:
+      • TIME (T/N): Tester = short attention span, unaffected by compliments, tests you. Investor = takes you seriously, focused, asks about your future.
+      • SEX (D/J): Denier = modest dress, shy about sex talk, avoids aggressive touch, conservative. Justifier = tattoos/piercings, talks sex openly, comfortable with aggressive touch, rebellious.
+      • RELATIONSHIP (R/I): Realist = career-focused, splits bills, practical, believes in equality. Idealist = expects to be pampered, plans wedding early, romantic, spoiled upbringing.
+
+      8 TYPES + KEY BEHAVIORAL MARKERS:
+      - TDI (The Playette): Tester+Denier+Idealist. Modestly dressed, quiet observer, secretive, unaffected by compliments, looks around room, fantasizes about romance. MISTYPE: If she openly talks about wild past = Justifier.
+      - TJI (The Social Butterfly): Tester+Justifier+Idealist. High energy, talks to everyone, tattoos/piercings, playful aggressive touch, bored by deep convo, dresses to stand out. MISTYPE: If she gets offended by teasing = Investor.
+      - TDR (The Private Dancer): Tester+Denier+Realist. Practical dress, career-focused, insists on splitting bill, guarded about flirting, logical analyzer. MISTYPE: If she talks about dream wedding = Idealist.
+      - TJR (The Seductress): Tester+Justifier+Realist. Confident, sexually aggressive, challenges opinions, leather jacket/piercings, direct eye contact, independent. MISTYPE: If she blushes when escalated = Denier.
+      - NDI (The Hopeful Romantic): Investor+Denier+Idealist. Sweet/feminine dress, asks about your future, blushes at compliments, seeks soul connection, religious/conservative background. MISTYPE: If she insists on splitting bill = Realist.
+      - NJI (The Cinderella): Investor+Justifier+Idealist. Designer clothes, perfect makeup, expects to be pampered, mentions status/ex, high maintenance, head-turner. MISTYPE: If she asks deep empathy questions = NDI.
+      - NDR (The Connoisseur): Investor+Denier+Realist. Articulate, asks about career/goals, high standards, won't be easily impressed, quiet luxury style. MISTYPE: If easily impressed by flashy wealth = NJI.
+      - NJR (The Modern Woman): Investor+Justifier+Realist. Direct, talks passionately about career, can be bossy, smart-casual style, open-minded, values mutual satisfaction. MISTYPE: If highly secretive and blushes easily = Denier.
 
       REQUIREMENTS (JSON):
       Return a JSON object with the following EXACT shape. Every leaf field
@@ -708,7 +714,7 @@ export default function CalibrationPage() {
       6. "coldReader": Single 2-3 sentence string. Profound "mind-reading" statement.
       7. "howSheGetsWhatSheWants": Single paragraph string. Blunt insight into her tactics.
       8. "tasks": Array of 5-7 task objects with keys: id (string), title (string),
-         description (string), priority ("low"|"medium"|"high"), dueDate (string),
+         description (string — 1-2 sentences explaining WHY this task matters and HOW to do it), priority ("low"|"medium"|"high"), dueDate (MUST be one of: "Day 1", "Day 3", "Week 1", "Week 2", "Month 1"),
          completed (boolean false), category ("communication"|"physical"|"logistics"|"psychology").
       9. "whatToAvoid": Array of 3-5 short string sentences.
       10. "relationshipAdvice": Object with EXACTLY three string keys: "vision",
@@ -721,6 +727,8 @@ export default function CalibrationPage() {
       13. "behavioralBlueprint": Single string with a numbered 4-step plan
           (e.g., "1. ... 2. ... 3. ... 4. ..."). Do NOT return an array.
       14. "interactionStrategy": Single paragraph string. Concise next-step strategy.
+
+      CULTURAL CONTEXT: This system is calibrated for Filipino/Filipina women in the Philippines. Factor in cultural nuances: strong family values, Catholic/religious influence (increases Denier traits), social media influence on style, hiya (shame culture affecting emotional expression), and the blend of traditional and modern values common in urban Filipinas.
 
       TONE: Mysterious, authoritative, clinical yet evocative. Respond ONLY with valid JSON.`;
 
@@ -768,7 +776,7 @@ export default function CalibrationPage() {
       };
 
       setAnalysis(newHistoryItem);
-      setHistory([newHistoryItem, ...history]);
+      setHistory(prev => [newHistoryItem, ...prev]);
 
       if (user) {
         try {
@@ -1296,11 +1304,11 @@ export default function CalibrationPage() {
                       </select>
 
                       <button
-                        onClick={() => setTaskSort(taskSort === 'priority' ? 'dueDate' : 'priority')}
+                        onClick={() => setTaskSort(taskSort === 'priority' ? 'dueDate' : taskSort === 'dueDate' ? 'category' : 'priority')}
                         className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-300 flex items-center gap-2 hover:bg-white/10 transition-colors"
                       >
                         <ArrowUpDown className="w-3 h-3" />
-                        {taskSort === 'priority' ? 'Sort by Priority' : 'Sort by Due Date'}
+                        {taskSort === 'priority' ? 'Sort: Priority' : taskSort === 'dueDate' ? 'Sort: Due Date' : 'Sort: Category'}
                       </button>
 
                       <div className="flex items-center gap-2 ml-auto">
@@ -1354,6 +1362,14 @@ export default function CalibrationPage() {
                             )}>
                               {taskLabel(task)}
                             </p>
+                            {taskBody(task) && taskBody(task) !== taskLabel(task) && (
+                              <p className={cn(
+                                "text-xs leading-relaxed transition-all",
+                                task.completed ? "text-slate-600 line-through" : "text-slate-400"
+                              )}>
+                                {taskBody(task)}
+                              </p>
+                            )}
                             <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-wider font-bold">
                               <span className={cn(
                                 "px-2 py-0.5 rounded-full border",
@@ -1503,6 +1519,137 @@ export default function CalibrationPage() {
                   })()}
                 </div>
               </div>
+
+              {/* Type Intelligence — pulled from personalityTypes.ts */}
+              {(() => {
+                const typeData = personalityTypes.find(t => t.id === analysis.primaryType);
+                if (!typeData) return null;
+                return (
+                  <div className="space-y-6">
+                    {/* ETS Sequence */}
+                    {typeData.ets && typeData.ets.length > 0 && (
+                      <div className="glass-card p-8 space-y-4">
+                        <h3 className="text-2xl font-bold flex items-center gap-3 text-accent-primary">
+                          <Zap className="w-6 h-6" />
+                          Emotional Trigger Sequence (ETS)
+                        </h3>
+                        <div className="flex flex-wrap gap-3">
+                          {typeData.ets.map((stage, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <div className="px-4 py-2 rounded-xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary font-bold text-sm">
+                                {i + 1}. {stage}
+                              </div>
+                              {i < typeData.ets.length - 1 && (
+                                <ChevronRight className="w-4 h-4 text-slate-600" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Key Traits */}
+                    {typeData.keyTraits && typeData.keyTraits.length > 0 && (
+                      <div className="glass-card p-8 space-y-4">
+                        <h3 className="text-2xl font-bold flex items-center gap-3 text-amber-400">
+                          <UserCheck className="w-6 h-6" />
+                          Key Traits of a {typeData.name}
+                        </h3>
+                        <div className="flex flex-wrap gap-2">
+                          {typeData.keyTraits.map((trait, i) => (
+                            <span key={i} className="px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-sm text-slate-300">
+                              {trait}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Devotion Triggers & Red Flags */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {typeData.devotionTriggers && typeData.devotionTriggers.length > 0 && (
+                        <div className="glass-card p-8 space-y-4">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-emerald-400">
+                            <CheckCircle2 className="w-5 h-5" />
+                            Devotion Triggers
+                          </h4>
+                          <ul className="space-y-2">
+                            {typeData.devotionTriggers.map((trigger, i) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                <span className="text-emerald-400 mt-0.5 shrink-0">→</span>
+                                {trigger}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {typeData.redFlags && typeData.redFlags.length > 0 && (
+                        <div className="glass-card p-8 space-y-4">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-red-400">
+                            <AlertCircle className="w-5 h-5" />
+                            Red Flags (Avoid These)
+                          </h4>
+                          <ul className="space-y-2">
+                            {typeData.redFlags.map((flag, i) => (
+                              <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
+                                <span className="text-red-400 mt-0.5 shrink-0">✗</span>
+                                {flag}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Where to Find Her + Dating Venues */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {typeData.whereToFindHer && typeData.whereToFindHer.length > 0 && (
+                        <div className="glass-card p-8 space-y-4">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-slate-300">
+                            <Target className="w-5 h-5 text-accent-primary" />
+                            Where to Find Her
+                          </h4>
+                          <ul className="space-y-2">
+                            {typeData.whereToFindHer.map((place, i) => (
+                              <li key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary shrink-0" />
+                                {place}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {typeData.dating?.ideas && typeData.dating.ideas.length > 0 && (
+                        <div className="glass-card p-8 space-y-4">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-slate-300">
+                            <Sparkles className="w-5 h-5 text-accent-primary" />
+                            Date Ideas
+                          </h4>
+                          <ul className="space-y-2">
+                            {typeData.dating.ideas.map((idea, i) => (
+                              <li key={i} className="flex items-center gap-2 text-sm text-slate-400">
+                                <span className="w-1.5 h-1.5 rounded-full bg-accent-primary shrink-0" />
+                                {idea}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Mistype Warning */}
+                    {typeData.mistypeRedFlag && (
+                      <div className="glass-card p-6 bg-amber-500/5 border-amber-500/20 space-y-3">
+                        <h4 className="text-sm font-bold flex items-center gap-2 text-amber-400 uppercase tracking-widest">
+                          <AlertCircle className="w-4 h-4" />
+                          Mistype Warning
+                        </h4>
+                        <p className="text-sm text-slate-300">{typeData.mistypeRedFlag}</p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}
