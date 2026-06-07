@@ -124,7 +124,7 @@ export default function PaywallScreen({
             <span className="text-sm text-slate-500">/ month</span>
           </div>
           <p className="text-xs text-slate-500">
-            Or ${requiredTier === 'strategist' ? 168 : 468}/yr billed annually · Paid checkout launching soon
+            Or ${requiredTier === 'strategist' ? 144 : 396}/yr billed annually · Paid checkout launching soon
           </p>
 
           {/* Perks */}

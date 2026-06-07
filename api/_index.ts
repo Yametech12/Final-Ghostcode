@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import helmet from 'helmet';
 import { createClient } from '@supabase/supabase-js';
 
-import { serializeError } from '../src/utils/errorHandling';
+
 import { getAuthenticatedUser } from './lib/auth.js';
 import { log, requestIdFrom, serializeErr } from './lib/log.js';
 import { initSentryNode, captureException } from './lib/sentryNode.js';
@@ -355,14 +355,11 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   // path still has explicit Sentry coverage even if the forwarder import
   // hasn't resolved yet on the first error of a cold start.
   captureException(err, { requestId, route });
-  // Keep the legacy serializeError for the dev-only `details` payload — it
-  // matches the shape clients have come to expect from local dev.
-  void serializeError;
   const statusCode = err.statusCode || err.status || 500;
   res.status(statusCode).json({
     error: 'Internal server error',
     code: err.code || 'INTERNAL_ERROR',
-    ...(process.env.NODE_ENV === 'development' && { details: serializeError(err) }),
+    ...(process.env.NODE_ENV === 'development' && { details: serializeErr(err) }),
   });
 });
 
