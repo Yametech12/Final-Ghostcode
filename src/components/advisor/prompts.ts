@@ -14,28 +14,27 @@ export const promptCategories: PromptCategory[] = [
     title: 'Read the situation',
     description: 'Make sense of a specific moment',
     prompts: [
-      'How should I approach this situation?',
-      'What are her likely intentions?',
-      'What red flags should I watch for?',
+      'She laughed at my joke but looked away. What does that mean?',
+      "She keeps texting but won't commit to plans. What should I do?",
+      'What red flags should I watch for in early dating?',
     ],
   },
   {
     title: 'Build connection',
     description: 'Move things forward',
     prompts: [
-      'How to escalate safely?',
-      'Building emotional connection',
-      'Reading body language cues',
+      'How do I escalate from texting to asking her out?',
+      'She seems interested but distant. How do I build trust?',
+      "What's a good first date that reveals compatibility?",
     ],
   },
   {
     title: 'Self & strategy',
     description: 'Sharpen your own game',
     prompts: [
-      'How can I improve my calibration?',
-      'What does my personality type mean?',
-      'How to handle rejection?',
-      'When to walk away?',
+      'How can I improve my calibration skills?',
+      'What does my personality type mean for dating?',
+      'How do I handle rejection without losing confidence?',
     ],
   },
 ];

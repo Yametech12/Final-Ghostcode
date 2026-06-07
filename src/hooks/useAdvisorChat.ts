@@ -27,6 +27,7 @@ export interface AdvisorMessage {
   content: string;
   timestamp?: Date;
   failed?: boolean;
+  reaction?: 'like' | 'dislike';
 }
 
 interface RawMessage {
@@ -34,6 +35,7 @@ interface RawMessage {
   role: 'user' | 'model';
   content: string;
   timestamp?: string | number | Date;
+  reaction?: 'like' | 'dislike';
 }
 
 const STREAM_DONE = '[DONE]';
@@ -82,6 +84,7 @@ export function useAdvisorChat() {
                 role: msg.role,
                 content: msg.content,
                 timestamp: msg.timestamp ? new Date(msg.timestamp) : undefined,
+                reaction: msg.reaction,
               })));
             }
             setIsLoadingSession(false);
@@ -373,6 +376,37 @@ export function useAdvisorChat() {
     }
   }, []);
 
+  const setReaction = useCallback(async (messageId: string, reaction: 'like' | 'dislike' | undefined) => {
+    // Optimistically update local state
+    setMessages(prev => prev.map(m => 
+      m.id === messageId ? { ...m, reaction } : m
+    ));
+
+    // Persist to database
+    try {
+      const response = await apiFetch(`/api/advisor/messages/${messageId}/reaction`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reaction }),
+      });
+      if (!response.ok) {
+        throw new Error('Failed to save reaction');
+      }
+    } catch (error) {
+      console.error('Failed to save reaction:', error);
+      // Revert optimistic update on error
+      setMessages(prev => prev.map(m => {
+        if (m.id === messageId) {
+          // Find original reaction from messages before the optimistic update
+          const original = messages.find(msg => msg.id === messageId);
+          return { ...m, reaction: original?.reaction };
+        }
+        return m;
+      }));
+      toast.error('Failed to save reaction');
+    }
+  }, [messages]);
+
   return {
     messages,
     sendMessage,
@@ -382,6 +416,7 @@ export function useAdvisorChat() {
     isLoadingSession,
     sessionId,
     clearChat,
+    setReaction,
   };
 }
 

@@ -19,6 +19,7 @@ import {
   handleCreateAdvisorSession,
   handleGetAdvisorSession,
   handleDeleteAdvisorSession,
+  handleUpdateAdvisorReaction,
   handleAdvisorChatStream,
   handleAiChat,
   handleCreateOracleAnalysis,
@@ -246,6 +247,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const r = await handleDeleteAdvisorSession(normReq, supabase);
       res.status(r.status).json(r.body);
       return;
+    }
+    if (pathname.startsWith('advisor/messages/') && pathname.endsWith('/reaction') && req.method === 'PATCH') {
+      const segments = pathname.split('/');
+      // segments: ['advisor', 'messages', '<messageId>', 'reaction']
+      if (segments.length === 4) {
+        normReq.params = { messageId: segments[2] };
+        const r = await handleUpdateAdvisorReaction(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
     }
     if (pathname === 'advisor/chat' && req.method === 'POST') {
       // Vercel serverless supports streaming via the runtime, but to keep this

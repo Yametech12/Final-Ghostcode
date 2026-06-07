@@ -110,7 +110,7 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
               Cancelled before the model replied.
             </span>
           ) : (
-            <div className="prose prose-invert prose-sm max-w-none break-words prose-a:text-accent-primary prose-a:underline hover:prose-a:text-accent-secondary prose-code:text-accent-primary prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-strong:text-white prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-li:my-0.5">
+            <div className="prose prose-invert prose-sm max-w-none break-words prose-a:text-accent-primary prose-a:underline hover:prose-a:text-accent-secondary prose-code:text-accent-primary prose-code:bg-white/5 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:before:hidden prose-code:after:hidden prose-strong:text-white prose-p:my-2 prose-headings:my-3 prose-ul:my-3 prose-ol:my-3 prose-li:my-1.5">
               <ReactMarkdown
                 components={{
                   // Open every link in a new tab safely (treat AI output as untrusted).

@@ -19,6 +19,7 @@ import {
   handleCreateAdvisorSession,
   handleGetAdvisorSession,
   handleDeleteAdvisorSession,
+  handleUpdateAdvisorReaction,
   handleAdvisorChatStream,
   handleAiChat,
   handleCreateOracleAnalysis,
@@ -291,6 +292,11 @@ app.get('/api/advisor/session', async (req, res) => {
 app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
+});
+
+app.patch('/api/advisor/messages/:messageId/reaction', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleUpdateAdvisorReaction(nr, supabase));
 });
 
 app.post('/api/advisor/chat', async (req, res) => {

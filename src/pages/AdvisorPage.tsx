@@ -22,11 +22,11 @@ export default function AdvisorPage() {
     isStreaming,
     isLoadingSession,
     clearChat,
+    setReaction,
   } = useAdvisorChat();
 
   const [input, setInput] = useState('');
   const [isSending, setIsSending] = useState(false);
-  const [reactions, setReactions] = useState<Record<string, 'like' | 'dislike' | undefined>>({});
 
   const send = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -50,12 +50,11 @@ export default function AdvisorPage() {
   }, [send]);
 
   const handleReaction = useCallback((id: string, reaction: 'like' | 'dislike') => {
-    setReactions(prev => {
-      const current = prev[id];
-      const next = current === reaction ? undefined : reaction;
-      return { ...prev, [id]: next };
-    });
-  }, []);
+    const message = messages.find(m => m.id === id);
+    const current = message?.reaction;
+    const next = current === reaction ? undefined : reaction;
+    void setReaction(id, next);
+  }, [messages, setReaction]);
 
   const handleExport = useCallback(() => {
     if (messages.length === 0) return;
@@ -78,7 +77,6 @@ export default function AdvisorPage() {
     if (messages.length === 0) return;
     if (window.confirm('Clear this conversation? This cannot be undone.')) {
       void clearChat();
-      setReactions({});
     }
   }, [messages.length, clearChat]);
 
@@ -95,8 +93,10 @@ export default function AdvisorPage() {
   }
 
   // Show follow-up chips after the model has responded and we are not currently streaming.
+  // Only show if the response is substantive (at least 50 chars) — don't show chips after
+  // "I need more context" or "[interrupted before reply]" placeholders.
   const lastMessage = messages[messages.length - 1];
-  const showFollowUps = !isStreaming && lastMessage?.role === 'model' && lastMessage.content !== '';
+  const showFollowUps = !isStreaming && lastMessage?.role === 'model' && lastMessage.content.length >= 50;
 
   return (
     <div className="flex flex-col h-full">
@@ -110,7 +110,7 @@ export default function AdvisorPage() {
         messages={messages}
         isStreaming={isStreaming}
         isSending={isSending}
-        reactions={reactions}
+        reactions={{}}
         onReaction={handleReaction}
         onRetry={retryMessage}
         onSelectPrompt={handleSelectPrompt}

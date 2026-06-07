@@ -10,7 +10,7 @@ interface MessageListProps {
   messages: AdvisorMessage[];
   isStreaming: boolean;
   isSending: boolean;
-  reactions: Record<string, 'like' | 'dislike' | undefined>;
+  reactions: Record<string, 'like' | 'dislike' | undefined>; // DEPRECATED: reactions now stored in message.reaction
   onReaction: (id: string, reaction: 'like' | 'dislike') => void;
   onRetry: (id: string) => void;
   onSelectPrompt: (prompt: string) => void;
@@ -62,7 +62,7 @@ export function MessageList({
               <Message
                 key={message.id}
                 message={message}
-                reaction={reactions[message.id]}
+                reaction={message.reaction}
                 onReaction={onReaction}
                 onRetry={onRetry}
               />

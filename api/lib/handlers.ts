@@ -281,7 +281,7 @@ export async function handleGetAdvisorSession(
 
   const { data: messages, error: messagesError } = await supabase
     .from('advisor_messages')
-    .select('id, role, content, timestamp')
+    .select('id, role, content, timestamp, reaction')
     .eq('session_id', session.id)
     .order('timestamp', { ascending: true })
     .limit(50);
@@ -321,6 +321,55 @@ export async function handleDeleteAdvisorSession(
 
   await supabase.from('advisor_messages').delete().eq('session_id', sessionId);
   await supabase.from('advisor_sessions').delete().eq('id', sessionId);
+  return { status: 200, body: { success: true } };
+}
+
+/**
+ * PATCH /api/advisor/messages/:messageId/reaction — authenticated.
+ * Update the user's reaction (like/dislike) on a specific message.
+ */
+export async function handleUpdateAdvisorReaction(
+  req: NormalizedRequest,
+  supabase: SupabaseClient
+): Promise<NormalizedResponse> {
+  if (!req.user) return unauthorized();
+  const denied = await requireTier(req, supabase, 'strategist');
+  if (denied) return denied;
+
+  const messageId = req.params.messageId;
+  if (!isValidUUID(messageId)) return badRequest('Invalid messageId', 'INVALID_UUID');
+
+  const { reaction } = req.body || {};
+  if (reaction !== undefined && reaction !== 'like' && reaction !== 'dislike' && reaction !== null) {
+    return badRequest('reaction must be "like", "dislike", or null');
+  }
+
+  // Verify the message belongs to the user's session
+  const { data: message } = await supabase
+    .from('advisor_messages')
+    .select('session_id, user_id')
+    .eq('id', messageId)
+    .maybeSingle();
+
+  if (!message || message.user_id !== req.user.id) {
+    return { status: 404, body: { error: 'Message not found', code: 'NOT_FOUND' } };
+  }
+
+  // Update reaction
+  const { error } = await supabase
+    .from('advisor_messages')
+    .update({ reaction: reaction ?? null })
+    .eq('id', messageId);
+
+  if (error) {
+    log.error('advisor_reaction_update_failed', {
+      userId: req.user.id,
+      messageId,
+      err: serializeErr(error),
+    });
+    return serverError('Failed to update reaction');
+  }
+
   return { status: 200, body: { success: true } };
 }
 
@@ -374,8 +423,31 @@ Your goal is to help users navigate interpersonal dynamics with empathy, psychol
 - Keep responses under 250 words.
 - If the user mentions a specific person ("she/her"), infer possible intentions based on behavior patterns, but avoid assumptions.
 
+## EPIMETHEUS TYPE FRAMEWORK
+The user is assessed on three axes forming an 8-type system:
+• TIME (T/N): Tester vs Investor — does she test before committing, or invest deeply upfront?
+• SEX (D/J): Denier vs Justifier — conservative/guarded vs open/rebellious with intimacy?
+• RELATIONSHIP (R/I): Realist vs Idealist — practical/independent vs romantic/traditional?
+
+8 Types: TDI (Playette), TJI (Social Butterfly), TDR (Private Dancer), TJR (Seductress),
+         NDI (Hopeful Romantic), NJI (Cinderella), NDR (Connoisseur), NJR (Modern Woman).
+
 ## USER PROFILE
 Personality Type: ${personalityType}
+${personalityType !== 'Unknown' ? `
+Type Context: ${(() => {
+  const typeMap: Record<string, string> = {
+    TDI: 'Tests interest, guards emotions, seeks deep connection — patient and selective.',
+    TJI: 'Tests interest, expressive/social, seeks excitement — high energy, low patience.',
+    TDR: 'Tests interest, guards emotions, practical focus — values stability and respect.',
+    TJR: 'Tests interest, expressive/direct, practical focus — bold and action-oriented.',
+    NDI: 'Invests early, guards emotions, seeks deep connection — thoughtful romantic.',
+    NJI: 'Invests early, expressive/social, seeks fairy tale — classic romantic dreamer.',
+    NDR: 'Invests early, guards emotions, practical focus — stable long-term builder.',
+    NJR: 'Invests early, expressive/direct, practical focus — committed and realistic.',
+  };
+  return typeMap[personalityType] || 'Unique profile.';
+})()}` : ''}
 Traits Analysis:
 ${traits && Object.keys(traits).length > 0
   ? [
@@ -390,12 +462,21 @@ Recent Sessions: ${recentActivity?.map((s) => s.title).join(', ') || 'None'}
 Message History: ${history?.length || 0} messages in this session
 
 ## RESPONSE GUIDELINES
-- Keep responses under 250 words
 - Include 1-2 specific, actionable steps when giving advice
 - Ask thoughtful questions to deepen understanding
 - Reference user's calibration data when relevant
 - End with a forward-looking suggestion or question
-- Maintain professional, insightful tone`;
+- Maintain professional, insightful tone
+
+## EXAMPLE EXCHANGES
+User: "She laughed at my joke but then looked away. What does that mean?"
+Assistant: "That's a mixed signal — laughter shows interest, but looking away suggests she's either shy (Denier trait) or testing your persistence (Tester). Since you're a TDR, your instinct is probably to back off and observe. Instead, try one more light comment to see if she re-engages. If she does, she's interested but cautious. If not, she's signaling 'not now.' What was the context of the interaction?"
+
+User: "I want to ask her out but I'm nervous she'll say no."
+Assistant: "That fear is normal, but here's the frame: her 'no' isn't about your worth — it's about timing, compatibility, or her current situation. As an NDI, you invest emotionally before acting, which amplifies the stakes. Reframe it: you're gathering data, not risking everything. Ask casually: 'Want to grab coffee this week?' If she hesitates, you have your answer without a hard rejection. What's holding you back specifically — fear of awkwardness, or losing the friendship?"
+
+User: "She keeps texting me but won't commit to plans."
+Assistant: "Classic Tester behavior — she's keeping you warm while evaluating other options or waiting for higher interest on her end. Your move depends on your type: if you're an Investor (N), this drains you because you're already in. If you're a Tester (T), match her energy — reply but don't chase. Set a boundary: 'Let me know when your schedule clears up, I'd like to see you.' Then pull back. If she's interested, she'll commit. If not, you've freed yourself. How long has this pattern been going on?"`;
 
   // Token-aware truncation: approximate 1 token ≈ 4 chars.
   // Reserve ~2000 tokens for system prompt + new user message + response.
