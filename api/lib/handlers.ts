@@ -1148,13 +1148,9 @@ export async function handleAiChat(
     // burn the entire Vercel function budget. AbortSignal.timeout is the
     // modern path; fall back to a manual AbortController if unavailable.
     //
-    // We give non-streaming completions almost the full Vercel budget
-    // (30s default for the deployed function). The Oracle calibration
-    // prompt is big and Llama-3.3-70B can take 25s+ for the structured
-    // JSON response — anything tighter cascades into the fallback model
-    // chain and confuses the user. The remaining 2s headroom covers
-    // response.text() + parsing on our side.
-    const TIMEOUT_MS = 28_000;
+    // Vercel function cap = 60s (vercel.json). Give Regolo up to 55s
+    // for Oracle calibration prompts which are large structured JSON.
+    const TIMEOUT_MS = 55_000;
     const signal: AbortSignal =
       typeof AbortSignal.timeout === 'function'
         ? AbortSignal.timeout(TIMEOUT_MS)

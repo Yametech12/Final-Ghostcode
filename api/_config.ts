@@ -49,8 +49,8 @@ function getHeaders(): Record<string, string> {
 // prompts (Oracle calibration) don't time out and prematurely fall over
 // to a smaller model. MAX_TOTAL_MS leaves room for one fallback attempt
 // before the platform timeout kicks in.
-const MAX_TOTAL_MS = 27_000;     // total allowed across all attempts
-const PER_ATTEMPT_MS = 24_000;   // single non-streaming fetch wall-clock
+const MAX_TOTAL_MS = 55_000;     // total allowed across all attempts (Vercel cap = 60s)
+const PER_ATTEMPT_MS = 50_000;   // single non-streaming fetch wall-clock
 const STREAM_CONNECT_MS = 20_000; // streaming: time to get headers; body untimed
 
 export async function createCompletion({
