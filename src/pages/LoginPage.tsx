@@ -19,67 +19,12 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [emailError, setEmailError] = useState('');
-  const [acceptTerms, setAcceptTerms] = useState(false);
   const [loginAttempts, setLoginAttempts] = useState(0);
   const [isLocked, setIsLocked] = useState(false);
   const [lockoutEndTime, setLockoutEndTime] = useState<number | null>(null);
   const [timeRemaining, setTimeRemaining] = useState(0);
 
-  // Password strength calculation
-  const passwordStrength = React.useMemo(() => {
-    if (!password) {
-      return {
-        strength: 'None',
-        width: '0%',
-        color: 'gray',
-        bgClass: 'bg-gray-500/50',
-        textClass: 'text-gray-400'
-      };
-    }
-
-    let score = 0;
-    if (password.length >= 8) score++;
-    if (/[A-Z]/.test(password)) score++;
-    if (/[a-z]/.test(password)) score++;
-    if (/[0-9]/.test(password)) score++;
-    if (/[^A-Za-z0-9]/.test(password)) score++;
-
-    const strengthMap = ['Very Weak', 'Weak', 'Fair', 'Good', 'Strong'];
-    const widthMap = ['20%', '40%', '60%', '80%', '100%'];
-    const colorKeys = ['red', 'orange', 'yellow', 'blue', 'green'];
-    const colorIndex = Math.min(score - 1, 4);
-    const colorKey = score > 0 ? colorKeys[colorIndex] : 'gray';
-
-    const colorClassMap: Record<string, { bg: string; text: string }> = {
-      red: { bg: 'bg-red-500/50', text: 'text-red-400' },
-      orange: { bg: 'bg-orange-500/50', text: 'text-orange-400' },
-      yellow: { bg: 'bg-yellow-500/50', text: 'text-yellow-400' },
-      blue: { bg: 'bg-blue-500/50', text: 'text-blue-400' },
-      green: { bg: 'bg-green-500/50', text: 'text-green-400' },
-      gray: { bg: 'bg-gray-500/50', text: 'text-gray-400' }
-    };
-
-    const classes = colorClassMap[colorKey] || colorClassMap.gray;
-
-    return {
-      strength: strengthMap[score - 1] || 'None',
-      width: widthMap[score - 1] || '0%',
-      color: colorKey,
-      bgClass: classes.bg,
-      textClass: classes.text
-    };
-  }, [password]);
-
-  const passwordErrors = React.useMemo(() => {
-    const errors: string[] = [];
-    if (password && password.length < 8) errors.push('At least 8 characters');
-    if (password && !/[A-Z]/.test(password)) errors.push('One uppercase letter');
-    if (password && !/[a-z]/.test(password)) errors.push('One lowercase letter');
-    if (password && !/[0-9]/.test(password)) errors.push('One number');
-    return errors;
-  }, [password]);
-
-  const isFormValid = email && password && acceptTerms && !emailError && passwordErrors.length === 0;
+  const isFormValid = email && password && !emailError;
 
   // Load stored attempts on mount
   useEffect(() => {
@@ -206,7 +151,7 @@ export default function LoginPage() {
             {emailError && <div className="text-xs text-red-400">{emailError}</div>}
           </div>
 
-          {/* Password field with strength meter */}
+          {/* Password field */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-slate-300">Password</label>
             <div className="relative">
@@ -215,11 +160,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
-                  password && passwordErrors.length === 0
-                    ? 'border-green-500/50'
-                    : 'border-white/10'
-                }`}
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -232,54 +173,6 @@ export default function LoginPage() {
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
-            {password && (
-              <div className="space-y-2 mt-2">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="text-slate-400">Strength:</span>
-                  <span className={`font-medium ${passwordStrength.textClass}`}>
-                    {passwordStrength.strength}
-                  </span>
-                </div>
-                <div className="w-full bg-white/5 rounded-full h-2">
-                  <div
-                    className={`h-2 rounded-full transition-all ${passwordStrength.bgClass}`}
-                    style={{ width: passwordStrength.width }}
-                  />
-                </div>
-                {passwordErrors.length > 0 && (
-                  <div className="space-y-1 mt-2">
-                    {passwordErrors.map((err, i) => (
-                      <div key={i} className="flex items-center gap-1 text-xs text-red-400">
-                        <div className="w-1 h-1 rounded-full bg-red-400" />
-                        {err}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Terms checkbox */}
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="mt-1 rounded border-white/10 bg-white/5 text-accent-primary focus:ring-accent-primary"
-              required
-            />
-            <label htmlFor="terms" className="text-sm text-slate-400 leading-relaxed">
-              I agree to the{' '}
-              <button type="button" className="text-accent-primary hover:underline">
-                Terms of Service
-              </button>{' '}
-              and{' '}
-              <button type="button" className="text-accent-primary hover:underline">
-                Privacy Policy
-              </button>
-            </label>
           </div>
 
           {/* Forgot password */}

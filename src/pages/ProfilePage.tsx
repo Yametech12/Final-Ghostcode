@@ -93,11 +93,11 @@ export default function ProfilePage() {
         } else {
           const fetchedAssessments: Assessment[] = [];
           calibrations?.forEach((data) => {
-            const profile = { id: data.type_id, name: data.type_id };
+            const typeProfile = personalityTypes.find(p => p.id === data.type_id);
             fetchedAssessments.push({
               typeId: data.type_id,
               date: data.timestamp || new Date().toISOString(),
-              name: profile.name
+              name: typeProfile?.name || data.type_id,
             });
           });
           setAssessments(fetchedAssessments);

@@ -7,7 +7,7 @@ import { toast } from 'sonner';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { cn } from '../lib/utils';
 
 /**
@@ -52,7 +52,6 @@ export default function DossiersPage() {
   const [phase, setPhase] = useState<Dossier['phase']>('Intrigue');
   const [notes, setNotes] = useState('');
   const [lastInteraction, setLastInteraction] = useState('');
-  const [confirmingDelete, setConfirmingDelete] = useState<string | null>(null);
 
   const { user } = auth || {};
 
@@ -84,7 +83,7 @@ export default function DossiersPage() {
            loadedDossiers.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           setDossiers(loadedDossiers);
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'dossiers');
+          handleSupabaseError(error, OperationType.GET, 'dossiers');
         }
       } else {
         const saved = localStorage.getItem('epimetheus_dossiers');
@@ -140,7 +139,7 @@ export default function DossiersPage() {
             .eq('id', editingId);
           if (error) throw error;
         } catch (error) {
-          handleFirestoreError(error, OperationType.UPDATE, `dossiers/${editingId}`);
+          handleSupabaseError(error, OperationType.UPDATE, `dossiers/${editingId}`);
           return;
         }
       }
@@ -198,7 +197,7 @@ export default function DossiersPage() {
           if (error) throw error;
           newId = data.id;
         } catch (error) {
-          handleFirestoreError(error, OperationType.CREATE, 'dossiers');
+          handleSupabaseError(error, OperationType.CREATE, 'dossiers');
           return;
         }
       }
@@ -225,18 +224,11 @@ export default function DossiersPage() {
    };
 
   const handleDelete = async (id: string) => {
-    if (confirmingDelete !== id) {
-      setConfirmingDelete(id);
-      toast("Click again to confirm deletion", {
-        action: {
-          label: "Confirm",
-          onClick: () => {
-            handleDelete(id).catch(err => {
-              console.error("Dossier deletion failed:", err);
-            });
-          }
-        }
-      });
+    // Use native window.confirm instead of recursive toast UX
+    const dossierName = dossiers.find(d => d.id === id)?.name || 'this dossier';
+    const confirmed = window.confirm(`Are you sure you want to delete "${dossierName}"? This action cannot be undone.`);
+    
+    if (!confirmed) {
       return;
     }
     
@@ -248,14 +240,13 @@ export default function DossiersPage() {
           .eq('id', id);
         if (error) throw error;
       } catch (error) {
-        handleFirestoreError(error, OperationType.DELETE, `dossiers/${id}`);
+        handleSupabaseError(error, OperationType.DELETE, `dossiers/${id}`);
         return;
       }
     }
     
     saveDossiers(dossiers.filter(d => d.id !== id));
     toast.success("Dossier deleted successfully.");
-    setConfirmingDelete(null);
   };
 
   const closeModal = () => {

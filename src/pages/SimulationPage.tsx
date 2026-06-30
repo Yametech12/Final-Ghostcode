@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Send, Bot, Loader2, Play, Square, RefreshCw, Shield, Target, Award, User, Mic, MicOff, Copy, Check, AlertTriangle } from 'lucide-react';
+import { Send, Bot, Loader2, Play, Square, RefreshCw, Shield, Target, Award, User, Copy, Check, AlertTriangle } from 'lucide-react';
 import { personalityTypes } from '../data/personalityTypes';
 import { PersonalityType } from '../types';
 import { cn } from '../lib/utils';
@@ -22,7 +22,6 @@ export default function SimulationPage() {
   const [isActive, setIsActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
-  const [isRecording, setIsRecording] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -237,13 +236,6 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
     setError(null);
     setIsActive(false);
     setInput('');
-  };
-
-  const startVoiceRecording = () => {
-    setIsRecording(true);
-    // Voice recording functionality would go here
-    toast.info('Voice recording feature coming soon!');
-    setTimeout(() => setIsRecording(false), 2000);
   };
 
   return (
@@ -494,7 +486,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                     <div className={cn(
                       "rounded-2xl px-4 py-3 max-w-2xl",
                       message.role === 'user'
-                        ? "bg-accent-primary text-white"
+                        ? "bg-accent-primary text-mystic-950"
                         : "bg-mystic-800/50 text-slate-300"
                     )}>
                       <p className="text-sm leading-relaxed">{message.content}</p>
@@ -578,24 +570,12 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                         }
                       }}
                       placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
-                      className="w-full bg-mystic-800/50 border border-white/10 rounded-xl px-4 py-3 pr-12 text-slate-200 focus:outline-none focus:border-accent-primary/50 focus:bg-mystic-800 transition-all resize-none"
+                      className="w-full bg-mystic-800/50 border border-white/10 rounded-xl px-4 py-3 text-slate-200 focus:outline-none focus:border-accent-primary/50 focus:bg-mystic-800 transition-all resize-none"
                       rows={1}
                       style={{ minHeight: '48px', maxHeight: '120px' }}
                       disabled={isLoading}
                     />
-                    <button
-                      type="button"
-                      onClick={startVoiceRecording}
-                      className={cn(
-                        "absolute right-3 top-3 p-1 rounded-lg transition-all",
-                        isRecording
-                          ? "text-red-400 bg-red-500/20"
-                          : "text-slate-500 hover:text-slate-400"
-                      )}
-                      title="Voice message (coming soon)"
-                    >
-                      {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
-                    </button>
+
                   </div>
 
                   <button

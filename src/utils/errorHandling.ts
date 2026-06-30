@@ -9,7 +9,7 @@ export enum OperationType {
 
 import { AppError } from '../lib/errors';
 
-export interface FirestoreErrorInfo {
+export interface SupabaseErrorInfo {
   error: string;
   operationType: OperationType;
   path: string | null;
@@ -28,7 +28,7 @@ export interface FirestoreErrorInfo {
   }
 }
 
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+export function handleSupabaseError(error: unknown, operationType: OperationType, path: string | null) {
   const errorMessage = error instanceof Error ? error.message : String(error);
   const errorCode = (error as { code?: string })?.code;
 
@@ -43,6 +43,9 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
   // instead of JSON.parse-ing the error message.
   throw new AppError(errorMessage, { operationType, path, code: errorCode });
 }
+
+// Backwards compatibility alias
+export const handleFirestoreError = handleSupabaseError;
 
 // Hook for handling async errors in components
 export function useErrorHandler() {
