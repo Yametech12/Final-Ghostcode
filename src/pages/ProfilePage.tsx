@@ -7,7 +7,7 @@ import {
 import ProfileCard from '../components/ProfileCard';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
 import EditProfileModal from '../components/EditProfileModal';
@@ -89,7 +89,7 @@ export default function ProfilePage() {
 
         if (error) {
           console.error('Error fetching calibrations:', error);
-          handleFirestoreError(error, OperationType.LIST, 'calibrations');
+          handleSupabaseError(error, OperationType.LIST, 'calibrations');
         } else {
           const fetchedAssessments: Assessment[] = [];
           calibrations?.forEach((data) => {
@@ -112,7 +112,7 @@ export default function ProfilePage() {
 
         if (reportsError) {
           console.error('Error fetching field reports:', reportsError);
-          handleFirestoreError(reportsError, OperationType.LIST, 'field_reports');
+          handleSupabaseError(reportsError, OperationType.LIST, 'field_reports');
         } else {
           setFieldReports(reports || []);
         }

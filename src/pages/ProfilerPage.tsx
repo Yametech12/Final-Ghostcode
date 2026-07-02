@@ -5,7 +5,7 @@ import { personalityTypes } from '../data/personalityTypes';
 import { Link } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 
 export default function ProfilerPage() {
   const auth = useEnhancedAuth();
@@ -45,7 +45,7 @@ export default function ProfilerPage() {
            });
           setPastResults(results);
         } catch (error) {
-          handleFirestoreError(error, OperationType.GET, 'calibrations');
+          handleSupabaseError(error, OperationType.GET, 'calibrations');
         }
       } else {
         const saved = localStorage.getItem('profiler_past_results');
@@ -86,7 +86,7 @@ export default function ProfilerPage() {
                });
             if (error) throw error;
           } catch (error) {
-            handleFirestoreError(error, OperationType.CREATE, 'calibrations');
+            handleSupabaseError(error, OperationType.CREATE, 'calibrations');
           }
         }
 

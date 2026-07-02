@@ -7,7 +7,7 @@ import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { personalityTypes } from '../data/personalityTypes';
 import { Activity, Target, TrendingUp, PieChart } from 'lucide-react';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { Skeleton } from '../components/ui/Skeleton';
 
 /** Read a CSS custom property from :root, with a safe fallback for SSR / first paint. */
@@ -73,7 +73,7 @@ export default function InsightsPage() {
         setCalibrations(data.sort((a, b) => a.date.getTime() - b.date.getTime()));
       } catch (error) {
         console.error('Error fetching insights data:', error);
-        handleFirestoreError(error, OperationType.LIST, 'calibrations');
+        handleSupabaseError(error, OperationType.LIST, 'calibrations');
       } finally {
         setLoading(false);
       }

@@ -10,7 +10,7 @@ import { personalityTypes } from '../data/personalityTypes';
 import { toast } from 'sonner';
 import { supabase } from '../lib/supabase';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { handleFirestoreError, OperationType } from '../utils/errorHandling';
+import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { cn } from '../lib/utils';
 
 interface FieldReport {
@@ -140,7 +140,7 @@ export default function FieldGuidePage() {
     } catch (error) {
       console.error("Error submitting report:", error);
       toast.error("Failed to submit report.");
-      handleFirestoreError(error, OperationType.CREATE, 'field_reports');
+      handleSupabaseError(error, OperationType.CREATE, 'field_reports');
     } finally {
       setIsSubmitting(false);
     }
@@ -222,7 +222,7 @@ export default function FieldGuidePage() {
     } catch (error) {
       console.error("Error posting comment:", error);
       toast.error("Failed to post comment.");
-      handleFirestoreError(error, OperationType.CREATE, 'field_report_comments');
+      handleSupabaseError(error, OperationType.CREATE, 'field_report_comments');
     } finally {
       setIsSubmittingComment(false);
     }

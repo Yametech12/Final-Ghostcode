@@ -10,7 +10,7 @@ import {
   Activity,
 } from "lucide-react";
 import { supabase } from "../lib/supabase";
-import { handleFirestoreError, OperationType } from "../utils/errorHandling";
+import { handleSupabaseError, OperationType } from "../utils/errorHandling";
 import { useEnhancedAuth } from "../contexts/EnhancedAuthContext";
 
 import { useNavigate } from "react-router-dom";
@@ -110,7 +110,7 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error fetching users:", error);
       toast.error("Failed to load users.");
-      handleFirestoreError(error, OperationType.LIST, "users");
+      handleSupabaseError(error, OperationType.LIST, "users");
     } finally {
       setUsersLoading(false);
     }
@@ -133,7 +133,7 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error fetching reports:", error);
       toast.error("Failed to load reports.");
-      handleFirestoreError(error, OperationType.LIST, "field_reports");
+      handleSupabaseError(error, OperationType.LIST, "field_reports");
     } finally {
       setReportsLoading(false);
     }
@@ -156,7 +156,7 @@ export default function AdminDashboard() {
     } catch (error: any) {
       console.error("Error fetching feedback:", error);
       toast.error("Failed to load feedback.");
-      handleFirestoreError(error, OperationType.LIST, "feedback");
+      handleSupabaseError(error, OperationType.LIST, "feedback");
     } finally {
       setFeedbacksLoading(false);
     }
@@ -192,7 +192,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error updating role:", error);
       toast.error("Failed to update role.");
-      handleFirestoreError(error, OperationType.UPDATE, `users/${userId}`);
+      handleSupabaseError(error, OperationType.UPDATE, `users/${userId}`);
     }
   };
 
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error deleting user:", error);
       toast.error(error instanceof Error ? error.message : "Failed to delete user.");
-      handleFirestoreError(error, OperationType.DELETE, `users/${userId}`);
+      handleSupabaseError(error, OperationType.DELETE, `users/${userId}`);
     }
   };
 
@@ -286,7 +286,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error deleting report:", error);
       toast.error("Failed to delete report.");
-      handleFirestoreError(error, OperationType.DELETE, `field_reports/${reportId}`);
+      handleSupabaseError(error, OperationType.DELETE, `field_reports/${reportId}`);
     }
   };
 
@@ -318,7 +318,7 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error deleting feedback:", error);
       toast.error("Failed to delete feedback.");
-      handleFirestoreError(error, OperationType.DELETE, `feedback/${feedbackId}`);
+      handleSupabaseError(error, OperationType.DELETE, `feedback/${feedbackId}`);
     }
   };
 
