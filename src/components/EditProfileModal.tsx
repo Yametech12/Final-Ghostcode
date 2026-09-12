@@ -25,7 +25,10 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     twitter: '',
   });
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
-  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  // Vestigial bookkeeping state: the upload path sends the compressed data
+  // URL directly, so the File value itself is never read. Kept as a setter
+  // only to preserve the reset/cleanup behavior on discard/unmount.
+  const [, setPhotoFile] = useState<File | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [cropperImage, setCropperImage] = useState<string | null>(null); // URL for cropper
@@ -76,7 +79,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         }
         break;
       case 'phone':
-        if (value && !/^[+]?[\d\s\-\(\)]{10,}$/.test(value)) {
+        if (value && !/^[+]?[\d\s()-]{10,}$/.test(value)) {
           newErrors.phone = 'Invalid phone number format';
         } else {
           delete newErrors.phone;

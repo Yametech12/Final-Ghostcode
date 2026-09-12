@@ -267,7 +267,7 @@ describe('handleCalibrationAnalyze', () => {
       choices: [{
         message: {
           content: JSON.stringify({
-            traits: Array.from({ length: 20 }, (_, i) => ({
+            traits: Array.from({ length: 20 }, (_, _i) => ({
               name: oversize, // oversize name
               score: 999,     // out-of-range score
             })),

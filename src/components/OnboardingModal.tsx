@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, ChevronRight, ChevronLeft, Target, Brain, Shield, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
+import { X, ChevronRight, ChevronLeft, Target, Brain, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 

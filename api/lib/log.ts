@@ -105,10 +105,8 @@ function emit(level: LogLevel, msg: string, ctx?: LogContext): void {
   // Route warn/error to stderr so Vercel's log sink colors them and ops
   // dashboards can filter on stream. info/debug stay on stdout.
   if (level === 'warn' || level === 'error') {
-    // eslint-disable-next-line no-console
     console.error(line);
   } else {
-    // eslint-disable-next-line no-console
     console.log(line);
   }
 
@@ -149,7 +147,6 @@ function forwardToSentry(msg: string, ctx: LogContext | undefined): void {
   // event-loop cycles.
   if (Date.now() - sentryImportTriedAt < SENTRY_IMPORT_COOLDOWN_MS) return;
   sentryImportTriedAt = Date.now();
-  // eslint-disable-next-line @typescript-eslint/no-floating-promises
   import('./sentryNode.js')
     .then((mod) => {
       sentryForwarder = (m, c) => mod.captureFromLog(m, c);

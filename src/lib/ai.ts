@@ -254,7 +254,7 @@ export async function chatCompletion(
       } else {
         try {
           return await response.json();
-        } catch (_jsonError) {
+        } catch {
           const text = await response.text();
           console.error("Invalid JSON response:", text);
           throw new Error(`Invalid JSON response: ${text.slice(0, 100)}`);

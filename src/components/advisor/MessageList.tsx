@@ -24,7 +24,7 @@ export function MessageList({
   messages,
   isStreaming,
   isSending,
-  reactions,
+  reactions: _reactions, // DEPRECATED: reactions now stored in message.reaction; kept for call-site compatibility
   onReaction,
   onRetry,
   onSelectPrompt,

@@ -23,6 +23,7 @@ const feedbackTypes = [
 
 export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const auth = useEnhancedAuth();
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
   const [feedbackType, setFeedbackType] = useState<'bug' | 'feature' | 'general' | 'praise' | 'suggestion' | 'content' | 'ui' | 'performance'>('general');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,7 +33,6 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
   if (!auth) return null;
   const { user } = auth;
-  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, onClose);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

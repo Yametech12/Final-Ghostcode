@@ -36,7 +36,6 @@ export async function initSentryNode(): Promise<void> {
   const dsn = process.env.SENTRY_DSN;
   if (!dsn) {
     if (process.env.NODE_ENV !== 'production') {
-      // eslint-disable-next-line no-console
       console.info('[sentry/node] Disabled — set SENTRY_DSN to enable.');
     }
     return;
@@ -66,10 +65,8 @@ export async function initSentryNode(): Promise<void> {
     });
     SentryRef = Sentry;
     initialized = true;
-    // eslint-disable-next-line no-console
     console.info('[sentry/node] Initialized for', process.env.NODE_ENV || 'production');
   } catch (err) {
-    // eslint-disable-next-line no-console
     console.warn('[sentry/node] init failed:', err);
   }
 }

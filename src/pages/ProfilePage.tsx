@@ -7,6 +7,7 @@ import {
 import ProfileCard from '../components/ProfileCard';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
+import { personalityTypes } from '../data/personalityTypes';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { toast } from 'sonner';
 import { motion } from 'motion/react';
