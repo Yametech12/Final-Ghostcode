@@ -1,7 +1,13 @@
 {
   "name": "react-example",
+  "description": "Epimetheus — AI-driven personality profiling & relationship intelligence",
   "private": true,
   "version": "0.0.0",
+  "license": "MIT",
+  "author": "Yametech12",
+  "engines": {
+    "node": ">=20.0.0"
+  },
   "type": "module",
   "scripts": {
     "dev": "npm run clean:dev && concurrently \"npm run dev:api\" \"npm run dev:frontend\"",
