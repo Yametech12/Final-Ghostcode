@@ -110,3 +110,4 @@ Desktop.ini
 # Local development files
 debug-script.js
 console-error-check.js
+dist-server/
