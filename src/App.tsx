@@ -23,7 +23,7 @@ function AppContent() {
     <>
       <AnimatedRoutes />
       {import.meta.env.DEV && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingScreen />}>
           <EnvironmentDebug />
         </Suspense>
       )}

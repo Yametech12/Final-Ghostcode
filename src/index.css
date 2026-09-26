@@ -192,18 +192,26 @@
   --color-mystic-800: #E8E0D2;
   --color-mystic-700: #D8CFBE;
 
-  /* Accent shifts deeper for contrast on cream — passes WCAG AA on cream */
-  --color-accent-primary:   #B8860B; /* deeper gold — 4.7:1 vs cream */
-  --color-accent-secondary: #8B5A2B; /* deeper copper */
+  /* Accent shifts deeper for contrast on cream — verified WCAG AA on cream */
+  --color-accent-primary:   #7A5B12; /* deep gold — 5.90:1 vs cream (AA, verified) */
+  --color-accent-secondary: #6B4222; /* deep copper */
   --color-accent-glow:      #9C7421;
+
+  /* Status colors must be re-mapped for light theme — the dark-theme values
+     (e.g. #C99B5B) measure only 2.36:1 on cream and FAIL WCAG AA.
+     All values below verified ≥ 4.5:1 against #FAF7F2. */
+  --color-status-success: #3F6B52; /* 5.72:1 vs cream (AA, verified) */
+  --color-status-warning: #7B4F18; /* 6.61:1 vs cream (AA, verified) */
+  --color-status-error:   #8C382A; /* 7.24:1 vs cream (AA, verified) */
+  --color-status-info:    #36556B; /* 7.36:1 vs cream (AA, verified) */
 
   /* Grayscale flips and warms — same names, inverted lightness */
   --color-slate-50:  #14110E;
   --color-slate-100: #2A2520;
   --color-slate-200: #4A4138;
   --color-slate-300: #6E6358; /* body text on cream — 5.6:1 (AA) */
-  --color-slate-400: #8C8174;
-  --color-slate-500: #A89C8E;
+  --color-slate-400: #6E6358; /* was #8C8174 (3.57:1, large-only) — now 5.48:1 (AA, verified) */
+  --color-slate-500: #6E6358; /* was #A89C8E (2.52:1, FAIL) — now 5.48:1 (AA, verified) */
   --color-slate-600: #C4BAAB;
   --color-slate-700: #DDD5C9;
   --color-slate-800: #EDE7DC;
