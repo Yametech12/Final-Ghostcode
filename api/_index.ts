@@ -413,6 +413,34 @@ app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
 });
 
+
+// Billing — Stripe checkout & customer portal (JWT required).
+app.post('/api/billing/create-checkout-session', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleCreateCheckoutSession(nr, supabase));
+});
+
+app.post('/api/billing/create-portal-session', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleCreatePortalSession(nr, supabase));
+});
+
+// RAG management (authenticated; soft-fail HTTP 200 + { ok: false }).
+app.post('/api/rag/reindex', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagReindex(nr, supabase));
+});
+
+app.post('/api/rag/toggle', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagToggle(nr, supabase));
+});
+
+app.get('/api/rag/status', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagStatus(nr, supabase));
+});
+
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const requestId = requestIdFrom(_req.headers as Record<string, string | string[] | undefined>);
   const route = `${_req.method} ${_req.path}`;

@@ -1,7 +1,14 @@
-import { retrieveChunks, type RetrievedChunk } from './rag/retriever.js';
-import { buildRagPrompt } from './rag/promptBuilder.js';
-import { reindexUser } from './rag/scheduler.js';
-import { isRagEnabledForUser } from './handlers/rag.js';
+import {
+  getCachedPromptBlock,
+  getPersonalityTypeContext,
+  PROMPT_TYPE_FRAMEWORK_KEY,
+  PROMPT_RESPONSE_GUIDELINES_KEY,
+  PROMPT_BLOCK_TTL_SEC,
+} from '../featuredCaches.js';
+import { retrieveChunks, type RetrievedChunk } from '..../rag/retriever.js';
+import { buildRagPrompt } from '..../rag/promptBuilder.js';
+import { reindexUser } from '..../rag/scheduler.js';
+import { isRagEnabledForUser } from './rag.js';
 /// <reference lib="dom" />
 /**
  * Advisor domain.

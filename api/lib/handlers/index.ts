@@ -37,6 +37,11 @@ export { handleCalibrationAnalyze } from './calibration.js';
 export { handleAiChat } from './ai.js';
 export { handleDeleteMyAccount } from './account.js';
 export { handleAdminDeleteUser } from './admin.js';
+export {
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
+} from './photoAdmin.js';
 
 export type { NormalizedRequest, NormalizedResponse, RouteDef, HandlerRoute, StaticRoute, HttpMethod } from '../types.js';
 export { isStaticRoute } from '../types.js';
