@@ -1,3 +1,4 @@
+<<<<<<< ours
 import { readToken, COLOR_TOKEN } from '../styles/colorTokens';
 import React from 'react';
 import {
@@ -200,12 +201,17 @@ function coerceObjOf3(
   };
 }
 
+=======
+>>>>>>> theirs
 /**
- * Normalize an analysis-shaped blob into a render-safe AnalysisResult.
- * Tolerates missing fields and off-spec types from smaller AI models.
- * Mirrors the server's sanitizeOracleResult contract so the same blob
- * renders consistently before AND after server persistence.
+ * Backwards-compatible re-export.
+ * The Calibration page has been refactored into the feature folder
+ * `src/features/calibration/`. The React Router lazy import
+ * (src/components/layout/AnimatedRoutes.tsx) and the route-preloading
+ * map (src/hooks/useRoutePreloading.ts) still resolve this module path,
+ * so we keep it as a stable default re-export.
  */
+<<<<<<< ours
 function coerceAnalysisResult(raw: any): AnalysisResult {
   const VALID_TYPES = new Set(['TDI', 'TJI', 'TDR', 'TJR', 'NDI', 'NJI', 'NDR', 'NJR']);
   const VALID_PRIORITY = new Set(['low', 'medium', 'high']);
@@ -1936,3 +1942,6 @@ export default function CalibrationPage() {
     </>
   );
 }
+=======
+export { default } from '../features/calibration/CalibrationPage';
+>>>>>>> theirs
