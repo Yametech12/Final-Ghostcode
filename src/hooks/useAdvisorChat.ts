@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { isUUID } from '../utils/validation';
-import { sanitizeAiResponse } from '../utils/sanitizeHtml';
+import { isUUID, stripControlChars } from '../utils/validation';
 import { toast } from 'sonner';
 import { apiFetch } from '../lib/fetch';
 import { parseApiError, type ParsedApiError } from '../lib/apiError';
@@ -237,7 +236,7 @@ export function useAdvisorChat() {
                 throw new Error(parsed.error);
               }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
-                assistantContent += sanitizeAiResponse(parsed.content);
+                assistantContent += stripControlChars(parsed.content);
                 scheduleFlush();
               }
             } catch (err) {

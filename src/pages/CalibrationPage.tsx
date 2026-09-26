@@ -21,7 +21,7 @@ import { apiFetch } from '../lib/fetch';
 import { parseApiError } from '../lib/apiError';
 import { toast } from 'sonner';
 import { chatCompletion } from '../lib/ai';
-import { sanitizePromptField } from '../utils/sanitizeHtml';
+import { sanitizePromptField } from '../utils/validation';
 import { cn } from '../lib/utils';
 
 import { motion, AnimatePresence } from 'motion/react';

@@ -47,9 +47,15 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-// Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing with size limits (audit H-7/M-8: 10mb was far too permissive).
+// The profile-photo upload carries a base64 data-URL, so it gets a scoped 6mb
+// parser mounted BEFORE the global one — Express parses on the first matching
+// parser, so a global 1mb limit would 413 the upload before the route-scoped
+// limit could ever apply. Everything else is capped at 1mb.
+app.use('/api/upload/profile-photo', express.json({ limit: '6mb' }));
+app.use('/api/upload/profile-photo', express.urlencoded({ extended: true, limit: '6mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Supabase client for backend operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL;

@@ -11,31 +11,26 @@ import {
 } from './validation';
 
 describe('sanitizeInput', () => {
-  it('removes <script> blocks', () => {
-    const out = sanitizeInput('hi<script>alert(1)</script>there');
-    expect(out).not.toContain('<script>');
-    expect(out).not.toContain('alert');
+  // The old regex "sanitizers" (tag stripping + entity encoding) were removed:
+  // they were bypassable and mangled valid input. New contract: normalize only.
+  it('trims and passes valid text through unchanged', () => {
+    expect(sanitizeInput('  hello world  ')).toBe('hello world');
   });
 
-  it('strips arbitrary tags', () => {
-    expect(sanitizeInput('<b>bold</b>')).not.toContain('<b>');
+  it('preserves emails containing &, quotes or apostrophes (M-04 regression)', () => {
+    const email = "o'brien&co+tag@example.com";
+    expect(sanitizeInput(email)).toBe(email);
   });
 
-  it('removes javascript:, data:, vbscript:, event handlers', () => {
-    const dangerous = 'javascript:x data:y vbscript:z onclick=evil';
-    const out = sanitizeInput(dangerous);
-    expect(out).not.toMatch(/javascript:/i);
-    expect(out).not.toMatch(/\bdata:/i);
-    expect(out).not.toMatch(/vbscript:/i);
-    expect(out).not.toMatch(/onclick=/i);
+  it('no longer encodes HTML metacharacters (escape-at-render handles that)', () => {
+    expect(sanitizeInput('a & b')).toBe('a & b');
   });
 
-  it('encodes residual HTML metacharacters', () => {
-    expect(sanitizeInput('a & b')).toBe('a &amp; b');
+  it('strips control characters', () => {
+    expect(sanitizeInput('a\u0000b\u0007c')).toBe('abc');
   });
 
   it('returns input untouched when falsy', () => {
-    // The current implementation returns the input directly for "" and undefined.
     expect(sanitizeInput('')).toBe('');
   });
 });

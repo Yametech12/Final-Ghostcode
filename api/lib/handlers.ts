@@ -13,6 +13,15 @@ import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../_config.js';
 import { isValidUUID } from './auth.js';
 import { requireTier, getEffectiveTier } from './tierGate.js';
 import { log, serializeErr } from './log.js';
+import {
+  BOUNDS,
+  ValidationError,
+  validationErrorResponse,
+  requireString,
+  requireJsonString,
+  clampInt,
+  clampFloat,
+} from './validation.js';
 
 export interface NormalizedRequest {
   method: string;
@@ -46,6 +55,66 @@ function badRequest(message: string, code = 'BAD_REQUEST'): NormalizedResponse {
 
 function serverError(message = 'Internal error', code = 'INTERNAL_ERROR'): NormalizedResponse {
   return { status: 500, body: { error: message, code } };
+}
+
+function tooManyRequests(message: string, code = 'RATE_LIMITED'): NormalizedResponse {
+  return { status: 429, body: { error: message, code } };
+}
+
+/** Re-exported so the HTTP layers and tests import validation from one place. */
+export { BOUNDS, requireString, clampInt, clampFloat, requireJsonString, ValidationError };
+
+/**
+ * Count the rows in `advisor_messages` for one session using a HEAD request
+ * (no payload transfer). Used to hard-cap runaway sessions (audit H-7).
+ * Returns 0 when the count itself fails so the counter never blocks the
+ * chat path — the per-message/per-field caps are still enforced regardless.
+ */
+async function countAdvisorMessages(
+  supabase: SupabaseClient,
+  sessionId: string,
+): Promise<number> {
+  const { count, error } = await supabase
+    .from('advisor_messages')
+    .select('id', { count: 'exact', head: true })
+    .eq('session_id', sessionId);
+  if (error || typeof count !== 'number') {
+    log.warn('advisor_message_count_failed', { sessionId, err: serializeErr(error) });
+    return 0;
+  }
+  return count;
+}
+
+/**
+ * Shared advisor chat preconditions: the session id is a UUID, the caller
+ * owns the session, and the session has not grown past
+ * BOUNDS.MAX_MESSAGES_PER_SESSION rows. Throws ValidationError for every
+ * failure mode (a typed 4xx, never a TypeError → 500).
+ */
+async function validateAdvisorSession(
+  supabase: SupabaseClient,
+  userId: string,
+  sessionId: unknown,
+): Promise<void> {
+  if (typeof sessionId !== 'string' || !isValidUUID(sessionId)) {
+    throw new ValidationError('Invalid sessionId', 'INVALID_UUID');
+  }
+  const { data: sess } = await supabase
+    .from('advisor_sessions')
+    .select('user_id')
+    .eq('id', sessionId)
+    .maybeSingle();
+  if (!sess || sess.user_id !== userId) {
+    throw new ValidationError('Session not found', 'NOT_FOUND', 404);
+  }
+  const messageCount = await countAdvisorMessages(supabase, sessionId);
+  if (messageCount >= BOUNDS.MAX_MESSAGES_PER_SESSION) {
+    throw new ValidationError(
+      'Session too long — please start a new session',
+      'SESSION_TOO_LONG',
+      429,
+    );
+  }
 }
 
 /**
@@ -130,6 +199,16 @@ export async function handleUploadProfilePhoto(
   const { base64Data } = req.body || {};
   if (!base64Data || typeof base64Data !== 'string') {
     return badRequest('Image data is required', 'MISSING_IMAGE_DATA');
+  }
+
+  // Size gate BEFORE any decode work. `Buffer.from(base64)` allocates the
+  // decoded buffer and the format regex scans the whole string — an
+  // oversized data-URL used to burn CPU/memory before the 1MB cap ran.
+  if (base64Data.length > BOUNDS.MAX_B64_DATAURL_BYTES) {
+    return {
+      status: 413,
+      body: { error: 'Image too large', code: 'FILE_TOO_LARGE', maxSize: '5120KB' },
+    };
   }
 
   const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,(.+)$/i);
@@ -491,7 +570,19 @@ export async function handleCreateAdvisorSession(
   const denied = await requireTier(req, supabase, 'strategist');
   if (denied) return denied;
   const userId = req.user.id;
-  const title = (req.body?.title as string) || 'AI Advisor Session';
+  // Audit H-7: `title` used to be cast straight to string with no type or
+  // length check — a number or a multi-MB object went straight into
+  // Postgres and later into the advisor system prompt.
+  const rawTitle = req.body?.title;
+  let title: string;
+  try {
+    title =
+      rawTitle === undefined || rawTitle === null || rawTitle === ''
+        ? 'AI Advisor Session'
+        : requireString(rawTitle, 'title', BOUNDS.MAX_SESSION_TITLE_LEN);
+  } catch (err) {
+    return validationErrorResponse(err); // typed 4xx, never a 500
+  }
 
   const { data: session, error } = await supabase
     .from('advisor_sessions')
@@ -660,7 +751,7 @@ async function buildAdvisorMessages(
       .select('role, content, timestamp')
       .eq('session_id', sessionId)
       .order('timestamp', { ascending: true })
-      .limit(50),
+      .limit(BOUNDS.MAX_HISTORY_MESSAGES),
     supabase
       .from('advisor_sessions')
       .select('title, timestamp')
@@ -778,17 +869,17 @@ export async function handleAdvisorChatStream(
   const userId = req.user.id;
   const { sessionId, message } = req.body || {};
 
-  if (!message?.trim()) return badRequest('Message is required');
-  if (!isValidUUID(sessionId)) return badRequest('Invalid sessionId', 'INVALID_UUID');
-
-  // Confirm ownership of the session.
-  const { data: sess } = await supabase
-    .from('advisor_sessions')
-    .select('user_id')
-    .eq('id', sessionId)
-    .maybeSingle();
-  if (!sess || sess.user_id !== userId) {
-    return { status: 404, body: { error: 'Session not found', code: 'NOT_FOUND' } };
+  // Audit H-4: `!message?.trim()` guarded null/undefined but NOT non-strings —
+  // `{"message": 12345}` reached `(12345).trim()` → TypeError → unhandled 500.
+  // requireString type-checks first and throws a typed 4xx for numbers,
+  // objects, empty strings, and input over BOUNDS.MAX_MESSAGE_CHARS.
+  // validateAdvisorSession also enforces the 200-message-per-session cap.
+  let validatedMessage: string;
+  try {
+    validatedMessage = requireString(message, 'message', BOUNDS.MAX_MESSAGE_CHARS);
+    await validateAdvisorSession(supabase, userId, sessionId);
+  } catch (err) {
+    return validationErrorResponse(err);
   }
 
   // Tier-aware budgets. Oracle gets:
@@ -806,7 +897,7 @@ export async function handleAdvisorChatStream(
     supabase,
     userId,
     sessionId,
-    message,
+    validatedMessage,
     effectiveTier,
   );
 
@@ -815,7 +906,7 @@ export async function handleAdvisorChatStream(
     session_id: sessionId,
     user_id: userId,
     role: 'user',
-    content: message,
+    content: validatedMessage,
   });
 
   // Cancellation token shared between the generator and the response writer.
@@ -1241,7 +1332,19 @@ export async function handleCalibrationAnalyze(
   const userId = req.user.id;
   const { typeId, answers } = req.body || {};
 
-  if (!typeId || !answers) return badRequest('Missing required fields');
+  if (typeof typeId !== 'string' || !/^[A-Z]{3}$/.test(typeId)) {
+    return badRequest('typeId must be a valid calibration type (e.g. "TDI")', 'INVALID_TYPE_ID');
+  }
+  // Audit H-7: `answers` is JSON-stringified straight into the LLM prompt AND
+  // persisted. Cap it and require valid JSON (accepts an object — serialized
+  // here — or a pre-serialized JSON string, then re-parsed for persistence).
+  let answersValue: unknown;
+  try {
+    const answersJson = requireJsonString(answers, 'answers', BOUNDS.MAX_ANSWERS_KB);
+    answersValue = JSON.parse(answersJson);
+  } catch (err) {
+    return validationErrorResponse(err); // typed 4xx with INVALID_JSON / TOO_LARGE
+  }
 
   const prompt = `You are a personality analysis system. Based on the following answers to a "${typeId}" calibration, extract a JSON object with:
 - 5 primary traits (each with name and score 0-100)
@@ -1290,7 +1393,7 @@ Return ONLY valid JSON:
       .insert({
         user_id: userId,
         type_id: typeId,
-        answers,
+        answers: answersValue,
         traits: parsed,
         timestamp: new Date().toISOString(),
       })
@@ -1375,11 +1478,14 @@ export async function handleAiChat(
 
   const effectiveModel = hasImage ? VISION_MODEL : model || DEFAULT_MODEL;
 
+  // Audit H-7: `temperature` and `max_tokens` were passed straight through —
+  // a client could request max_tokens: 100000000 on the owner-paid Regolo
+  // key. Clamp instead of reject so well-behaved clients never notice.
   const requestBody: any = {
     model: effectiveModel,
-    messages: messages || [],
-    temperature: temperature ?? 0.7,
-    max_tokens: max_tokens ?? 4096,
+    messages,
+    temperature: clampFloat(temperature, 'temperature', BOUNDS.MIN_TEMPERATURE, BOUNDS.MAX_TEMPERATURE, 0.7),
+    max_tokens: clampInt(max_tokens, 'max_tokens', 1, BOUNDS.MAX_OUTPUT_TOKENS, 4096),
     stream: !!stream,
   };
 
