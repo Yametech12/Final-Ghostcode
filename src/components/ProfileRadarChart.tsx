@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useThemeColors } from '../styles/colorTokens';
 import {
   Radar,
   RadarChart,
@@ -12,13 +12,6 @@ import { PersonalityProfile } from '../types';
 
 interface ProfileRadarChartProps {
   profile: PersonalityProfile;
-}
-
-/** Read a CSS custom property from :root, with a safe fallback for SSR / first paint. */
-function getCssVar(name: string, fallback: string): string {
-  if (typeof window === 'undefined') return fallback;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -37,23 +30,10 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
-  // Source colors from design tokens so theme + redesign updates flow through.
-  // Recharts/SVG can't consume CSS variables directly inside `stroke`/`stopColor`,
-  // so we read them once after mount and re-read when theme toggles.
-  const [accent, setAccent] = useState<string>('#E8C77E');
-  const [tickColor, setTickColor] = useState<string>('#C4BAAB');
-
-  useEffect(() => {
-    const refreshColors = () => {
-      setAccent(getCssVar('--color-accent-primary', '#E8C77E'));
-      setTickColor(getCssVar('--color-slate-300', '#C4BAAB'));
-    };
-    refreshColors();
-    // Re-read when the theme class on <html> flips (light/dark toggle).
-    const observer = new MutationObserver(refreshColors);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
+  // Colours come from the shared token hook: recharts writes stroke/fill as SVG
+  // *attributes*, which cannot consume var(), so the hook hands back concrete
+  // values and re-reads them whenever the theme class on <html> flips.
+  const { accentPrimary: accent, tickColor, gridColor } = useThemeColors();
 
   const isTester = profile.combination.includes('Tester');
   const isJustifier = profile.combination.includes('Justifier');
@@ -111,7 +91,7 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
-          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <PolarGrid stroke={gridColor} />
           <PolarAngleAxis 
             dataKey="subject" 
             tick={{ fill: tickColor, fontSize: 11, fontWeight: 600, letterSpacing: '0.05em' }} 

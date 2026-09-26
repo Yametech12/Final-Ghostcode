@@ -22,7 +22,7 @@ export default function ArchetypeLockedPreview({ profile }: ArchetypeLockedPrevi
         className="pointer-events-none absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full"
         style={{
           background:
-            'radial-gradient(circle, rgba(232,199,126,0.08) 0%, transparent 65%)',
+            'radial-gradient(circle, var(--color-accent-veil-soft) 0%, transparent 65%)',
           filter: 'blur(40px)',
         }}
       />

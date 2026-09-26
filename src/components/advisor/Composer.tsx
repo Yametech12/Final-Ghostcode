@@ -94,7 +94,7 @@ export function Composer({
         </div>
       )}
 
-      <div className="relative flex items-end gap-2 bg-mystic-900/50 border border-slate-700/30 focus-within:border-accent-primary/60 focus-within:shadow-[0_0_0_3px_rgba(232,199,126,0.10)] rounded-2xl p-2 transition-[border-color,box-shadow] duration-200">
+      <div className="relative flex items-end gap-2 bg-mystic-900/50 border border-slate-700/30 focus-within:border-accent-primary/60 focus-within:shadow-focus-ring rounded-2xl p-2 transition-[border-color,box-shadow] duration-200">
         <label htmlFor="advisor-composer" className="sr-only">Message Epimetheus</label>
         <textarea
           id="advisor-composer"

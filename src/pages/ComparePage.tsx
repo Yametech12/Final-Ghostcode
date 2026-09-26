@@ -49,7 +49,7 @@ export default function ComparePage() {
         <ul className="space-y-3">
           {p.whatToAvoid.map((item, i) => (
             <li key={i} className="flex gap-3 items-start text-slate-400 text-sm leading-relaxed">
-              <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0 shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+              <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0 shadow-glow-error" />
               {item}
             </li>
           ))}
@@ -71,7 +71,7 @@ export default function ComparePage() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sticky top-24 z-30 bg-mystic-950/80 backdrop-blur-xl p-4 -m-4 rounded-3xl border border-slate-700/30 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)]">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 sticky top-24 z-30 bg-mystic-950/80 backdrop-blur-xl p-4 -m-4 rounded-3xl border border-slate-700/30 shadow-popover">
         <TypeSelector label="Subject Alpha" value={type1} onChange={setType1} />
         <TypeSelector label="Subject Beta" value={type2} onChange={setType2} />
       </div>

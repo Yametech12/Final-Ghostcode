@@ -115,8 +115,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-mystic-950 to-mystic-900 p-4">
+      <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl rounded-2xl p-8 border border-mystic-700/50 shadow-2xl">
         <div className="flex justify-center mb-6">
           <Logo size="xl" />
         </div>
@@ -141,8 +141,8 @@ export default function LoginPage() {
                 onBlur={() => {
                   if (email && !isValidEmail(email)) setEmailError('Please enter a valid email address');
                 }}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
-                  emailError ? 'border-red-500/50' : 'border-white/10'
+                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-slate-50 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
+                  emailError ? 'border-status-error/50' : 'border-mystic-700/50'
                 }`}
                 placeholder="you@example.com"
                 autoComplete="email"
@@ -168,7 +168,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-slate-50 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -178,9 +178,13 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+<<<<<<< ours
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
                 aria-pressed={showPassword}
+=======
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-50"
+>>>>>>> theirs
               >
                 {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
               </button>
@@ -245,10 +249,10 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
+                <div className="w-full border-t border-mystic-700/50"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#1a0f15] text-slate-500">Or continue with</span>
+                <span className="px-2 bg-mystic-900 text-slate-500">Or continue with</span>
               </div>
             </div>
 
@@ -266,7 +270,7 @@ export default function LoginPage() {
                 }
               }}
               disabled={loading}
-              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-[#0a0508] font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
+              className="w-full mt-6 flex items-center justify-center gap-2 bg-slate-50 text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

@@ -516,7 +516,7 @@ export default function PricingPage() {
                 transition={{ duration: 0.5, delay: reduceMotion ? 0 : idx * 0.06 }}
                 className={`relative glass-card p-7 sm:p-8 flex flex-col ${
                   isHighlight
-                    ? 'border-accent-primary/40 shadow-[0_0_48px_-12px_rgba(232,199,126,0.25)] md:scale-[1.02] md:z-10'
+                    ? 'border-accent-primary/40 shadow-glow-accent-xl md:scale-[1.02] md:z-10'
                     : ''
                 } ${cta.isCurrent ? 'border-status-success/40' : ''}`}
               >

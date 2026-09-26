@@ -667,7 +667,7 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          <div className="glass-card p-7 border-accent-primary/30 shadow-[0_0_32px_-12px_rgba(232,199,126,0.18)]">
+          <div className="glass-card p-7 border-accent-primary/30 shadow-glow-accent-lg">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-primary">
                 <TrendingUp className="w-5 h-5" strokeWidth={2} aria-hidden="true" />

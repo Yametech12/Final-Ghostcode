@@ -309,7 +309,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
           transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-          className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+          className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-modal overflow-hidden"
         >
           <div className="p-6 border-b border-slate-700/30 flex items-center justify-between">
             <h2 id="edit-profile-modal-title" className="text-xl font-semibold flex items-center gap-2 text-slate-100">

@@ -118,8 +118,8 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-mystic-950 to-mystic-900 p-4">
+      <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl rounded-2xl p-8 border border-mystic-700/50 shadow-2xl">
         <div className="flex justify-center mb-6">
           <Logo size="xl" />
         </div>

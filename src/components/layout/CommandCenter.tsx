@@ -158,8 +158,8 @@ export default function CommandCenter() {
         animate={{
           scale: isHovered ? 1.1 : 1,
           boxShadow: isHovered
-            ? "0 20px 25px -5px rgba(0, 0, 0, 0.4), 0 10px 10px -5px rgba(0, 0, 0, 0.2)"
-            : "0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.1)"
+            ? "var(--shadow-modal)"
+            : "var(--shadow-popover)"
         }}
         whileHover={{ scale: 1.05 }}
         onHoverStart={() => setIsHovered(true)}
@@ -243,7 +243,7 @@ export default function CommandCenter() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              className="w-full max-w-2xl bg-mystic-900 border border-white/10 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden relative z-10"
+              className="w-full max-w-2xl bg-mystic-900 border border-white/10 rounded-2xl shadow-spotlight overflow-hidden relative z-10"
             >
 
             <div className="p-4 border-b border-white/10 flex items-center gap-4">
@@ -335,7 +335,7 @@ export default function CommandCenter() {
                           <motion.span
                             className="text-[10px] font-bold uppercase tracking-widest text-slate-600 bg-white/5 px-1.5 py-0.5 rounded"
                             animate={{
-                              backgroundColor: selectedIndex === index ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.05)"
+                              backgroundColor: selectedIndex === index ? "var(--color-hover-veil)" : "var(--color-hover-veil-soft)"
                             }}
                           >
                             {result.type}

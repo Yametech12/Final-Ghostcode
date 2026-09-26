@@ -295,7 +295,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent-primary/5 blur-[120px] rounded-full" />
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-accent-secondary/5 blur-[120px] rounded-full" />
-        <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+        <div className="absolute inset-0 opacity-[0.02] mix-blend-overlay" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, var(--color-grid-veil) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
       </div>
 
       {/* Navigation */}
@@ -306,7 +306,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
           "fixed top-0 left-0 right-0 z-50 border-b safe-area-x",
           "transition-[background-color,backdrop-filter,border-color,box-shadow,padding] duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]",
           scrolled
-            ? "bg-mystic-950/80 backdrop-blur-xl border-slate-700/20 py-1 shadow-[0_4px_24px_-8px_rgba(0,0,0,0.4)]"
+            ? "bg-mystic-950/80 backdrop-blur-xl border-slate-700/20 py-1 shadow-nav"
             : "bg-mystic-950/0 backdrop-blur-md border-transparent py-3"
         )}
       >
@@ -349,7 +349,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     <item.icon className={cn(
                       "w-4 h-4 transition-transform group-hover:scale-110",
                       location.pathname === item.path
-                        ? "text-accent-primary drop-shadow-[0_0_8px_rgba(232,199,126,0.4)]"
+                        ? "text-accent-primary drop-shadow-glow-md"
                         : "text-slate-500 group-hover:text-accent-primary"
                     )} />
                     <span>{item.name}</span>
@@ -408,7 +408,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                             "absolute top-full left-0 mt-2 w-56 z-[60]",
                             "bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8",
                             "rounded-2xl p-3",
-                            "shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)]",
+                            "shadow-popover",
                             "animate-[fadeIn_200ms_cubic-bezier(0.32,0.72,0,1)]"
                           )}
                         >
@@ -430,7 +430,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                                 className={cn(
                                   "w-4 h-4",
                                   location.pathname === item.path
-                                    ? "text-accent-primary drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]"
+                                    ? "text-accent-primary drop-shadow-glow-sm"
                                     : "text-slate-500 group-hover:text-accent-primary"
                                 )}
                               />
@@ -493,7 +493,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   className={cn(
                     "bg-white/5 border border-white/10 rounded-xl py-2 pl-10 pr-12 text-sm w-32 xl:w-44 leading-none",
                     "focus:outline-none focus:border-accent-primary/60",
-                    "focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]",
+                    "focus:shadow-focus-ring",
                     "transition-[border-color,box-shadow,width] duration-200"
                   )}
                 />
@@ -568,7 +568,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   </button>
 
                   {activeDropdown === 'profile' && (
-                    <div role="menu" className="absolute top-full right-0 mt-2 w-56 bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] p-3 z-[60] animate-[fadeIn_200ms_cubic-bezier(0.32,0.72,0,1)]">
+                    <div role="menu" className="absolute top-full right-0 mt-2 w-56 bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-popover p-3 z-[60] animate-[fadeIn_200ms_cubic-bezier(0.32,0.72,0,1)]">
                       <div className="flex flex-col mb-3 pb-3 border-b border-slate-700/30">
                         <span className="text-sm font-semibold text-slate-100 break-words">{user.displayName}</span>
                         <span className="text-xs text-slate-400 break-words">{user.email}</span>
@@ -689,7 +689,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   className={cn(
                     "w-full bg-white/5 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-base",
                     "focus:outline-none focus:border-accent-primary/60",
-                    "focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]",
+                    "focus:shadow-focus-ring",
                     "transition-[border-color,box-shadow] duration-200"
                   )}
                 />
@@ -746,7 +746,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                             )}>
                               <item.icon className={cn(
                                 "w-5 h-5",
-                                location.pathname === item.path && "drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]"
+                                location.pathname === item.path && "drop-shadow-glow-sm"
                               )} />
                             </div>
                             <div className="flex-1">

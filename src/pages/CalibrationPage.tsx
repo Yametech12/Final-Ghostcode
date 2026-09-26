@@ -1,3 +1,4 @@
+import { readToken, COLOR_TOKEN } from '../styles/colorTokens';
 import React from 'react';
 import {
   Target, Loader2, AlertCircle, Sparkles,
@@ -445,7 +446,7 @@ export default function CalibrationPage() {
       // Dynamic import keeps html2canvas out of the main bundle.
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(analysisRef.current, {
-        backgroundColor: '#0a0508',
+        backgroundColor: readToken(COLOR_TOKEN.surfacePage),
         scale: 2,
         logging: false,
         useCORS: true,
@@ -1266,7 +1267,7 @@ export default function CalibrationPage() {
                       <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                         <div
                           style={{ width: `${(analysis.tasks.filter(t => t.completed).length / analysis.tasks.length) * 100}%` }}
-                          className="h-full bg-accent-primary shadow-[0_0_10px_rgba(0,242,255,0.5)]"
+                          className="h-full bg-accent-primary shadow-glow-gold"
                         />
                       </div>
                     )}

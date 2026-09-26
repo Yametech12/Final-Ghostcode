@@ -76,7 +76,7 @@ export default function SubscriptionCard() {
           className="pointer-events-none absolute -top-20 -right-20 w-60 h-60 rounded-full"
           style={{
             background:
-              'radial-gradient(circle, rgba(232,199,126,0.10) 0%, transparent 65%)',
+              'radial-gradient(circle, var(--color-accent-veil-soft) 0%, transparent 65%)',
             filter: 'blur(30px)',
           }}
         />

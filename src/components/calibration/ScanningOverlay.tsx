@@ -145,7 +145,7 @@ export function ScanningOverlay({ visible, onCancel }: ScanningOverlayProps) {
             animate={reduceMotion ? undefined : { opacity: [0.2, 0.6, 0.2] }}
             transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
           />
-          <LogoIcon className="w-20 h-20 sm:w-28 sm:h-28 text-accent-primary drop-shadow-[0_0_24px_rgba(232,199,126,0.45)]" />
+          <LogoIcon className="w-20 h-20 sm:w-28 sm:h-28 text-accent-primary drop-shadow-glow-lg" />
         </motion.div>
 
         {/* Title + bar + status */}
@@ -164,7 +164,7 @@ export function ScanningOverlay({ visible, onCancel }: ScanningOverlayProps) {
             <motion.div
               animate={{ width: `${progress * 100}%` }}
               transition={{ duration: 0.6, ease: 'easeOut' }}
-              className="h-full bg-gradient-to-r from-amber-300 via-accent-primary to-amber-500 shadow-[0_0_12px_rgba(232,199,126,0.55)]"
+              className="h-full bg-gradient-to-r from-amber-300 via-accent-primary to-amber-500 shadow-glow-gold"
             />
           </div>
 
@@ -243,7 +243,7 @@ function ResultSkeleton({ reduceMotion }: { reduceMotion: boolean }) {
       style={{
         backgroundSize: '200% 100%',
         backgroundImage:
-          'linear-gradient(90deg, transparent 0%, rgba(232,199,126,0.04) 50%, transparent 100%)',
+          'linear-gradient(90deg, transparent 0%, var(--color-accent-veil-faint) 50%, transparent 100%)',
       }}
     >
       <motion.div

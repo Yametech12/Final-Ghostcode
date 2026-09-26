@@ -121,7 +121,7 @@ export default function Tooltip({ children, term, definition, content }: Tooltip
           <div 
             className="absolute -bottom-2 border-8 border-transparent border-t-mystic-900"
             style={{ 
-              filter: 'drop-shadow(0 1px 0 rgba(255,255,255,0.1))',
+              filter: 'drop-shadow(0 1px 0 var(--color-hover-veil))',
               left: coords.align === 'left' ? '16px' : coords.align === 'right' ? 'calc(100% - 32px)' : '50%',
               transform: coords.align === 'center' ? 'translateX(-50%)' : 'none'
             }}

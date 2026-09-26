@@ -84,6 +84,42 @@ export default [
       'no-empty': 'off',
       'no-useless-catch': 'off',
       'react-hooks/purity': 'off',
+      // ── Design-token guard ──────────────────────────────────────────────
+      // Colour literals belong in the token layer: src/index.css (CSS custom
+      // properties — source of truth) or src/styles/colorTokens.ts (JS mirror
+      // for canvas / SVG consumers). Everything else uses a semantic utility
+      // (bg-surface-page, shadow-modal, text-status-error, …) or
+      // var(--color-…) inside an inline style.
+      // Warn-only on purpose: legacy call sites keep building while they
+      // migrate, and `npm run lint:tokens:strict` runs the same scan as a hard
+      // gate in CI.
+      'no-restricted-syntax': [
+        'warn',
+        {
+          selector: 'Literal[value=/^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/]',
+          message:
+            'Hard-coded hex colour. Use a semantic token/utility from src/index.css, or readToken() from src/styles/colorTokens.ts.',
+        },
+        {
+          selector: 'Literal[value=/\\b(?:rgba?|hsla?)\\(/]',
+          message:
+            'Hard-coded colour function. Use a token utility, var(--color-…), or color-mix(in srgb, var(--color-…) X%, transparent).',
+        },
+        {
+          selector: 'TemplateElement[value.raw=/\\b(?:rgba?|hsla?)\\(/]',
+          message:
+            'Hard-coded colour inside a template literal. Use a token utility or var(--color-…).',
+        },
+      ],
+    },
+  },
+  {
+    // The token mirror + its verification suite are the only allowed literal
+    // sources in the JS layer; colorTokens.test.ts asserts they match
+    // src/index.css so palette drift fails the build.
+    files: ['src/styles/colorTokens.ts', 'src/styles/colorTokens.test.ts'],
+    rules: {
+      'no-restricted-syntax': 'off',
     },
   },
 ];

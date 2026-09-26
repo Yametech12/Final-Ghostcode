@@ -327,7 +327,7 @@ export default function DossiersPage() {
           onChange={(e) => setSearchQuery(e.target.value)}
           className={cn(
             'w-full bg-mystic-800/50 border border-slate-700/30 rounded-2xl py-3 pl-12 pr-4 text-slate-100 placeholder:text-slate-500 text-sm',
-            'focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)]',
+            'focus:outline-none focus:border-accent-primary/60 focus:shadow-focus-ring',
             'transition-[border-color,box-shadow] duration-200'
           )}
         />
@@ -433,7 +433,7 @@ export default function DossiersPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-              className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+              className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-modal overflow-hidden"
             >
               <div className="p-6 border-b border-slate-700/30 flex justify-between items-center">
                 <h2 className="text-xl font-semibold tracking-tight text-slate-100">{editingId ? 'Edit Dossier' : 'New Dossier'}</h2>
@@ -454,7 +454,7 @@ export default function DossiersPage() {
                     required
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)] transition-[border-color,box-shadow] duration-200"
+                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-accent-primary/60 focus:shadow-focus-ring transition-[border-color,box-shadow] duration-200"
                     placeholder="Enter name or alias..."
                   />
                 </div>
@@ -495,7 +495,7 @@ export default function DossiersPage() {
                     type="date"
                     value={lastInteraction}
                     onChange={(e) => setLastInteraction(e.target.value)}
-                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 tabular-nums focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)] transition-[border-color,box-shadow] duration-200"
+                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 tabular-nums focus:outline-none focus:border-accent-primary/60 focus:shadow-focus-ring transition-[border-color,box-shadow] duration-200"
                   />
                 </div>
 
@@ -505,7 +505,7 @@ export default function DossiersPage() {
                     value={notes}
                     onChange={(e) => setNotes(e.target.value)}
                     rows={4}
-                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 leading-relaxed focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)] transition-[border-color,box-shadow] duration-200 resize-none"
+                    className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 leading-relaxed focus:outline-none focus:border-accent-primary/60 focus:shadow-focus-ring transition-[border-color,box-shadow] duration-200 resize-none"
                     placeholder="Observations, triggers, red flags..."
                   />
                 </div>

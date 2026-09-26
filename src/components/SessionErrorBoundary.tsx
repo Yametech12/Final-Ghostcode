@@ -99,13 +99,13 @@ export default class SessionErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0a0508] p-4">
-          <div className="max-w-md w-full bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-red-500/20 text-center">
+        <div className="min-h-screen flex items-center justify-center bg-mystic-950 p-4">
+          <div className="max-w-md w-full bg-mystic-900/50 backdrop-blur-xl rounded-2xl p-8 border border-status-error/20 text-center">
             <div className="flex justify-center mb-4">
               <AlertCircle className="w-12 h-12 text-red-400" />
             </div>
 
-            <h2 className="text-xl font-bold text-white mb-2">Oops!</h2>
+            <h2 className="text-xl font-bold text-slate-50 mb-2">Oops!</h2>
             <p className="text-slate-300 mb-4">{this.state.errorMessage}</p>
 
             {this.state.errorDetails && (

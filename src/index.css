@@ -185,6 +185,68 @@
   --bottom-nav-height: 4rem;
 }
 
+/* ── Semantic alias layer (token refactor, Phase 1B) ─────────────────────────
+   Component code must never hard-code a colour. Every alias below resolves
+   through the base palette declared above, so toggling `.light-theme` re-themes
+   every consumer without touching a component file.
+   Names are role-based: surface-* · border-* · scrim-* · veil-* · shadow-* ·
+   drop-shadow-*. Guarded by `npm run lint:tokens` and src/styles/colorTokens.test.ts. */
+@theme {
+  /* Surfaces ------------------------------------------------------------- */
+  --color-surface-page: var(--color-mystic-950);
+  --color-surface-raised: var(--color-mystic-900);
+  --color-surface-sunken: var(--color-mystic-950);
+  --color-border-hairline: var(--color-mystic-700);
+
+  /* Backdrop scrims (modals, drawers, image-crop mask) ------------------- */
+  --color-scrim-soft: rgb(0 0 0 / 0.5);
+  --color-scrim: rgb(0 0 0 / 0.65);
+  --color-scrim-strong: rgb(0 0 0 / 0.8);
+  --color-scrim-crop: rgb(14 11 18 / 0.75);
+
+  /* Interaction veils — these flip with the theme ------------------------ */
+  --color-hover-veil: rgb(255 255 255 / 0.1);
+  --color-hover-veil-soft: rgb(255 255 255 / 0.05);
+
+  /* Decorative pattern lines (grid + dotted overlays) -------------------- */
+  --color-grid-veil: rgb(255 255 255 / 0.15);
+  --color-pattern-gold: rgb(232 199 126 / 0.3);
+
+  /* Accent veils — derived from the *live* accent token, so they follow the
+     light-theme accent shift automatically. ------------------------------- */
+  --color-accent-veil-faint: color-mix(in srgb, var(--color-accent-primary) 4%, transparent);
+  --color-accent-veil-soft: color-mix(in srgb, var(--color-accent-primary) 8%, transparent);
+  --color-accent-veil: color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+
+  /* Skeleton shimmer ramp ------------------------------------------------ */
+  --color-skeleton-from: color-mix(in srgb, var(--color-slate-300) 4%, transparent);
+  --color-skeleton-via: color-mix(in srgb, var(--color-slate-300) 10%, transparent);
+
+  /* Chart primitives — recharts needs concrete values, see colorTokens.ts */
+  --color-chart-grid: rgb(255 255 255 / 0.08);
+
+  /* Elevation ------------------------------------------------------------ */
+  --shadow-modal: 0 24px 80px -16px rgb(0 0 0 / 0.65);
+  --shadow-popover: 0 12px 40px -12px rgb(0 0 0 / 0.5);
+  --shadow-nav: 0 4px 24px -8px rgb(0 0 0 / 0.4);
+  --shadow-spotlight: 0 0 50px rgb(0 0 0 / 0.5);
+  --shadow-focus-ring: 0 0 0 3px color-mix(in srgb, var(--color-accent-primary) 12%, transparent);
+  --shadow-glow-gold: 0 0 12px color-mix(in srgb, var(--color-accent-primary) 55%, transparent);
+  --shadow-glow-error: 0 0 8px color-mix(in srgb, var(--color-status-error) 50%, transparent);
+  --shadow-glow-accent-soft: 0 0 15px color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+  --shadow-glow-accent-lg: 0 0 32px -12px color-mix(in srgb, var(--color-accent-primary) 18%, transparent);
+  --shadow-glow-accent-xl: 0 0 48px -12px color-mix(in srgb, var(--color-accent-primary) 25%, transparent);
+
+  /* Accent glows for icon/nav emphasis ----------------------------------- */
+  --drop-shadow-glow-sm: 0 0 6px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
+  --drop-shadow-glow-md: 0 0 8px color-mix(in srgb, var(--color-accent-primary) 40%, transparent);
+  --drop-shadow-glow-lg: 0 0 24px color-mix(in srgb, var(--color-accent-primary) 45%, transparent);
+  --drop-shadow-glow-accent: 0 0 10px color-mix(in srgb, var(--color-accent-primary) 50%, transparent);
+  --drop-shadow-glow-success: 0 0 6px color-mix(in srgb, var(--color-status-success) 30%, transparent);
+  --drop-shadow-glow-warning: 0 0 14px color-mix(in srgb, var(--color-status-warning) 60%, transparent);
+  --drop-shadow-glow-error: 0 0 20px color-mix(in srgb, var(--color-status-error) 70%, transparent);
+}
+
 .light-theme {
   /* Phase 1A — Warm cream base + deeper gold accents (Req 4.5) */
   --color-mystic-950: #FAF7F2; /* warm ivory background */
@@ -210,17 +272,42 @@
   --color-slate-100: #2A2520;
   --color-slate-200: #4A4138;
   --color-slate-300: #6E6358; /* body text on cream — 5.6:1 (AA) */
+<<<<<<< ours
   --color-slate-400: #6E6358; /* was #8C8174 (3.57:1, large-only) — now 5.48:1 (AA, verified) */
   --color-slate-500: #6E6358; /* was #A89C8E (2.52:1, FAIL) — now 5.48:1 (AA, verified) */
+=======
+  --color-slate-400: #8C8174;
+  /* #A89C8E measured 2.52:1 on #FAF7F2 — below the 3:1 floor for UI/hint
+     text and lighter than slate-400, which also inverted the ramp.
+     Deepened to #7A6F61: 4.598:1 and back in ramp order. */
+  --color-slate-500: #7A6F61;
+>>>>>>> theirs
   --color-slate-600: #C4BAAB;
   --color-slate-700: #DDD5C9;
   --color-slate-800: #EDE7DC;
   --color-slate-900: #F5F0E6;
   --color-slate-950: #FAF7F2;
 
+  /* ── Semantic layer: aliases that must flip on cream ------------------- */
+  --color-hover-veil: rgb(20 17 14 / 0.06);
+  --color-hover-veil-soft: rgb(20 17 14 / 0.04);
+  --color-grid-veil: rgb(20 17 14 / 0.1);
+  --color-pattern-gold: rgb(184 134 11 / 0.35);
+  --color-chart-grid: rgb(20 17 14 / 0.12);
+  --color-scrim-crop: rgb(20 17 14 / 0.75);
+
+  /* Status tokens were never re-declared for the cream theme, which left
+     success/warning/error/info text at 2.35–3.04:1 on #FAF7F2 (below AA).
+     These deeper, same-hue values measure 5.6–6.8:1 — see colorTokens.test.ts. */
+  --color-status-success: #3F6B52;
+  --color-status-warning: #7A5210;
+  --color-status-error: #9C3B2E;
+  --color-status-info: #3A5A73;
+
   background-color: var(--color-mystic-950);
   color: var(--color-slate-300);
 }
+
 
 :root {
   color-scheme: dark;

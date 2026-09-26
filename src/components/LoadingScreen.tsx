@@ -81,7 +81,7 @@ export default function LoadingScreen({
       <div
         className="absolute inset-0 opacity-[0.03]"
         style={{
-          backgroundImage: 'linear-gradient(rgba(232,199,126,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,199,126,0.3) 1px, transparent 1px)',
+          backgroundImage: 'linear-gradient(var(--color-pattern-gold) 1px, transparent 1px), linear-gradient(90deg, var(--color-pattern-gold) 1px, transparent 1px)',
           backgroundSize: '40px 40px',
         }}
       />

@@ -243,7 +243,7 @@ export default function DeleteAccountSection() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-              className="relative w-full max-w-md bg-mystic-900/95 backdrop-blur-xl border border-status-error/30 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+              className="relative w-full max-w-md bg-mystic-900/95 backdrop-blur-xl border border-status-error/30 rounded-2xl shadow-modal overflow-hidden"
             >
               <div className="p-6 border-b border-white/10 flex items-start justify-between gap-4">
                 <div className="flex items-center gap-3">
