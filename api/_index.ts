@@ -15,6 +15,7 @@ import { getAuthenticatedUser } from './lib/auth.js';
 import { log, requestIdFrom, serializeErr } from './lib/log.js';
 import { initSentryNode, captureException } from './lib/sentryNode.js';
 import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
+import { cache, cacheMode, tryRedisRateLimit, redisAvailable } from './lib/cache.js';
 import {
 <<<<<<< ours
   handleHealth,
@@ -48,6 +49,11 @@ import {
 } from './lib/subscription.js';
 
 console.log('Server starting...');
+console.log(
+  cacheMode === "redis"
+    ? "Cache mode: redis (Upstash REST)\n"
+    : "Cache mode: process-local \u2014 set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for a shared cache\n",
+);
 
 // Initialize Sentry as early as possible so any throw during module
 // evaluation gets captured. No-op when SENTRY_DSN isn't set.
@@ -135,7 +141,18 @@ if (isPlaceholder(supabaseServiceKey)) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Warm the cache client once so a bad Upstash credential surfaces at boot
+// instead of on the first gated request. A failure here is non-fatal: the
+// cache layer degrades to its bounded process-local store.
+if (redisAvailable) {
+  void cache
+    .set("__boot_probe__", Date.now(), 10)
+    .then(() => console.log("Cache: Upstash reachable"))
+    .catch((err) => console.warn("Cache: Upstash probe failed, using process-local fallback", err));
+}
+
 // ---------------------------------------------------------------------------
+<<<<<<< ours
 // Rate limiting
 // ---------------------------------------------------------------------------
 // P0-4: this was a plain in-memory Map, which had two real defects:
@@ -154,6 +171,18 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 //
 // Fallback: if the RPC is missing (migration not applied) or errors, we use a
 // bounded local bucket rather than failing open entirely.
+=======
+// Rate limiting — shared Redis counter (see docs/architecture/caching.md)
+//
+// The counter lives in Upstash Redis so every instance and region shares one
+// bucket. A per-process Map gave each concurrent instance its own allowance,
+// which multiplied the effective limit by the number of warm functions.
+//
+// Degradation is explicit, never fail-open: when Redis is unreachable the cache
+// layer falls back to a bounded process-local counter that STILL enforces these
+// limits (per instance). See api/lib/cache.ts §4.
+// ---------------------------------------------------------------------------
+>>>>>>> theirs
 const AI_LIMIT = 10;
 const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
 const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
@@ -184,6 +213,7 @@ function fallbackRateLimit(key: string, limit: number, windowMs: number): boolea
   return rec.count > limit;
 }
 
+<<<<<<< ours
 /** Returns true when the caller has exceeded `limit` within the window. */
 async function isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
   try {
@@ -200,6 +230,8 @@ async function isRateLimited(key: string, limit: number, windowSeconds: number):
   }
 }
 
+=======
+>>>>>>> theirs
 async function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
   // Decide which bucket (if any) applies. AI/advisor/calibration share one,
   // /api/security/log gets its own with a higher allowance since legitimate
@@ -229,6 +261,7 @@ async function rateLimitMiddleware(req: express.Request, res: express.Response, 
     bucketPrefix = 'rate';
   }
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
+<<<<<<< ours
   const bucketKey = `${bucketPrefix}:${ip}`;
 
   try {
@@ -244,6 +277,22 @@ async function rateLimitMiddleware(req: express.Request, res: express.Response, 
     // isRateLimited already swallows RPC failures; this is belt-and-braces so a
     // programming error can never turn into a 500 on a rate-limit check.
     log.warn('rate_limit_check_failed', { bucketKey, err: serializeErr(err) });
+=======
+  const bucketKey = `rate:${bucketPrefix}:${ip}`;
+  const windowSec = Math.round(window / 1000);
+
+  // tryRedisRateLimit never rejects: a Redis outage degrades to the bounded
+  // in-process counter rather than letting every request through.
+  const { allowed, resetMs } = await tryRedisRateLimit(bucketKey, limit, windowSec);
+
+  if (!allowed) {
+    return res.status(429).json({
+      error: 'Rate limited',
+      details: `Maximum ${limit} requests per ${Math.round(window / 60_000)} minute(s)`,
+      retryAfter: Math.max(1, Math.ceil(resetMs / 1000)),
+      code: 'RATE_LIMITED',
+    });
+>>>>>>> theirs
   }
   next();
 }

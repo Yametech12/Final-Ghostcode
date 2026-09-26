@@ -13,6 +13,13 @@ import type { SupabaseClient, User } from '@supabase/supabase-js';
 import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../_config.js';
 import { isValidUUID } from './auth.js';
 import { requireTier, getEffectiveTier } from './tierGate.js';
+import {
+  getCachedPromptBlock,
+  getPersonalityTypeContext,
+  PROMPT_TYPE_FRAMEWORK_KEY,
+  PROMPT_RESPONSE_GUIDELINES_KEY,
+  PROMPT_BLOCK_TTL_SEC,
+} from './featuredCaches.js';
 import { log, serializeErr } from './log.js';
 import {
   BOUNDS,
@@ -729,6 +736,79 @@ export async function handleUpdateAdvisorReaction(
 }
 
 /**
+ * Static advisor prompt blocks.
+ *
+ * Extracted verbatim from the previous inline template literal so the value
+ * served through the cache is byte-identical to what shipped before the
+ * migration. They are read via `featuredCaches`, which memoises them in Redis
+ * instead of re-assembling several kilobytes of constant text per chat call.
+ */
+const ADVISOR_TYPE_FRAMEWORK = `## EPIMETHEUS TYPE FRAMEWORK
+The user is assessed on three axes forming an 8-type system:
+• TIME (T/N): Tester vs Investor — does she test before committing, or invest deeply upfront?
+• SEX (D/J): Denier vs Justifier — conservative/guarded vs open/rebellious with intimacy?
+• RELATIONSHIP (R/I): Realist vs Idealist — practical/independent vs romantic/traditional?
+
+8 Types: TDI (Playette), TJI (Social Butterfly), TDR (Private Dancer), TJR (Seductress),
+         NDI (Hopeful Romantic), NJI (Cinderella), NDR (Connoisseur), NJR (Modern Woman).
+
+`;
+
+const ADVISOR_RESPONSE_GUIDELINES = `## RESPONSE GUIDELINES
+- Include 1-2 specific, actionable steps when giving advice
+- Ask thoughtful questions to deepen understanding
+- Reference user's calibration data when relevant
+- End with a forward-looking suggestion or question
+- Maintain professional, insightful tone
+
+## EXAMPLE EXCHANGES
+User: "She laughed at my joke but then looked away. What does that mean?"
+Assistant: "That's a mixed signal — laughter shows interest, but looking away suggests she's either shy (Denier trait) or testing your persistence (Tester). Since you're a TDR, your instinct is probably to back off and observe. Instead, try one more light comment to see if she re-engages. If she does, she's interested but cautious. If not, she's signaling 'not now.' What was the context of the interaction?"
+
+User: "I want to ask her out but I'm nervous she'll say no."
+Assistant: "That fear is normal, but here's the frame: her 'no' isn't about your worth — it's about timing, compatibility, or her current situation. As an NDI, you invest emotionally before acting, which amplifies the stakes. Reframe it: you're gathering data, not risking everything. Ask casually: 'Want to grab coffee this week?' If she hesitates, you have your answer without a hard rejection. What's holding you back specifically — fear of awkwardness, or losing the friendship?"
+
+User: "She keeps texting me but won't commit to plans."
+Assistant: "Classic Tester behavior — she's keeping you warm while evaluating other options or waiting for higher interest on her end. Your move depends on your type: if you're an Investor (N), this drains you because you're already in. If you're a Tester (T), match her energy — reply but don't chase. Set a boundary: 'Let me know when your schedule clears up, I'd like to see you.' Then pull back. If she's interested, she'll commit. If not, you've freed yourself. How long has this pattern been going on?"`;
+
+/** Type id → one-line context sentence. Interpolated into the system prompt. */
+const PERSONALITY_TYPE_CONTEXT: Record<string, string> = {
+  TDI: "Tests interest, guards emotions, seeks deep connection — patient and selective.",
+  TJI: "Tests interest, expressive/social, seeks excitement — high energy, low patience.",
+  TDR: "Tests interest, guards emotions, practical focus — values stability and respect.",
+  TJR: "Tests interest, expressive/direct, practical focus — bold and action-oriented.",
+  NDI: "Invests early, guards emotions, seeks deep connection — thoughtful romantic.",
+  NJI: "Invests early, expressive/social, seeks fairy tale — classic romantic dreamer.",
+  NDR: "Invests early, guards emotions, practical focus — stable long-term builder.",
+  NJR: "Invests early, expressive/direct, practical focus — committed and realistic.",
+};
+
+function personalityTypeContextFor(typeId: string): string {
+  return Object.prototype.hasOwnProperty.call(PERSONALITY_TYPE_CONTEXT, typeId)
+    ? PERSONALITY_TYPE_CONTEXT[typeId]
+    : 'Unique profile.';
+}
+
+/**
+ * Resolve the two static prompt blocks through the cache. A Redis outage
+ * falls through to the in-process constants, so the prompt is never blank.
+ */
+async function loadAdvisorPromptBlocks(): Promise<{
+  typeFramework: string;
+  responseGuidelines: string;
+}> {
+  const [typeFramework, responseGuidelines] = await Promise.all([
+    getCachedPromptBlock(PROMPT_TYPE_FRAMEWORK_KEY, PROMPT_BLOCK_TTL_SEC, () => ADVISOR_TYPE_FRAMEWORK),
+    getCachedPromptBlock(
+      PROMPT_RESPONSE_GUIDELINES_KEY,
+      PROMPT_BLOCK_TTL_SEC,
+      () => ADVISOR_RESPONSE_GUIDELINES,
+    ),
+  ]);
+  return { typeFramework, responseGuidelines };
+}
+
+/**
  * Build the system prompt + message history for the advisor.
  * Extracted so both streaming (Express) and non-streaming (Vercel) paths share it.
  * Implements token-aware truncation to stay within model context limits.
@@ -746,6 +826,7 @@ async function buildAdvisorMessages(
    */
   tier: 'free' | 'strategist' | 'oracle' = 'strategist',
 ): Promise<Array<{ role: string; content: string }>> {
+  const { typeFramework, responseGuidelines } = await loadAdvisorPromptBlocks();
   const [{ data: calibrations }, { data: history }, { data: recentActivity }] = await Promise.all([
     supabase
       .from('calibrations')
@@ -789,31 +870,10 @@ Your goal is to help users navigate interpersonal dynamics with empathy, psychol
 - Keep responses under 250 words.
 - If the user mentions a specific person ("she/her"), infer possible intentions based on behavior patterns, but avoid assumptions.
 
-## EPIMETHEUS TYPE FRAMEWORK
-The user is assessed on three axes forming an 8-type system:
-• TIME (T/N): Tester vs Investor — does she test before committing, or invest deeply upfront?
-• SEX (D/J): Denier vs Justifier — conservative/guarded vs open/rebellious with intimacy?
-• RELATIONSHIP (R/I): Realist vs Idealist — practical/independent vs romantic/traditional?
-
-8 Types: TDI (Playette), TJI (Social Butterfly), TDR (Private Dancer), TJR (Seductress),
-         NDI (Hopeful Romantic), NJI (Cinderella), NDR (Connoisseur), NJR (Modern Woman).
-
-## USER PROFILE
+${typeFramework}## USER PROFILE
 Personality Type: ${personalityType}
 ${personalityType !== 'Unknown' ? `
-Type Context: ${(() => {
-  const typeMap: Record<string, string> = {
-    TDI: 'Tests interest, guards emotions, seeks deep connection — patient and selective.',
-    TJI: 'Tests interest, expressive/social, seeks excitement — high energy, low patience.',
-    TDR: 'Tests interest, guards emotions, practical focus — values stability and respect.',
-    TJR: 'Tests interest, expressive/direct, practical focus — bold and action-oriented.',
-    NDI: 'Invests early, guards emotions, seeks deep connection — thoughtful romantic.',
-    NJI: 'Invests early, expressive/social, seeks fairy tale — classic romantic dreamer.',
-    NDR: 'Invests early, guards emotions, practical focus — stable long-term builder.',
-    NJR: 'Invests early, expressive/direct, practical focus — committed and realistic.',
-  };
-  return typeMap[personalityType] || 'Unique profile.';
-})()}` : ''}
+Type Context: ${await getPersonalityTypeContext(personalityType, personalityTypeContextFor)}` : ''}
 Traits Analysis:
 ${traits && Object.keys(traits).length > 0
   ? [
@@ -827,22 +887,7 @@ ${traits && Object.keys(traits).length > 0
 Recent Sessions: ${recentActivity?.map((s) => s.title).join(', ') || 'None'}
 Message History: ${orderedHistory.length} messages in this session
 
-## RESPONSE GUIDELINES
-- Include 1-2 specific, actionable steps when giving advice
-- Ask thoughtful questions to deepen understanding
-- Reference user's calibration data when relevant
-- End with a forward-looking suggestion or question
-- Maintain professional, insightful tone
-
-## EXAMPLE EXCHANGES
-User: "She laughed at my joke but then looked away. What does that mean?"
-Assistant: "That's a mixed signal — laughter shows interest, but looking away suggests she's either shy (Denier trait) or testing your persistence (Tester). Since you're a TDR, your instinct is probably to back off and observe. Instead, try one more light comment to see if she re-engages. If she does, she's interested but cautious. If not, she's signaling 'not now.' What was the context of the interaction?"
-
-User: "I want to ask her out but I'm nervous she'll say no."
-Assistant: "That fear is normal, but here's the frame: her 'no' isn't about your worth — it's about timing, compatibility, or her current situation. As an NDI, you invest emotionally before acting, which amplifies the stakes. Reframe it: you're gathering data, not risking everything. Ask casually: 'Want to grab coffee this week?' If she hesitates, you have your answer without a hard rejection. What's holding you back specifically — fear of awkwardness, or losing the friendship?"
-
-User: "She keeps texting me but won't commit to plans."
-Assistant: "Classic Tester behavior — she's keeping you warm while evaluating other options or waiting for higher interest on her end. Your move depends on your type: if you're an Investor (N), this drains you because you're already in. If you're a Tester (T), match her energy — reply but don't chase. Set a boundary: 'Let me know when your schedule clears up, I'd like to see you.' Then pull back. If she's interested, she'll commit. If not, you've freed yourself. How long has this pattern been going on?"`;
+${responseGuidelines}`;
 
   // Token-aware truncation: approximate 1 token ≈ 4 chars.
   // Reserve ~2000 tokens for system prompt + new user message + response.
