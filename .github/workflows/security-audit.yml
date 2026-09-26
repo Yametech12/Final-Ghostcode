@@ -1,0 +1,78 @@
+name: Security audit
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  schedule:
+    # Every Monday 06:00 UTC
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  dependency-audit:
+    name: Dependency audit (production)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Uses scripts/audit-check.sh from the S3 dependency patch when present;
+      # otherwise falls back to an equivalent inline npm audit gate.
+      # NOTE: on the unpatched baseline this job is expected to FAIL because the
+      # production tree still has high/critical advisories - apply the S3 patch
+      # (package.json + package-lock.json) to make it pass.
+      - name: Audit production dependencies (fails on high/critical)
+        run: |
+          if [ -f scripts/audit-check.sh ]; then
+            echo "Using scripts/audit-check.sh (S3 dependency patch)"
+            bash scripts/audit-check.sh
+          else
+            npm audit --omit=dev --audit-level=high
+          fi
+
+  gitleaks:
+    name: Secret scan (gitleaks)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # gitleaks-action automatically picks up .gitleaks.toml from the repo root
+      # when present (S1 patch adds it); until then gitleaks default rules apply.
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  dependency-review:
+    name: Dependency review (PR)
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Review new dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high

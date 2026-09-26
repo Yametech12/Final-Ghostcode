@@ -1,0 +1,101 @@
+name: Preview deploy
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize]
+    branches: [main]
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write  # required to post the preview URL comment
+
+jobs:
+  preview:
+    name: Vercel preview deploy
+    # Fork PRs never receive repository secrets, so skip them up front.
+    if: github.event.pull_request.head.repo.fork == false
+    runs-on: ubuntu-latest
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check required Vercel secrets
+        if: env.VERCEL_TOKEN == '' || env.VERCEL_ORG_ID == '' || env.VERCEL_PROJECT_ID == ''
+        run: |
+          echo "::error::Missing Vercel secrets (VERCEL_TOKEN, VERCEL_ORG_ID, VERCEL_PROJECT_ID)."
+          echo "Add them under Settings > Secrets and variables > Actions, then re-run this workflow."
+          exit 1
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment (preview)
+        run: vercel pull --yes --environment=preview --token="$VERCEL_TOKEN"
+
+      - name: Build (vercel build, uses vercel.json)
+        run: vercel build --token="$VERCEL_TOKEN"
+
+      - name: Deploy preview (prebuilt)
+        id: deploy
+        run: |
+          set -o pipefail
+          url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN" | grep -oE 'https://[a-zA-Z0-9._-]+\.vercel\.app' | tail -1)"
+          if [ -z "$url" ]; then
+            echo "::error::Could not parse the preview URL from vercel deploy output"
+            exit 1
+          fi
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: Comment preview URL on PR
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const marker = '<!-- vercel-preview-url -->';
+            const url = '${{ steps.deploy.outputs.url }}';
+            const body = [
+              marker,
+              '**Vercel preview deployed**',
+              '',
+              'Preview URL: ' + url,
+              'Commit: ' + context.sha,
+              '',
+              '_This comment is updated automatically on every push to this PR._',
+            ].join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

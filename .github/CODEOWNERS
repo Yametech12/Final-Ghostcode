@@ -1,0 +1,10 @@
+# Default owner for every file in the repository.
+* @Yametech12
+
+# Explicit per-area ownership (same maintainer today - split here so it is
+# ready when collaborators join).
+/api/ @Yametech12
+/src/ @Yametech12
+/supabase/ @Yametech12
+/scripts/ @Yametech12
+/.github/ @Yametech12

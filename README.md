@@ -1,5 +1,11 @@
 # Epimetheus
 
+[![CI](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/ci.yml/badge.svg)](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/ci.yml)
+[![Security audit](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/security-audit.yml)
+[![Coverage](https://codecov.io/gh/Yametech12/Final-Ghostcode/branch/main/graph/badge.svg)](https://codecov.io/gh/Yametech12/Final-Ghostcode)
+[![License](https://img.shields.io/badge/license-proprietary-lightgrey)](#license)
+[![Node](https://img.shields.io/badge/node-%E2%89%A520.x-brightgreen)](https://github.com/Yametech12/Final-Ghostcode/blob/main/.github/workflows/ci.yml)
+
 Personality profiling and relationship-intelligence web app. React 19 SPA with a small Express/Vercel API backed by Supabase and Regolo AI.
 
 ## Features
