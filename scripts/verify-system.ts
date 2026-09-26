@@ -49,7 +49,7 @@ async function verifyAll() {
   }
   
   try {
-    const { data: cal, error: calError } = await supabase
+    const { error: calError } = await supabase
       .from('calibrations')
       .select('id')
       .limit(1);
@@ -79,7 +79,7 @@ async function verifyAll() {
   }
   
   try {
-    const { data: advisorSessions, error: advisorError } = await supabase
+    const { error: advisorError } = await supabase
       .from('advisor_sessions')
       .select('id')
       .limit(1);
@@ -138,7 +138,7 @@ async function verifyAll() {
     } else {
       log('success', `Service role: OK (${adminUsers?.users?.length || 0} users in system)`);
     }
-  } catch (err: any) {
+  } catch {
     log('warning', `Service role test skipped (normal in client-only mode)`);
   }
   

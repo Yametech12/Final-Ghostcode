@@ -25,7 +25,9 @@ async function main() {
       }
       return;
     }
-  } catch {}
+  } catch {
+    // resvg-js unavailable — fall through to the PowerShell method below.
+  }
 
   // Method 2: Use PowerShell + .NET System.Drawing (Windows)
   console.log('Using PowerShell to convert SVGs to PNGs...');
