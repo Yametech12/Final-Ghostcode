@@ -28,7 +28,7 @@ function storagePathFromPhotoRef(ref: string | null | undefined): string | null 
   return path.startsWith('users/') ? path : null;
 }
 
-async function handleGetMyProfilePhotoUrl(
+export async function handleGetMyProfilePhotoUrl(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
@@ -74,7 +74,7 @@ async function handleGetMyProfilePhotoUrl(
   };
 }
 
-async function handleAdminGetUserPhotoUrl(
+export async function handleAdminGetUserPhotoUrl(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
@@ -137,7 +137,7 @@ async function handleAdminGetUserPhotoUrl(
   };
 }
 
-async function handleAdminUpdateUserRole(
+export async function handleAdminUpdateUserRole(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {

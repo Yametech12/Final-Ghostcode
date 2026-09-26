@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useThemeColors } from '../styles/colorTokens';
 import {
   Radar,
@@ -29,7 +30,7 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
-export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
+function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
   // Colours come from the shared token hook: recharts writes stroke/fill as SVG
   // *attributes*, which cannot consume var(), so the hook hands back concrete
   // values and re-reads them whenever the theme class on <html> flips.
