@@ -93,3 +93,13 @@ Honest list, so the next contributor does not have to rediscover it.
 ---
 
 **Last verified: 2026-09-26**
+
+---
+
+## Recent additions
+
+- **2026-09-26 — PR #2 consolidated fix report** → [`CHANGELOG_2026-09-26_PR2.md`](./CHANGELOG_2026-09-26_PR2.md)
+  Master document for the 2026-09-26 audit + remediation session: all 19 applied patches of the
+  consolidated PR #2 set, the audit findings behind them, conflict-resolution traces, unfinished
+  items, the deployment checklist, and the GitHub PAT disclosure incident.
+  **Start here if you are reviewing PR #2.**
