@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
+  handleGetMyProfilePhotoUrl,
   handleSecurityLog,
   handleUploadProfilePhoto,
   handleCalibrationAnalyze,
@@ -99,7 +100,15 @@ function makeSupabase() {
     storage: {
       from: vi.fn(() => ({
         upload: vi.fn().mockImplementation(async () => storageUploadResult),
+        // The bucket is private as of 20240101001000_storage_private_bucket.sql,
+        // so the upload handler signs instead of calling getPublicUrl.
+        // getPublicUrl stays stubbed so a regression that reintroduces it fails
+        // on the URL assertions in the upload test rather than on a TypeError.
         getPublicUrl: vi.fn().mockReturnValue({ data: { publicUrl: 'https://cdn/photo.png' } }),
+        createSignedUrl: vi.fn().mockImplementation(async (path: string) => ({
+          data: { signedUrl: `https://cdn/signed/${path}?token=stub`, path },
+          error: null,
+        })),
         // The upload handler now also lists+removes legacy timestamped
         // photos for the same user. Stub these as no-ops so the cleanup
         // step doesn't crash on `list is not a function`.
@@ -209,7 +218,7 @@ describe('handleUploadProfilePhoto', () => {
     expect(r.body.code).toBe('FILE_TOO_LARGE');
   });
 
-  it('uploads valid PNG and returns the public URL', async () => {
+  it('uploads valid PNG and returns a signed URL plus the storage path', async () => {
     const { client } = makeSupabase();
     const r = await handleUploadProfilePhoto(
       makeReq({ body: { base64Data: validPngBase64 } }),
@@ -217,11 +226,51 @@ describe('handleUploadProfilePhoto', () => {
     );
     expect(r.status).toBe(200);
     expect(r.body.success).toBe(true);
-    // The handler now versions the public URL with `?v=<ts>` so caches
-    // refetch after each upload. The base URL portion comes from the
-    // mocked getPublicUrl.
-    expect(r.body.url.startsWith('https://cdn/photo.png?v=')).toBe(true);
-    expect(r.body.fileName).toMatch(/^users\/550e8400-/);
+    // Private bucket: the URL is signed, not public.
+    expect(r.body.url.startsWith('https://cdn/signed/users/550e8400-')).toBe(true);
+    expect(r.body.expiresIn).toBe(3600);
+    // The stable object path is what callers persist — a signed URL would be
+    // a dead link within the hour.
+    expect(r.body.path).toMatch(/^users\/550e8400-.*\/profile\.[a-z]+$/);
+  });
+
+  it('signs the caller\'s stored photo path for GET /api/me/profile-photo', async () => {
+    const { client, setUsersRow } = makeSupabase();
+    setUsersRow({
+      data: { photo_url: 'users/550e8400-e29b-41d4-a716-446655440000/profile.webp' },
+      error: null,
+    });
+    const r = await handleGetMyProfilePhotoUrl(makeReq({}), client);
+    expect(r.status).toBe(200);
+    // Proves the private-bucket read path works from the stored path alone.
+    expect(r.body.url).toBe(
+      'https://cdn/signed/users/550e8400-e29b-41d4-a716-446655440000/profile.webp?token=stub',
+    );
+    expect(r.body.path).toBe('users/550e8400-e29b-41d4-a716-446655440000/profile.webp');
+  });
+
+  it('recovers a bucket path from a legacy public URL written before the bucket went private', async () => {
+    const { client, setUsersRow } = makeSupabase();
+    setUsersRow({
+      data: {
+        photo_url:
+          'https://proj.supabase.co/storage/v1/object/public/user-uploads/users/550e8400-e29b-41d4-a716-446655440000/profile.jpg?v=1717000000000',
+      },
+      error: null,
+    });
+    const r = await handleGetMyProfilePhotoUrl(makeReq({}), client);
+    expect(r.status).toBe(200);
+    expect(r.body.path).toBe('users/550e8400-e29b-41d4-a716-446655440000/profile.jpg');
+  });
+
+  it('leaves an external (OAuth) avatar alone instead of trying to sign it', async () => {
+    const { client, setUsersRow } = makeSupabase();
+    setUsersRow({ data: { photo_url: 'https://lh3.googleusercontent.com/a/abc123' }, error: null });
+    const r = await handleGetMyProfilePhotoUrl(makeReq({}), client);
+    expect(r.status).toBe(200);
+    // No bucket path to sign — the client keeps rendering the external URL.
+    expect(r.body.url).toBe(null);
+    expect(r.body.path).toBe(null);
   });
 });
 

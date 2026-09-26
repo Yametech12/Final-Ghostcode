@@ -27,6 +27,9 @@ import {
   handleDeleteOracleAnalysis,
   handleDeleteMyAccount,
   handleAdminDeleteUser,
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
 
@@ -277,6 +280,25 @@ app.post('/api/security/log', async (req, res) => {
 app.post('/api/upload/profile-photo', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleUploadProfilePhoto(nr, supabase));
+});
+
+// Signed-URL read path for the now-private user-uploads bucket.
+// See 20240101001000_storage_private_bucket.sql.
+app.get('/api/me/profile-photo', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleGetMyProfilePhotoUrl(nr, supabase));
+});
+
+app.get('/api/admin/users/:id/photo', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleAdminGetUserPhotoUrl(nr, supabase));
+});
+
+// Privileged write moved off the client: the column-level grants in
+// 20240101000900 reject users.update({role}) from the browser with 42501.
+app.patch('/api/admin/users/:id/role', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleAdminUpdateUserRole(nr, supabase));
 });
 
 app.post('/api/advisor/session', async (req, res) => {

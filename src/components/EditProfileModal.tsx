@@ -190,18 +190,23 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         throw new Error(errBody.error || `Upload failed: ${response.status}`);
       }
 
-      const { url: publicUrl } = await response.json();
-      if (!publicUrl) {
+      // The endpoint returns BOTH a signed URL (for rendering) and the bucket
+      // object path (for persistence). The bucket is private as of
+      // 20240101001000_storage_private_bucket.sql, so the signed URL expires in
+      // an hour — persisting it would leave a dead <img> src. Persist the path
+      // instead; it is re-signed on load via GET /api/me/profile-photo.
+      const { url: signedUrl, path: storagePath } = await response.json();
+      if (!signedUrl || !storagePath) {
         URL.revokeObjectURL(localPreviewUrl);
-        throw new Error('Upload succeeded but no URL was returned');
+        throw new Error('Upload succeeded but no signed URL/path was returned');
       }
 
-      setPhotoUrl(publicUrl);
-      setPhotoPreview(publicUrl);
+      setPhotoUrl(signedUrl);
+      setPhotoPreview(signedUrl);
       // Now that the HTTPS URL is showing, the local blob URL is no
       // longer referenced by any <img>. Free it.
       URL.revokeObjectURL(localPreviewUrl);
-      await updateUserProfile({ photoURL: publicUrl });
+      await updateUserProfile({ photoURL: storagePath });
       toast.success('Profile photo updated!');
     } catch (error: any) {
       console.error('Photo upload error:', error);

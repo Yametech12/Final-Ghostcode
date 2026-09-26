@@ -27,6 +27,9 @@ import {
   handleDeleteOracleAnalysis,
   handleDeleteMyAccount,
   handleAdminDeleteUser,
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
 
@@ -338,6 +341,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (segments.length === 3) {
         normReq.params = { id: segments[2] };
         const r = await handleAdminDeleteUser(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
+    }
+
+    // GET /api/me/profile-photo  → short-lived signed URL for the caller's own
+    // photo. Needed because the user-uploads bucket is private as of
+    // 20240101001000_storage_private_bucket.sql: the stored value is a bucket
+    // path (or a now-dead legacy public URL), and only the server holds the key
+    // required to sign it.
+    if (pathname === 'me/profile-photo' && req.method === 'GET') {
+      const r = await handleGetMyProfilePhotoUrl(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+
+    // GET /api/admin/users/:id/photo  → signed URL for ANOTHER user's photo.
+    // Admin-only: an admin row renders avatars for users whose objects the
+    // admin does not own, so it cannot reuse /api/me/profile-photo. The admin
+    // check happens server-side before any URL is minted.
+    if (pathname.startsWith('admin/users/') && pathname.endsWith('/photo') && req.method === 'GET') {
+      const segments = pathname.split('/');
+      // segments: ['admin', 'users', '<id>', 'photo']
+      if (segments.length === 4) {
+        normReq.params = { id: segments[2] };
+        const r = await handleAdminGetUserPhotoUrl(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
+    }
+
+    // PATCH /api/admin/users/:id/role  → admin-only privileged write.
+    // Replaces the dashboard's direct client-side users.update({role}), which
+    // the column-level grants in 20240101000900 now reject with 42501.
+    if (pathname.startsWith('admin/users/') && pathname.endsWith('/role') && req.method === 'PATCH') {
+      const segments = pathname.split('/');
+      // segments: ['admin', 'users', '<id>', 'role']
+      if (segments.length === 4) {
+        normReq.params = { id: segments[2] };
+        const r = await handleAdminUpdateUserRole(normReq, supabase);
         res.status(r.status).json(r.body);
         return;
       }
