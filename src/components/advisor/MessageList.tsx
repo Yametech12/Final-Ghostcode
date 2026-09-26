@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useSmartScroll } from '../../hooks/useSmartScroll';
@@ -20,7 +21,7 @@ interface MessageListProps {
  * Scrollable area that lists messages or shows the empty state.
  * Uses smart-scroll: only auto-follows the bottom when the user is already there.
  */
-export function MessageList({
+function MessageListImpl({
   messages,
   isStreaming,
   isSending,
@@ -87,3 +88,7 @@ export function MessageList({
     </div>
   );
 }
+
+/** P1: pure component — memoised so parent re-renders that pass identical
+ * props skip its render path entirely. */
+export const MessageList = memo(MessageListImpl);

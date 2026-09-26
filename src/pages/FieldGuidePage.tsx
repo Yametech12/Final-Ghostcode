@@ -61,7 +61,7 @@ export default function FieldGuidePage() {
       try {
         const { data: reports, error } = await supabase
           .from('field_reports')
-          .select('*')
+          .select('id, author, type, scenario, action, result, likes, comment_count, user_id, timestamp')
           .order('timestamp', { ascending: false })
           .limit(50);
         if (error) throw error;
@@ -166,7 +166,7 @@ export default function FieldGuidePage() {
     try {
        const { data: fetchedComments, error } = await supabase
          .from('field_report_comments')
-         .select('*')
+         .select('id, report_id, user_id, author, content, timestamp')
          .eq('report_id', reportId)
          .order('timestamp', { ascending: true })
          .limit(100);

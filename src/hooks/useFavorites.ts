@@ -43,7 +43,7 @@ export function useFavorites() {
     const fetchAll = async () => {
       const { data, error } = await supabase
         .from('favorites')
-        .select('*')
+        .select('id, user_id, content_id, content_type, category, title, timestamp')
         .eq('user_id', user.id)
         .order('timestamp', { ascending: false })
         .limit(500)

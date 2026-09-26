@@ -374,6 +374,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     src={photoPreview}
                     alt="Profile preview"
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   {uploadingPhoto && (
                     <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
@@ -389,6 +391,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     src={userData.photoURL}
                     alt="Current profile photo"
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               )}

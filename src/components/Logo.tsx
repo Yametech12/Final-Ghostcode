@@ -1,11 +1,12 @@
 import { cn } from '../lib/utils';
+import { memo } from 'react';
 
 interface LogoProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg' | 'xl';
 }
 
-export function LogoIcon({ className }: { className?: string }) {
+function LogoIconImpl({ className }: { className?: string }) {
   return (
     <div className={cn("w-5 h-5 rounded-md overflow-hidden bg-black flex items-center justify-center border border-white/10 hover:border-accent-primary/15 transition-colors duration-200", className)}>
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" className="w-full h-full p-1 text-white fill-current">
@@ -17,7 +18,7 @@ export function LogoIcon({ className }: { className?: string }) {
   );
 }
 
-export default function Logo({ className, size = 'md' }: LogoProps) {
+function Logo({ className, size = 'md' }: LogoProps) {
   const sizeClasses = {
     sm: 'w-5 h-5',
     md: 'w-8 h-8',
@@ -45,3 +46,9 @@ export default function Logo({ className, size = 'md' }: LogoProps) {
     </div>
   );
 }
+
+/** P1: pure component — memoised to stop parent re-renders from
+ * re-running its render path. */
+export const LogoIcon = memo(LogoIconImpl);
+
+export default memo(Logo);

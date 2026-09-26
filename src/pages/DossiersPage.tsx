@@ -62,7 +62,7 @@ export default function DossiersPage() {
         try {
            const { data: dossiers, error } = await supabase
              .from('dossiers')
-             .select('*')
+             .select('id, name, type_id, phase, notes, last_interaction, created_at')
              .eq('user_id', user.id)
              .order('created_at', { ascending: false })
              .limit(100);

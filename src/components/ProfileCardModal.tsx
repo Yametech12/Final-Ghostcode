@@ -66,7 +66,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
       role="dialog"
       aria-modal="true"
       aria-label="Profile card"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90"
     >
       <div className="w-full max-w-md space-y-4">
         <div className="flex justify-end">

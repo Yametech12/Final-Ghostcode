@@ -70,7 +70,48 @@ export function applySecurityHeaders(opts: {
     isProduction = process.env.NODE_ENV === 'production',
   } = opts;
 
+<<<<<<< ours
   const productionHeaders = isProduction || isSecure;
+=======
+  setHeader('X-Frame-Options', 'DENY');
+  setHeader('X-Content-Type-Options', 'nosniff');
+  setHeader('X-XSS-Protection', '1; mode=block');
+  setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  setHeader(
+    'Content-Security-Policy',
+    [
+      "default-src 'self'",
+      // Google Tag Manager / Analytics is loaded only when VITE_GA_TRACKING_ID
+      // is set; allow its host so the script tag isn't blocked.
+      "script-src 'self' https://www.googletagmanager.com",
+      // Tailwind 4 inlines critical CSS and Google Fonts is loaded as a
+      // stylesheet. When you migrate to nonced styles, drop 'unsafe-inline'.
+      // P0-1: fonts are self-hosted under /fonts, so no third-party style or
+      // font origin is needed any more.
+      "style-src 'self' 'unsafe-inline'",
+      "img-src 'self' data: https:",
+      // Outbound fetch destinations:
+      //   • Supabase REST / Realtime / Storage
+      //   • Regolo AI (used by /api/ai/chat from server, but client may
+      //     occasionally call directly through apiFetch wrappers)
+      //   • Sentry browser ingest — wildcard covers regional ingest hosts
+      //     (e.g. *.ingest.sentry.io and *.ingest.de.sentry.io). Without
+      //     this the browser silently drops Sentry POSTs and we lose all
+      //     client-side error capture.
+      //   • Google Analytics measurement protocol.
+      "connect-src 'self' https://*.supabase.co https://api.regolo.ai https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://www.google-analytics.com",
+      "font-src 'self' data:",
+      // Explicit directives for PWA shell — default-src would catch them
+      // too but scanners flag missing entries.
+      "worker-src 'self'",
+      "manifest-src 'self'",
+      "frame-src 'self'",
+      "object-src 'none'",
+      "frame-ancestors 'self'",
+      "base-uri 'self'",
+    ].join('; ') + ';',
+  );
+>>>>>>> theirs
 
   for (const { key, value } of getStaticSecurityHeaders({
     isProduction: productionHeaders,

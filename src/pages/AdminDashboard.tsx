@@ -578,7 +578,9 @@ export default function AdminDashboard() {
                               src={avatarSrc(u)}
                               alt={u.display_name || "User"}
                               className="w-full h-full object-cover"
-                            />
+                            loading="lazy"
+                            decoding="async"
+/>
                           ) : (
                             <User className="w-4 h-4 text-slate-500" />
                           )}
@@ -685,7 +687,9 @@ export default function AdminDashboard() {
                                 src={avatarSrc(u)}
                                 alt={u.display_name || "User"}
                                 className="w-full h-full object-cover"
-                              />
+                              loading="lazy"
+                              decoding="async"
+/>
                             ) : (
                               <User className="w-4 h-4 text-slate-500" />
                             )}

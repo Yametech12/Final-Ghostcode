@@ -627,12 +627,18 @@ export async function handleGetAdvisorSession(
     return { status: 200, body: { sessionId: null, messages: [] } };
   }
 
-  const { data: messages, error: messagesError } = await supabase
+  // P1: was `.order('timestamp', { ascending: true }).limit(50)` — that returns the
+  // OLDEST 50 messages and silently drops everything a long conversation added
+  // after message #50. Fetch the newest 50 (index-friendly, DESC) then flip in
+  // memory so the client still receives chronological order.
+  const { data: messagesDesc, error: messagesError } = await supabase
     .from('advisor_messages')
     .select('id, role, content, timestamp, reaction')
     .eq('session_id', session.id)
-    .order('timestamp', { ascending: true })
+    .order('timestamp', { ascending: false })
     .limit(50);
+
+  const messages = messagesDesc ? [...messagesDesc].reverse() : null;
 
   if (messagesError) {
     log.error('advisor_messages_fetch_failed', { userId, err: serializeErr(messagesError) });
@@ -746,12 +752,19 @@ async function buildAdvisorMessages(
       .eq('user_id', userId)
       .order('timestamp', { ascending: false })
       .limit(3),
+    // P1: same newest-N-then-reverse fix as the session loader — the model was
+    // being handed the OLDEST 50 turns as context instead of the latest 50.
     supabase
       .from('advisor_messages')
       .select('role, content, timestamp')
       .eq('session_id', sessionId)
+<<<<<<< ours
       .order('timestamp', { ascending: true })
       .limit(BOUNDS.MAX_HISTORY_MESSAGES),
+=======
+      .order('timestamp', { ascending: false })
+      .limit(50),
+>>>>>>> theirs
     supabase
       .from('advisor_sessions')
       .select('title, timestamp')
@@ -759,6 +772,10 @@ async function buildAdvisorMessages(
       .order('timestamp', { ascending: false })
       .limit(5),
   ]);
+
+  // The two advisor history queries above are newest-first so the LIMIT keeps the
+  // most recent turns; restore chronological order for the prompt.
+  const orderedHistory = Array.isArray(history) ? [...history].reverse() : [];
 
   const latestCalibration = calibrations?.[0];
   const personalityType = latestCalibration?.type_id || 'Unknown';
@@ -807,7 +824,7 @@ ${traits && Object.keys(traits).length > 0
 
 ## CONVERSATION CONTEXT
 Recent Sessions: ${recentActivity?.map((s) => s.title).join(', ') || 'None'}
-Message History: ${history?.length || 0} messages in this session
+Message History: ${orderedHistory.length} messages in this session
 
 ## RESPONSE GUIDELINES
 - Include 1-2 specific, actionable steps when giving advice
@@ -836,7 +853,7 @@ Assistant: "Classic Tester behavior — she's keeping you warm while evaluating 
   // stays at 20k chars (~5k tokens). Both leave headroom for system
   // prompt + new message + response within the 8192 context.
   const MAX_HISTORY_CHARS = tier === 'oracle' ? 27500 : 20000;
-  let historyMessages = (history || []).map((m) => ({
+  let historyMessages = orderedHistory.map((m) => ({
     role: m.role === 'model' ? 'assistant' : m.role,
     content: m.content,
   }));

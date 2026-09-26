@@ -4,6 +4,10 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
+// P0-5: gzip/brotli for API responses. Node's http server previously sent
+// every JSON payload (some are large — oracle analyses embed a full result
+// object) and every static asset uncompressed.
+import compression from 'compression';
 import { createClient } from '@supabase/supabase-js';
 
 
@@ -52,6 +56,7 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
+<<<<<<< ours
 // ---------------------------------------------------------------------------
 // Stripe webhook — MUST be registered BEFORE express.json so signature
 // verification sees the RAW request body (re-serialization breaks the HMAC).
@@ -70,6 +75,23 @@ app.post(
     );
     res.status(r.status).json(r.body ?? {});
   },
+=======
+// P0-5: response compression. The filter matters: /api/advisor/chat is a
+// text/event-stream and compressing it would let zlib buffer tokens, adding
+// latency to time-to-first-token and defeating the point of streaming. So we
+// compress everything except SSE, and skip payloads under 1 KB where the
+// gzip header overhead outweighs the saving.
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (req, res) => {
+      const contentType = res.getHeader('Content-Type')?.toString() ?? '';
+      if (contentType.includes('text/event-stream')) return false;
+      if (req.headers['x-no-compression']) return false;
+      return compression.filter(req, res);
+    },
+  }),
+>>>>>>> theirs
 );
 
 // Body parsing with size limits
@@ -109,16 +131,71 @@ if (isPlaceholder(supabaseServiceKey)) {
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // ---------------------------------------------------------------------------
-// Rate limiting (in-memory; best-effort only — see notes in shared handlers)
+// Rate limiting
 // ---------------------------------------------------------------------------
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
+// P0-4: this was a plain in-memory Map, which had two real defects:
+//   • Correctness — every serverless instance kept its own counters, so the
+//     effective ceiling was (limit × warm instances). Under load the throttle
+//     silently stopped throttling.
+//   • Memory — nothing ever pruned the Map, so a long-lived process accumulated
+//     one entry per distinct IP address forever.
+// The durable limiter already exists in Postgres and is the one the production
+// entrypoint (api/server.ts) has always called:
+//   record_and_count_rate_limit(rl_key text, window_seconds integer) RETURNS integer
+// defined in supabase/migrations/20240101000200_rate_limits.sql and hardened by
+// 20240101000600_rate_limit_hardcap.sql (HARD_CAP short-circuit so abusive
+// traffic stops writing rows). We now route this entrypoint through the same
+// atomic RPC, so dev and prod enforce one shared, instance-independent budget.
+//
+// Fallback: if the RPC is missing (migration not applied) or errors, we use a
+// bounded local bucket rather than failing open entirely.
 const AI_LIMIT = 10;
 const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
 const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
-const RATE_WINDOW = 60_000;
-const ACCOUNT_DELETE_WINDOW = 5 * 60_000; // 5min window for account delete
+const RATE_WINDOW_S = 60;
+const ACCOUNT_DELETE_WINDOW_S = 5 * 60;
 
-function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+// Bounded fallback store — hard-capped, and expired entries are swept on write.
+const FALLBACK_MAX_KEYS = 5_000;
+const fallbackStore = new Map<string, { count: number; resetTime: number }>();
+
+function fallbackRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  if (fallbackStore.size >= FALLBACK_MAX_KEYS) {
+    for (const [k, v] of fallbackStore) {
+      if (v.resetTime <= now) fallbackStore.delete(k);
+    }
+    if (fallbackStore.size >= FALLBACK_MAX_KEYS) {
+      const oldest = fallbackStore.keys().next().value;
+      if (oldest !== undefined) fallbackStore.delete(oldest);
+    }
+  }
+  const rec = fallbackStore.get(key);
+  if (!rec || now > rec.resetTime) {
+    fallbackStore.set(key, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+  rec.count += 1;
+  return rec.count > limit;
+}
+
+/** Returns true when the caller has exceeded `limit` within the window. */
+async function isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('record_and_count_rate_limit', {
+      rl_key: key,
+      window_seconds: windowSeconds,
+    });
+    if (error) throw error;
+    if (typeof data === 'number') return data > limit;
+    return false;
+  } catch (err) {
+    log.warn('rate_limit_rpc_failed', { key, err: serializeErr(err) });
+    return fallbackRateLimit(key, limit, windowSeconds * 1000);
+  }
+}
+
+async function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
   // Decide which bucket (if any) applies. AI/advisor/calibration share one,
   // /api/security/log gets its own with a higher allowance since legitimate
   // clients can emit several events per page load. Account deletion gets
@@ -131,39 +208,38 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
   if (!isAiPath && !isLogPath && !isAccountDelete) return next();
 
   let limit: number;
-  let window: number;
+  let windowSeconds: number;
   let bucketPrefix: string;
   if (isAccountDelete) {
     limit = ACCOUNT_DELETE_LIMIT;
-    window = ACCOUNT_DELETE_WINDOW;
-    bucketPrefix = 'acctdel';
+    windowSeconds = ACCOUNT_DELETE_WINDOW_S;
+    bucketPrefix = 'delete';
   } else if (isLogPath) {
     limit = LOG_LIMIT;
-    window = RATE_WINDOW;
+    windowSeconds = RATE_WINDOW_S;
     bucketPrefix = 'log';
   } else {
     limit = AI_LIMIT;
-    window = RATE_WINDOW;
-    bucketPrefix = 'ai';
+    windowSeconds = RATE_WINDOW_S;
+    bucketPrefix = 'rate';
   }
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
   const bucketKey = `${bucketPrefix}:${ip}`;
-  const now = Date.now();
-  const record = rateLimitStore.get(bucketKey);
 
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(bucketKey, { count: 1, resetTime: now + window });
-    return next();
+  try {
+    if (await isRateLimited(bucketKey, limit, windowSeconds)) {
+      return res.status(429).json({
+        error: 'Rate limited',
+        details: `Maximum ${limit} requests per ${Math.round(windowSeconds / 60)} minute(s)`,
+        retryAfter: windowSeconds,
+        code: 'RATE_LIMITED',
+      });
+    }
+  } catch (err) {
+    // isRateLimited already swallows RPC failures; this is belt-and-braces so a
+    // programming error can never turn into a 500 on a rate-limit check.
+    log.warn('rate_limit_check_failed', { bucketKey, err: serializeErr(err) });
   }
-  if (record.count >= limit) {
-    return res.status(429).json({
-      error: 'Rate limited',
-      details: `Maximum ${limit} requests per ${Math.round(window / 60_000)} minute(s)`,
-      retryAfter: Math.ceil((record.resetTime - now) / 1000),
-      code: 'RATE_LIMITED',
-    });
-  }
-  record.count++;
   next();
 }
 app.use(rateLimitMiddleware);

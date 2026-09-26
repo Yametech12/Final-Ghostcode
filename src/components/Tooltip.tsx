@@ -76,7 +76,9 @@ export default function Tooltip({ children, term, definition, content }: Tooltip
         updatePosition();
       });
     };
-    window.addEventListener('scroll', onScrollOrResize, true);
+    // P1: capture-phase scroll on window forced the browser to wait on the
+    // handler; nothing here calls preventDefault, so it is safe to mark passive.
+    window.addEventListener('scroll', onScrollOrResize, { capture: true, passive: true });
     window.addEventListener('resize', onScrollOrResize);
     return () => {
       window.removeEventListener('scroll', onScrollOrResize, true);

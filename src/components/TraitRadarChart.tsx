@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   Radar,
   RadarChart,
@@ -35,7 +36,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function TraitRadarChart({
+function TraitRadarChartImpl({
   traits,
   className = '',
   height = 400
@@ -82,3 +83,7 @@ export function TraitRadarChart({
     </div>
   );
 }
+
+/** P1: pure component — memoised to stop parent re-renders from
+ * re-running its render path. */
+export const TraitRadarChart = memo(TraitRadarChartImpl);

@@ -20,6 +20,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Epimetheus" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+<<<<<<< ours
 
     <!-- Fonts: preconnect first so the CSS request doesn't pay DNS+TLS to
          fonts.googleapis.com and the font files don't pay it to
@@ -68,6 +69,108 @@
         --splash-glow: rgba(184, 134, 11, 0.2);
       }
 
+=======
+    <!-- P0-1: fonts are self-hosted (latin subsets, 13 faces instead of 18).
+         No third-party stylesheet on the critical path; only the two faces used
+         by above-the-fold text are preloaded, the rest resolve from cache. -->
+    <link rel="preload" href="/fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-latin-600.woff2" as="font" type="font/woff2" crossorigin />
+
+    <title>EPIMETHEUS</title>
+    <style>
+      /* P0-1: inlined self-hosted @font-face — removes one blocking round trip. */
+      @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 300;
+      font-display: optional;
+      src: url('/fonts/cormorant-garamond-latin-300.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 400;
+      font-display: optional;
+      src: url('/fonts/cormorant-garamond-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/inter-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/inter-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/inter-latin-600.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('/fonts/inter-latin-700.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: optional;
+      src: url('/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 500;
+      font-display: optional;
+      src: url('/fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 300;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-300.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-600.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-700.woff2') format('woff2');
+    }
+>>>>>>> theirs
       @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: .4; }

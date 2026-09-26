@@ -224,7 +224,7 @@ export default function LandingPage() {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation"
-          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col safe-area-top safe-area-bottom safe-area-x"
+          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 flex flex-col safe-area-top safe-area-bottom safe-area-x"
         >
           <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
             <Link

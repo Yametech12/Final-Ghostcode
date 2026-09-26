@@ -1,4 +1,5 @@
 import { Bot } from 'lucide-react';
+import { memo } from 'react';
 import { motion } from 'motion/react';
 import { cn } from '../lib/utils';
 
@@ -20,7 +21,7 @@ interface TypingIndicatorProps {
  * Three pulsing dots that show while the model is "thinking" before tokens
  * arrive. Single shared component for the advisor and any other chat UI.
  */
-export function TypingIndicator({
+function TypingIndicatorImpl({
   className,
   size = 'md',
   variant = 'bubble',
@@ -78,3 +79,7 @@ export function TypingIndicator({
     </motion.div>
   );
 }
+
+/** P1: pure component — memoised to stop parent re-renders from
+ * re-running its render path. */
+export const TypingIndicator = memo(TypingIndicatorImpl);

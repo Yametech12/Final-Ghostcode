@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import React from 'react';
 import { cn } from "../../lib/utils";
 
@@ -6,7 +7,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   shimmer?: boolean;
 }
 
-export function Skeleton({ className, variant = 'default', shimmer = true, ...props }: SkeletonProps) {
+function SkeletonImpl({ className, variant = 'default', shimmer = true, ...props }: SkeletonProps) {
   const variantClasses = {
     default: 'rounded-md',
     circle: 'rounded-full',
@@ -58,3 +59,7 @@ export function CardSkeleton() {
     </div>
   );
 }
+
+/** P1: pure component — memoised so parent re-renders that pass identical
+ * props skip its render path entirely. */
+export const Skeleton = memo(SkeletonImpl);

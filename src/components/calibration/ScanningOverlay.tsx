@@ -103,7 +103,7 @@ export function ScanningOverlay({ visible, onCancel }: ScanningOverlayProps) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] bg-mystic-950/95 backdrop-blur-xl flex items-start sm:items-center justify-center p-4 overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-mystic-950/95 flex items-start sm:items-center justify-center p-4 overflow-y-auto"
       // Local overscroll containment — replaces the previous global
       // `document.body.style.overflow = 'hidden'`, which clipped overlay
       // content on small screens.

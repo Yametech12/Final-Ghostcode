@@ -1,4 +1,8 @@
+<<<<<<< ours
 import { useThemeColors } from '../styles/colorTokens';
+=======
+import { memo, useEffect, useState } from 'react';
+>>>>>>> theirs
 import {
   Radar,
   RadarChart,
@@ -29,11 +33,32 @@ const CustomTooltip = ({ active, payload }: any) => {
   return null;
 };
 
+<<<<<<< ours
 export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
   // Colours come from the shared token hook: recharts writes stroke/fill as SVG
   // *attributes*, which cannot consume var(), so the hook hands back concrete
   // values and re-reads them whenever the theme class on <html> flips.
   const { accentPrimary: accent, tickColor, gridColor } = useThemeColors();
+=======
+function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
+  // Source colors from design tokens so theme + redesign updates flow through.
+  // Recharts/SVG can't consume CSS variables directly inside `stroke`/`stopColor`,
+  // so we read them once after mount and re-read when theme toggles.
+  const [accent, setAccent] = useState<string>('#E8C77E');
+  const [tickColor, setTickColor] = useState<string>('#C4BAAB');
+
+  useEffect(() => {
+    const refreshColors = () => {
+      setAccent(getCssVar('--color-accent-primary', '#E8C77E'));
+      setTickColor(getCssVar('--color-slate-300', '#C4BAAB'));
+    };
+    refreshColors();
+    // Re-read when the theme class on <html> flips (light/dark toggle).
+    const observer = new MutationObserver(refreshColors);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+    return () => observer.disconnect();
+  }, []);
+>>>>>>> theirs
 
   const isTester = profile.combination.includes('Tester');
   const isJustifier = profile.combination.includes('Justifier');
@@ -116,3 +141,5 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
     </div>
   );
 };
+
+export default memo(ProfileRadarChart);

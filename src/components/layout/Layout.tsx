@@ -213,13 +213,37 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
     return () => window.removeEventListener('unhandledrejection', handleRejection);
   }, []);
 
-  // Scroll listener for nav background effect
+  // Scroll listener for nav background effect.
+  // P0-2: previously a non-passive listener calling setScrolled() on EVERY scroll
+  // event — under Lenis that is 60-120 state updates per second, each re-rendering
+  // the whole Layout subtree. Now: passive listener, coalesced through rAF, and
+  // setState fires only when the boolean actually flips.
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
+    const THRESHOLD = 20;
+    let ticking = false;
+    let isScrolled = window.scrollY > THRESHOLD;
+    setScrolled(isScrolled);
+
+    const evaluate = () => {
+      ticking = false;
+      const next = window.scrollY > THRESHOLD;
+      if (next !== isScrolled) {
+        isScrolled = next;
+        setScrolled(next);
+      }
     };
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+
+    const handleScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(evaluate);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (ticking) cancelAnimationFrame(0);
+    };
   }, []);
 
   // Theme toggle effect
@@ -546,6 +570,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                         src={user.photoURL}
                         alt=""
                         className="w-8 h-8 rounded-full border border-white/10 shrink-0 object-cover"
+                        decoding="async"
                         referrerPolicy="no-referrer"
                         onError={(e) => {
                           // If the photo URL 404s or is rate-limited (common
@@ -647,7 +672,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
-            className="fixed inset-0 h-screen h-[100dvh] w-full z-[60] lg:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col overflow-hidden safe-area-top safe-area-bottom safe-area-x"
+            className="fixed inset-0 h-screen h-[100dvh] w-full z-[60] lg:hidden bg-mystic-950/95 flex flex-col overflow-hidden safe-area-top safe-area-bottom safe-area-x"
           >
             <div className="flex items-center justify-between h-16 px-4 sm:px-6 border-b border-slate-700/30 shrink-0">
               <div className="flex items-center gap-2">
@@ -779,6 +804,8 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     <img
                       src={user.photoURL || undefined}
                       alt=""
+                      loading="lazy"
+                      decoding="async"
                       className="w-12 h-12 rounded-full border-2 border-slate-700/30 shrink-0"
                       referrerPolicy="no-referrer"
                     />

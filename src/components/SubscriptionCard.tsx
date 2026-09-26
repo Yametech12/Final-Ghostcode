@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Sparkles, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
 import { useSubscription } from '../hooks/useSubscription';
@@ -9,7 +10,7 @@ import { useSubscription } from '../hooks/useSubscription';
  * Admins see a special "Admin · full access" state — all gates are bypassed
  * for them at the route level so a plan label would be misleading.
  */
-export default function SubscriptionCard() {
+function SubscriptionCard() {
   const sub = useSubscription();
 
   // Admin override view
@@ -137,3 +138,5 @@ export default function SubscriptionCard() {
     </div>
   );
 }
+
+export default memo(SubscriptionCard);

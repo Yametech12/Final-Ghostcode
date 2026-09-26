@@ -162,7 +162,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         console.log('Loading user data for:', userId);
         const { data, error } = await supabase
           .from('users')
-          .select('*')
+          .select('id, email, display_name, photo_url, bio, contact_info, role, created_at, last_login_at, subscription_tier, subscription_expires_at')
           .eq('id', userId)
           .maybeSingle();
 
@@ -204,7 +204,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
               console.log('User record created successfully for:', userId);
               const { data: newData } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, email, display_name, photo_url, bio, contact_info, role, created_at, last_login_at, subscription_tier, subscription_expires_at')
                 .eq('id', userId)
                 .maybeSingle();
               if (newData) {

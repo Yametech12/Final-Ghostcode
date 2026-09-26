@@ -1,6 +1,7 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, Home, ChevronDown, ClipboardCopy, Check } from 'lucide-react';
 import { isAppError } from '../lib/errors';
+import { captureException } from '../lib/sentry';
 
 interface Props {
   children: ReactNode;
@@ -32,6 +33,7 @@ class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Uncaught error:', error, errorInfo);
+<<<<<<< ours
     // Forward to Sentry and keep the event id so support can correlate a
     // user-reported bug with the server-side trace. No-op if not configured.
     import('@sentry/react')
@@ -44,6 +46,11 @@ class ErrorBoundary extends Component<Props, State> {
       .catch(() => {
         // Sentry unavailable — already logged to console
       });
+=======
+    // Forward to Sentry (no-op if not configured). P1: was a dynamic import on
+    // every render error; sentry.ts already keeps the SDK handle cached.
+    void captureException(error, { componentStack: errorInfo.componentStack });
+>>>>>>> theirs
   }
 
   private handleReset = () => {

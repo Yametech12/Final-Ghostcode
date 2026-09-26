@@ -472,7 +472,9 @@ export default function CalibrationPage() {
       if (!analysisId || !user) return;
 
       try {
-        const { data, error } = await supabase.from('oracle_analyses').select('*').eq('id', analysisId).single();
+        const { data, error } = await supabase.from('oracle_analyses')
+          .select('id, timestamp, result, scenarioSummary:scenario_summary')
+          .eq('id', analysisId).single();
         if (error) throw error;
 
         // Coerce the persisted blob into the render-safe shape before
@@ -513,7 +515,9 @@ export default function CalibrationPage() {
       }
       setIsLoadingHistory(true);
       try {
-        const { data, error } = await supabase.from('oracle_analyses').select('*').eq('user_id', user.id).order('timestamp', { ascending: false }).limit(50);
+        const { data, error } = await supabase.from('oracle_analyses')
+          .select('id, timestamp, result, scenarioSummary:scenario_summary')
+          .eq('user_id', user.id).order('timestamp', { ascending: false }).limit(50);
         if (error) throw error;
 
         const fetchedHistory: AnalysisHistory[] = data.map((doc) => {
