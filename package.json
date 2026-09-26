@@ -19,7 +19,11 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "diagnose": "tsx scripts/diagnostic.ts"
+    "diagnose": "tsx scripts/diagnostic.ts",
+    "sync:headers": "tsx scripts/sync-vercel-headers.ts",
+    "check:headers": "tsx scripts/sync-vercel-headers.ts --check",
+    "verify:headers": "bash scripts/check-security-headers.sh",
+    "verify": "npm run lint:all && npm run check:headers && npm run test"
   },
   "dependencies": {
     "@sentry/node": "^10.53.1",

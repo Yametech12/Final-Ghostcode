@@ -1,33 +1,45 @@
-// Declare global gtag function
+// Google Analytics loader.
+//
+// CSP NOTE: this used to inject a second <script> element whose textContent
+// held the gtag bootstrap. That is an *inline* script, and the app-shell CSP
+// (script-src 'self' https://www.googletagmanager.com, no 'unsafe-inline', no
+// nonce) blocks it — GA would have silently stopped reporting the moment the
+// CSP from vercel.json took effect. Initialising from module code instead is
+// equivalent and is allowed, because the module itself is a same-origin script.
 declare global {
-  function gtag(...args: any[]): void;
+  interface Window {
+    dataLayer: unknown[];
+    gtag: (...args: unknown[]) => void;
+  }
 }
 
 // Initialize Google Analytics
 export const initAnalytics = () => {
-  if (typeof window !== 'undefined' && import.meta.env.VITE_GA_TRACKING_ID) {
-    // Load Google Analytics script
-    const script1 = document.createElement('script');
-    script1.async = true;
-    script1.src = `https://www.googletagmanager.com/gtag/js?id=${import.meta.env.VITE_GA_TRACKING_ID}`;
-    document.head.appendChild(script1);
+  if (typeof window === 'undefined') return;
 
-    // Initialize gtag
-    const script2 = document.createElement('script');
-    script2.textContent = `
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', '${import.meta.env.VITE_GA_TRACKING_ID}');
-    `;
-    document.head.appendChild(script2);
-  }
+  const trackingId = import.meta.env.VITE_GA_TRACKING_ID;
+  if (!trackingId) return;
+
+  // Load the external GA loader (allowed by script-src's googletagmanager entry).
+  const script1 = document.createElement('script');
+  script1.async = true;
+  script1.src = `https://www.googletagmanager.com/gtag/js?id=${trackingId}`;
+  document.head.appendChild(script1);
+
+  // Initialise in module scope — no inline <script> element, so no CSP
+  // violation and no console noise.
+  window.dataLayer = window.dataLayer || [];
+  window.gtag = function gtag(...args: unknown[]) {
+    window.dataLayer.push(args);
+  };
+  window.gtag('js', new Date());
+  window.gtag('config', trackingId);
 };
 
 // Track page views
 export const trackPageView = (pagePath: string, pageTitle?: string) => {
-  if (typeof window !== 'undefined' && import.meta.env.VITE_GA_TRACKING_ID && typeof gtag === 'function') {
-    gtag('config', import.meta.env.VITE_GA_TRACKING_ID, {
+  if (typeof window !== 'undefined' && import.meta.env.VITE_GA_TRACKING_ID && typeof window.gtag === 'function') {
+    window.gtag('config', import.meta.env.VITE_GA_TRACKING_ID, {
       page_path: pagePath,
       page_title: pageTitle || document.title,
     });
@@ -37,10 +49,10 @@ export const trackPageView = (pagePath: string, pageTitle?: string) => {
 // Track events
 export const trackEvent = (
   eventName: string,
-  parameters: Record<string, any> = {}
+  parameters: Record<string, unknown> = {}
 ) => {
-  if (typeof window !== 'undefined' && import.meta.env.VITE_GA_TRACKING_ID && typeof gtag === 'function') {
-    gtag('event', eventName, {
+  if (typeof window !== 'undefined' && import.meta.env.VITE_GA_TRACKING_ID && typeof window.gtag === 'function') {
+    window.gtag('event', eventName, {
       ...parameters,
       custom_map: { dimension1: 'user_type' }
     });

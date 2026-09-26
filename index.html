@@ -5,13 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0a0508" />
+    <meta name="theme-color" content="#0E0B12" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Epimetheus" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap">
+
+    <!-- Fonts: preconnect first so the CSS request doesn't pay DNS+TLS to
+         fonts.googleapis.com and the font files don't pay it to
+         fonts.gstatic.com (crossorigin is required for the font origin). -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" />
 
     <title>EPIMETHEUS</title>
     <style>
@@ -25,19 +31,13 @@
         100% { width: 10%; margin-left: 90%; }
       }
     </style>
-    <script>
-      // Apply theme before React hydrates to avoid FOUC
-      (function() {
-        try {
-          var saved = localStorage.getItem('theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = saved === 'dark' || (!saved && prefersDark);
-          if (!isDark) {
-            document.documentElement.classList.add('light-theme');
-          }
-        } catch (e) { /* localStorage unavailable */ }
-      })();
-    </script>
+
+    <!-- Apply the saved theme before React hydrates to avoid FOUC.
+         External file (not inline): the app-shell CSP is script-src 'self'
+         with no 'unsafe-inline', so an inline snippet would be blocked and
+         the flash would come back. Deliberately NOT deferred — a deferred
+         script can run after the first paint. -->
+    <script src="/theme-bootstrap.js"></script>
   </head>
   <body>
     <div id="root">
