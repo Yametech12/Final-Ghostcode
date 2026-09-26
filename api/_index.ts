@@ -16,6 +16,7 @@ import { log, requestIdFrom, serializeErr } from './lib/log.js';
 import { initSentryNode, captureException } from './lib/sentryNode.js';
 import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
 import {
+<<<<<<< ours
   handleHealth,
   handleTestKey,
   handleSecurityLog,
@@ -34,6 +35,10 @@ import {
   handleGetMyProfilePhotoUrl,
   handleAdminGetUserPhotoUrl,
   handleAdminUpdateUserRole,
+=======
+  routes,
+  isStaticRoute,
+>>>>>>> theirs
   type NormalizedRequest,
 } from './lib/handlers.js';
 import {
@@ -364,8 +369,20 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
 }
 
 // ---------------------------------------------------------------------------
-// Routes
+// Routes — mounted from the declarative table exported by
+// api/lib/handlers/index.ts, one entry per domain module.
+//
+// Behaviour is identical to the 16 hand-written app.get/post/patch/delete
+// registrations this replaces:
+//   • the array is concatenated in the ORIGINAL registration order, and
+//     Express matches in registration order, so first-match semantics are
+//     unchanged;
+//   • every non-static route still runs normalize() (JWT resolution) then
+//     send() (SSE plumbing + the 500 fallback that logs to Sentry);
+//   • the one static route (/api/ai/credits) still answers WITHOUT touching
+//     Supabase or the auth header, exactly as the previous inline handler did.
 // ---------------------------------------------------------------------------
+<<<<<<< ours
 app.get('/api/health', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, handleHealth);
@@ -423,37 +440,21 @@ app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
 });
+=======
+type ExpressVerb = 'get' | 'post' | 'patch' | 'delete';
+>>>>>>> theirs
 
-app.patch('/api/advisor/messages/:messageId/reaction', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleUpdateAdvisorReaction(nr, supabase));
-});
+for (const route of routes) {
+  const verb = route.method.toLowerCase() as ExpressVerb;
 
-app.post('/api/advisor/chat', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleAdvisorChatStream(nr, supabase));
-});
+  if (isStaticRoute(route)) {
+    app[verb](route.path, (_req, res) => {
+      res.status(route.staticResponse.status).json(route.staticResponse.body);
+    });
+    continue;
+  }
 
-app.post('/api/oracle/analyses', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleCreateOracleAnalysis(nr, supabase));
-});
-
-app.patch('/api/oracle/analyses/:id/tasks', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleUpdateOracleAnalysisTasks(nr, supabase));
-});
-
-app.delete('/api/oracle/analyses/:id', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleDeleteOracleAnalysis(nr, supabase));
-});
-
-app.post('/api/ai/chat', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleAiChat(nr, supabase));
-});
-
+<<<<<<< ours
 // Billing — Stripe checkout & customer portal (JWT required; CSRF applies via
 // the JSON content-type the client always sends).
 app.post('/api/billing/create-checkout-session', async (req, res) => {
@@ -473,16 +474,17 @@ app.delete('/api/users/me', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleDeleteMyAccount(nr, supabase));
 });
+=======
+  app[verb](route.path, async (req, res) => {
+    const n = await normalize(req);
+    await send(res, n, (nr) => route.handler(nr, supabase));
+  });
+}
+>>>>>>> theirs
 
-// Admin-only user deletion. Required because AdminDashboard previously
-// deleted from `public.users` directly, which after the auth FK migration
-// leaves the auth row intact (ghost account). This handler verifies the
-// caller's admin role server-side and drives the deletion through
-// auth.admin.deleteUser so the FK cascade actually fires.
-app.delete('/api/admin/users/:id', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleAdminDeleteUser(nr, supabase));
-});
+// Machine-readable route table, used by scripts/route-table-modules.ts to
+// diff the mounted surface against the pre-refactor registration list.
+export const routeTable: string[] = routes.map((r) => `${r.method} ${r.path}`);
 
 // Static serving (production)
 if (process.env.NODE_ENV === 'production') {
