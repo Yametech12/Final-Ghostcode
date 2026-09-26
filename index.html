@@ -5,71 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-<<<<<<< ours
-    <meta name="theme-color" content="#0E0B12" />
-=======
     <!-- theme-color mirrors --color-mystic-950 of src/index.css. index.html is
          parsed before the bundle CSS exists, so it cannot consume a CSS
          variable; the two media queries cover first paint and ThemeContext
          re-syncs the tag at run time in src/contexts/ThemeContext.tsx. -->
     <meta name="theme-color" content="#0E0B12" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)" />
->>>>>>> theirs
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Epimetheus" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-<<<<<<< ours
-
-    <!-- Fonts: preconnect first so the CSS request doesn't pay DNS+TLS to
-         fonts.googleapis.com and the font files don't pay it to
-         fonts.gstatic.com (crossorigin is required for the font origin). -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&display=swap" />
-
-    <title>EPIMETHEUS</title>
-    <style>
-      /* ── Boot-splash token layer ──────────────────────────────────────────
-         This block is the documented, allowed mirror of the colour tokens in
-         src/index.css: the pre-React splash paints before the JS bundle (and
-         therefore before src/index.css) has loaded, so it cannot reference the
-         Tailwind tokens. Inline style="" attributes below reference ONLY these
-         variables — no colour literal appears in the markup.
-         `npm run lint:tokens` allow-lists exactly this block. */
-      :root {
-        --splash-bg: #0E0B12;
-        --splash-logo-bg: #0A0806;
-        --splash-accent: #E8C77E;
-        --splash-accent-hi: #F0D89A;
-        --splash-accent-deep: #D4AF37;
-        --splash-copper: #B87333;
-        --splash-muted: rgba(154, 143, 128, 0.6);
-        --splash-track: rgba(255, 255, 255, 0.05);
-        --splash-track-border: rgba(42, 36, 47, 0.8);
-        --splash-grid: rgba(232, 199, 126, 0.3);
-        --splash-orb: rgba(232, 199, 126, 0.08);
-        --splash-ring: rgba(232, 199, 126, 0.15);
-        --splash-glow: rgba(212, 175, 55, 0.18);
-      }
-      .light-theme {
-        --splash-bg: #FAF7F2;
-        --splash-logo-bg: #F2EDE3;
-        --splash-accent: #B8860B;
-        --splash-accent-hi: #9C7421;
-        --splash-accent-deep: #8B5A2B;
-        --splash-copper: #8B5A2B;
-        --splash-muted: rgba(110, 99, 88, 0.75);
-        --splash-track: rgba(20, 17, 14, 0.06);
-        --splash-track-border: rgba(20, 17, 14, 0.12);
-        --splash-grid: rgba(184, 134, 11, 0.35);
-        --splash-orb: rgba(184, 134, 11, 0.1);
-        --splash-ring: rgba(184, 134, 11, 0.18);
-        --splash-glow: rgba(184, 134, 11, 0.2);
-      }
-
-=======
     <!-- P0-1: fonts are self-hosted (latin subsets, 13 faces instead of 18).
          No third-party stylesheet on the critical path; only the two faces used
          by above-the-fold text are preloaded, the rest resolve from cache. -->
@@ -170,7 +116,6 @@
       font-display: swap;
       src: url('/fonts/space-grotesk-latin-700.woff2') format('woff2');
     }
->>>>>>> theirs
       @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: .4; }

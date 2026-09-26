@@ -17,7 +17,6 @@ import { initSentryNode, captureException } from './lib/sentryNode.js';
 import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
 import { cache, cacheMode, tryRedisRateLimit, redisAvailable } from './lib/cache.js';
 import {
-<<<<<<< ours
   handleHealth,
   handleTestKey,
   handleSecurityLog,
@@ -36,24 +35,18 @@ import {
   handleGetMyProfilePhotoUrl,
   handleAdminGetUserPhotoUrl,
   handleAdminUpdateUserRole,
-=======
-  routes,
-  isStaticRoute,
->>>>>>> theirs
   type NormalizedRequest,
 } from './lib/handlers.js';
 import {
-<<<<<<< ours
   handleCreateCheckoutSession,
   handleCreatePortalSession,
   handleStripeWebhook,
 } from './lib/subscription.js';
-=======
+import {
   handleRagReindex,
   handleRagStatus,
   handleRagToggle,
 } from './lib/handlers/rag.js';
->>>>>>> theirs
 
 console.log('Server starting...');
 console.log(
@@ -74,7 +67,6 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
-<<<<<<< ours
 // ---------------------------------------------------------------------------
 // Stripe webhook — MUST be registered BEFORE express.json so signature
 // verification sees the RAW request body (re-serialization breaks the HMAC).
@@ -93,7 +85,8 @@ app.post(
     );
     res.status(r.status).json(r.body ?? {});
   },
-=======
+);
+
 // P0-5: response compression. The filter matters: /api/advisor/chat is a
 // text/event-stream and compressing it would let zlib buffer tokens, adding
 // latency to time-to-first-token and defeating the point of streaming. So we
@@ -109,7 +102,6 @@ app.use(
       return compression.filter(req, res);
     },
   }),
->>>>>>> theirs
 );
 
 // Body parsing with size limits
@@ -159,26 +151,6 @@ if (redisAvailable) {
 }
 
 // ---------------------------------------------------------------------------
-<<<<<<< ours
-// Rate limiting
-// ---------------------------------------------------------------------------
-// P0-4: this was a plain in-memory Map, which had two real defects:
-//   • Correctness — every serverless instance kept its own counters, so the
-//     effective ceiling was (limit × warm instances). Under load the throttle
-//     silently stopped throttling.
-//   • Memory — nothing ever pruned the Map, so a long-lived process accumulated
-//     one entry per distinct IP address forever.
-// The durable limiter already exists in Postgres and is the one the production
-// entrypoint (api/server.ts) has always called:
-//   record_and_count_rate_limit(rl_key text, window_seconds integer) RETURNS integer
-// defined in supabase/migrations/20240101000200_rate_limits.sql and hardened by
-// 20240101000600_rate_limit_hardcap.sql (HARD_CAP short-circuit so abusive
-// traffic stops writing rows). We now route this entrypoint through the same
-// atomic RPC, so dev and prod enforce one shared, instance-independent budget.
-//
-// Fallback: if the RPC is missing (migration not applied) or errors, we use a
-// bounded local bucket rather than failing open entirely.
-=======
 // Rate limiting — shared Redis counter (see docs/architecture/caching.md)
 //
 // The counter lives in Upstash Redis so every instance and region shares one
@@ -189,7 +161,6 @@ if (redisAvailable) {
 // layer falls back to a bounded process-local counter that STILL enforces these
 // limits (per instance). See api/lib/cache.ts §4.
 // ---------------------------------------------------------------------------
->>>>>>> theirs
 const AI_LIMIT = 10;
 const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
 const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
@@ -220,25 +191,6 @@ function fallbackRateLimit(key: string, limit: number, windowMs: number): boolea
   return rec.count > limit;
 }
 
-<<<<<<< ours
-/** Returns true when the caller has exceeded `limit` within the window. */
-async function isRateLimited(key: string, limit: number, windowSeconds: number): Promise<boolean> {
-  try {
-    const { data, error } = await supabase.rpc('record_and_count_rate_limit', {
-      rl_key: key,
-      window_seconds: windowSeconds,
-    });
-    if (error) throw error;
-    if (typeof data === 'number') return data > limit;
-    return false;
-  } catch (err) {
-    log.warn('rate_limit_rpc_failed', { key, err: serializeErr(err) });
-    return fallbackRateLimit(key, limit, windowSeconds * 1000);
-  }
-}
-
-=======
->>>>>>> theirs
 async function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
   // Decide which bucket (if any) applies. AI/advisor/calibration share one,
   // /api/security/log gets its own with a higher allowance since legitimate
@@ -268,38 +220,16 @@ async function rateLimitMiddleware(req: express.Request, res: express.Response, 
     bucketPrefix = 'rate';
   }
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
-<<<<<<< ours
-  const bucketKey = `${bucketPrefix}:${ip}`;
-
-  try {
-    if (await isRateLimited(bucketKey, limit, windowSeconds)) {
-      return res.status(429).json({
-        error: 'Rate limited',
-        details: `Maximum ${limit} requests per ${Math.round(windowSeconds / 60)} minute(s)`,
-        retryAfter: windowSeconds,
-        code: 'RATE_LIMITED',
-      });
-    }
-  } catch (err) {
-    // isRateLimited already swallows RPC failures; this is belt-and-braces so a
-    // programming error can never turn into a 500 on a rate-limit check.
-    log.warn('rate_limit_check_failed', { bucketKey, err: serializeErr(err) });
-=======
   const bucketKey = `rate:${bucketPrefix}:${ip}`;
-  const windowSec = Math.round(window / 1000);
-
-  // tryRedisRateLimit never rejects: a Redis outage degrades to the bounded
-  // in-process counter rather than letting every request through.
-  const { allowed, resetMs } = await tryRedisRateLimit(bucketKey, limit, windowSec);
+  const { allowed, resetMs } = await tryRedisRateLimit(bucketKey, limit, windowSeconds);
 
   if (!allowed) {
     return res.status(429).json({
       error: 'Rate limited',
-      details: `Maximum ${limit} requests per ${Math.round(window / 60_000)} minute(s)`,
+      details: `Maximum ${limit} requests per ${Math.round(windowSeconds / 60)} minute(s)`,
       retryAfter: Math.max(1, Math.ceil(resetMs / 1000)),
       code: 'RATE_LIMITED',
     });
->>>>>>> theirs
   }
   next();
 }
@@ -438,7 +368,6 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
 //   • the one static route (/api/ai/credits) still answers WITHOUT touching
 //     Supabase or the auth header, exactly as the previous inline handler did.
 // ---------------------------------------------------------------------------
-<<<<<<< ours
 app.get('/api/health', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, handleHealth);
@@ -496,9 +425,6 @@ app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
 });
-=======
-type ExpressVerb = 'get' | 'post' | 'patch' | 'delete';
->>>>>>> theirs
 
 for (const route of routes) {
   const verb = route.method.toLowerCase() as ExpressVerb;
@@ -510,7 +436,6 @@ for (const route of routes) {
     continue;
   }
 
-<<<<<<< ours
 // Billing — Stripe checkout & customer portal (JWT required; CSRF applies via
 // the JSON content-type the client always sends).
 app.post('/api/billing/create-checkout-session', async (req, res) => {
@@ -549,13 +474,6 @@ app.delete('/api/users/me', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleDeleteMyAccount(nr, supabase));
 });
-=======
-  app[verb](route.path, async (req, res) => {
-    const n = await normalize(req);
-    await send(res, n, (nr) => route.handler(nr, supabase));
-  });
-}
->>>>>>> theirs
 
 // Machine-readable route table, used by scripts/route-table-modules.ts to
 // diff the mounted surface against the pre-refactor registration list.

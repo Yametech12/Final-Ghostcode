@@ -1,6 +1,5 @@
 /// <reference lib="dom" />
 /**
-<<<<<<< ours
  * Framework-agnostic route handlers shared by:
  *  - api/index.ts (Express dev server)
  *  - api/_server.ts (Vercel serverless handler)
@@ -21,8 +20,6 @@ import {
   PROMPT_BLOCK_TTL_SEC,
 } from './featuredCaches.js';
 import { log, serializeErr } from './log.js';
-<<<<<<< ours
-import {
   BOUNDS,
   ValidationError,
   validationErrorResponse,
@@ -31,12 +28,6 @@ import {
   clampInt,
   clampFloat,
 } from './validation.js';
-=======
-import { retrieveChunks, type RetrievedChunk } from './rag/retriever.js';
-import { buildRagPrompt } from './rag/promptBuilder.js';
-import { reindexUser } from './rag/scheduler.js';
-import { isRagEnabledForUser } from './handlers/rag.js';
->>>>>>> theirs
 
 export interface NormalizedRequest {
   method: string;
@@ -56,25 +47,20 @@ export interface NormalizedResponse {
   /** Optional cancellation hook. The HTTP layer should call this when the
    *  client disconnects so the upstream Regolo stream stops being consumed. */
   cancel?: () => void;
-}
 
 const REGOLO_BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
 
 function unauthorized(): NormalizedResponse {
   return { status: 401, body: { error: 'Authentication required', code: 'UNAUTHORIZED' } };
-}
 
 function badRequest(message: string, code = 'BAD_REQUEST'): NormalizedResponse {
   return { status: 400, body: { error: message, code } };
-}
 
 function serverError(message = 'Internal error', code = 'INTERNAL_ERROR'): NormalizedResponse {
   return { status: 500, body: { error: message, code } };
-}
 
 function tooManyRequests(message: string, code = 'RATE_LIMITED'): NormalizedResponse {
   return { status: 429, body: { error: message, code } };
-}
 
 /** Re-exported so the HTTP layers and tests import validation from one place. */
 export { BOUNDS, requireString, clampInt, clampFloat, requireJsonString, ValidationError };
@@ -84,7 +70,6 @@ export { BOUNDS, requireString, clampInt, clampFloat, requireJsonString, Validat
  * (no payload transfer). Used to hard-cap runaway sessions (audit H-7).
  * Returns 0 when the count itself fails so the counter never blocks the
  * chat path — the per-message/per-field caps are still enforced regardless.
- */
 async function countAdvisorMessages(
   supabase: SupabaseClient,
   sessionId: string,
@@ -98,22 +83,17 @@ async function countAdvisorMessages(
     return 0;
   }
   return count;
-}
 
-/**
  * Shared advisor chat preconditions: the session id is a UUID, the caller
  * owns the session, and the session has not grown past
  * BOUNDS.MAX_MESSAGES_PER_SESSION rows. Throws ValidationError for every
  * failure mode (a typed 4xx, never a TypeError → 500).
- */
 async function validateAdvisorSession(
-  supabase: SupabaseClient,
   userId: string,
   sessionId: unknown,
 ): Promise<void> {
   if (typeof sessionId !== 'string' || !isValidUUID(sessionId)) {
     throw new ValidationError('Invalid sessionId', 'INVALID_UUID');
-  }
   const { data: sess } = await supabase
     .from('advisor_sessions')
     .select('user_id')
@@ -121,7 +101,6 @@ async function validateAdvisorSession(
     .maybeSingle();
   if (!sess || sess.user_id !== userId) {
     throw new ValidationError('Session not found', 'NOT_FOUND', 404);
-  }
   const messageCount = await countAdvisorMessages(supabase, sessionId);
   if (messageCount >= BOUNDS.MAX_MESSAGES_PER_SESSION) {
     throw new ValidationError(
@@ -129,12 +108,8 @@ async function validateAdvisorSession(
       'SESSION_TOO_LONG',
       429,
     );
-  }
-}
 
-/**
  * GET /api/health — public.
- */
 export async function handleHealth(): Promise<NormalizedResponse> {
   const hasKey = !!process.env.REGOLO_API_KEY;
   return {
@@ -147,26 +122,16 @@ export async function handleHealth(): Promise<NormalizedResponse> {
       timestamp: new Date().toISOString(),
     },
   };
-}
 
-/**
  * GET /api/ai/test-key — public.
- */
 export async function handleTestKey(): Promise<NormalizedResponse> {
-  const hasKey = !!process.env.REGOLO_API_KEY;
-  return {
-    status: 200,
     body: hasKey
       ? { configured: true, provider: 'Regolo AI' }
       : { configured: false, error: 'API key not configured' },
-  };
-}
 
-/**
  * POST /api/security/log — public (best-effort logging).
  * In production this should write to a real log sink. For now, console only.
  * Rate-limited by payload size to prevent abuse.
- */
 export async function handleSecurityLog(req: NormalizedRequest): Promise<NormalizedResponse> {
   const { event, userId, email, ip, userAgent, timestamp, details } = req.body || {};
   if (!event || typeof event !== 'string') return badRequest('Event type is required');
@@ -190,20 +155,16 @@ export async function handleSecurityLog(req: NormalizedRequest): Promise<Normali
     timestamp: timestamp || new Date().toISOString(),
     details: detailsStr.length <= 2000 ? details : undefined,
     platform: process.env.NODE_ENV || 'unknown',
-  };
   // The legacy console.log("[SECURITY] {...}") shape is preserved as a
   // structured `securityEvent` field so log search keeps working. The
   // top-level `event` field on the log line stays as our internal
   // category marker.
   log.info('security_log', { securityEvent: logEntry.event, payload: logEntry });
   return { status: 200, body: { success: true, logged: true } };
-}
 
-/**
  * POST /api/upload/profile-photo — authenticated.
  * userId is ALWAYS derived from the JWT, never from the body. This prevents a
  * client from claiming someone else's userId and overwriting their photo path.
- */
 export async function handleUploadProfilePhoto(
   req: NormalizedRequest,
   supabase: SupabaseClient
@@ -214,7 +175,6 @@ export async function handleUploadProfilePhoto(
   const { base64Data } = req.body || {};
   if (!base64Data || typeof base64Data !== 'string') {
     return badRequest('Image data is required', 'MISSING_IMAGE_DATA');
-  }
 
   // Size gate BEFORE any decode work. `Buffer.from(base64)` allocates the
   // decoded buffer and the format regex scans the whole string — an
@@ -224,12 +184,10 @@ export async function handleUploadProfilePhoto(
       status: 413,
       body: { error: 'Image too large', code: 'FILE_TOO_LARGE', maxSize: '5120KB' },
     };
-  }
 
   const match = base64Data.match(/^data:image\/(png|jpeg|jpg|webp|gif);base64,(.+)$/i);
   if (!match) {
     return badRequest('Invalid image data format', 'INVALID_IMAGE_FORMAT');
-  }
   const mimeSubtype = match[1].toLowerCase();
   const base64 = match[2];
 
@@ -239,19 +197,16 @@ export async function handleUploadProfilePhoto(
     if (buffer.length === 0) throw new Error('Empty buffer');
   } catch {
     return badRequest('Failed to process image data', 'BUFFER_ERROR');
-  }
 
   // 1MB cap
   if (buffer.length > 1024 * 1024) {
     return { status: 413, body: { error: 'Image too large', code: 'FILE_TOO_LARGE', maxSize: '1024KB' } };
-  }
 
   // Magic-byte sniff: confirm the buffer matches the claimed format. Defends against
   // a client labeling an arbitrary blob as image/* to abuse storage.
   const sniffedMime = sniffImageMime(buffer);
   if (!sniffedMime) {
     return badRequest('Uploaded data is not a recognized image format', 'INVALID_IMAGE_BYTES');
-  }
   // Use the sniffed type, not the client-claimed one.
   const ext = sniffedMime.split('/')[1] || 'jpg';
   void mimeSubtype; // accepted but not trusted
@@ -273,13 +228,11 @@ export async function handleUploadProfilePhoto(
   if (error) {
     log.error('storage_upload_failed', { userId, err: serializeErr(error) });
     return serverError('Storage upload failed', 'STORAGE_ERROR');
-  }
 
   // Best-effort cleanup of legacy timestamped uploads from the previous
   // path scheme (`profile-<ts>.ext`). This runs once per upload and the
   // result is non-fatal — if the list/delete fails, the new file is still
   // saved correctly. Skipping on error keeps the happy path fast.
-  try {
     const { data: existing } = await supabase.storage
       .from('user-uploads')
       .list(`users/${userId}`, { limit: 100 });
@@ -291,7 +244,6 @@ export async function handleUploadProfilePhoto(
     }
   } catch (cleanupErr) {
     log.warn('profile_photo_cleanup_skipped', { userId, err: serializeErr(cleanupErr) });
-  }
 
   // The bucket is PRIVATE as of 20240101001000_storage_private_bucket.sql, so
   // getPublicUrl() no longer returns anything fetchable — a "public" URL against
@@ -299,13 +251,11 @@ export async function handleUploadProfilePhoto(
   // URL instead: it carries a server-signed token, so only the holder of this
   // response can read the object.
   const { data: signedPhoto, error: signErr } = await supabase.storage
-    .from('user-uploads')
     .createSignedUrl(fileName, PROFILE_PHOTO_URL_TTL_SECONDS);
 
   if (signErr || !signedPhoto?.signedUrl) {
     log.error('profile_photo_sign_failed', { userId, err: serializeErr(signErr) });
     return serverError('Failed to sign uploaded photo URL', 'SIGN_ERROR');
-  }
 
   // Both values are returned deliberately:
   //   • url  — for immediate rendering. It EXPIRES.
@@ -313,23 +263,15 @@ export async function handleUploadProfilePhoto(
   // Callers must persist `path` (not the URL) into users.photo_url / auth
   // metadata. A stored signed URL is a dead link within the hour; a stored path
   // can be re-signed on demand by handleGetMyProfilePhotoUrl.
-  return {
-    status: 200,
-    body: {
       success: true,
       url: signedPhoto.signedUrl,
       path: fileName,
       expiresIn: PROFILE_PHOTO_URL_TTL_SECONDS,
-    },
-  };
-}
 
 /** Signed-URL lifetime for profile photos (seconds). 1 hour. */
 export const PROFILE_PHOTO_URL_TTL_SECONDS = 60 * 60;
 
-/**
  * Map whatever is stored in users.photo_url to a bucket object path.
- *
  * Three shapes exist in this database:
  *   1. `users/<uid>/profile.<ext>` — what new uploads persist.
  *   2. A legacy public URL of the form
@@ -338,7 +280,6 @@ export const PROFILE_PHOTO_URL_TTL_SECONDS = 60 * 60;
  *   3. Anything else — e.g. a Google OAuth avatar URL from user_metadata.
  *      Returns null: that is an external URL, it needs no signing, and handing
  *      it to createSignedUrl would just fail.
- */
 function storagePathFromPhotoRef(ref: string | null | undefined): string | null {
   if (typeof ref !== 'string') return null;
   const trimmed = ref.trim();
@@ -355,91 +296,54 @@ function storagePathFromPhotoRef(ref: string | null | undefined): string | null 
   if (idx === -1) return null; // shape 3 — external URL
   const path = trimmed.slice(idx + marker.length).split('?')[0];
   return path.startsWith('users/') ? path : null;
-}
 
-/**
  * GET /api/me/profile-photo — authenticated.
- *
  * Returns a freshly signed, short-lived URL for the CALLER's own photo. The
  * client cannot sign one itself (that needs the service-role key), and the
  * private bucket means the raw stored value is not renderable — so this is the
  * read path behind every avatar in the app.
- *
  * `url: null` with status 200 is a valid, non-error answer: the user has no
  * bucket-hosted photo (external OAuth avatar, or no photo at all).
- */
 export async function handleGetMyProfilePhotoUrl(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const userId = req.user.id;
 
   const { data, error } = await supabase
     .from('users')
     .select('photo_url')
     .eq('id', userId)
-    .maybeSingle();
 
-  if (error) {
     log.error('profile_photo_lookup_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to load profile', 'PROFILE_LOOKUP_FAILED');
-  }
 
   const path = storagePathFromPhotoRef(data?.photo_url);
   if (!path) {
-    return {
       status: 200,
       body: { success: true, url: null, path: null, expiresIn: PROFILE_PHOTO_URL_TTL_SECONDS },
-    };
-  }
 
   const { data: signed, error: signErr } = await supabase.storage
-    .from('user-uploads')
     .createSignedUrl(path, PROFILE_PHOTO_URL_TTL_SECONDS);
 
   if (signErr || !signed?.signedUrl) {
-    log.error('profile_photo_sign_failed', { userId, err: serializeErr(signErr) });
     return serverError('Failed to sign photo URL', 'SIGN_ERROR');
-  }
 
-  return {
-    status: 200,
-    body: {
-      success: true,
       url: signed.signedUrl,
       path,
-      expiresIn: PROFILE_PHOTO_URL_TTL_SECONDS,
-    },
-  };
-}
 
-/**
  * GET /api/admin/users/:id/photo — admin-only.
- *
  * The admin dashboard renders other users' rows, and a signed URL for someone
  * else's object cannot be computed client-side. The caller's admin role is
  * verified server-side (same check as handleAdminDeleteUser) BEFORE any signed
  * URL is minted, so this endpoint cannot be used to enumerate photos: a
  * non-admin gets 403 and no URL, whatever arguments they pass.
- */
 export async function handleAdminGetUserPhotoUrl(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
   const adminId = req.user.id;
   const targetId = req.params?.id;
 
   if (!targetId || !isValidUUID(targetId)) {
     return badRequest('Valid user ID required', 'INVALID_USER_ID');
-  }
 
   const { data: callerRow, error: callerErr } = await supabase
-    .from('users')
     .select('role')
     .eq('id', adminId)
-    .maybeSingle();
 
   if (callerErr) {
     log.error('admin_photo_caller_lookup_failed', {
@@ -447,48 +351,20 @@ export async function handleAdminGetUserPhotoUrl(
       err: serializeErr(callerErr),
     });
     return serverError('Authorization check failed', 'AUTH_CHECK_FAILED');
-  }
   if (!callerRow || callerRow.role !== 'admin') {
     return { status: 403, body: { error: 'Admin role required', code: 'FORBIDDEN' } };
-  }
 
-  const { data, error } = await supabase
-    .from('users')
-    .select('photo_url')
     .eq('id', targetId)
-    .maybeSingle();
 
-  if (error) {
     log.error('admin_photo_lookup_failed', { adminId, targetId, err: serializeErr(error) });
-    return serverError('Failed to load profile', 'PROFILE_LOOKUP_FAILED');
-  }
 
-  const path = storagePathFromPhotoRef(data?.photo_url);
-  if (!path) {
-    return {
-      status: 200,
-      body: { success: true, url: null, path: null, expiresIn: PROFILE_PHOTO_URL_TTL_SECONDS },
-    };
-  }
 
-  const { data: signed, error: signErr } = await supabase.storage
-    .from('user-uploads')
-    .createSignedUrl(path, PROFILE_PHOTO_URL_TTL_SECONDS);
 
-  if (signErr || !signed?.signedUrl) {
     log.error('admin_photo_sign_failed', { adminId, targetId, err: serializeErr(signErr) });
-    return serverError('Failed to sign photo URL', 'SIGN_ERROR');
-  }
 
-  return {
-    status: 200,
     body: { success: true, url: signed.signedUrl, path, expiresIn: PROFILE_PHOTO_URL_TTL_SECONDS },
-  };
-}
 
-/**
  * PATCH /api/admin/users/:id/role — admin-only privileged write.
- *
  * This endpoint exists BECAUSE of the hardening migration: `role` is no longer
  * client-writable. 20240101000900_users_rls_hardening.sql revokes table-level
  * UPDATE on public.users from `authenticated` and grants back only the
@@ -497,68 +373,35 @@ export async function handleAdminGetUserPhotoUrl(
  * regardless of RLS. Privileged mutations therefore move server-side: this
  * handler runs on the service-role client (which bypasses RLS and the lock
  * trigger) but only AFTER verifying the caller is an admin.
- */
 export async function handleAdminUpdateUserRole(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const adminId = req.user.id;
-  const targetId = req.params?.id;
   const newRole = req.body?.role;
 
-  if (!targetId || !isValidUUID(targetId)) {
-    return badRequest('Valid user ID required', 'INVALID_USER_ID');
-  }
   // Allow-list rather than pass-through: the value lands in a column with a
   // CHECK constraint, and a typo should be a 400, not a 500.
   if (newRole !== 'user' && newRole !== 'admin') {
     return badRequest("Role must be 'user' or 'admin'", 'INVALID_ROLE');
-  }
 
-  const { data: callerRow, error: callerErr } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', adminId)
-    .maybeSingle();
 
-  if (callerErr) {
     log.error('admin_role_caller_lookup_failed', {
-      adminId,
-      err: serializeErr(callerErr),
-    });
-    return serverError('Authorization check failed', 'AUTH_CHECK_FAILED');
-  }
-  if (!callerRow || callerRow.role !== 'admin') {
-    return { status: 403, body: { error: 'Admin role required', code: 'FORBIDDEN' } };
-  }
 
   // Self-demotion would lock the last admin out of the dashboard with no
   // in-product route back, so it is refused here (mirrors CANNOT_SELF_DELETE).
   if (targetId === adminId) {
-    return {
       status: 400,
       body: { error: 'Admins cannot change their own role', code: 'CANNOT_SELF_DEMOTE' },
-    };
-  }
 
   const { error: updateErr } = await supabase
-    .from('users')
     .update({ role: newRole })
     .eq('id', targetId);
 
   if (updateErr) {
     log.error('admin_role_update_failed', {
-      adminId,
       targetId,
       err: serializeErr(updateErr),
-    });
     return serverError('Failed to update role', 'UPDATE_FAILED');
-  }
 
   log.info('admin_user_role_updated', { adminId, targetId, newRole });
   return { status: 200, body: { success: true, id: targetId, role: newRole } };
-}
 
 function sniffImageMime(buf: Buffer): string | null {
   if (buf.length < 12) return null;
@@ -571,83 +414,55 @@ function sniffImageMime(buf: Buffer): string | null {
   // WEBP: RIFF....WEBP
   if (buf.toString('ascii', 0, 4) === 'RIFF' && buf.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
   return null;
-}
-/**
  * POST /api/advisor/session — authenticated.
- */
 export async function handleCreateAdvisorSession(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
   // Server-side tier gate. The React route guard already blocks free
   // users from /advisor, but a direct API call would otherwise bypass it.
   const denied = await requireTier(req, supabase, 'strategist');
   if (denied) return denied;
-  const userId = req.user.id;
   // Audit H-7: `title` used to be cast straight to string with no type or
   // length check — a number or a multi-MB object went straight into
   // Postgres and later into the advisor system prompt.
   const rawTitle = req.body?.title;
   let title: string;
-  try {
     title =
       rawTitle === undefined || rawTitle === null || rawTitle === ''
         ? 'AI Advisor Session'
         : requireString(rawTitle, 'title', BOUNDS.MAX_SESSION_TITLE_LEN);
   } catch (err) {
     return validationErrorResponse(err); // typed 4xx, never a 500
-  }
 
   const { data: session, error } = await supabase
-    .from('advisor_sessions')
     .insert({
       user_id: userId,
       title,
-      timestamp: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     })
     .select()
     .single();
 
-  if (error) {
     log.error('advisor_session_create_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to create session');
-  }
   return { status: 200, body: { sessionId: session.id } };
-}
 
-/**
  * GET /api/advisor/session — authenticated.
  * Returns the latest session and its messages for the authenticated user only.
- */
 export async function handleGetAdvisorSession(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
-  const userId = req.user.id;
 
   const { data: session } = await supabase
-    .from('advisor_sessions')
     .select('id, title, timestamp')
     .eq('user_id', userId)
     .order('updated_at', { ascending: false })
     .limit(1)
-    .maybeSingle();
 
   if (!session) {
     return { status: 200, body: { sessionId: null, messages: [] } };
-  }
 
   // P1: was `.order('timestamp', { ascending: true }).limit(50)` — that returns the
   // OLDEST 50 messages and silently drops everything a long conversation added
   // after message #50. Fetch the newest 50 (index-friendly, DESC) then flip in
   // memory so the client still receives chronological order.
   const { data: messagesDesc, error: messagesError } = await supabase
-    .from('advisor_messages')
     .select('id, role, content, timestamp, reaction')
     .eq('session_id', session.id)
     .order('timestamp', { ascending: false })
@@ -658,19 +473,11 @@ export async function handleGetAdvisorSession(
   if (messagesError) {
     log.error('advisor_messages_fetch_failed', { userId, err: serializeErr(messagesError) });
     return serverError('Failed to fetch messages');
-  }
 
   return { status: 200, body: { sessionId: session.id, messages: messages || [] } };
-}
 
-/**
  * DELETE /api/advisor/session/:sessionId — authenticated.
- */
 export async function handleDeleteAdvisorSession(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
   // No tier check on DELETE — we always let users clean up their own
   // data even if they downgrade (otherwise tier expiry would strand
   // sessions they can no longer manage).
@@ -678,32 +485,17 @@ export async function handleDeleteAdvisorSession(
   if (!isValidUUID(sessionId)) return badRequest('Invalid sessionId', 'INVALID_UUID');
 
   // Confirm ownership before deleting.
-  const { data: session } = await supabase
-    .from('advisor_sessions')
-    .select('user_id')
-    .eq('id', sessionId)
-    .maybeSingle();
 
   if (!session || session.user_id !== req.user.id) {
     return { status: 404, body: { error: 'Session not found', code: 'NOT_FOUND' } };
-  }
 
   await supabase.from('advisor_messages').delete().eq('session_id', sessionId);
   await supabase.from('advisor_sessions').delete().eq('id', sessionId);
   return { status: 200, body: { success: true } };
-}
 
-/**
  * PATCH /api/advisor/messages/:messageId/reaction — authenticated.
  * Update the user's reaction (like/dislike) on a specific message.
- */
 export async function handleUpdateAdvisorReaction(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
 
   const messageId = req.params.messageId;
   if (!isValidUUID(messageId)) return badRequest('Invalid messageId', 'INVALID_UUID');
@@ -711,45 +503,32 @@ export async function handleUpdateAdvisorReaction(
   const { reaction } = req.body || {};
   if (reaction !== undefined && reaction !== 'like' && reaction !== 'dislike' && reaction !== null) {
     return badRequest('reaction must be "like", "dislike", or null');
-  }
 
   // Verify the message belongs to the user's session
   const { data: message } = await supabase
-    .from('advisor_messages')
     .select('session_id, user_id')
     .eq('id', messageId)
-    .maybeSingle();
 
   if (!message || message.user_id !== req.user.id) {
     return { status: 404, body: { error: 'Message not found', code: 'NOT_FOUND' } };
-  }
 
   // Update reaction
   const { error } = await supabase
-    .from('advisor_messages')
     .update({ reaction: reaction ?? null })
     .eq('id', messageId);
 
-  if (error) {
     log.error('advisor_reaction_update_failed', {
       userId: req.user.id,
       messageId,
       err: serializeErr(error),
-    });
     return serverError('Failed to update reaction');
-  }
 
-  return { status: 200, body: { success: true } };
-}
 
-/**
  * Static advisor prompt blocks.
- *
  * Extracted verbatim from the previous inline template literal so the value
  * served through the cache is byte-identical to what shipped before the
  * migration. They are read via `featuredCaches`, which memoises them in Redis
  * instead of re-assembling several kilobytes of constant text per chat call.
- */
 const ADVISOR_TYPE_FRAMEWORK = `## EPIMETHEUS TYPE FRAMEWORK
 The user is assessed on three axes forming an 8-type system:
 • TIME (T/N): Tester vs Investor — does she test before committing, or invest deeply upfront?
@@ -794,12 +573,9 @@ function personalityTypeContextFor(typeId: string): string {
   return Object.prototype.hasOwnProperty.call(PERSONALITY_TYPE_CONTEXT, typeId)
     ? PERSONALITY_TYPE_CONTEXT[typeId]
     : 'Unique profile.';
-}
 
-/**
  * Resolve the two static prompt blocks through the cache. A Redis outage
  * falls through to the in-process constants, so the prompt is never blank.
- */
 async function loadAdvisorPromptBlocks(): Promise<{
   typeFramework: string;
   responseGuidelines: string;
@@ -813,17 +589,11 @@ async function loadAdvisorPromptBlocks(): Promise<{
     ),
   ]);
   return { typeFramework, responseGuidelines };
-}
 
-/**
  * Build the system prompt + message history for the advisor.
  * Extracted so both streaming (Express) and non-streaming (Vercel) paths share it.
  * Implements token-aware truncation to stay within model context limits.
- */
 async function buildAdvisorMessages(
-  supabase: SupabaseClient,
-  userId: string,
-  sessionId: string,
   message: string,
   /**
    * Effective tier for the caller. Oracle gets a deeper history budget so
@@ -832,12 +602,10 @@ async function buildAdvisorMessages(
    * blocks it) but treats free as Strategist if it does.
    */
   tier: 'free' | 'strategist' | 'oracle' = 'strategist',
-  /**
    * Retrieval-augmented context for this turn. An empty array (or an omitted
    * argument) keeps the pre-RAG prompt shape, so behaviour is unchanged when
    * retrieval yields nothing — the no-context path is the fallback, not an
    * error state.
-   */
   retrieved: RetrievedChunk[] = [],
 ): Promise<Array<{ role: string; content: string }>> {
   const { typeFramework, responseGuidelines } = await loadAdvisorPromptBlocks();
@@ -850,24 +618,14 @@ async function buildAdvisorMessages(
       .limit(3),
     // P1: same newest-N-then-reverse fix as the session loader — the model was
     // being handed the OLDEST 50 turns as context instead of the latest 50.
-    supabase
       .from('advisor_messages')
       .select('role, content, timestamp')
       .eq('session_id', sessionId)
-<<<<<<< ours
       .order('timestamp', { ascending: true })
       .limit(BOUNDS.MAX_HISTORY_MESSAGES),
-=======
-      .order('timestamp', { ascending: false })
-      .limit(50),
->>>>>>> theirs
-    supabase
       .from('advisor_sessions')
       .select('title, timestamp')
-      .eq('user_id', userId)
-      .order('timestamp', { ascending: false })
       .limit(5),
-  ]);
 
   // The two advisor history queries above are newest-first so the LIMIT keeps the
   // most recent turns; restore chronological order for the prompt.
@@ -906,7 +664,6 @@ ${responseGuidelines}`;
   // Token-aware truncation: approximate 1 token ≈ 4 chars.
   // Reserve ~2000 tokens for system prompt + new user message + response.
   // Llama 3.3 70B has 8192 context; leave room for the response (600 tokens max).
-  //
   // Tier-aware history budget — Oracle gets ~7.5k chars more (≈1.8k tokens
   // more conversation context), backing the "deep-dive AI sessions
   // (extended context)" Oracle promise on the pricing page. Strategist
@@ -923,7 +680,6 @@ ${responseGuidelines}`;
   while (totalChars > MAX_HISTORY_CHARS && historyMessages.length > 2) {
     const removed = historyMessages.shift();
     if (removed) totalChars -= removed.content.length;
-  }
 
   // Sectioned prompt (SYSTEM / RETRIEVED CONTEXT / RECENT MESSAGES / USER
   // QUERY) when we have retrieved context; the legacy shape otherwise. Keeping
@@ -936,20 +692,10 @@ ${responseGuidelines}`;
     query: message,
     sectioned: retrieved.length > 0,
   });
-}
 
-/**
  * POST /api/advisor/chat (streaming variant) — authenticated.
  * Returns an SSE stream the caller pipes to the response.
- */
 export async function handleAdvisorChatStream(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
-  const userId = req.user.id;
   const { sessionId, message } = req.body || {};
 
   // Audit H-4: `!message?.trim()` guarded null/undefined but NOT non-strings —
@@ -958,12 +704,9 @@ export async function handleAdvisorChatStream(
   // objects, empty strings, and input over BOUNDS.MAX_MESSAGE_CHARS.
   // validateAdvisorSession also enforces the 200-message-per-session cap.
   let validatedMessage: string;
-  try {
     validatedMessage = requireString(message, 'message', BOUNDS.MAX_MESSAGE_CHARS);
     await validateAdvisorSession(supabase, userId, sessionId);
-  } catch (err) {
     return validationErrorResponse(err);
-  }
 
   // Tier-aware budgets. Oracle gets:
   //   - More conversation history kept in-context (handled inside
@@ -994,12 +737,9 @@ export async function handleAdvisorChatStream(
     ragRequested,
     chunks: retrieved.length,
     retrievalMs,
-  });
 
   const messages = await buildAdvisorMessages(
     supabase,
-    userId,
-    sessionId,
     validatedMessage,
     effectiveTier,
     retrieved,
@@ -1011,7 +751,6 @@ export async function handleAdvisorChatStream(
     user_id: userId,
     role: 'user',
     content: validatedMessage,
-  });
 
   // Cancellation token shared between the generator and the response writer.
   // The Express/Vercel layer can flip cancelled=true when the client closes
@@ -1019,7 +758,6 @@ export async function handleAdvisorChatStream(
   // (and stop billing) Regolo tokens for an audience that's gone.
   const cancelToken: { cancelled: boolean; reader?: ReadableStreamDefaultReader<Uint8Array> } = {
     cancelled: false,
-  };
 
   const stream = (async function* (): AsyncGenerator<string> {
     // Emit the retrieved-context frame before the first token so the client can
@@ -1036,7 +774,6 @@ export async function handleAdvisorChatStream(
             chunk.text.length > 180 ? `${chunk.text.slice(0, 177)}...` : chunk.text,
         })),
       })}\n\n`;
-    }
 
     let fullContent = '';
     let sourceReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
@@ -1084,8 +821,6 @@ export async function handleAdvisorChatStream(
               bufferBytes: buffer.length,
               maxBufferBytes: MAX_BUFFER_BYTES,
             });
-            break;
-          }
 
           while (true) {
             const lineEnd = buffer.indexOf('\n\n');
@@ -1106,24 +841,20 @@ export async function handleAdvisorChatStream(
                 if (parsed.choices?.[0]?.finish_reason) {
                   chunkCount = maxChunks;
                   break;
-                }
               } catch {
                 // skip invalid chunks
               }
             }
-          }
         }
       } finally {
         try {
           sourceReader.releaseLock();
         } catch {
           // best-effort
-        }
       }
 
       if (!cancelToken.cancelled) {
         yield `data: [DONE]\n\n`;
-      }
     } catch (streamError: any) {
       const errMsg: string = streamError?.message || '';
       const errorMessage = errMsg.includes('401')
@@ -1134,10 +865,7 @@ export async function handleAdvisorChatStream(
             ? 'AI service has insufficient credits. Top up your Regolo account.'
             : "I'm having trouble connecting right now. Please try again in a moment.";
       fullContent = errorMessage;
-      if (!cancelToken.cancelled) {
         yield `data: ${JSON.stringify({ content: errorMessage })}\n\n`;
-        yield `data: [DONE]\n\n`;
-      }
     } finally {
       // Persist whatever we have. Even partial content from a client
       // disconnect is worth saving so the user sees their reply on reload.
@@ -1153,7 +881,6 @@ export async function handleAdvisorChatStream(
         : fullContent;
 
       if (persistedContent.length > 0) {
-        try {
           await supabase.from('advisor_messages').insert({
             session_id: sessionId,
             user_id: userId,
@@ -1169,26 +896,18 @@ export async function handleAdvisorChatStream(
             userId,
             sessionId,
             err: serializeErr(dbError),
-          });
-        }
-      }
-    }
   })();
 
   return { status: 200, stream, cancel: () => {
     cancelToken.cancelled = true;
     if (cancelToken.reader) {
       try { cancelToken.reader.cancel(); } catch { /* ignore */ }
-    }
   } };
-}
 
-/**
  * Validate and normalize an Oracle analysis result before persisting.
  * Mirrors the AnalysisResult interface in src/pages/CalibrationPage.tsx but
  * applies length/shape clamps so a malicious client can't push an arbitrary
  * blob into Postgres. Returns a sanitized copy or null if structurally invalid.
- */
 function sanitizeOracleResult(raw: any): any | null {
   if (!raw || typeof raw !== 'object') return null;
 
@@ -1219,15 +938,12 @@ function sanitizeOracleResult(raw: any): any | null {
         completed: Boolean(t?.completed),
         category: VALID_CATEGORY.has(t?.category) ? t.category : 'psychology',
       }))
-    : [];
 
   const objOf3 = (v: any, k1: string, k2: string, k3: string, max: number) => ({
     [k1]: clampStr(v?.[k1], max),
     [k2]: clampStr(v?.[k2], max),
     [k3]: clampStr(v?.[k3], max),
-  });
 
-  return {
     primaryType,
     confidence,
     secondaryType,
@@ -1242,42 +958,29 @@ function sanitizeOracleResult(raw: any): any | null {
     darkMindBreakdown: clampStr(raw.darkMindBreakdown, 4000),
     behavioralBlueprint: clampStr(raw.behavioralBlueprint, 4000),
     interactionStrategy: clampStr(raw.interactionStrategy, 2000),
-  };
-}
 
-/**
  * POST /api/oracle/analyses — authenticated.
  * Persists a CalibrationPage AI Oracle result. Previously the client wrote
  * directly to the oracle_analyses table — RLS protected user_id ownership but
  * not the JSON shape. This endpoint validates and clamps the payload so a
  * compromised client can't bloat the column with arbitrary data.
- *
  * Body: { input: object, result: object, scenarioSummary?: string }
  * Returns: { id, ...persisted row }
- */
 export async function handleCreateOracleAnalysis(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
 ): Promise<NormalizedResponse> {  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
-  const userId = req.user.id;
 
   const { input, result, scenarioSummary } = req.body || {};
 
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     return badRequest('input must be an object');
-  }
   // Cap the input blob — it's a structured form, never large in practice.
   const inputJson = JSON.stringify(input);
   if (inputJson.length > 20_000) {
     return badRequest('input payload too large (max 20KB)');
-  }
 
   const sanitized = sanitizeOracleResult(result);
   if (!sanitized) {
     return badRequest('result has invalid shape', 'INVALID_RESULT');
-  }
 
   const summary =
     typeof scenarioSummary === 'string' ? scenarioSummary.slice(0, 200) : '';
@@ -1288,24 +991,15 @@ export async function handleCreateOracleAnalysis(
   await supabase.from('users').upsert(
     { id: userId, email: req.user.email ?? null },
     { onConflict: 'id', ignoreDuplicates: false }
-  );
 
   const { data: inserted, error } = await supabase
     .from('oracle_analyses')
-    .insert({
-      user_id: userId,
       input,
       result: sanitized,
       scenario_summary: summary,
-      timestamp: new Date().toISOString(),
-    })
-    .select()
-    .single();
 
-  if (error) {
     log.error('oracle_analysis_insert_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to save analysis', 'DB_INSERT_ERROR');
-  }
 
   // Fire-and-forget re-index so a new analysis becomes retrievable context for
   // the advisor. Deliberately not awaited: the response must not depend on an
@@ -1313,17 +1007,12 @@ export async function handleCreateOracleAnalysis(
   void reindexUser(userId, supabase, { reason: 'oracle-analysis' }).then((result) => {
     if (!result.ok) {
       log.warn('oracle_reindex_failed', { userId, error: result.error });
-    }
-  });
 
   return { status: 200, body: { id: inserted.id, analysis: inserted } };
-}
 
-/**
  * Sanitize a single task before merging into result.tasks. Mirrors the
  * per-task clamps in sanitizeOracleResult so a compromised client can't
  * smuggle arbitrary blobs into the JSON column via the patch endpoint.
- */
 function sanitizeTask(raw: any, fallbackId: string): {
   id: string;
   title: string;
@@ -1333,11 +1022,7 @@ function sanitizeTask(raw: any, fallbackId: string): {
   completed: boolean;
   category: 'communication' | 'physical' | 'logistics' | 'psychology';
 } | null {
-  if (!raw || typeof raw !== 'object') return null;
-  const VALID_PRIORITY = new Set(['low', 'medium', 'high']);
-  const VALID_CATEGORY = new Set(['communication', 'physical', 'logistics', 'psychology']);
   const clamp = (v: any, max: number) => String(v ?? '').slice(0, max);
-  return {
     id: clamp(raw.id || fallbackId, 80),
     title: clamp(raw.title, 200),
     description: clamp(raw.description, 1000),
@@ -1345,38 +1030,23 @@ function sanitizeTask(raw: any, fallbackId: string): {
     dueDate: clamp(raw.dueDate, 50),
     completed: Boolean(raw.completed),
     category: VALID_CATEGORY.has(raw.category) ? raw.category : 'psychology',
-  };
-}
 
-/**
  * PATCH /api/oracle/analyses/:id/tasks — authenticated.
- *
  * Replaces `result.tasks` on an existing oracle_analyses row owned by the
  * caller. Used by CalibrationPage's task toggle / "mark all" actions, which
  * previously wrote directly to the table. RLS still enforces ownership, but
  * the server now also re-validates the task shape and caps the array length,
  * matching what `handleCreateOracleAnalysis` does on insert.
- *
  * Body: { tasks: Task[] }
- */
 export async function handleUpdateOracleAnalysisTasks(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
-  const userId = req.user.id;
   const id = req.params.id;
   if (!isValidUUID(id)) return badRequest('Invalid analysis id', 'INVALID_UUID');
 
   const rawTasks = req.body?.tasks;
   if (!Array.isArray(rawTasks)) {
     return badRequest('tasks must be an array');
-  }
   if (rawTasks.length > 50) {
     return badRequest('Too many tasks (max 50)');
-  }
 
   const sanitizedTasks = rawTasks
     .map((t: any, i: number) => sanitizeTask(t, `task-${id}-${i}`))
@@ -1385,95 +1055,50 @@ export async function handleUpdateOracleAnalysisTasks(
   // Confirm ownership before mutating. RLS would also block, but a 404 is a
   // friendlier response than a silent zero-row update.
   const { data: existing } = await supabase
-    .from('oracle_analyses')
     .select('user_id, result')
     .eq('id', id)
-    .maybeSingle();
 
   if (!existing || existing.user_id !== userId) {
     return { status: 404, body: { error: 'Analysis not found', code: 'NOT_FOUND' } };
-  }
 
   // Merge tasks into the existing result blob rather than overwriting the row.
   const nextResult = { ...(existing.result ?? {}), tasks: sanitizedTasks };
 
   const { data: updated, error } = await supabase
-    .from('oracle_analyses')
     .update({ result: nextResult })
-    .eq('id', id)
-    .select()
-    .single();
 
-  if (error) {
     log.error('oracle_tasks_update_failed', { userId, analysisId: id, err: serializeErr(error) });
     return serverError('Failed to update tasks', 'DB_UPDATE_ERROR');
-  }
 
   return { status: 200, body: { id: updated.id, tasks: sanitizedTasks } };
-}
 
-/**
  * DELETE /api/oracle/analyses/:id — authenticated.
- *
  * Owner-only delete of a single oracle_analyses row. Mirrors the pattern
  * used by /api/advisor/session/:id (verify ownership, return 404 if not
  * found, then delete).
- */
 export async function handleDeleteOracleAnalysis(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
   // No tier gate on DELETE — owners can always clean up after themselves
   // even after a tier downgrade. Mirrors handleDeleteAdvisorSession.
-  const userId = req.user.id;
-  const id = req.params.id;
-  if (!isValidUUID(id)) return badRequest('Invalid analysis id', 'INVALID_UUID');
 
-  const { data: existing } = await supabase
-    .from('oracle_analyses')
-    .select('user_id')
-    .eq('id', id)
-    .maybeSingle();
 
-  if (!existing || existing.user_id !== userId) {
-    return { status: 404, body: { error: 'Analysis not found', code: 'NOT_FOUND' } };
-  }
 
   const { error } = await supabase.from('oracle_analyses').delete().eq('id', id);
-  if (error) {
     log.error('oracle_analysis_delete_failed', { userId, analysisId: id, err: serializeErr(error) });
     return serverError('Failed to delete analysis', 'DB_DELETE_ERROR');
-  }
-  return { status: 200, body: { success: true } };
-}
 
-/**
  * POST /api/calibration/analyze — authenticated.
- */
 export async function handleCalibrationAnalyze(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
-  const userId = req.user.id;
   const { typeId, answers } = req.body || {};
 
   if (typeof typeId !== 'string' || !/^[A-Z]{3}$/.test(typeId)) {
     return badRequest('typeId must be a valid calibration type (e.g. "TDI")', 'INVALID_TYPE_ID');
-  }
   // Audit H-7: `answers` is JSON-stringified straight into the LLM prompt AND
   // persisted. Cap it and require valid JSON (accepts an object — serialized
   // here — or a pre-serialized JSON string, then re-parsed for persistence).
   let answersValue: unknown;
-  try {
     const answersJson = requireJsonString(answers, 'answers', BOUNDS.MAX_ANSWERS_KB);
     answersValue = JSON.parse(answersJson);
-  } catch (err) {
     return validationErrorResponse(err); // typed 4xx with INVALID_JSON / TOO_LARGE
-  }
 
   const prompt = `You are a personality analysis system. Based on the following answers to a "${typeId}" calibration, extract a JSON object with:
 - 5 primary traits (each with name and score 0-100)
@@ -1489,27 +1114,22 @@ Return ONLY valid JSON:
   "summary": "..."
 }`;
 
-  try {
     const completion: any = await createCompletion({
       model: DEFAULT_MODEL,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       response_format: { type: 'json_object' },
       max_tokens: 1000,
-    });
 
     const content = completion?.choices?.[0]?.message?.content;
     let parsed: any;
-    try {
       parsed = JSON.parse(content);
     } catch {
       return serverError('AI returned invalid analysis format', 'AI_PARSE_ERROR');
-    }
 
     // Validate shape and cap string lengths.
     if (!Array.isArray(parsed.traits) || !Array.isArray(parsed.archetypes) || typeof parsed.summary !== 'string') {
       return serverError('AI returned invalid analysis structure', 'AI_SHAPE_ERROR');
-    }
     parsed.summary = String(parsed.summary).slice(0, 1000);
     parsed.archetypes = parsed.archetypes.slice(0, 5).map((a: any) => String(a).slice(0, 200));
     parsed.traits = parsed.traits.slice(0, 10).map((t: any) => ({
@@ -1518,7 +1138,6 @@ Return ONLY valid JSON:
     }));
 
     const { data, error } = await supabase
-      .from('calibrations')
       .insert({
         user_id: userId,
         type_id: typeId,
@@ -1532,31 +1151,19 @@ Return ONLY valid JSON:
     if (error) throw error;
 
     return { status: 200, body: { success: true, calibration: data, traits: parsed } };
-  } catch (err) {
     log.error('calibration_analysis_failed', { userId, err: serializeErr(err) });
     return serverError(
       'Failed to analyze calibration',
       'CALIBRATION_ERROR'
-    );
-  }
-}
 
-/**
  * POST /api/ai/chat — authenticated.
  * Generic Regolo proxy used by the various analysis pages.
- */
 export async function handleAiChat(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
 
   // Tier gate. Every page that calls /api/ai/chat (Decryptor, Simulation,
   // CalibrationPage Oracle) is Strategist-tier or higher in the React
   // route guard, so the API needs to enforce the same. Otherwise a free
   // user could hit this endpoint directly with curl + their JWT.
-  const denied = await requireTier(req, supabase, 'strategist');
-  if (denied) return denied;
 
   const apiKey = process.env.REGOLO_API_KEY;
   if (!apiKey) return serverError('API key not configured', 'NO_API_KEY');
@@ -1566,26 +1173,21 @@ export async function handleAiChat(
   // Input validation: prevent abuse via oversized payloads
   if (!Array.isArray(messages) || messages.length === 0) {
     return badRequest('messages must be a non-empty array');
-  }
   if (messages.length > 30) {
     return badRequest('Too many messages (max 30)');
-  }
   const totalContentLength = messages.reduce((sum: number, m: any) => {
     const content = typeof m?.content === 'string' ? m.content : JSON.stringify(m?.content || '');
     return sum + content.length;
   }, 0);
   if (totalContentLength > 100_000) {
     return badRequest('Total message content too large (max 100KB)');
-  }
 
   const hasImage = (messages || []).some((m: any) => {
     if (!m?.content) return false;
     if (typeof m.content === 'string') {
       return m.content.includes('data:image') || m.content.includes('base64');
-    }
     if (Array.isArray(m.content)) return m.content.some((c: any) => c.type === 'image_url');
     return false;
-  });
 
   // Image attachments are an Oracle-tier feature (matches PricingPage).
   // We already passed the strategist gate above; this second gate runs
@@ -1602,8 +1204,6 @@ export async function handleAiChat(
           feature: 'image_attachments',
         },
       };
-    }
-  }
 
   const effectiveModel = hasImage ? VISION_MODEL : model || DEFAULT_MODEL;
 
@@ -1616,9 +1216,7 @@ export async function handleAiChat(
     temperature: clampFloat(temperature, 'temperature', BOUNDS.MIN_TEMPERATURE, BOUNDS.MAX_TEMPERATURE, 0.7),
     max_tokens: clampInt(max_tokens, 'max_tokens', 1, BOUNDS.MAX_OUTPUT_TOKENS, 4096),
     stream: !!stream,
-  };
 
-  if (hasImage) {
     requestBody.messages = messages.map((m: any) => {
       if (!m.content || typeof m.content !== 'string') return m;
       const base64Match = m.content.match(/data:image\/(\w+);base64,/);
@@ -1630,12 +1228,8 @@ export async function handleAiChat(
             { type: 'image_url', image_url: { url: m.content } },
           ],
         };
-      }
       return m;
-    });
-  }
 
-  try {
     // Hard timeout on the upstream call so a hung Regolo connection can't
     // burn the entire Vercel function budget. AbortSignal.timeout is the
     // modern path; fall back to a manual AbortController if unavailable.
@@ -1653,57 +1247,42 @@ export async function handleAiChat(
           })();
 
     let response: Response;
-    try {
       response = await fetch(REGOLO_BASE_URL, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${apiKey}`,
           'Content-Type': 'application/json',
-        },
         body: JSON.stringify(requestBody),
         signal,
       });
     } catch (fetchErr: any) {
       if (fetchErr?.name === 'AbortError' || fetchErr?.name === 'TimeoutError') {
         return { status: 504, body: { error: 'AI service timed out', code: 'AI_TIMEOUT' } };
-      }
       throw fetchErr;
-    }
 
     const status = response.status;
     const responseText = await response.text();
     let parsed: any = {};
-    try {
       parsed = JSON.parse(responseText);
-    } catch {
       // leave as empty object
-    }
 
     if (status === 400) return badRequest(parsed?.error?.message || 'Bad request');
     if (status === 401) return { status: 500, body: { error: 'AI service temporarily unavailable', code: 'AI_SERVICE_ERROR' } };
     if (status === 429) return { status: 429, body: { error: 'Rate limited', code: 'RATE_LIMITED', retryAfter: response.headers.get('Retry-After') } };
     if (status === 502 || status === 503) {
       return { status: 503, body: { error: 'Model unavailable', code: 'MODEL_UNAVAILABLE' } };
-    }
     if (!response.ok) {
       return serverError(parsed?.error?.message || `Request failed (${status})`);
-    }
 
     return { status: 200, body: parsed };
-  } catch (err) {
     log.error('ai_chat_failed', { userId: req.user?.id, err: serializeErr(err) });
     return serverError('Chat request failed');
-  }
-}
 
 
-/**
  * DELETE /api/users/me — authenticated.
- *
  * Self-serve account deletion. The user submits a confirmation phrase
  * (their own email, lowercased) so a single accidental click can't wipe
  * the account; the request body must include `{ confirm: <email> }`.
- *
  * Order of operations:
  *   1. Verify the auth header → req.user (already done by the caller).
  *   2. Verify the confirmation phrase matches the authenticated email.
@@ -1713,46 +1292,33 @@ export async function handleAiChat(
  *      oracle_analyses, dossiers, favorites, assessment_results, …) and
  *      fires the trg_purge_user_storage_objects trigger so files in
  *      `users/<uid>/` get deleted from storage.
- *
  * After this returns, the client should:
  *   - Drop its local auth state (signOut + clear localStorage scoped
  *     keys; in this codebase that means letting the SIGNED_OUT event
  *     fire, which the auth context already handles).
  *   - Redirect to the public landing page.
- *
  * Privacy Policy section 8 promises the user can delete their account
  * from inside the app; this endpoint is what makes that promise truthful.
- */
 export async function handleDeleteMyAccount(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const userId = req.user.id;
   const userEmail = (req.user.email || '').toLowerCase();
 
   const confirmRaw = req.body?.confirm;
   if (typeof confirmRaw !== 'string') {
     return badRequest('Confirmation phrase is required', 'CONFIRM_REQUIRED');
-  }
   // The user must type their email back at us to delete. This is enough
   // friction to prevent fat-finger account loss without being annoying.
   if (confirmRaw.trim().toLowerCase() !== userEmail) {
     return badRequest(
       'Confirmation phrase does not match the account email',
       'CONFIRM_MISMATCH'
-    );
-  }
   if (!userEmail) {
     // No email on file (shouldn't happen for a verified user, but guard
     // anyway — the empty-string equality above would let the user past).
     return badRequest('Account has no email; contact support', 'NO_EMAIL');
-  }
 
   // supabase.auth.admin.* requires the service role client, which is what
   // the API server uses by construction. Do not expose this surface to
   // anon-keyed clients.
-  //
   // Order:
   //   1. DELETE FROM public.users — this fires the storage cleanup
   //      trigger AND cascades to every child table via FKs. If it fails,
@@ -1765,13 +1331,11 @@ export async function handleDeleteMyAccount(
   //      added by 20240101000700 cascades the other way too on auth
   //      delete, so this final step also acts as belt-and-braces for
   //      anyone who hit this endpoint pre-FK migration.
-  try {
     const { error: dbErr } = await supabase.from('users').delete().eq('id', userId);
     if (dbErr) throw dbErr;
   } catch (dbErr) {
     log.error('account_delete_db_step_failed', { userId, err: serializeErr(dbErr) });
     return serverError('Failed to delete account', 'DELETE_FAILED');
-  }
 
   const { error: authErr } = await supabase.auth.admin.deleteUser(userId);
   if (authErr) {
@@ -1780,15 +1344,10 @@ export async function handleDeleteMyAccount(
     // but report success to the client because the user-visible state
     // (no app data, can't sign in) matches "deleted".
     log.warn('account_delete_auth_step_orphan', { userId, err: serializeErr(authErr) });
-  }
 
   log.info('account_deleted', { userId });
-  return { status: 200, body: { success: true } };
-}
 
-/**
  * DELETE /api/admin/users/:id — admin-only.
- *
  * Companion to handleDeleteMyAccount, but for AdminDashboard. Without
  * this endpoint, AdminDashboard.tsx was deleting only `public.users`
  * directly via the supabase client. After 20240101000700 added the
@@ -1797,7 +1356,6 @@ export async function handleDeleteMyAccount(
  * cascade is one-way: auth → public). Result: a "ghost" account that
  * can still authenticate, can recreate its public.users row on next
  * sign-in, and bypasses every audit trail.
- *
  * This handler:
  *   1. Verifies the caller is an admin (role === 'admin' in public.users).
  *   2. Refuses to delete the caller's own account (the operator should
@@ -1807,47 +1365,18 @@ export async function handleDeleteMyAccount(
  *      cleanup trigger. Same cascade semantics as the self-serve flow,
  *      just without the email confirmation step (admins are trusted to
  *      know what they're doing).
- */
 export async function handleAdminDeleteUser(
-  req: NormalizedRequest,
-  supabase: SupabaseClient
-): Promise<NormalizedResponse> {
-  if (!req.user) return unauthorized();
-  const adminId = req.user.id;
-  const targetId = req.params?.id;
-  if (!targetId || !isValidUUID(targetId)) {
-    return badRequest('Valid user ID required', 'INVALID_USER_ID');
-  }
-  if (targetId === adminId) {
-    return {
-      status: 400,
       body: {
         error: 'Admins cannot delete their own account here. Use the self-serve flow on your profile page.',
         code: 'CANNOT_SELF_DELETE',
       },
-    };
-  }
 
   // Verify the caller is actually an admin. The route guard on the
   // client checks this, but the client guard runs in the user's
   // browser — anyone with a valid JWT could call this endpoint
   // directly with curl. The server is the only enforcement that
   // matters.
-  const { data: callerRow, error: callerErr } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', adminId)
-    .maybeSingle();
-  if (callerErr) {
     log.error('admin_delete_caller_lookup_failed', {
-      adminId,
-      err: serializeErr(callerErr),
-    });
-    return serverError('Authorization check failed', 'AUTH_CHECK_FAILED');
-  }
-  if (!callerRow || callerRow.role !== 'admin') {
-    return { status: 403, body: { error: 'Admin role required', code: 'FORBIDDEN' } };
-  }
 
   // Drive the cascade from the auth side. The FK added in
   // 20240101000700 makes `public.users` (and every child table that
@@ -1857,14 +1386,9 @@ export async function handleAdminDeleteUser(
   // admin path doesn't worry about a "user can't sign in to retry"
   // scenario — if it fails, the operator just retries.
   const { error: authErr } = await supabase.auth.admin.deleteUser(targetId);
-  if (authErr) {
     log.error('admin_delete_auth_failed', {
-      adminId,
-      targetId,
       err: serializeErr(authErr),
-    });
     return serverError('Failed to delete user', 'DELETE_FAILED');
-  }
 
   // Belt-and-braces: if for any reason the FK cascade didn't fire
   // (e.g. the user was created before 20240101000700 and the row
@@ -1873,24 +1397,15 @@ export async function handleAdminDeleteUser(
   const { error: dbErr } = await supabase.from('users').delete().eq('id', targetId);
   if (dbErr) {
     log.warn('admin_delete_public_cleanup_failed', {
-      adminId,
-      targetId,
       err: serializeErr(dbErr),
-    });
-  }
 
   log.info('admin_user_deleted', { adminId, targetId });
-  return { status: 200, body: { success: true } };
-}
-=======
  * Public entry point for the backend handlers.
- *
  * This file used to hold ~1,400 lines and every route handler in the project.
  * It is now a thin barrel: the implementation lives in ./handlers/<domain>.ts
  * and this module re-exports it so the existing specifier `./lib/handlers.js`
  * keeps resolving unchanged in api/_index.ts, api/server.ts and
  * api/lib/handlers.test.ts. Nothing else about those call sites changes.
- *
  * Domain map (all bodies moved verbatim — see the header of each module):
  *   system.ts       handleHealth · handleTestKey · handleSecurityLog
  *   profile.ts      handleUploadProfilePhoto
@@ -1900,7 +1415,6 @@ export async function handleAdminDeleteUser(
  *   ai.ts           handleAiChat
  *   account.ts      handleDeleteMyAccount
  *   admin.ts        handleAdminDeleteUser
- */
 export {
   handleHealth,
   handleTestKey,
@@ -1932,4 +1446,3 @@ export type {
   StaticRoute,
   HttpMethod,
 } from './types.js';
->>>>>>> theirs

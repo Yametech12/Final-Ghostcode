@@ -1,26 +1,5 @@
 ---
 name: Feature request
-<<<<<<< ours
-about: Suggest a feature or improvement for Epimetheus
-title: '[feat] '
-labels: [enhancement]
-assignees: ''
----
-
-### Problem to solve
-
-<!-- What user problem or friction does this address? -->
-
-### Proposed solution
-
-<!-- What should happen? Keep it concrete. -->
-
-### Alternatives considered
-
-### Additional context
-
-<!-- Links, screenshots, related issues. -->
-=======
 about: Suggest a capability
 title: '[feat] '
 labels: enhancement
@@ -75,4 +54,3 @@ database needs RLS policies and a migration, which is worth knowing up front.
 ## Additional context
 
 <!-- Sketches, links to similar products, related issues. -->
->>>>>>> theirs

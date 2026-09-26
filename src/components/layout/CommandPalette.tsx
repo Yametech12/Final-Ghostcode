@@ -57,12 +57,8 @@ export default function CommandPalette() {
           >
             <Command
               loop
-<<<<<<< ours
               aria-label="Command palette"
-              className="bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
-=======
               className="bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-modal overflow-hidden"
->>>>>>> theirs
             >
               <div className="flex items-center px-4 py-3 border-b border-slate-700/30">
                 <Search aria-hidden="true" className="w-5 h-5 text-slate-500 mr-3" />

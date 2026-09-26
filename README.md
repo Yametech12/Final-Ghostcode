@@ -1,16 +1,5 @@
 # Epimetheus
 
-<<<<<<< ours
-[![CI](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/ci.yml/badge.svg)](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/ci.yml)
-[![Security audit](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/security-audit.yml/badge.svg)](https://github.com/Yametech12/Final-Ghostcode/actions/workflows/security-audit.yml)
-[![Coverage](https://codecov.io/gh/Yametech12/Final-Ghostcode/branch/main/graph/badge.svg)](https://codecov.io/gh/Yametech12/Final-Ghostcode)
-[![License](https://img.shields.io/badge/license-proprietary-lightgrey)](#license)
-[![Node](https://img.shields.io/badge/node-%E2%89%A520.x-brightgreen)](https://github.com/Yametech12/Final-Ghostcode/blob/main/.github/workflows/ci.yml)
-
-Personality profiling and relationship-intelligence web app. React 19 SPA with a small Express/Vercel API backed by Supabase and Regolo AI.
-
-## Features
-=======
 [![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
 [![Vite](https://img.shields.io/badge/Vite-6-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -131,7 +120,6 @@ graph TB
     R --> U
     O --> V
 ```
->>>>>>> theirs
 
 **Why one handler module.** `api/lib/handlers.ts` exports 16 framework-agnostic
 handlers that take a normalised request and return a normalised response. Both
