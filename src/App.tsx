@@ -10,6 +10,8 @@ import { Suspense, lazy } from 'react';
 import { queryClient } from './lib/queryClient';
 import { useRoutePreloading } from './hooks/useRoutePreloading';
 import { LoadingScreen } from './components/LoadingComponents';
+import UpdatePrompt from './components/pwa/UpdatePrompt';
+import OnlineIndicator from './components/pwa/OnlineIndicator';
 
 // Only load EnvironmentDebug in development
 const EnvironmentDebug = import.meta.env.DEV
@@ -21,9 +23,11 @@ function AppContent() {
 
   return (
     <>
+      <OnlineIndicator />
       <AnimatedRoutes />
+      <UpdatePrompt />
       {import.meta.env.DEV && (
-        <Suspense fallback={null}>
+        <Suspense fallback={<LoadingScreen />}>
           <EnvironmentDebug />
         </Suspense>
       )}

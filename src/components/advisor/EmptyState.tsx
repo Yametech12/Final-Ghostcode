@@ -1,4 +1,5 @@
 import { Sparkles, Bot, ArrowUpRight } from 'lucide-react';
+import { memo } from 'react';
 import { motion } from 'motion/react';
 import { promptCategories } from './prompts';
 
@@ -11,7 +12,7 @@ interface EmptyStateProps {
  * Shown when the chat has no messages. Welcomes the user and offers
  * grouped prompt suggestions. Clicking a prompt sends it immediately.
  */
-export function EmptyState({ onSelectPrompt, disabled }: EmptyStateProps) {
+function EmptyStateImpl({ onSelectPrompt, disabled }: EmptyStateProps) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
@@ -69,3 +70,7 @@ export function EmptyState({ onSelectPrompt, disabled }: EmptyStateProps) {
     </motion.div>
   );
 }
+
+/** P1: pure component — memoised to stop parent re-renders from
+ * re-running its render path. */
+export const EmptyState = memo(EmptyStateImpl);

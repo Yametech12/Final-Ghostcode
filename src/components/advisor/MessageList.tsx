@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { ArrowDown } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useSmartScroll } from '../../hooks/useSmartScroll';
@@ -20,7 +21,7 @@ interface MessageListProps {
  * Scrollable area that lists messages or shows the empty state.
  * Uses smart-scroll: only auto-follows the bottom when the user is already there.
  */
-export function MessageList({
+function MessageListImpl({
   messages,
   isStreaming,
   isSending,
@@ -78,7 +79,7 @@ export function MessageList({
           type="button"
           onClick={() => scrollToBottom(true)}
           aria-label="Scroll to latest message"
-          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full bg-mystic-900/95 backdrop-blur border border-accent-primary/15 text-sm text-slate-200 shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] hover:border-accent-primary/30 transition-colors"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-3 py-2 rounded-full bg-mystic-900/95 backdrop-blur border border-accent-primary/15 text-sm text-slate-200 shadow-popover hover:border-accent-primary/30 transition-colors"
         >
           <ArrowDown aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
           <span>Latest</span>
@@ -87,3 +88,7 @@ export function MessageList({
     </div>
   );
 }
+
+/** P1: pure component — memoised so parent re-renders that pass identical
+ * props skip its render path entirely. */
+export const MessageList = memo(MessageListImpl);

@@ -1,3 +1,4 @@
+import { readToken, COLOR_TOKEN } from '../styles/colorTokens';
 import { useRef, useState } from 'react';
 import { X, Download, Share2, Check, Crown, Zap, FileText, Award, User } from 'lucide-react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
@@ -32,7 +33,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
     try {
       const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(cardRef.current, {
-        backgroundColor: '#0f0f1a',
+        backgroundColor: readToken(COLOR_TOKEN.surfaceRaised),
         pixelRatio: 2,
         cacheBust: true,
       });
@@ -65,7 +66,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
       role="dialog"
       aria-modal="true"
       aria-label="Profile card"
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90 backdrop-blur-md"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-mystic-950/90"
     >
       <div className="w-full max-w-md space-y-4">
         <div className="flex justify-end">

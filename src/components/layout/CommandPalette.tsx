@@ -51,18 +51,23 @@ export default function CommandPalette() {
             exit={{ opacity: 0, scale: 0.96, y: -8 }}
             transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
             className="relative w-full max-w-2xl"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Command palette"
           >
             <Command
               loop
-              className="bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+              aria-label="Command palette"
+              className="bg-mystic-900/85 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-modal overflow-hidden"
             >
               <div className="flex items-center px-4 py-3 border-b border-slate-700/30">
                 <Search aria-hidden="true" className="w-5 h-5 text-slate-500 mr-3" />
-                <Command.Input
-                  autoFocus
-                  placeholder="Search profiles, tools, or guides…"
-                  className="w-full bg-transparent border-none outline-none text-slate-100 placeholder:text-slate-500 text-sm tracking-wide"
-                />
+              <Command.Input
+                autoFocus
+                placeholder="Search profiles, tools, or guides…"
+                aria-label="Search profiles, tools, or guides"
+                className="w-full bg-transparent border-none outline-none text-slate-100 placeholder:text-slate-500 text-sm tracking-wide"
+              />
                 <kbd
                   aria-hidden="true"
                   className="ml-3 px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-500 bg-white/5 border border-accent-primary/15 rounded"
@@ -71,7 +76,10 @@ export default function CommandPalette() {
                 </kbd>
               </div>
 
-              <Command.List className="max-h-[60vh] overflow-y-auto p-3">
+              <Command.List
+                aria-label="Command palette options"
+                className="max-h-[60vh] overflow-y-auto p-3"
+              >
                 <Command.Empty className="py-8 text-center text-sm text-slate-500">
                   No results found.
                 </Command.Empty>
@@ -82,6 +90,7 @@ export default function CommandPalette() {
                 >
                   <Command.Item
                     onSelect={() => runCommand(() => navigate('/advisor'))}
+                    aria-label="Epimetheus Advisor"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <Brain aria-hidden="true" className="w-4 h-4 mr-3 text-accent-primary" />
@@ -89,6 +98,7 @@ export default function CommandPalette() {
                   </Command.Item>
                   <Command.Item
                     onSelect={() => runCommand(() => navigate('/calibration'))}
+                    aria-label="Oracle Calibration"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <Target aria-hidden="true" className="w-4 h-4 mr-3 text-accent-primary" />
@@ -96,6 +106,7 @@ export default function CommandPalette() {
                   </Command.Item>
                   <Command.Item
                     onSelect={() => runCommand(() => navigate('/dossiers'))}
+                    aria-label="Dossiers"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <FileText aria-hidden="true" className="w-4 h-4 mr-3 text-accent-primary" />
@@ -111,6 +122,7 @@ export default function CommandPalette() {
                     <Command.Item
                       key={profile.id}
                       onSelect={() => runCommand(() => navigate(`/encyclopedia?type=${profile.id}`))}
+                      aria-label={`${profile.name} — type ${profile.id}`}
                       className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                     >
                       <User aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
@@ -128,6 +140,7 @@ export default function CommandPalette() {
                 >
                   <Command.Item
                     onSelect={() => runCommand(() => navigate('/guide'))}
+                    aria-label="The Epimetheus Guide"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <Compass aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
@@ -135,6 +148,7 @@ export default function CommandPalette() {
                   </Command.Item>
                   <Command.Item
                     onSelect={() => runCommand(() => navigate('/glossary'))}
+                    aria-label="Glossary"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <BookOpen aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />
@@ -145,6 +159,7 @@ export default function CommandPalette() {
                       localStorage.removeItem('hasSeenOnboarding');
                       window.dispatchEvent(new CustomEvent('open-onboarding'));
                     })}
+                    aria-label="Replay Welcome tutorial"
                     className="flex items-center px-3 py-2.5 mt-1 rounded-xl cursor-pointer aria-selected:bg-accent-primary/10 aria-selected:text-accent-primary text-slate-300 transition-colors"
                   >
                     <Sparkles aria-hidden="true" className="w-4 h-4 mr-3 text-slate-500" />

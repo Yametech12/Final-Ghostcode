@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": false,
+    "allowImportingTsExtensions": false,
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "outDir": "dist-server",
+    "rootDir": ".",
+    "sourceMap": false,
+    "types": ["node"]
+  },
+  "include": ["api/_index.ts", "api/_config.ts", "api/_ai.ts", "api/lib/**/*.ts"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "dist-server",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "api/server.ts",
+    "api/_create-bucket.ts"
+  ]
+}

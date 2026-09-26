@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import React from 'react';
 import { cn } from "../../lib/utils";
 
@@ -6,7 +7,7 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   shimmer?: boolean;
 }
 
-export function Skeleton({ className, variant = 'default', shimmer = true, ...props }: SkeletonProps) {
+function SkeletonImpl({ className, variant = 'default', shimmer = true, ...props }: SkeletonProps) {
   const variantClasses = {
     default: 'rounded-md',
     circle: 'rounded-full',
@@ -16,9 +17,10 @@ export function Skeleton({ className, variant = 'default', shimmer = true, ...pr
   return (
     <div
       className={cn(
-        // Warm-tinted base — pulls from the new slate-300 (#C4BAAB) at low alpha.
+        // Warm-tinted base — the slate-300 token at low alpha
+        // (--color-skeleton-from / --color-skeleton-via in src/index.css).
         // Gold shimmer pass comes from .shimmer-effect (defined in index.css).
-        "bg-gradient-to-r from-[rgba(196,186,171,0.04)] via-[rgba(196,186,171,0.10)] to-[rgba(196,186,171,0.04)]",
+        "bg-gradient-to-r from-skeleton-from via-skeleton-via to-skeleton-from",
         shimmer && "shimmer-effect",
         variantClasses[variant],
         className
@@ -57,3 +59,7 @@ export function CardSkeleton() {
     </div>
   );
 }
+
+/** P1: pure component — memoised so parent re-renders that pass identical
+ * props skip its render path entirely. */
+export const Skeleton = memo(SkeletonImpl);

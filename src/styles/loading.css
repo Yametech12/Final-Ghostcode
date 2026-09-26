@@ -1,7 +1,7 @@
 /* Loading Spinner Styles — luxury gold theme */
 .loading-spinner {
-  border: 2px solid rgba(232, 199, 126, 0.2);
-  border-top-color: #E8C77E;
+  border: 2px solid color-mix(in srgb, var(--color-accent-primary) 20%, transparent);
+  border-top-color: var(--color-accent-primary);
   border-radius: 50%;
   animation: spin-loading 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
@@ -26,7 +26,7 @@
   position: absolute;
   inset: -8px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(232, 199, 126, 0.15) 0%, transparent 70%);
+  background: radial-gradient(circle, color-mix(in srgb, var(--color-accent-primary) 15%, transparent) 0%, transparent 70%);
   animation: pulse-glow 2.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
@@ -34,9 +34,9 @@
   position: absolute;
   inset: 0;
   border-radius: 50%;
-  border: 2px solid rgba(232, 199, 126, 0.15);
-  border-top-color: #E8C77E;
-  border-right-color: rgba(184, 115, 51, 0.5);
+  border: 2px solid color-mix(in srgb, var(--color-accent-primary) 15%, transparent);
+  border-top-color: var(--color-accent-primary);
+  border-right-color: color-mix(in srgb, var(--color-accent-secondary) 50%, transparent);
   animation: spin-loading 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 

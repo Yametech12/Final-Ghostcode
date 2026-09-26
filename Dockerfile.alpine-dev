@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1.7
+#
+# DEVELOPMENT variant — includes dev dependencies, runs Vite dev server (5173)
+# and the Express API (3000) concurrently inside one container.
+#
+# Do NOT use this for production: it runs as root, ships the full dev dep tree
+# (~3x the prod image) and starts a hot-reload bundler.
+#
+#   docker build -f Dockerfile.alpine-dev -t ghostcode-api:dev .
+#   docker run --rm -p 3000:3000 -p 5173:5173 -v "$PWD/src:/app/src" \
+#     --env-file .env ghostcode-api:dev
+#
+# Vite proxies /api -> http://localhost:3000 (vite.config.ts), so both ports
+# must be published and the proxy target must resolve inside the container.
+
+ARG NODE_VERSION=20
+FROM node:20-alpine AS dev
+
+WORKDIR /app
+
+# git is needed by some tooling; bash makes interactive debugging bearable.
+RUN apk add --no-cache bash git
+
+COPY package.json package-lock.json ./
+
+# Full dependency tree — tsx, vite, vitest, typescript all required here.
+RUN npm ci
+
+COPY . .
+
+ENV NODE_ENV=development \
+    PORT=3000 \
+    HOST=0.0.0.0
+
+# tsx runs the TypeScript API directly — no compile step in dev.
+# `npm run dev` would also call clean:dev (kill-port 3000 5173), which can
+# kill the container's own PID 1 child; run the two processes directly instead.
+CMD ["sh", "-c", "npx concurrently -k -n api,web -c cyan,magenta \"npx tsx api/_index.ts\" \"npx vite --port 5173 --host 0.0.0.0\""]
+
+EXPOSE 3000 5173
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=40s --retries=3 \
+  CMD wget -q -O - http://127.0.0.1:3000/api/health > /dev/null 2>&1 || exit 1

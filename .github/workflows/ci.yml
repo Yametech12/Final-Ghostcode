@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: build (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: [20]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node ${{ matrix.node }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck API (npm run lint:api)
+        run: npm run lint:api
+
+      - name: Typecheck frontend (npm run lint)
+        run: npm run lint
+
+      # lint:tokens:strict comes from the S10 CSS-token patch. Until that patch is
+      # applied this script does not exist in package.json; `--if-present` makes npm
+      # skip it silently (exit 0) and it starts enforcing automatically once present.
+      - name: Color-token lint (npm run lint:tokens:strict, if present)
+        run: npm run lint:tokens:strict --if-present
+
+      # Coverage provider (@vitest/coverage-v8) is not installed in the repo yet, so
+      # tests run plain by default; coverage activates automatically once the
+      # provider is added as a devDependency.
+      - name: Unit tests (vitest, with coverage if provider installed)
+        run: |
+          if node -e "require.resolve('@vitest/coverage-v8/package.json')" 2>/dev/null; then
+            echo "Coverage provider found - running vitest with coverage"
+            npx vitest run --coverage --coverage.reporter=lcov --coverage.reporter=text
+          else
+            echo "No coverage provider installed - running plain vitest"
+            npx vitest run
+          fi
+
+      - name: Build (vite)
+        run: npm run build
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-node${{ matrix.node }}
+          path: |
+            coverage/
+            !coverage/tmp/**
+          if-no-files-found: ignore
+          retention-days: 7
+
+      - name: Upload coverage to Codecov (optional)
+        if: always() && hashFiles('coverage/**') != ''
+        uses: codecov/codecov-action@v4
+        with:
+          files: coverage/lcov.info
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: false
+
+  # Stable aggregate check: use "CI status" as the single required status check in
+  # branch protection, so adding Node versions to the matrix later does not break
+  # the required-check registration.
+  ci-ok:
+    name: CI status
+    needs: [build]
+    if: always()
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Aggregate results
+        run: |
+          if [ "${{ needs.build.result }}" = "success" ]; then
+            echo "All CI jobs passed"
+          else
+            echo "::error::One or more CI jobs failed (build: ${{ needs.build.result }})"
+            exit 1
+          fi

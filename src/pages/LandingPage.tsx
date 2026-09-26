@@ -224,7 +224,7 @@ export default function LandingPage() {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation"
-          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col safe-area-top safe-area-bottom safe-area-x"
+          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 flex flex-col safe-area-top safe-area-bottom safe-area-x"
         >
           <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
             <Link
@@ -667,7 +667,7 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          <div className="glass-card p-7 border-accent-primary/30 shadow-[0_0_32px_-12px_rgba(232,199,126,0.18)]">
+          <div className="glass-card p-7 border-accent-primary/30 shadow-glow-accent-lg">
             <div className="flex items-center gap-3 mb-5">
               <div className="w-10 h-10 rounded-xl bg-accent-primary/10 border border-accent-primary/20 flex items-center justify-center text-accent-primary">
                 <TrendingUp className="w-5 h-5" strokeWidth={2} aria-hidden="true" />

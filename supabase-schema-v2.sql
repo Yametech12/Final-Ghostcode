@@ -1,4 +1,14 @@
 -- =====================================================================
+-- ⚠ DEPRECATED MIRROR — DO NOT APPLY.
+-- This file predates supabase/migrations/ and still contains the loose
+-- `FOR ALL USING (id = auth.uid())` policy on public.users plus a bucket-wide
+-- public-read policy on storage.objects. Applying it AFTER
+-- 20240101000900_users_rls_hardening.sql / 20240101001000_storage_private_bucket.sql
+-- would reintroduce the privilege-escalation and public-photo holes those
+-- migrations close. The canonical schema is supabase/migrations/*.sql.
+-- =====================================================================
+
+-- =====================================================================
 -- DEPRECATED — kept on disk for one release cycle.
 --
 -- The canonical schema source is now `supabase/migrations/`. Apply with

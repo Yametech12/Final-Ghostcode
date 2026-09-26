@@ -6,6 +6,29 @@
 
 let initialized = false;
 
+/**
+ * P1: the SDK was re-imported on every captureException/setUser/clearUser call,
+ * even though initSentry() had already resolved the module. Keeping the resolved
+ * namespace in a module-scope handle removes that redundant async work while
+ * preserving the lazy-load (Sentry still never enters the initial bundle).
+ */
+type SentryModule = typeof import('@sentry/react');
+let sentryModule: SentryModule | null = null;
+let sentryLoading: Promise<SentryModule | null> | null = null;
+
+async function loadSentry(): Promise<SentryModule | null> {
+  if (sentryModule) return sentryModule;
+  if (!sentryLoading) {
+    sentryLoading = import('@sentry/react')
+      .then((m) => {
+        sentryModule = m;
+        return m;
+      })
+      .catch(() => null);
+  }
+  return sentryLoading;
+}
+
 export async function initSentry(): Promise<void> {
   if (initialized) return;
 
@@ -19,7 +42,8 @@ export async function initSentry(): Promise<void> {
   }
 
   try {
-    const Sentry = await import('@sentry/react');
+    const Sentry = await loadSentry();
+    if (!Sentry) return;
 
     Sentry.init({
       dsn,
@@ -83,7 +107,8 @@ export async function initSentry(): Promise<void> {
 export async function captureException(error: unknown, context?: Record<string, unknown>): Promise<void> {
   if (!initialized) return;
   try {
-    const Sentry = await import('@sentry/react');
+    const Sentry = await loadSentry();
+    if (!Sentry) return;
     Sentry.captureException(error, { extra: context });
   } catch {
     // Sentry unavailable — fall back to console
@@ -103,7 +128,8 @@ export async function captureException(error: unknown, context?: Record<string, 
 export async function setUser(user: { id: string; email?: string | null }): Promise<void> {
   if (!initialized) return;
   try {
-    const Sentry = await import('@sentry/react');
+    const Sentry = await loadSentry();
+    if (!Sentry) return;
     Sentry.setUser({ id: user.id });
     void user.email; // intentionally not forwarded
   } catch {
@@ -117,7 +143,8 @@ export async function setUser(user: { id: string; email?: string | null }): Prom
 export async function clearUser(): Promise<void> {
   if (!initialized) return;
   try {
-    const Sentry = await import('@sentry/react');
+    const Sentry = await loadSentry();
+    if (!Sentry) return;
     Sentry.setUser(null);
   } catch {
     // ignore

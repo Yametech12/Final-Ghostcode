@@ -24,16 +24,29 @@
 -- Add:
 [
   {
-    "origin": ["*"],
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:3000",
+      "https://epimetheusproject.vercel.app",
+      "https://epimetheus.ai",
+      "https://www.epimetheus.ai"
+    ],
     "method": ["GET", "POST", "PUT", "DELETE"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
   }
 ]
 
--- Step 3: Make bucket public for read access
--- In GCP Console: Bucket > Permissions > Add
--- Grant Storage Object Viewer to allUsers
+-- Step 3: KEEP THE BUCKET PRIVATE — do NOT grant public read
+-- The previous instruction here ("Make bucket public for read access" /
+-- "Grant Storage Object Viewer to allUsers") is precisely what made every
+-- profile photo world-readable at a guessable path (users/<userId>/profile.<ext>)
+-- permanently — including after account deletion. Public read is now removed:
+--   • reads go through createSignedUrl() with a 1h TTL
+--   • Supabase equivalent: storage.buckets.public = false, applied by
+--     supabase/migrations/20240101001000_storage_private_bucket.sql
+-- Leave the bucket private; grant the service account Object Admin only.
 
 -- Step 4: IAM Policies for uploads
 -- The service account needs Storage Object Admin on the bucket
@@ -48,34 +61,38 @@
 -- Note: Unlike Supabase RLS, GCS uses signed URLs for secure uploads
 -- No direct equivalent to RLS, but signed URLs provide similar security
 
--- Create policy: Allow users to view their own files
+-- Object policies — owner-scoped only.
+-- CORRECTED: the previous revision of this file matched
+-- `(storage.foldername(name))[1] = auth.uid()::text`, but folders are laid out
+-- `users/<uid>/...`, so element [1] is the literal 'users' and the uid is
+-- element [2]. Those policies therefore matched nothing while still looking
+-- correct in review. The canonical, migration-managed set lives in
+-- supabase/migrations/20240101001000_storage_private_bucket.sql; this file is a
+-- legacy GCS guide and is kept in sync for operators who paste it by hand.
+DROP POLICY IF EXISTS "Public can view files" ON storage.objects;
 DROP POLICY IF EXISTS "Users can view their own files" ON storage.objects;
 CREATE POLICY "Users can view their own files" ON storage.objects
 FOR SELECT USING (
   bucket_id = 'user-uploads'
   AND auth.role() = 'authenticated'
-  AND (storage.foldername(name))[1] = auth.uid()::text
+  AND (storage.foldername(name))[1] = 'users'
+  AND (storage.foldername(name))[2] = auth.uid()::text
 );
 
--- Create policy: Allow public access to view all files
-DROP POLICY IF EXISTS "Public can view files" ON storage.objects;
-CREATE POLICY "Public can view files" ON storage.objects
-FOR SELECT USING (bucket_id = 'user-uploads');
-
--- Create policy: Allow users to delete their own files
 DROP POLICY IF EXISTS "Users can delete their own files" ON storage.objects;
 CREATE POLICY "Users can delete their own files" ON storage.objects
 FOR DELETE USING (
   bucket_id = 'user-uploads'
   AND auth.role() = 'authenticated'
-  AND (storage.foldername(name))[1] = auth.uid()::text
+  AND (storage.foldername(name))[1] = 'users'
+  AND (storage.foldername(name))[2] = auth.uid()::text
 );
 
--- Create policy: Allow users to update their own files
 DROP POLICY IF EXISTS "Users can update their own files" ON storage.objects;
 CREATE POLICY "Users can update their own files" ON storage.objects
 FOR UPDATE USING (
   bucket_id = 'user-uploads'
   AND auth.role() = 'authenticated'
-  AND (storage.foldername(name))[1] = auth.uid()::text
+  AND (storage.foldername(name))[1] = 'users'
+  AND (storage.foldername(name))[2] = auth.uid()::text
 );

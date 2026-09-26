@@ -178,13 +178,72 @@ export default function AdminDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userData, navigate]);
 
+  // ── Signed avatar URLs ────────────────────────────────────────────────
+  // The user-uploads bucket is private since
+  // 20240101001000_storage_private_bucket.sql, so a stored photo_url is either
+  // a bucket path (`users/<id>/profile.*`) or a now-dead legacy public URL.
+  // Neither renders in an <img> without a signed URL, and the admin row is not
+  // the caller's own object, so /api/me/profile-photo cannot be used — each row
+  // is signed through the admin-only endpoint instead.
+  const [signedPhotos, setSignedPhotos] = useState<Record<string, string>>({});
+  const [unsignablePhotos, setUnsignablePhotos] = useState<Record<string, boolean>>({});
+
+  const isBucketPhoto = (ref?: string) =>
+    !!ref && (ref.startsWith("users/") || ref.includes("/user-uploads/"));
+
+  const avatarSrc = (u: UserData): string | undefined =>
+    signedPhotos[u.id] ??
+    (isBucketPhoto(u.photo_url) ? undefined : u.photo_url || undefined);
+
+  // Resolve signed URLs for the rows on screen. Sequential and capped so a
+  // 1000-row page doesn't fire 1000 requests; every miss is memoised in
+  // unsignablePhotos so it is never retried (which would loop the effect).
+  useEffect(() => {
+    const pending = users
+      .filter((u) => isBucketPhoto(u.photo_url) && !signedPhotos[u.id] && !unsignablePhotos[u.id])
+      .slice(0, 25);
+    if (pending.length === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { apiFetch } = await import("../lib/fetch");
+      for (const u of pending) {
+        try {
+          const res = await apiFetch(`/api/admin/users/${u.id}/photo`);
+          const body = res.ok ? await res.json() : null;
+          if (cancelled) return;
+          if (body && typeof body.url === "string") {
+            setSignedPhotos((prev) => ({ ...prev, [u.id]: body.url }));
+          } else {
+            setUnsignablePhotos((prev) => ({ ...prev, [u.id]: true }));
+          }
+        } catch {
+          if (!cancelled) setUnsignablePhotos((prev) => ({ ...prev, [u.id]: true }));
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [users, signedPhotos, unsignablePhotos]);
+
+  /**
+   * Privileged write — now server-side. 20240101000900_users_rls_hardening.sql
+   * revokes table-level UPDATE on public.users from `authenticated` and grants
+   * back only the non-privileged columns, so the previous direct
+   * `supabase.from("users").update({ role })` fails with SQLSTATE 42501 no
+   * matter what RLS says. The service-role endpoint re-checks the caller's
+   * admin role before writing.
+   */
   const handleRoleChange = async (userId: string, newRole: string) => {
     try {
-      const { error } = await supabase
-        .from("users")
-        .update({ role: newRole })
-        .eq("id", userId);
-      if (error) throw error;
+      const { apiFetch } = await import("../lib/fetch");
+      const res = await apiFetch(`/api/admin/users/${userId}/role`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ role: newRole }),
+      });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body?.error || `Role update failed: ${res.status}`);
       setUsers(
         users.map((u) => (u.id === userId ? { ...u, role: newRole } : u)),
       );
@@ -514,12 +573,14 @@ export default function AdminDashboard() {
                     >
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-mystic-800 flex items-center justify-center overflow-hidden">
-                          {u.photo_url ? (
+                          {avatarSrc(u) ? (
                             <img
-                              src={u.photo_url}
+                              src={avatarSrc(u)}
                               alt={u.display_name || "User"}
                               className="w-full h-full object-cover"
-                            />
+                            loading="lazy"
+                            decoding="async"
+/>
                           ) : (
                             <User className="w-4 h-4 text-slate-500" />
                           )}
@@ -621,12 +682,14 @@ export default function AdminDashboard() {
                       <td className="p-4">
                         <div className="flex items-center gap-3">
                           <div className="w-8 h-8 rounded-full bg-mystic-800 flex items-center justify-center overflow-hidden">
-                            {u.photo_url ? (
+                            {avatarSrc(u) ? (
                               <img
-                                src={u.photo_url}
+                                src={avatarSrc(u)}
                                 alt={u.display_name || "User"}
                                 className="w-full h-full object-cover"
-                              />
+                              loading="lazy"
+                              decoding="async"
+/>
                             ) : (
                               <User className="w-4 h-4 text-slate-500" />
                             )}

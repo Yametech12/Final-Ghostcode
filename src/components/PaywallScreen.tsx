@@ -89,7 +89,7 @@ export default function PaywallScreen({
           className="pointer-events-none absolute -top-32 left-1/2 -translate-x-1/2 w-[500px] h-[500px] rounded-full"
           style={{
             background:
-              'radial-gradient(circle, rgba(232,199,126,0.10) 0%, transparent 60%)',
+              'radial-gradient(circle, var(--color-accent-veil-soft) 0%, transparent 60%)',
             filter: 'blur(40px)',
           }}
         />

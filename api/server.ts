@@ -27,8 +27,22 @@ import {
   handleDeleteOracleAnalysis,
   handleDeleteMyAccount,
   handleAdminDeleteUser,
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
+import {
+  handleCreateCheckoutSession,
+  handleCreatePortalSession,
+  handleStripeWebhook,
+} from './lib/subscription.js';
+
+// Disable Vercel's body parser so the Stripe webhook reaches signature
+// verification with the RAW request payload (re-serialization breaks the
+// HMAC). All other POST/PATCH/DELETE routes parse their JSON body
+// explicitly below via readRawBody + JSON.parse.
+export const config = { api: { bodyParser: false } };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -59,6 +73,22 @@ function applyResponseHeaders(req: VercelRequest, res: VercelResponse) {
   const setHeader = (name: string, value: string) => res.setHeader(name, value);
   applyCorsHeaders({ origin: req.headers.origin as string | undefined, setHeader });
   applySecurityHeaders({ setHeader });
+}
+
+/**
+ * Buffer the raw request body. Required because module-level
+ * `config.api.bodyParser = false` (the Stripe webhook needs the untouched
+ * bytes) — every other route receives the parsed result from here.
+ */
+function readRawBody(req: VercelRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: unknown) => {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : (chunk as Buffer));
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -92,6 +122,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .replace(/^v1\//, '');
   const pathFromQuery = Array.isArray(req.query.path) ? req.query.path.join('/') : (req.query.path as string | undefined);
   const pathname = (pathFromUrl || pathFromQuery || '').replace(/^v1\//, '');
+
+  // Stripe webhook — raw body + signature auth. No JWT, no CSRF, no rate
+  // limit: Stripe signs the payload itself and cannot send browser headers.
+  // Handled before any auth/rate-limit work so the cold path stays fast.
+  if (pathname === 'billing/webhook' && req.method === 'POST') {
+    const raw = await readRawBody(req);
+    const r = await handleStripeWebhook(
+      raw,
+      req.headers['stripe-signature'] as string | undefined,
+      supabase,
+    );
+    res.status(r.status).json(r.body ?? {});
+    return;
+  }
 
   // Rate limiting for AI/advisor/calibration endpoints, the public
   // /api/security/log path, and self-serve account deletion. The latter
@@ -190,9 +234,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // Body parsing (Vercel's parser is disabled for the webhook — see config
+  // above). Mirrors express.json: JSON bodies are parsed, anything else is
+  // passed through as raw bytes.
+  let body: unknown = {};
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const raw = await readRawBody(req);
+    if (raw.length > 0) {
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        try {
+          body = JSON.parse(raw.toString('utf8'));
+        } catch {
+          res.status(400).json({ error: 'Invalid JSON body', code: 'INVALID_JSON' });
+          return;
+        }
+      } else {
+        body = raw;
+      }
+    }
+  }
+
   const normReq: NormalizedRequest = {
     method: req.method || 'GET',
-    body: req.body,
+    body,
     query: req.query as Record<string, any>,
     params: {},
     headers: req.headers as Record<string, string | string[] | undefined>,
@@ -229,6 +294,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (pathname === 'upload/profile-photo' && req.method === 'POST') {
       const r = await handleUploadProfilePhoto(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+
+    // Billing — Stripe checkout & customer portal (JWT required).
+    if (pathname === 'billing/create-checkout-session' && req.method === 'POST') {
+      const r = await handleCreateCheckoutSession(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+    if (pathname === 'billing/create-portal-session' && req.method === 'POST') {
+      const r = await handleCreatePortalSession(normReq, supabase);
       res.status(r.status).json(r.body);
       return;
     }
@@ -338,6 +415,46 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (segments.length === 3) {
         normReq.params = { id: segments[2] };
         const r = await handleAdminDeleteUser(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
+    }
+
+    // GET /api/me/profile-photo  → short-lived signed URL for the caller's own
+    // photo. Needed because the user-uploads bucket is private as of
+    // 20240101001000_storage_private_bucket.sql: the stored value is a bucket
+    // path (or a now-dead legacy public URL), and only the server holds the key
+    // required to sign it.
+    if (pathname === 'me/profile-photo' && req.method === 'GET') {
+      const r = await handleGetMyProfilePhotoUrl(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+
+    // GET /api/admin/users/:id/photo  → signed URL for ANOTHER user's photo.
+    // Admin-only: an admin row renders avatars for users whose objects the
+    // admin does not own, so it cannot reuse /api/me/profile-photo. The admin
+    // check happens server-side before any URL is minted.
+    if (pathname.startsWith('admin/users/') && pathname.endsWith('/photo') && req.method === 'GET') {
+      const segments = pathname.split('/');
+      // segments: ['admin', 'users', '<id>', 'photo']
+      if (segments.length === 4) {
+        normReq.params = { id: segments[2] };
+        const r = await handleAdminGetUserPhotoUrl(normReq, supabase);
+        res.status(r.status).json(r.body);
+        return;
+      }
+    }
+
+    // PATCH /api/admin/users/:id/role  → admin-only privileged write.
+    // Replaces the dashboard's direct client-side users.update({role}), which
+    // the column-level grants in 20240101000900 now reject with 42501.
+    if (pathname.startsWith('admin/users/') && pathname.endsWith('/role') && req.method === 'PATCH') {
+      const segments = pathname.split('/');
+      // segments: ['admin', 'users', '<id>', 'role']
+      if (segments.length === 4) {
+        normReq.params = { id: segments[2] };
+        const r = await handleAdminUpdateUserRole(normReq, supabase);
         res.status(r.status).json(r.body);
         return;
       }

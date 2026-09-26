@@ -1,0 +1,72 @@
+# Local development stack for the Epimetheus API.
+#
+#   docker compose up api            # API + SPA on http://localhost:3000
+#   docker compose up api redis      # API + Redis (see the note on redis below)
+#   docker compose logs -f api
+#   docker compose down
+#
+# NOTE ON REDIS: the application does not consume Redis yet. Rate limiting and
+# tier caching are still in-process (api/_index.ts Map, api/lib/tierGate.ts).
+# The redis service is included as a ready-to-use dependency for the planned
+# Upstash-compatible migration so the compose topology does not need to change
+# when that lands. Starting it without the app using it costs ~10 MB RAM.
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        GIT_SHA: ${GIT_SHA:-local}
+        BUILD_DATE: ${BUILD_DATE:-local}
+    image: ghostcode-api:local
+    container_name: ghostcode-api
+    # The server binds 0.0.0.0:3000 inside the container; publish it to the host.
+    ports:
+      - "${API_PORT:-3000}:3000"
+    # `.env` is gitignored and must exist on the host (see .env.example).
+    # Required keys: VITE_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY.
+    # The server calls process.exit(1) if either is missing.
+    env_file:
+      - .env
+    environment:
+      NODE_ENV: development
+      PORT: "3000"
+      HOST: 0.0.0.0
+      # APP_URL must point at the address the *browser* uses, not the
+      # container hostname — CORS echoes the Origin header against this value.
+      APP_URL: ${APP_URL:-http://localhost:3000}
+      # Present so the app can adopt Redis without a compose change.
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1:3000/api/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+    networks:
+      - ghostcode
+
+  redis:
+    image: redis:7-alpine
+    container_name: ghostcode-redis
+    # Not published to the host by default — only the api service needs it.
+    expose:
+      - "6379"
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - ghostcode
+
+networks:
+  ghostcode:
+    driver: bridge

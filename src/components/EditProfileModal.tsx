@@ -190,18 +190,23 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
         throw new Error(errBody.error || `Upload failed: ${response.status}`);
       }
 
-      const { url: publicUrl } = await response.json();
-      if (!publicUrl) {
+      // The endpoint returns BOTH a signed URL (for rendering) and the bucket
+      // object path (for persistence). The bucket is private as of
+      // 20240101001000_storage_private_bucket.sql, so the signed URL expires in
+      // an hour — persisting it would leave a dead <img> src. Persist the path
+      // instead; it is re-signed on load via GET /api/me/profile-photo.
+      const { url: signedUrl, path: storagePath } = await response.json();
+      if (!signedUrl || !storagePath) {
         URL.revokeObjectURL(localPreviewUrl);
-        throw new Error('Upload succeeded but no URL was returned');
+        throw new Error('Upload succeeded but no signed URL/path was returned');
       }
 
-      setPhotoUrl(publicUrl);
-      setPhotoPreview(publicUrl);
+      setPhotoUrl(signedUrl);
+      setPhotoPreview(signedUrl);
       // Now that the HTTPS URL is showing, the local blob URL is no
       // longer referenced by any <img>. Free it.
       URL.revokeObjectURL(localPreviewUrl);
-      await updateUserProfile({ photoURL: publicUrl });
+      await updateUserProfile({ photoURL: storagePath });
       toast.success('Profile photo updated!');
     } catch (error: any) {
       console.error('Photo upload error:', error);
@@ -304,7 +309,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.96, y: 8 }}
           transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
-          className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+          className="relative w-full max-w-lg bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-modal overflow-hidden"
         >
           <div className="p-6 border-b border-slate-700/30 flex items-center justify-between">
             <h2 id="edit-profile-modal-title" className="text-xl font-semibold flex items-center gap-2 text-slate-100">
@@ -369,6 +374,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     src={photoPreview}
                     alt="Profile preview"
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                   {uploadingPhoto && (
                     <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
@@ -384,6 +391,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     src={userData.photoURL}
                     alt="Current profile photo"
                     className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                   />
                 </div>
               )}

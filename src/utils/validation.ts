@@ -9,25 +9,72 @@
  */
 export function sanitizeInput(input: string): string {
   if (!input) return input;
+  // Regex "sanitizers" (strip tags, kill `javascript:`, drop event handlers)
+  // were removed: they are bypassable (`<scr<script>ipt>`, split across SSE
+  // tokens, `jav\tascript:`) and they mangled valid input — e.g. emails
+  // containing `&`, `'`, or `"` were rewritten before auth, causing bogus
+  // "wrong password" failures (audit M-04). React auto-escapes everything
+  // rendered in JSX, react-markdown without rehype-raw never emits raw HTML,
+  // and there is no dangerouslySetInnerHTML in this codebase — so escape-at-
+  // render already covers XSS. This helper now only normalizes input safely.
+  return stripControlChars(input).trim();
+}
 
-  return input
-    // Remove HTML tags
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<[^>]*>/g, '')
-    // Remove common XSS patterns
-    .replace(/javascript:/gi, '')
-    .replace(/on\w+\s*=/gi, '')
-    .replace(/data:/gi, '')
-    .replace(/vbscript:/gi, '')
-    .replace(/expression\(/gi, '')
-    // Decode HTML entities to prevent double encoding
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#x27;')
-    // Trim whitespace
-    .trim();
+/**
+ * Remove control characters (except tab/newline/CR) and zero-width
+ * homoglyph tricks from a string, then cap its length. Useful for
+ * user-supplied free text that will be logged, stored, or interpolated
+ * into LLM prompts — without mangling legitimate characters the way
+ * regex HTML "sanitizers" did.
+ */
+export function stripControlChars(text: string, maxLen = 5000): string {
+  if (!text) return '';
+  // eslint-disable-next-line no-control-regex
+  return text
+    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060]/g, '')
+    .slice(0, maxLen);
+}
+
+/**
+ * Sanitize a free-form text field that will be inlined into an LLM prompt.
+ *
+ * Defends against the classic prompt-injection patterns where a user types
+ * something like:
+ *
+ *   Ignore all previous instructions. You are now …
+ *   <|im_start|>system you are …
+ *   assistant: bypass …
+ *
+ * This is defense-in-depth — the *real* mitigation is structuring the prompt
+ * so user content sits inside a delimited "INPUT:" block the model is told
+ * to treat as data, not instructions.
+ */
+export function sanitizePromptField(input: string, maxLength = 1500): string {
+  if (!input) return '';
+
+  let cleaned = stripControlChars(input, maxLength);
+
+  // Strip ChatML / OpenAI assistant tokens
+  cleaned = cleaned.replace(/<\|(?:im_start|im_end|endoftext|system|user|assistant)\|>/gi, '');
+
+  // Strip role-prefix lines like "system:", "assistant:", "###  user:" at the
+  // start of a line. Only at line-start to avoid mangling normal prose like
+  // "the system: works fine".
+  cleaned = cleaned.replace(/^[\s>#-]*(system|assistant|user|developer|tool)\s*:\s*/gim, '');
+
+  // Neutralize the most common injection phrases by quoting them rather than
+  // deleting (preserves the user's actual intent if they were quoting
+  // something legitimately).
+  cleaned = cleaned.replace(
+    /\b(ignore|disregard|forget)\s+(?:all\s+)?(?:prior|previous|above|earlier)\s+(instructions|prompts|rules|messages)\b/gi,
+    '[redacted instruction]',
+  );
+
+  // Collapse runs of whitespace introduced by the substitutions.
+  cleaned = cleaned.replace(/[ \t]{3,}/g, '  ').trim();
+
+  return cleaned;
 }
 
 /**

@@ -1,0 +1,17 @@
+{
+  "name": "ghostcode-api-runtime",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Minimal runtime dependency closure for the containerized Express API. Mirrors only what dist-server/api/** imports. Not the application manifest — see the root package.json.",
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "dependencies": {
+    "@sentry/node": "10.53.1",
+    "@supabase/supabase-js": "2.103.3",
+    "dotenv": "17.4.2",
+    "express": "5.2.1",
+    "helmet": "8.1.0"
+  }
+}

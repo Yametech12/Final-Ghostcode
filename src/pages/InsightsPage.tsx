@@ -9,49 +9,18 @@ import { personalityTypes } from '../data/personalityTypes';
 import { Activity, Target, TrendingUp, PieChart } from 'lucide-react';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { Skeleton } from '../components/ui/Skeleton';
+import { useThemeColors } from '../styles/colorTokens';
 
-/** Read a CSS custom property from :root, with a safe fallback for SSR / first paint. */
-function getCssVar(name: string, fallback: string): string {
-  if (typeof window === 'undefined') return fallback;
-  const value = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  return value || fallback;
-}
-
-/** Source recharts colors from luxury-palette tokens (Req 9.6). */
-function useChartTheme() {
-  const [theme, setTheme] = useState({
-    accentPrimary: '#E8C77E',
-    accentSecondary: '#B87333',
-    tickColor: '#9A8F80',
-    gridColor: 'rgba(196, 186, 171, 0.08)',
-    surfaceBg: '#161118',
-  });
-
-  useEffect(() => {
-    const refresh = () => {
-      setTheme({
-        accentPrimary: getCssVar('--color-accent-primary', '#E8C77E'),
-        accentSecondary: getCssVar('--color-accent-secondary', '#B87333'),
-        tickColor: getCssVar('--color-slate-400', '#9A8F80'),
-        gridColor: 'rgba(196, 186, 171, 0.08)',
-        surfaceBg: getCssVar('--color-mystic-900', '#161118'),
-      });
-    };
-    refresh();
-    // Re-read when theme class on <html> flips (light/dark toggle).
-    const observer = new MutationObserver(refresh);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
-    return () => observer.disconnect();
-  }, []);
-
-  return theme;
-}
+// Chart colours come from the shared token hook in src/styles/colorTokens.ts.
+// It resolves the live CSS variables and re-reads them when the theme class on
+// <html> flips, so both the dark and the light palette render correctly. The
+// local getCssVar/useChartTheme copies were removed in the token refactor.
 
 export default function InsightsPage() {
   const auth = useEnhancedAuth();
   const [loading, setLoading] = useState(true);
   const [calibrations, setCalibrations] = useState<any[]>([]);
-  const chartTheme = useChartTheme();
+  const chartTheme = useThemeColors();
 
   const { user } = auth || {};
 
@@ -114,10 +83,10 @@ export default function InsightsPage() {
 
   // Tooltip styling shared by both charts — glass-card treatment (Req 9.6).
   const tooltipContentStyle: React.CSSProperties = {
-    backgroundColor: 'rgba(22, 17, 24, 0.95)',
-    border: '1px solid rgba(232, 199, 126, 0.15)',
+    backgroundColor: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+    border: '1px solid color-mix(in srgb, var(--color-accent-primary) 15%, transparent)',
     borderRadius: '12px',
-    boxShadow: '0 12px 40px -12px rgba(0,0,0,0.5)',
+    boxShadow: 'var(--shadow-popover)',
     backdropFilter: 'blur(12px)',
   };
 

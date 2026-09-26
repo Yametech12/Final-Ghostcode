@@ -1,0 +1,25 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/Yametech12/Final-Ghostcode/security/advisories/new
+    about: >
+      Do NOT open a public issue for a vulnerability. Use private vulnerability
+      reporting — see SECURITY.md for what to include and the response timeline.
+
+  - name: Documentation
+    url: https://github.com/Yametech12/Final-Ghostcode/blob/main/README.md
+    about: >
+      Setup, environment variables, architecture, API reference, and deployment
+      are covered in the README. Check there before filing a "how do I" issue.
+
+  - name: Contributing guide
+    url: https://github.com/Yametech12/Final-Ghostcode/blob/main/CONTRIBUTING.md
+    about: >
+      Development setup, coding standards, commit convention, and the review
+      process. Read this before opening a pull request.
+
+  - name: Security posture and known accepted risks
+    url: https://github.com/Yametech12/Final-Ghostcode/blob/main/SECURITY.md
+    about: >
+      A list of known, deliberate risks (localStorage sessions, in-process dev
+      rate limiting, optional Sentry). Please check here before reporting.

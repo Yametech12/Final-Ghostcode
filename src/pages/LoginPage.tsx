@@ -115,8 +115,8 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-mystic-950 to-mystic-900 p-4">
+      <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl rounded-2xl p-8 border border-mystic-700/50 shadow-2xl">
         <div className="flex justify-center mb-6">
           <Logo size="xl" />
         </div>
@@ -126,10 +126,11 @@ export default function LoginPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email field */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Email</label>
+            <label htmlFor="login-email" className="text-sm font-medium text-slate-300">Email</label>
             <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -140,37 +141,48 @@ export default function LoginPage() {
                 onBlur={() => {
                   if (email && !isValidEmail(email)) setEmailError('Please enter a valid email address');
                 }}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
-                  emailError ? 'border-red-500/50' : 'border-white/10'
+                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-slate-50 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
+                  emailError ? 'border-status-error/50' : 'border-mystic-700/50'
                 }`}
                 placeholder="you@example.com"
                 autoComplete="email"
                 required
+                aria-invalid={!!emailError}
+                aria-describedby={emailError ? 'login-email-error' : undefined}
               />
             </div>
-            {emailError && <div className="text-xs text-red-400">{emailError}</div>}
+            {emailError && (
+              <div id="login-email-error" role="alert" className="text-xs text-red-400">
+                {emailError}
+              </div>
+            )}
           </div>
 
           {/* Password field */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Password</label>
+            <label htmlFor="login-password" className="text-sm font-medium text-slate-300">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
               <input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-slate-50 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
+                aria-invalid={!!error}
+                aria-describedby={error ? 'login-error' : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                aria-pressed={showPassword}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-50"
               >
-                {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                {showPassword ? <EyeOff className="w-5 h-5" aria-hidden="true" /> : <Eye className="w-5 h-5" aria-hidden="true" />}
               </button>
             </div>
           </div>
@@ -197,7 +209,7 @@ export default function LoginPage() {
 
           {/* Lockout timer */}
           {isLocked && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div role="alert" className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               <Clock className="w-4 h-4" />
               <span>Locked. Try again in {formatTime(timeRemaining)}</span>
             </div>
@@ -205,7 +217,7 @@ export default function LoginPage() {
 
           {/* Error display */}
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div id="login-error" role="alert" aria-live="assertive" className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>{error}</span>
             </div>
@@ -214,6 +226,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid || isLocked}
+            aria-busy={loading}
             className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
@@ -232,10 +245,10 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
+                <div className="w-full border-t border-mystic-700/50"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#1a0f15] text-slate-500">Or continue with</span>
+                <span className="px-2 bg-mystic-900 text-slate-500">Or continue with</span>
               </div>
             </div>
 
@@ -253,7 +266,7 @@ export default function LoginPage() {
                 }
               }}
               disabled={loading}
-              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-[#0a0508] font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
+              className="w-full mt-6 flex items-center justify-center gap-2 bg-slate-50 text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

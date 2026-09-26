@@ -4,15 +4,24 @@
  *   • api/server.ts (Vercel serverless handler)
  *
  * Hoisted so the security headers, CORS origin allow-list, and CSP can't
- * drift between dev and prod. Previously the CSP only existed on the
- * Express path, which meant the Vercel function (i.e. production) shipped
- * no CSP at all — a real security gap that auditors would flag.
+ * drift between dev and prod.
  *
- * Each helper takes a minimal pair of `getHeader` / `setHeader`
- * closures so it works for both Express's `res.setHeader` and the
- * VercelResponse's identical surface, without us depending on either
- * package's types from a shared module.
+ * The header VALUES no longer live here — they live in ./securityHeaders.ts,
+ * which is also what `scripts/sync-vercel-headers.ts` reads to generate the
+ * `headers` block in vercel.json. Rationale: the app HTML (/, /index.html,
+ * /assets/*) is served by the CDN, never by this function, so the same policy
+ * has to exist in two places. Two hand-maintained copies = guaranteed drift;
+ * one module + a CI check = one policy.
+ *
+ * Each helper takes a minimal pair of `getHeader` / `setHeader` closures so it
+ * works for both Express's `res.setHeader` and the VercelResponse's identical
+ * surface, without us depending on either package's types from a shared module.
  */
+
+import {
+  buildCsp,
+  getStaticSecurityHeaders,
+} from './securityHeaders.js';
 
 export const ALLOWED_ORIGINS_DEFAULT: ReadonlyArray<string> = [
   'http://localhost:5173',
@@ -40,70 +49,33 @@ export function resolveAllowedOrigins(): ReadonlyArray<string> {
 }
 
 /**
- * Static security headers. Same set on both servers. The CSP is
- * intentionally tight:
- *   • script-src 'self' only — no unsafe-inline.
- *   • style-src includes 'unsafe-inline' because Tailwind 4 inlines
- *     critical CSS at build time. When we migrate to nonce-based styling
- *     this comes off.
- *   • connect-src restricted to the two upstreams the app actually talks
- *     to: Supabase + Regolo. Sentry's outgoing traffic is initiated by
- *     the SDK to its own DSN host; CSP doesn't affect server-to-server
- *     calls.
- *   • frame-ancestors 'self' blocks clickjacking.
+ * Static security headers — see ./securityHeaders.ts for the policy and the
+ * reasoning behind each directive. This function only decides *whether* the
+ * production variant applies.
  *
- * HSTS is only emitted in production; on localhost it'd lock the dev
- * domain into HTTPS for a year and break the next dev server start.
+ * isProduction (NODE_ENV=production) OR isSecure (the request arrived over TLS)
+ * both select the production header set: on a TLS-terminating proxy the dev
+ * server is effectively serving real traffic and should pin HSTS + the tight
+ * connect-src. On plain http://localhost nothing is pinned and the dev-only
+ * connect-src entries (ws://… HMR sockets) are added.
  */
 export function applySecurityHeaders(opts: {
   setHeader: (name: string, value: string) => void;
   isSecure?: boolean;
   isProduction?: boolean;
 }): void {
-  const { setHeader, isSecure = false, isProduction = process.env.NODE_ENV === 'production' } = opts;
+  const {
+    setHeader,
+    isSecure = false,
+    isProduction = process.env.NODE_ENV === 'production',
+  } = opts;
 
-  setHeader('X-Frame-Options', 'DENY');
-  setHeader('X-Content-Type-Options', 'nosniff');
-  setHeader('X-XSS-Protection', '1; mode=block');
-  setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-  setHeader(
-    'Content-Security-Policy',
-    [
-      "default-src 'self'",
-      // Google Tag Manager / Analytics is loaded only when VITE_GA_TRACKING_ID
-      // is set; allow its host so the script tag isn't blocked.
-      "script-src 'self' https://www.googletagmanager.com",
-      // Tailwind 4 inlines critical CSS and Google Fonts is loaded as a
-      // stylesheet. When you migrate to nonced styles, drop 'unsafe-inline'.
-      "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-      "img-src 'self' data: https:",
-      // Outbound fetch destinations:
-      //   • Supabase REST / Realtime / Storage
-      //   • Regolo AI (used by /api/ai/chat from server, but client may
-      //     occasionally call directly through apiFetch wrappers)
-      //   • Sentry browser ingest — wildcard covers regional ingest hosts
-      //     (e.g. *.ingest.sentry.io and *.ingest.de.sentry.io). Without
-      //     this the browser silently drops Sentry POSTs and we lose all
-      //     client-side error capture.
-      //   • Google Analytics measurement protocol.
-      "connect-src 'self' https://*.supabase.co https://api.regolo.ai https://*.ingest.sentry.io https://*.ingest.de.sentry.io https://www.google-analytics.com",
-      "font-src 'self' data: https://fonts.gstatic.com",
-      // Explicit directives for PWA shell — default-src would catch them
-      // too but scanners flag missing entries.
-      "worker-src 'self'",
-      "manifest-src 'self'",
-      "frame-src 'self'",
-      "object-src 'none'",
-      "frame-ancestors 'self'",
-      "base-uri 'self'",
-    ].join('; ') + ';',
-  );
+  const productionHeaders = isProduction || isSecure;
 
-  if (isSecure || isProduction) {
-    setHeader(
-      'Strict-Transport-Security',
-      'max-age=31536000; includeSubDomains; preload',
-    );
+  for (const { key, value } of getStaticSecurityHeaders({
+    isProduction: productionHeaders,
+  })) {
+    setHeader(key, value);
   }
 }
 
@@ -136,3 +108,7 @@ export function applyCorsHeaders(opts: {
   setHeader('Access-Control-Allow-Credentials', 'true');
   return permitted;
 }
+
+// Re-exported so callers that want the raw policy string (tests, diagnostics)
+// don't have to know which module it now lives in.
+export { buildCsp };

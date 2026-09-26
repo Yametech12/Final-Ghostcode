@@ -1,0 +1,41 @@
+# =============================================================================
+# Build context exclusions for the Docker image.
+# The builder stage installs from package-lock.json and rebuilds `dist/` from
+# source, so host copies of node_modules and build output must never be sent.
+# =============================================================================
+
+# --- dependencies (rebuilt from the lockfile) ---
+node_modules
+**/node_modules
+
+# --- build output (rebuilt inside the image) ---
+dist
+dist-server
+build
+*.tsbuildinfo
+tsconfig.tsbuildinfo
+
+# --- vcs + CI ---
+.git
+.gitignore
+.github
+.vercel
+
+# --- secrets: never ship into an image layer ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+.gitleaks.toml
+
+# --- logs + local tooling ---
+*.log
+npm-debug.log*
+logs
+.vscode
+.idea
+.DS_Store
+coverage
+.vitest

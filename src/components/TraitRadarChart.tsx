@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import {
   Radar,
   RadarChart,
@@ -7,6 +8,7 @@ import {
   ResponsiveContainer,
   Tooltip
 } from 'recharts';
+import { useThemeColors } from '../styles/colorTokens';
 
 interface Trait {
   name: string;
@@ -34,11 +36,14 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-export function TraitRadarChart({
+function TraitRadarChartImpl({
   traits,
   className = '',
   height = 400
 }: TraitRadarChartProps) {
+  // Off-palette greys/violet replaced by design tokens (token refactor phase 1B).
+  const { accentPrimary, tickColor, mutedColor, gridColor } = useThemeColors();
+
   // Ensure we have data
   const data = traits.length > 0 ? traits : [
     { name: 'Openness', score: 50 },
@@ -52,23 +57,23 @@ export function TraitRadarChart({
     <div className={className}>
       <ResponsiveContainer width="100%" height={height}>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-          <PolarGrid stroke="#374151" strokeWidth={1} />
+          <PolarGrid stroke={gridColor} strokeWidth={1} />
           <PolarAngleAxis
             dataKey="name"
-            tick={{ fill: '#9ca3af', fontSize: 12 }}
+            tick={{ fill: tickColor, fontSize: 12 }}
             className="text-slate-400"
           />
           <PolarRadiusAxis
             domain={[0, 100]}
-            tick={{ fill: '#6b7280', fontSize: 10 }}
+            tick={{ fill: mutedColor, fontSize: 10 }}
             tickCount={6}
             axisLine={false}
           />
           <Radar
             name="Your Traits"
             dataKey="score"
-            stroke="#8b5cf6"
-            fill="#8b5cf6"
+            stroke={accentPrimary}
+            fill={accentPrimary}
             fillOpacity={0.3}
             strokeWidth={2}
           />
@@ -78,3 +83,7 @@ export function TraitRadarChart({
     </div>
   );
 }
+
+/** P1: pure component — memoised to stop parent re-renders from
+ * re-running its render path. */
+export const TraitRadarChart = memo(TraitRadarChartImpl);

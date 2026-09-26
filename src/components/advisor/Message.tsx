@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { memo, useState } from 'react';
 import { Bot, User as UserIcon, Copy, ThumbsUp, ThumbsDown, RotateCcw, Check, AlertTriangle } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { motion } from 'motion/react';
@@ -47,7 +47,7 @@ function prepareMarkdown(input: string): string {
  * A single message bubble. The action toolbar is anchored below the bubble
  * (not floated to the right) so it works on mobile without clipping.
  */
-export function Message({ message, reaction, onReaction, onRetry }: MessageProps) {
+function MessageImpl({ message, reaction, onReaction, onRetry }: MessageProps) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
 
@@ -218,3 +218,7 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
     </motion.div>
   );
 }
+
+/** P1: pure component — memoised so parent re-renders that pass identical
+ * props skip its render path entirely. */
+export const Message = memo(MessageImpl);

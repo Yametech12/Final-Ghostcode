@@ -8,6 +8,7 @@ import './index.css';
 import { Toaster } from 'sonner';
 import { validateEnvironment } from './utils/env';
 import { initSentry } from './lib/sentry';
+import { registerServiceWorker } from './lib/sw';
 
 // Initialize Sentry early (no-op in dev or without DSN)
 initSentry();
@@ -45,7 +46,7 @@ try {
   // Show error to user in development
   if (import.meta.env.DEV) {
     document.body.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: #ef4444; padding: 2rem; text-align: center;">
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: var(--color-status-error); padding: 2rem; text-align: center;">
         <div>
           <h1>Configuration Error</h1>
           <p>${err instanceof Error ? err.message : 'Missing environment variables'}</p>
@@ -72,26 +73,29 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             closeButton
             duration={4000}
             style={{
-              // Map sonner's CSS variables to the luxury palette tokens.
-              ['--normal-bg' as string]: 'rgba(22, 17, 24, 0.95)',
-              ['--normal-text' as string]: '#F0EBE3',
-              ['--normal-border' as string]: 'rgba(232, 199, 126, 0.12)',
-              ['--success-bg' as string]: 'rgba(22, 17, 24, 0.95)',
-              ['--success-text' as string]: '#6FA083',
-              ['--success-border' as string]: 'rgba(111, 160, 131, 0.30)',
-              ['--error-bg' as string]: 'rgba(22, 17, 24, 0.95)',
-              ['--error-text' as string]: '#C77A6F',
-              ['--error-border' as string]: 'rgba(199, 122, 111, 0.40)',
-              ['--warning-bg' as string]: 'rgba(22, 17, 24, 0.95)',
-              ['--warning-text' as string]: '#C99B5B',
-              ['--warning-border' as string]: 'rgba(201, 155, 91, 0.30)',
-              ['--info-bg' as string]: 'rgba(22, 17, 24, 0.95)',
-              ['--info-text' as string]: '#7A93A8',
-              ['--info-border' as string]: 'rgba(122, 147, 168, 0.30)',
+              // Map sonner's CSS variables onto the design tokens instead of
+              // literals, so the toaster follows the light/dark theme flip.
+              // The toaster element lives in the document, so var()/color-mix
+              // resolve against the live palette.
+              ['--normal-bg' as string]: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+              ['--normal-text' as string]: 'var(--color-slate-100)',
+              ['--normal-border' as string]: 'color-mix(in srgb, var(--color-accent-primary) 12%, transparent)',
+              ['--success-bg' as string]: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+              ['--success-text' as string]: 'var(--color-status-success)',
+              ['--success-border' as string]: 'color-mix(in srgb, var(--color-status-success) 30%, transparent)',
+              ['--error-bg' as string]: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+              ['--error-text' as string]: 'var(--color-status-error)',
+              ['--error-border' as string]: 'color-mix(in srgb, var(--color-status-error) 40%, transparent)',
+              ['--warning-bg' as string]: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+              ['--warning-text' as string]: 'var(--color-status-warning)',
+              ['--warning-border' as string]: 'color-mix(in srgb, var(--color-status-warning) 30%, transparent)',
+              ['--info-bg' as string]: 'color-mix(in srgb, var(--color-mystic-900) 95%, transparent)',
+              ['--info-text' as string]: 'var(--color-status-info)',
+              ['--info-border' as string]: 'color-mix(in srgb, var(--color-status-info) 30%, transparent)',
             }}
             toastOptions={{
               className:
-                'backdrop-blur-xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] rounded-xl',
+                'backdrop-blur-xl shadow-popover rounded-xl',
             }}
           />
         </EnhancedAuthProvider>
@@ -100,67 +104,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA installability.
-// On every load we check for a new SW; if one is waiting, prompt the user
-// to refresh so they don't stay stuck on stale code after a deploy.
+// Register the service worker for offline-first PWA behavior.
+// All lifecycle logic lives in src/lib/sw.ts: PROD-only gating, immediate
+// update checks, old-cache cleanup, and the `swUpdated` event consumed by
+// src/components/pwa/UpdatePrompt.tsx.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('[SW] Registered:', registration.scope);
-
-        // Force an update check on every load so newly deployed SWs are
-        // discovered without a cold reload.
-        registration.update().catch(() => undefined);
-
-        const promptUpdate = (worker: ServiceWorker) => {
-          // Lazy import sonner to avoid pulling it into the SW registration path
-          // before the main bundle has loaded it.
-          import('sonner')
-            .then(({ toast }) => {
-              toast('A new version is available', {
-                description: 'Refresh to load the latest update.',
-                action: {
-                  label: 'Refresh',
-                  onClick: () => {
-                    worker.postMessage({ type: 'SKIP_WAITING' });
-                    // The new SW will take control; reload once it does.
-                    navigator.serviceWorker.addEventListener(
-                      'controllerchange',
-                      () => window.location.reload(),
-                      { once: true },
-                    );
-                  },
-                },
-                duration: Infinity,
-              });
-            })
-            .catch(() => {
-              // Toast unavailable — fall back to a console hint.
-              console.info('[SW] New version available. Reload to update.');
-            });
-        };
-
-        // A waiting worker exists at registration time when the user was
-        // already on a page when the SW updated.
-        if (registration.waiting) promptUpdate(registration.waiting);
-
-        registration.addEventListener('updatefound', () => {
-          const installing = registration.installing;
-          if (!installing) return;
-          installing.addEventListener('statechange', () => {
-            if (
-              installing.state === 'installed' &&
-              navigator.serviceWorker.controller
-            ) {
-              promptUpdate(installing);
-            }
-          });
-        });
-      })
-      .catch((err) => {
-        console.warn('[SW] Registration failed:', err);
-      });
+    void registerServiceWorker();
   });
 }

@@ -49,17 +49,18 @@ const DossiersPage = lazy(() => import('../../pages/DossiersPage'));
 const InsightsPage = lazy(() => import('../../pages/InsightsPage'));
 const AdminDashboard = lazy(() => import('../../pages/AdminDashboard'));
 
+// P0-3: transform/opacity only (no `scale` on a full-page wrapper), and a short
+// tween instead of a spring so the enter animation settles predictably.
 const pageVariants = {
-  initial: { opacity: 0, y: 15, scale: 0.99 },
-  in: { opacity: 1, y: 0, scale: 1 },
-  out: { opacity: 0, y: -15, scale: 0.99 }
+  initial: { opacity: 0, y: 8 },
+  in: { opacity: 1, y: 0 },
+  out: { opacity: 0, y: -8 }
 };
 
 const pageTransition = {
-  type: 'spring' as const,
-  stiffness: 300,
-  damping: 30,
-  mass: 1
+  type: 'tween' as const,
+  ease: [0.22, 1, 0.36, 1] as [number, number, number, number],
+  duration: 0.18,
 };
 
 function ProtectedRoute({
@@ -198,7 +199,13 @@ export default function AnimatedRoutes() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
-      <AnimatePresence mode="wait">
+      {/*
+        P0-3: `mode="wait"` serialised navigation — the outgoing page had to finish
+        its exit animation before the incoming page mounted, so every route change
+        paid exit-duration + suspense + network. Without it the two overlap and the
+        new route is interactive immediately.
+      */}
+      <AnimatePresence initial={false}>
         <Routes location={location} key={location.pathname}>
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />

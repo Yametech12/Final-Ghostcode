@@ -15,6 +15,7 @@ import Logo from '../components/Logo';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
 import { toast } from 'sonner';
+import { createCheckoutSession, BillingError, type PaidTier } from '../lib/billing';
 
 /**
  * Public pricing page — three-tier plan comparison plus FAQ.
@@ -202,7 +203,7 @@ export default function PricingPage() {
    * paid CTAs from logged-in users surface a "coming soon" toast instead of
    * silently routing them somewhere meaningless.
    */
-  const handleCTA = (plan: Plan) => {
+  const handleCTA = async (plan: Plan) => {
     // Logged-out users always go through registration first.
     if (!isSignedIn) {
       if (plan.tier === 'free') {
@@ -232,8 +233,18 @@ export default function PricingPage() {
       return;
     }
 
-    // Upgrade path — Stripe checkout not yet live.
-    toast.info('Paid checkout is launching soon. We will email you when it goes live.');
+    // Upgrade path — live Stripe checkout. Full-page redirect to the
+    // Stripe-hosted Checkout session; failures surface as a toast.
+    try {
+      const url = await createCheckoutSession(plan.tier as PaidTier);
+      window.location.assign(url);
+    } catch (err) {
+      toast.error(
+        err instanceof BillingError
+          ? err.message
+          : 'Checkout could not be started. Please try again.',
+      );
+    }
   };
 
   /** Given the viewer's state, return the label and disabled-ness for a card CTA. */
@@ -338,7 +349,7 @@ export default function PricingPage() {
           role="dialog"
           aria-modal="true"
           aria-label="Navigation"
-          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col safe-area-top safe-area-bottom safe-area-x"
+          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 flex flex-col safe-area-top safe-area-bottom safe-area-x"
         >
           <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
             <Link
@@ -505,7 +516,7 @@ export default function PricingPage() {
                 transition={{ duration: 0.5, delay: reduceMotion ? 0 : idx * 0.06 }}
                 className={`relative glass-card p-7 sm:p-8 flex flex-col ${
                   isHighlight
-                    ? 'border-accent-primary/40 shadow-[0_0_48px_-12px_rgba(232,199,126,0.25)] md:scale-[1.02] md:z-10'
+                    ? 'border-accent-primary/40 shadow-glow-accent-xl md:scale-[1.02] md:z-10'
                     : ''
                 } ${cta.isCurrent ? 'border-status-success/40' : ''}`}
               >

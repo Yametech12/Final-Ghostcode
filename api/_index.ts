@@ -4,6 +4,10 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import helmet from 'helmet';
+// P0-5: gzip/brotli for API responses. Node's http server previously sent
+// every JSON payload (some are large — oracle analyses embed a full result
+// object) and every static asset uncompressed.
+import compression from 'compression';
 import { createClient } from '@supabase/supabase-js';
 
 
@@ -11,6 +15,7 @@ import { getAuthenticatedUser } from './lib/auth.js';
 import { log, requestIdFrom, serializeErr } from './lib/log.js';
 import { initSentryNode, captureException } from './lib/sentryNode.js';
 import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
+import { cache, cacheMode, tryRedisRateLimit, redisAvailable } from './lib/cache.js';
 import {
   handleHealth,
   handleTestKey,
@@ -27,10 +32,28 @@ import {
   handleDeleteOracleAnalysis,
   handleDeleteMyAccount,
   handleAdminDeleteUser,
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
+import {
+  handleCreateCheckoutSession,
+  handleCreatePortalSession,
+  handleStripeWebhook,
+} from './lib/subscription.js';
+import {
+  handleRagReindex,
+  handleRagStatus,
+  handleRagToggle,
+} from './lib/handlers/rag.js';
 
 console.log('Server starting...');
+console.log(
+  cacheMode === "redis"
+    ? "Cache mode: redis (Upstash REST)\n"
+    : "Cache mode: process-local \u2014 set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN for a shared cache\n",
+);
 
 // Initialize Sentry as early as possible so any throw during module
 // evaluation gets captured. No-op when SENTRY_DSN isn't set.
@@ -44,9 +67,53 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
+// ---------------------------------------------------------------------------
+// Stripe webhook — MUST be registered BEFORE express.json so signature
+// verification sees the RAW request body (re-serialization breaks the HMAC).
+// Exempt from JWT auth (Stripe signs the payload itself) and from the CSRF
+// check below (Stripe cannot send our custom headers). Registered ahead of
+// the body parsers, so none of them consume the stream first.
+// ---------------------------------------------------------------------------
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: '*/*', limit: '1mb' }),
+  async (req, res) => {
+    const r = await handleStripeWebhook(
+      req.body as Buffer | string | undefined,
+      req.headers['stripe-signature'] as string | undefined,
+      supabase,
+    );
+    res.status(r.status).json(r.body ?? {});
+  },
+);
+
+// P0-5: response compression. The filter matters: /api/advisor/chat is a
+// text/event-stream and compressing it would let zlib buffer tokens, adding
+// latency to time-to-first-token and defeating the point of streaming. So we
+// compress everything except SSE, and skip payloads under 1 KB where the
+// gzip header overhead outweighs the saving.
+app.use(
+  compression({
+    threshold: 1024,
+    filter: (req, res) => {
+      const contentType = res.getHeader('Content-Type')?.toString() ?? '';
+      if (contentType.includes('text/event-stream')) return false;
+      if (req.headers['x-no-compression']) return false;
+      return compression.filter(req, res);
+    },
+  }),
+);
+
 // Body parsing with size limits
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+// Body parsing with size limits (audit H-7/M-8: 10mb was far too permissive).
+// The profile-photo upload carries a base64 data-URL, so it gets a scoped 6mb
+// parser mounted BEFORE the global one — Express parses on the first matching
+// parser, so a global 1mb limit would 413 the upload before the route-scoped
+// limit could ever apply. Everything else is capped at 1mb.
+app.use('/api/upload/profile-photo', express.json({ limit: '6mb' }));
+app.use('/api/upload/profile-photo', express.urlencoded({ extended: true, limit: '6mb' }));
+app.use(express.json({ limit: '1mb' }));
+app.use(express.urlencoded({ extended: true, limit: '1mb' }));
 
 // Supabase client for backend operations
 const supabaseUrl = process.env.VITE_SUPABASE_URL;
@@ -73,17 +140,58 @@ if (isPlaceholder(supabaseServiceKey)) {
 
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+// Warm the cache client once so a bad Upstash credential surfaces at boot
+// instead of on the first gated request. A failure here is non-fatal: the
+// cache layer degrades to its bounded process-local store.
+if (redisAvailable) {
+  void cache
+    .set("__boot_probe__", Date.now(), 10)
+    .then(() => console.log("Cache: Upstash reachable"))
+    .catch((err) => console.warn("Cache: Upstash probe failed, using process-local fallback", err));
+}
+
 // ---------------------------------------------------------------------------
-// Rate limiting (in-memory; best-effort only — see notes in shared handlers)
+// Rate limiting — shared Redis counter (see docs/architecture/caching.md)
+//
+// The counter lives in Upstash Redis so every instance and region shares one
+// bucket. A per-process Map gave each concurrent instance its own allowance,
+// which multiplied the effective limit by the number of warm functions.
+//
+// Degradation is explicit, never fail-open: when Redis is unreachable the cache
+// layer falls back to a bounded process-local counter that STILL enforces these
+// limits (per instance). See api/lib/cache.ts §4.
 // ---------------------------------------------------------------------------
-const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const AI_LIMIT = 10;
 const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
 const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
-const RATE_WINDOW = 60_000;
-const ACCOUNT_DELETE_WINDOW = 5 * 60_000; // 5min window for account delete
+const RATE_WINDOW_S = 60;
+const ACCOUNT_DELETE_WINDOW_S = 5 * 60;
 
-function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
+// Bounded fallback store — hard-capped, and expired entries are swept on write.
+const FALLBACK_MAX_KEYS = 5_000;
+const fallbackStore = new Map<string, { count: number; resetTime: number }>();
+
+function fallbackRateLimit(key: string, limit: number, windowMs: number): boolean {
+  const now = Date.now();
+  if (fallbackStore.size >= FALLBACK_MAX_KEYS) {
+    for (const [k, v] of fallbackStore) {
+      if (v.resetTime <= now) fallbackStore.delete(k);
+    }
+    if (fallbackStore.size >= FALLBACK_MAX_KEYS) {
+      const oldest = fallbackStore.keys().next().value;
+      if (oldest !== undefined) fallbackStore.delete(oldest);
+    }
+  }
+  const rec = fallbackStore.get(key);
+  if (!rec || now > rec.resetTime) {
+    fallbackStore.set(key, { count: 1, resetTime: now + windowMs });
+    return false;
+  }
+  rec.count += 1;
+  return rec.count > limit;
+}
+
+async function rateLimitMiddleware(req: express.Request, res: express.Response, next: express.NextFunction) {
   // Decide which bucket (if any) applies. AI/advisor/calibration share one,
   // /api/security/log gets its own with a higher allowance since legitimate
   // clients can emit several events per page load. Account deletion gets
@@ -96,39 +204,33 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
   if (!isAiPath && !isLogPath && !isAccountDelete) return next();
 
   let limit: number;
-  let window: number;
+  let windowSeconds: number;
   let bucketPrefix: string;
   if (isAccountDelete) {
     limit = ACCOUNT_DELETE_LIMIT;
-    window = ACCOUNT_DELETE_WINDOW;
-    bucketPrefix = 'acctdel';
+    windowSeconds = ACCOUNT_DELETE_WINDOW_S;
+    bucketPrefix = 'delete';
   } else if (isLogPath) {
     limit = LOG_LIMIT;
-    window = RATE_WINDOW;
+    windowSeconds = RATE_WINDOW_S;
     bucketPrefix = 'log';
   } else {
     limit = AI_LIMIT;
-    window = RATE_WINDOW;
-    bucketPrefix = 'ai';
+    windowSeconds = RATE_WINDOW_S;
+    bucketPrefix = 'rate';
   }
   const ip = (req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown').toString();
-  const bucketKey = `${bucketPrefix}:${ip}`;
-  const now = Date.now();
-  const record = rateLimitStore.get(bucketKey);
+  const bucketKey = `rate:${bucketPrefix}:${ip}`;
+  const { allowed, resetMs } = await tryRedisRateLimit(bucketKey, limit, windowSeconds);
 
-  if (!record || now > record.resetTime) {
-    rateLimitStore.set(bucketKey, { count: 1, resetTime: now + window });
-    return next();
-  }
-  if (record.count >= limit) {
+  if (!allowed) {
     return res.status(429).json({
       error: 'Rate limited',
-      details: `Maximum ${limit} requests per ${Math.round(window / 60_000)} minute(s)`,
-      retryAfter: Math.ceil((record.resetTime - now) / 1000),
+      details: `Maximum ${limit} requests per ${Math.round(windowSeconds / 60)} minute(s)`,
+      retryAfter: Math.max(1, Math.ceil(resetMs / 1000)),
       code: 'RATE_LIMITED',
     });
   }
-  record.count++;
   next();
 }
 app.use(rateLimitMiddleware);
@@ -253,8 +355,6 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
 }
 
 // ---------------------------------------------------------------------------
-// Routes
-// ---------------------------------------------------------------------------
 app.get('/api/health', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, handleHealth);
@@ -279,6 +379,25 @@ app.post('/api/upload/profile-photo', async (req, res) => {
   await send(res, n, (nr) => handleUploadProfilePhoto(nr, supabase));
 });
 
+// Signed-URL read path for the now-private user-uploads bucket.
+// See 20240101001000_storage_private_bucket.sql.
+app.get('/api/me/profile-photo', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleGetMyProfilePhotoUrl(nr, supabase));
+});
+
+app.get('/api/admin/users/:id/photo', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleAdminGetUserPhotoUrl(nr, supabase));
+});
+
+// Privileged write moved off the client: the column-level grants in
+// 20240101000900 reject users.update({role}) from the browser with 42501.
+app.patch('/api/admin/users/:id/role', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleAdminUpdateUserRole(nr, supabase));
+});
+
 app.post('/api/advisor/session', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleCreateAdvisorSession(nr, supabase));
@@ -294,60 +413,34 @@ app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
 });
 
-app.patch('/api/advisor/messages/:messageId/reaction', async (req, res) => {
+
+// Billing — Stripe checkout & customer portal (JWT required).
+app.post('/api/billing/create-checkout-session', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, (nr) => handleUpdateAdvisorReaction(nr, supabase));
+  await send(res, n, (nr) => handleCreateCheckoutSession(nr, supabase));
 });
 
-app.post('/api/advisor/chat', async (req, res) => {
+app.post('/api/billing/create-portal-session', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, (nr) => handleAdvisorChatStream(nr, supabase));
+  await send(res, n, (nr) => handleCreatePortalSession(nr, supabase));
 });
 
-app.post('/api/oracle/analyses', async (req, res) => {
+// RAG management (authenticated; soft-fail HTTP 200 + { ok: false }).
+app.post('/api/rag/reindex', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, (nr) => handleCreateOracleAnalysis(nr, supabase));
+  await send(res, n, (nr) => handleRagReindex(nr, supabase));
 });
 
-app.patch('/api/oracle/analyses/:id/tasks', async (req, res) => {
+app.post('/api/rag/toggle', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, (nr) => handleUpdateOracleAnalysisTasks(nr, supabase));
+  await send(res, n, (nr) => handleRagToggle(nr, supabase));
 });
 
-app.delete('/api/oracle/analyses/:id', async (req, res) => {
+app.get('/api/rag/status', async (req, res) => {
   const n = await normalize(req);
-  await send(res, n, (nr) => handleDeleteOracleAnalysis(nr, supabase));
+  await send(res, n, (nr) => handleRagStatus(nr, supabase));
 });
 
-app.post('/api/ai/chat', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleAiChat(nr, supabase));
-});
-
-// Self-serve account deletion. Body: { confirm: "<email>" }. Cascades
-// through public.users → all child tables, and the storage trigger
-// handles the bucket files.
-app.delete('/api/users/me', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleDeleteMyAccount(nr, supabase));
-});
-
-// Admin-only user deletion. Required because AdminDashboard previously
-// deleted from `public.users` directly, which after the auth FK migration
-// leaves the auth row intact (ghost account). This handler verifies the
-// caller's admin role server-side and drives the deletion through
-// auth.admin.deleteUser so the FK cascade actually fires.
-app.delete('/api/admin/users/:id', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleAdminDeleteUser(nr, supabase));
-});
-
-// Static serving (production)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
-}
-
-// Generic error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const requestId = requestIdFrom(_req.headers as Record<string, string | string[] | undefined>);
   const route = `${_req.method} ${_req.path}`;

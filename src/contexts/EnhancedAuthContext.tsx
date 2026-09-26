@@ -5,6 +5,49 @@ import { serializeError } from '../utils/errorHandling';
 import { setUser as setSentryUser, clearUser as clearSentryUser } from '../lib/sentry';
 import { toast } from 'sonner';
 
+/** Signed-URL lifetime expected from GET /api/me/profile-photo (seconds). */
+const PROFILE_PHOTO_SIGNED_URL_TTL_S = 60 * 60;
+
+/**
+ * Bucket-hosted photo reference? Since
+ * 20240101001000_storage_private_bucket.sql the user-uploads bucket is private,
+ * so a stored reference is either a bucket-relative path
+ * (`users/<uid>/profile.<ext>`) or a legacy public URL written while the bucket
+ * was still public. Both need a signed URL before an <img> can render them;
+ * external provider avatars need no signing.
+ */
+function isBucketPhotoRef(ref: unknown): boolean {
+  return (
+    typeof ref === 'string' &&
+    (ref.startsWith('users/') || ref.includes('/user-uploads/'))
+  );
+}
+
+/**
+ * Turn a stored users.photo_url value into something renderable. Bucket-hosted
+ * values are exchanged for a short-lived signed URL issued by
+ * GET /api/me/profile-photo; external URLs (Google OAuth) pass through
+ * untouched. Returns null when a bucket photo cannot be signed, so callers fall
+ * back to their initials/placeholder avatar instead of a broken image.
+ *
+ * NOTE: signed URLs expire. The visibility-change refresh below re-reads the
+ * user row on tab focus, which re-signs and refreshes a stale avatar.
+ */
+async function resolvePhotoUrl(stored: string | null | undefined): Promise<string | null> {
+  if (!stored) return null;
+  if (!isBucketPhotoRef(stored)) return stored;
+  try {
+    const { apiFetch } = await import('../lib/fetch');
+    const res = await apiFetch('/api/me/profile-photo');
+    if (!res.ok) return null;
+    const body = await res.json();
+    return typeof body?.url === 'string' ? body.url : null;
+  } catch {
+    return null;
+  }
+}
+void PROFILE_PHOTO_SIGNED_URL_TTL_S;
+
 // Extended User type with metadata properties
 type ExtendedUser = User & {
   photoURL: string | null;
@@ -89,7 +132,14 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     if (!supabaseUser) return null;
     return {
       ...supabaseUser,
-      photoURL: supabaseUser.user_metadata?.avatar_url || null,
+      // Provider avatars (Google) arrive as absolute URLs and are used as-is.
+      // A bucket-relative path must NOT be handed to an <img>: the bucket is
+      // private since 20240101001000_storage_private_bucket.sql, so it would
+      // render broken. The photo of record lives in users.photo_url and is
+      // served through GET /api/me/profile-photo.
+      photoURL: isBucketPhotoRef(supabaseUser.user_metadata?.avatar_url)
+        ? null
+        : supabaseUser.user_metadata?.avatar_url || null,
       displayName: supabaseUser.user_metadata?.display_name || null,
     } as ExtendedUser;
   };
@@ -112,7 +162,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         console.log('Loading user data for:', userId);
         const { data, error } = await supabase
           .from('users')
-          .select('*')
+          .select('id, email, display_name, photo_url, bio, contact_info, role, created_at, last_login_at, subscription_tier, subscription_expires_at')
           .eq('id', userId)
           .maybeSingle();
 
@@ -127,7 +177,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
           const mappedData = {
             ...data,
             displayName: data.display_name,
-            photoURL: data.photo_url,
+            photoURL: await resolvePhotoUrl(data.photo_url),
             contactInfo: data.contact_info,
             createdAt: data.created_at,
             lastLoginAt: data.last_login_at,
@@ -154,14 +204,14 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
               console.log('User record created successfully for:', userId);
               const { data: newData } = await supabase
                 .from('users')
-                .select('*')
+                .select('id, email, display_name, photo_url, bio, contact_info, role, created_at, last_login_at, subscription_tier, subscription_expires_at')
                 .eq('id', userId)
                 .maybeSingle();
               if (newData) {
                 setUserData({
                   ...newData,
                   displayName: newData.display_name,
-                  photoURL: newData.photo_url,
+                  photoURL: await resolvePhotoUrl(newData.photo_url),
                   contactInfo: newData.contact_info,
                   createdAt: newData.created_at,
                   lastLoginAt: newData.last_login_at,
@@ -493,10 +543,15 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     if (!user) return;
 
     try {
+      // Only display_name goes into auth metadata. avatar_url is deliberately
+      // NOT mirrored here: since 20240101001000_storage_private_bucket.sql the
+      // value is a private bucket object path (or a signed URL that expires),
+      // and metadata is surfaced verbatim as user.photoURL by wrapUser() — which
+      // would render as a broken <img> in the header. The photo of record lives
+      // in users.photo_url and is signed on demand.
       const { error: authError } = await supabase.auth.updateUser({
         data: {
-          display_name: data.displayName,
-          avatar_url: data.photoURL
+          display_name: data.displayName
         }
       });
 

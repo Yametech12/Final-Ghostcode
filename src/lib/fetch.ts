@@ -14,11 +14,41 @@ interface FetchOptions extends RequestInit {
 }
 
 /**
+ * P1: short-lived token cache.
+ *
+ * getSession() is not free — it reads storage, decrypts, and (for the JWT path)
+ * may touch the auth client's internal lock. A page that fires 5 parallel API
+ * calls used to run it 5 times. We cache the token only while it is still valid
+ * for at least REFRESH_MARGIN_MS and dedupe concurrent lookups.
+ */
+const REFRESH_MARGIN_MS = 60_000;
+let cachedToken: { token: string; expiresAtMs: number } | null = null;
+let inFlightToken: Promise<string | null> | null = null;
+
+/** Test/Debug helper — clears the in-module token cache. */
+export function __resetAuthTokenCache(): void {
+  cachedToken = null;
+  inFlightToken = null;
+}
+
+/**
  * Get the current Supabase access token (JWT) for authenticating server requests.
  * Uses getSession() which auto-refreshes expired tokens when possible.
  * Falls back to null if no active session or refresh fails.
  */
 export async function getAuthToken(): Promise<string | null> {
+  const now = Date.now();
+  if (cachedToken && cachedToken.expiresAtMs - REFRESH_MARGIN_MS > now) {
+    return cachedToken.token;
+  }
+  if (inFlightToken) return inFlightToken;
+  inFlightToken = resolveAuthToken().finally(() => {
+    inFlightToken = null;
+  });
+  return inFlightToken;
+}
+
+async function resolveAuthToken(): Promise<string | null> {
   try {
     // getSession() returns the cached session and auto-refreshes if expired.
     // However, if the cached token is expired and refresh fails silently,
@@ -33,6 +63,11 @@ export async function getAuthToken(): Promise<string | null> {
 
     const { access_token, expires_at } = data.session;
 
+    // Cache only while the token remains usable past the refresh margin.
+    if (expires_at && expires_at * 1000 - REFRESH_MARGIN_MS > Date.now()) {
+      cachedToken = { token: access_token, expiresAtMs: expires_at * 1000 };
+    }
+
     // If token expires within 60 seconds, force a refresh
     if (expires_at && expires_at * 1000 < Date.now() + 60_000) {
       if (import.meta.env.DEV) {
@@ -44,7 +79,12 @@ export async function getAuthToken(): Promise<string | null> {
         // Still try the old token — server will reject if truly expired
         return access_token;
       }
-      return refreshed.session.access_token;
+      const refreshedToken = refreshed.session.access_token;
+      const refreshedExp = refreshed.session.expires_at;
+      if (refreshedExp && refreshedExp * 1000 - REFRESH_MARGIN_MS > Date.now()) {
+        cachedToken = { token: refreshedToken, expiresAtMs: refreshedExp * 1000 };
+      }
+      return refreshedToken;
     }
 
     return access_token;

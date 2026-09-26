@@ -48,7 +48,7 @@ export function BottomNav({ className = '' }: BottomNavProps) {
                     <Icon
                       className={cn(
                         'w-5 h-5 transition-[filter] duration-200',
-                        isActive && 'drop-shadow-[0_0_6px_rgba(232,199,126,0.4)]'
+                        isActive && 'drop-shadow-glow-sm'
                       )}
                       aria-hidden="true"
                     />

@@ -245,7 +245,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
             <div className="absolute inset-0 pointer-events-none opacity-20">
               <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-accent-primary/5 to-transparent" />
               <div className="absolute inset-0" style={{
-                backgroundImage: 'radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)',
+                backgroundImage: 'radial-gradient(circle at 2px 2px, var(--color-grid-veil) 1px, transparent 0)',
                 backgroundSize: '24px 24px'
               }} />
             </div>

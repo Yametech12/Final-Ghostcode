@@ -155,9 +155,9 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
               animate={{ 
                 scale: [1, 1.2, 1],
                 boxShadow: [
-                  '0 0 0 0 rgba(111, 160, 131, 0.4)',
-                  '0 0 0 10px rgba(111, 160, 131, 0)',
-                  '0 0 0 0 rgba(111, 160, 131, 0)'
+                  '0 0 0 0 color-mix(in srgb, var(--color-status-success) 40%, transparent)',
+                  '0 0 0 10px transparent',
+                  '0 0 0 0 transparent'
                 ]
               }}
               transition={{ 

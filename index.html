@@ -5,16 +5,117 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#0a0508" />
+    <!-- theme-color mirrors --color-mystic-950 of src/index.css. index.html is
+         parsed before the bundle CSS exists, so it cannot consume a CSS
+         variable; the two media queries cover first paint and ThemeContext
+         re-syncs the tag at run time in src/contexts/ThemeContext.tsx. -->
+    <meta name="theme-color" content="#0E0B12" media="(prefers-color-scheme: dark)" />
+    <meta name="theme-color" content="#FAF7F2" media="(prefers-color-scheme: light)" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Epimetheus" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap">
+    <!-- P0-1: fonts are self-hosted (latin subsets, 13 faces instead of 18).
+         No third-party stylesheet on the critical path; only the two faces used
+         by above-the-fold text are preloaded, the rest resolve from cache. -->
+    <link rel="preload" href="/fonts/inter-latin-400.woff2" as="font" type="font/woff2" crossorigin />
+    <link rel="preload" href="/fonts/space-grotesk-latin-600.woff2" as="font" type="font/woff2" crossorigin />
 
     <title>EPIMETHEUS</title>
     <style>
+      /* P0-1: inlined self-hosted @font-face — removes one blocking round trip. */
+      @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 300;
+      font-display: optional;
+      src: url('/fonts/cormorant-garamond-latin-300.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Cormorant Garamond';
+      font-style: normal;
+      font-weight: 400;
+      font-display: optional;
+      src: url('/fonts/cormorant-garamond-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/inter-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/inter-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/inter-latin-600.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Inter';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('/fonts/inter-latin-700.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 400;
+      font-display: optional;
+      src: url('/fonts/jetbrains-mono-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'JetBrains Mono';
+      font-style: normal;
+      font-weight: 500;
+      font-display: optional;
+      src: url('/fonts/jetbrains-mono-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 300;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-300.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 400;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-400.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 500;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-500.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 600;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-600.woff2') format('woff2');
+    }
+      @font-face {
+      font-family: 'Space Grotesk';
+      font-style: normal;
+      font-weight: 700;
+      font-display: swap;
+      src: url('/fonts/space-grotesk-latin-700.woff2') format('woff2');
+    }
       @keyframes pulse {
         0%, 100% { opacity: 1; }
         50% { opacity: .4; }
@@ -25,35 +126,29 @@
         100% { width: 10%; margin-left: 90%; }
       }
     </style>
-    <script>
-      // Apply theme before React hydrates to avoid FOUC
-      (function() {
-        try {
-          var saved = localStorage.getItem('theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = saved === 'dark' || (!saved && prefersDark);
-          if (!isDark) {
-            document.documentElement.classList.add('light-theme');
-          }
-        } catch (e) { /* localStorage unavailable */ }
-      })();
-    </script>
+
+    <!-- Apply the saved theme before React hydrates to avoid FOUC.
+         External file (not inline): the app-shell CSP is script-src 'self'
+         with no 'unsafe-inline', so an inline snippet would be blocked and
+         the flash would come back. Deliberately NOT deferred — a deferred
+         script can run after the first paint. -->
+    <script src="/theme-bootstrap.js"></script>
   </head>
   <body>
     <div id="root">
       <!-- Pre-React loading state — shown during JS bundle download/parse -->
-      <div style="position: fixed; inset: 0; background-color: #0E0B12; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; overflow: hidden;">
+      <div style="position: fixed; inset: 0; background-color: var(--splash-bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; overflow: hidden;">
         <!-- Grid background -->
-        <div style="position: absolute; inset: 0; opacity: 0.03; background-image: linear-gradient(rgba(232,199,126,0.3) 1px, transparent 1px), linear-gradient(90deg, rgba(232,199,126,0.3) 1px, transparent 1px); background-size: 40px 40px;"></div>
+        <div style="position: absolute; inset: 0; opacity: 0.03; background-image: linear-gradient(var(--splash-grid) 1px, transparent 1px), linear-gradient(90deg, var(--splash-grid) 1px, transparent 1px); background-size: 40px 40px;"></div>
         <!-- Gold glow orb -->
-        <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, rgba(232,199,126,0.08) 0%, transparent 70%); border-radius: 50%; filter: blur(60px);"></div>
+        <div style="position: absolute; top: 30%; left: 50%; transform: translate(-50%, -50%); width: 300px; height: 300px; background: radial-gradient(circle, var(--splash-orb) 0%, transparent 70%); border-radius: 50%; filter: blur(60px);"></div>
 
         <div style="position: relative; display: flex; flex-direction: column; align-items: center; gap: 24px;">
           <!-- Logo with pulsing ring -->
           <div style="position: relative;">
-            <div style="position: absolute; inset: -12px; border-radius: 20px; border: 1px solid rgba(232,199,126,0.15); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
-            <div style="width: 56px; height: 56px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: #0A0806; box-shadow: 0 0 32px -4px rgba(212,175,55,0.18); border: 1px solid rgba(232,199,126,0.15);">
-              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; padding: 8px; color: #E8C77E; fill: currentColor;">
+            <div style="position: absolute; inset: -12px; border-radius: 20px; border: 1px solid var(--splash-ring); animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;"></div>
+            <div style="width: 56px; height: 56px; border-radius: 14px; overflow: hidden; display: flex; align-items: center; justify-content: center; background-color: var(--splash-logo-bg); box-shadow: 0 0 32px -4px var(--splash-glow); border: 1px solid var(--splash-ring);">
+              <svg viewBox="0 0 100 100" style="width: 100%; height: 100%; padding: 8px; color: var(--splash-accent); fill: currentColor;">
                 <path d="M50 20c-20 0-38 12-45 30 7 18 25 30 45 30s38-12 45-30c-7-18-25-30-45-30zm0 50c-11 0-20-9-20-20s9-20 20-20 20 9 20 20-9 20-20 20z" />
                 <path d="M50 35c-8.3 0-15 6.7-15 15s6.7 15 15 15 15-6.7 15-15-6.7-15-15-15zm0 25c-5.5 0-10-4.5-10-10s4.5-10 10-10 10 4.5 10 10-4.5 10-10 10z" />
                 <circle cx="50" cy="50" r="4" />
@@ -65,22 +160,22 @@
 
           <!-- Title -->
           <div style="text-align: center;">
-            <div style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: -0.01em; background: linear-gradient(90deg, #E8C77E, #F0D89A, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EPIMETHEUS</div>
-            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: rgba(154,143,128,0.6); letter-spacing: 0.25em; text-transform: uppercase; margin-top: 6px;">Initializing System</div>
+            <div style="font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 300; letter-spacing: -0.01em; background: linear-gradient(90deg, var(--splash-accent), var(--splash-accent-hi), var(--splash-accent-deep)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">EPIMETHEUS</div>
+            <div style="font-family: 'JetBrains Mono', monospace; font-size: 9px; color: var(--splash-muted); letter-spacing: 0.25em; text-transform: uppercase; margin-top: 6px;">Initializing System</div>
           </div>
 
           <!-- Progress bar -->
           <div style="width: 200px;">
-            <div style="height: 2px; background: rgba(255,255,255,0.05); border-radius: 9999px; overflow: hidden; border: 1px solid rgba(42,36,47,0.8);">
-              <div style="height: 100%; width: 30%; background: linear-gradient(135deg, #E8C77E, #D4AF37, #B87333); border-radius: 9999px; animation: loading-bar 2s ease-in-out infinite;"></div>
+            <div style="height: 2px; background: var(--splash-track); border-radius: 9999px; overflow: hidden; border: 1px solid var(--splash-track-border);">
+              <div style="height: 100%; width: 30%; background: linear-gradient(135deg, var(--splash-accent), var(--splash-accent-deep), var(--splash-copper)); border-radius: 9999px; animation: loading-bar 2s ease-in-out infinite;"></div>
             </div>
           </div>
 
           <!-- Spinner dots -->
           <div style="display: flex; gap: 6px; align-items: center;">
-            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out infinite;"></div>
-            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out 0.3s infinite;"></div>
-            <div style="width: 4px; height: 4px; border-radius: 50%; background: #E8C77E; animation: pulse 1.5s ease-in-out 0.6s infinite;"></div>
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: var(--splash-accent); animation: pulse 1.5s ease-in-out infinite;"></div>
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: var(--splash-accent); animation: pulse 1.5s ease-in-out 0.3s infinite;"></div>
+            <div style="width: 4px; height: 4px; border-radius: 50%; background: var(--splash-accent); animation: pulse 1.5s ease-in-out 0.6s infinite;"></div>
           </div>
         </div>
       </div>
