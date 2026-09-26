@@ -15,6 +15,7 @@ import Logo from '../components/Logo';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
 import { toast } from 'sonner';
+import { createCheckoutSession, BillingError, type PaidTier } from '../lib/billing';
 
 /**
  * Public pricing page — three-tier plan comparison plus FAQ.
@@ -202,7 +203,7 @@ export default function PricingPage() {
    * paid CTAs from logged-in users surface a "coming soon" toast instead of
    * silently routing them somewhere meaningless.
    */
-  const handleCTA = (plan: Plan) => {
+  const handleCTA = async (plan: Plan) => {
     // Logged-out users always go through registration first.
     if (!isSignedIn) {
       if (plan.tier === 'free') {
@@ -232,8 +233,18 @@ export default function PricingPage() {
       return;
     }
 
-    // Upgrade path — Stripe checkout not yet live.
-    toast.info('Paid checkout is launching soon. We will email you when it goes live.');
+    // Upgrade path — live Stripe checkout. Full-page redirect to the
+    // Stripe-hosted Checkout session; failures surface as a toast.
+    try {
+      const url = await createCheckoutSession(plan.tier as PaidTier);
+      window.location.assign(url);
+    } catch (err) {
+      toast.error(
+        err instanceof BillingError
+          ? err.message
+          : 'Checkout could not be started. Please try again.',
+      );
+    }
   };
 
   /** Given the viewer's state, return the label and disabled-ness for a card CTA. */

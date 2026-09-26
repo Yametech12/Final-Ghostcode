@@ -32,6 +32,17 @@ import {
   handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
+import {
+  handleCreateCheckoutSession,
+  handleCreatePortalSession,
+  handleStripeWebhook,
+} from './lib/subscription.js';
+
+// Disable Vercel's body parser so the Stripe webhook reaches signature
+// verification with the RAW request payload (re-serialization breaks the
+// HMAC). All other POST/PATCH/DELETE routes parse their JSON body
+// explicitly below via readRawBody + JSON.parse.
+export const config = { api: { bodyParser: false } };
 
 const supabaseUrl = process.env.VITE_SUPABASE_URL || '';
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -62,6 +73,22 @@ function applyResponseHeaders(req: VercelRequest, res: VercelResponse) {
   const setHeader = (name: string, value: string) => res.setHeader(name, value);
   applyCorsHeaders({ origin: req.headers.origin as string | undefined, setHeader });
   applySecurityHeaders({ setHeader });
+}
+
+/**
+ * Buffer the raw request body. Required because module-level
+ * `config.api.bodyParser = false` (the Stripe webhook needs the untouched
+ * bytes) — every other route receives the parsed result from here.
+ */
+function readRawBody(req: VercelRequest): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    const chunks: Buffer[] = [];
+    req.on('data', (chunk: unknown) => {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : (chunk as Buffer));
+    });
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -95,6 +122,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     .replace(/^v1\//, '');
   const pathFromQuery = Array.isArray(req.query.path) ? req.query.path.join('/') : (req.query.path as string | undefined);
   const pathname = (pathFromUrl || pathFromQuery || '').replace(/^v1\//, '');
+
+  // Stripe webhook — raw body + signature auth. No JWT, no CSRF, no rate
+  // limit: Stripe signs the payload itself and cannot send browser headers.
+  // Handled before any auth/rate-limit work so the cold path stays fast.
+  if (pathname === 'billing/webhook' && req.method === 'POST') {
+    const raw = await readRawBody(req);
+    const r = await handleStripeWebhook(
+      raw,
+      req.headers['stripe-signature'] as string | undefined,
+      supabase,
+    );
+    res.status(r.status).json(r.body ?? {});
+    return;
+  }
 
   // Rate limiting for AI/advisor/calibration endpoints, the public
   // /api/security/log path, and self-serve account deletion. The latter
@@ -193,9 +234,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
   }
 
+  // Body parsing (Vercel's parser is disabled for the webhook — see config
+  // above). Mirrors express.json: JSON bodies are parsed, anything else is
+  // passed through as raw bytes.
+  let body: unknown = {};
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    const raw = await readRawBody(req);
+    if (raw.length > 0) {
+      const contentType = req.headers['content-type'] || '';
+      if (contentType.includes('application/json')) {
+        try {
+          body = JSON.parse(raw.toString('utf8'));
+        } catch {
+          res.status(400).json({ error: 'Invalid JSON body', code: 'INVALID_JSON' });
+          return;
+        }
+      } else {
+        body = raw;
+      }
+    }
+  }
+
   const normReq: NormalizedRequest = {
     method: req.method || 'GET',
-    body: req.body,
+    body,
     query: req.query as Record<string, any>,
     params: {},
     headers: req.headers as Record<string, string | string[] | undefined>,
@@ -232,6 +294,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     if (pathname === 'upload/profile-photo' && req.method === 'POST') {
       const r = await handleUploadProfilePhoto(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+
+    // Billing — Stripe checkout & customer portal (JWT required).
+    if (pathname === 'billing/create-checkout-session' && req.method === 'POST') {
+      const r = await handleCreateCheckoutSession(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+    if (pathname === 'billing/create-portal-session' && req.method === 'POST') {
+      const r = await handleCreatePortalSession(normReq, supabase);
       res.status(r.status).json(r.body);
       return;
     }

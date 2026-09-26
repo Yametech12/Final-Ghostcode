@@ -32,6 +32,11 @@ import {
   handleAdminUpdateUserRole,
   type NormalizedRequest,
 } from './lib/handlers.js';
+import {
+  handleCreateCheckoutSession,
+  handleCreatePortalSession,
+  handleStripeWebhook,
+} from './lib/subscription.js';
 
 console.log('Server starting...');
 
@@ -47,6 +52,27 @@ const app = express();
 // Security middleware
 app.use(helmet());
 
+// ---------------------------------------------------------------------------
+// Stripe webhook — MUST be registered BEFORE express.json so signature
+// verification sees the RAW request body (re-serialization breaks the HMAC).
+// Exempt from JWT auth (Stripe signs the payload itself) and from the CSRF
+// check below (Stripe cannot send our custom headers). Registered ahead of
+// the body parsers, so none of them consume the stream first.
+// ---------------------------------------------------------------------------
+app.post(
+  '/api/billing/webhook',
+  express.raw({ type: '*/*', limit: '1mb' }),
+  async (req, res) => {
+    const r = await handleStripeWebhook(
+      req.body as Buffer | string | undefined,
+      req.headers['stripe-signature'] as string | undefined,
+      supabase,
+    );
+    res.status(r.status).json(r.body ?? {});
+  },
+);
+
+// Body parsing with size limits
 // Body parsing with size limits (audit H-7/M-8: 10mb was far too permissive).
 // The profile-photo upload carries a base64 data-URL, so it gets a scoped 6mb
 // parser mounted BEFORE the global one — Express parses on the first matching
@@ -350,6 +376,18 @@ app.delete('/api/oracle/analyses/:id', async (req, res) => {
 app.post('/api/ai/chat', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleAiChat(nr, supabase));
+});
+
+// Billing — Stripe checkout & customer portal (JWT required; CSRF applies via
+// the JSON content-type the client always sends).
+app.post('/api/billing/create-checkout-session', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleCreateCheckoutSession(nr, supabase));
+});
+
+app.post('/api/billing/create-portal-session', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleCreatePortalSession(nr, supabase));
 });
 
 // Self-serve account deletion. Body: { confirm: "<email>" }. Cascades
