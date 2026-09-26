@@ -49,3 +49,13 @@ export type {
   StaticRoute,
   HttpMethod,
 } from './types.js';
+export {
+  handleGetMyProfilePhotoUrl,
+  handleAdminGetUserPhotoUrl,
+  handleAdminUpdateUserRole,
+} from './handlers/photoAdmin.js';
+export {
+  handleRagReindex,
+  handleRagStatus,
+  handleRagToggle,
+} from './handlers/rag.js';

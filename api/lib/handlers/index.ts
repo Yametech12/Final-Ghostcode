@@ -91,3 +91,4 @@ export const UNSERVED_DOMAINS = {
   favorites: 'useFavorites reads and writes favorites straight from the Supabase client.',
   subscriptions: 'No tier-gate/Stripe route exists yet; requireTier() reads users directly. Stripe remains WIP.',
 } as const;
+export { handleRagReindex, handleRagStatus, handleRagToggle } from './rag.js';
