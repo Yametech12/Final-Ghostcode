@@ -1,32 +1,15 @@
 /// <reference lib="dom" />
-/**
- * Photo read/sign paths (private bucket) + the privileged role write.
- * Split out of the S13 domain modules so api/lib/handlers.ts can re-export them
- * for api/_index.ts, which registers these three routes explicitly.
- */
+/** Signed-URL photo reads for the private user-uploads bucket + the privileged role write.
+ *  api/lib/handlers.ts re-exports these for the explicit routes in api/_index.ts. */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { log, serializeErr } from '../log.js';
-import { PROFILE_PHOTO_URL_TTL_SECONDS as _TTL } from '../types.js';
+import { isValidUUID } from '../auth.js';
 import type { NormalizedRequest, NormalizedResponse } from '../types.js';
 
 export const PROFILE_PHOTO_URL_TTL_SECONDS = 60 * 60;
-void _TTL;
-
-
-export const PROFILE_PHOTO_URL_TTL_SECONDS = 60 * 60;
-
-/**
- * Map whatever is stored in users.photo_url to a bucket object path.
- *
- * Three shapes exist in this database:
- *   1. `users/<uid>/profile.<ext>` — what new uploads persist.
- *   2. A legacy public URL of the form
- *      `https://<proj>.supabase.co/storage/v1/object/public/user-uploads/users/<uid>/profile.jpg?v=...`
- *      written while the bucket was still public. Still recoverable.
- *   3. Anything else — e.g. a Google OAuth avatar URL from user_metadata.
- *      Returns null: that is an external URL, it needs no signing, and handing
- *      it to createSignedUrl would just fail.
- */
+function unauthorized(): NormalizedResponse { return { status: 401, body: { error: 'Authentication required', code: 'UNAUTHORIZED' } }; }
+function badRequest(m: string, code = 'BAD_REQUEST'): NormalizedResponse { return { status: 400, body: { error: m, code } }; }
+function serverError(m = 'Internal error', code = 'INTERNAL_ERROR'): NormalizedResponse { return { status: 500, body: { error: m, code } }; }
 function storagePathFromPhotoRef(ref: string | null | undefined): string | null {
   if (typeof ref !== 'string') return null;
   const trimmed = ref.trim();
@@ -45,25 +28,7 @@ function storagePathFromPhotoRef(ref: string | null | undefined): string | null 
   return path.startsWith('users/') ? path : null;
 }
 
-function storagePathFromPhotoRef(ref: string | null | undefined): string | null {
-  if (typeof ref !== 'string') return null;
-  const trimmed = ref.trim();
-  if (!trimmed) return null;
-
-  // Shape 1 — already a bucket-relative path.
-  if (trimmed.startsWith('users/')) return trimmed.split('?')[0];
-
-  // Shape 2 — legacy public URL. The marker scopes the parse to OUR bucket, so
-  // an unrelated URL that merely contains the substring can't be mistaken for
-  // one of our objects.
-  const marker = '/user-uploads/';
-  const idx = trimmed.indexOf(marker);
-  if (idx === -1) return null; // shape 3 — external URL
-  const path = trimmed.slice(idx + marker.length).split('?')[0];
-  return path.startsWith('users/') ? path : null;
-}
-
-export async function handleGetMyProfilePhotoUrl(
+async function handleGetMyProfilePhotoUrl(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
@@ -109,7 +74,7 @@ export async function handleGetMyProfilePhotoUrl(
   };
 }
 
-export async function handleAdminGetUserPhotoUrl(
+async function handleAdminGetUserPhotoUrl(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
@@ -172,7 +137,7 @@ export async function handleAdminGetUserPhotoUrl(
   };
 }
 
-export async function handleAdminUpdateUserRole(
+async function handleAdminUpdateUserRole(
   req: NormalizedRequest,
   supabase: SupabaseClient
 ): Promise<NormalizedResponse> {
@@ -232,16 +197,4 @@ export async function handleAdminUpdateUserRole(
 
   log.info('admin_user_role_updated', { adminId, targetId, newRole });
   return { status: 200, body: { success: true, id: targetId, role: newRole } };
-}
-
-function unauthorized(): NormalizedResponse {
-  return { status: 401, body: { error: 'Authentication required', code: 'UNAUTHORIZED' } };
-}
-
-function badRequest(message: string, code = 'BAD_REQUEST'): NormalizedResponse {
-  return { status: 400, body: { error: message, code } };
-}
-
-function serverError(message = 'Internal error', code = 'INTERNAL_ERROR'): NormalizedResponse {
-  return { status: 500, body: { error: message, code } };
 }

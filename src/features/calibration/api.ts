@@ -7,7 +7,7 @@ import { supabase } from '../../lib/supabase';
 import { apiFetch } from '../../lib/fetch';
 import { chatCompletion } from '../../lib/ai';
 import { safeParseJSON } from '../../utils/json';
-import { sanitizePromptField } from '../../utils/sanitizeHtml';
+import { stripControlChars } from '../../utils/validation';
 import type { AnalysisHistory, AnalysisResult, DynamicScenario, StructuredInput, Task } from './types';
 
 /** Raw shape of a row in the `oracle_analyses` table as consumed by this page. */
