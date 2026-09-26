@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { AlertTriangle, Loader2, Trash2, X } from 'lucide-react';
@@ -32,6 +32,15 @@ export default function DeleteAccountSection() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Declared before useFocusTrap so the hook callback references a stable,
+  // already-declared value (react-hooks immutability). useCallback keeps the
+  // identity stable so the focus-trap effect doesn't resubscribe per render.
+  const closeModal = useCallback(() => {
+    setIsOpen(false);
+    setConfirmText('');
+    setError(null);
+  }, []);
+
   // Track whether we set the critical-flow flag, so the unmount cleanup
   // below can clear it even if the user navigated away mid-flight.
   // Without this, the BACK button during deletion left
@@ -41,9 +50,7 @@ export default function DeleteAccountSection() {
 
   // Focus trap + Esc-to-close on the confirmation modal. Reuses the same
   // hook the existing modals use so behaviour is consistent.
-  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, () => {
-    if (!isDeleting) closeModal();
-  });
+  const trapRef = useFocusTrap<HTMLDivElement>(isOpen, closeModal);
 
   // If the component unmounts (browser BACK, route change, parent
   // re-render that drops us) while a deletion is mid-flight, the finally
@@ -60,12 +67,6 @@ export default function DeleteAccountSection() {
   }, []);
 
   if (!user) return null;
-
-  const closeModal = () => {
-    setIsOpen(false);
-    setConfirmText('');
-    setError(null);
-  };
 
   const handleDelete = async () => {
     setError(null);

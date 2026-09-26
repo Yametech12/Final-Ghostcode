@@ -191,43 +191,49 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loadSession = useCallback(async (retry = 0): Promise<Session | null> => {
-    try {
-      const { data, error } = await supabase.auth.getSession();
-      if (error) throw error;
-      if (data.session) {
-        setSession(data.session);
-        setUser(wrapUser(data.session.user));
-        setError(null);
-        // Run loadUserData in parallel with completing the session load
-        loadUserData(data.session.user.id).catch(err =>
-          console.error('Background user data load failed:', err)
-        );
-        // Sync email from Supabase auth to users table (fire and forget).
-        // Skipped when local userData already has the right email — avoids
-        // a redundant write on every page load. The trigger added in
-        // 20240101000400 still allows id/email updates; only role and
-        // subscription_tier are pinned.
-        const userEmail = data.session.user?.email;
-        if (userEmail && userDataRef.current?.email !== userEmail) {
-          supabase
-            .from('users')
-            .upsert({ id: data.session.user.id, email: userEmail }, { ignoreDuplicates: false })
-            .then(({ error: upsertErr }) => {
-              if (upsertErr) console.error('Email sync failed:', upsertErr);
-            });
+    // Iterative retry loop instead of self-recursion: a useCallback cannot
+    // reference itself before its declaration completes (react-hooks
+    // immutability), and a loop keeps every attempt on the same closure.
+    for (let attempt = retry; attempt <= MAX_RETRIES; attempt++) {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (data.session) {
+          setSession(data.session);
+          setUser(wrapUser(data.session.user));
+          setError(null);
+          // Run loadUserData in parallel with completing the session load
+          loadUserData(data.session.user.id).catch(err =>
+            console.error('Background user data load failed:', err)
+          );
+          // Sync email from Supabase auth to users table (fire and forget).
+          // Skipped when local userData already has the right email — avoids
+          // a redundant write on every page load. The trigger added in
+          // 20240101000400 still allows id/email updates; only role and
+          // subscription_tier are pinned.
+          const userEmail = data.session.user?.email;
+          if (userEmail && userDataRef.current?.email !== userEmail) {
+            supabase
+              .from('users')
+              .upsert({ id: data.session.user.id, email: userEmail }, { ignoreDuplicates: false })
+              .then(({ error: upsertErr }) => {
+                if (upsertErr) console.error('Email sync failed:', upsertErr);
+              });
+          }
+          return data.session;
         }
-        return data.session;
+        return null;
+      } catch (err: any) {
+        console.error('Session load error:', serializeError(err));
+        if (attempt < MAX_RETRIES) {
+          await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, attempt)));
+          continue;
+        }
+        setError('Failed to load session. Please refresh.');
+        return null;
       }
-      return null;
-    } catch (err: any) {
-      console.error('Session load error:', serializeError(err));
-      if (retry < MAX_RETRIES) {
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * Math.pow(2, retry)));
-        return loadSession(retry + 1);
-      }
-      setError('Failed to load session. Please refresh.');
-      return null;
     }
+    return null;
   }, [loadUserData]);
 
   useEffect(() => {

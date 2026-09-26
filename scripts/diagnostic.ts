@@ -80,7 +80,7 @@ async function runDiagnostics() {
     
     for (const table of tables) {
       try {
-        const { data, error } = await anonClient
+        const { error } = await anonClient
           .from(table)
           .select('id')
           .limit(1);
