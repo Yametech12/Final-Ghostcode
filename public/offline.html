@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0E0B12" />
+  <title>Offline — Epimetheus</title>
+  <style>
+    /* Mirrors the app's token palette (src/index.css) for both themes.
+       The html element carries .light-theme when the user's saved theme
+       is light — set inline before paint to avoid a flash. */
+    :root {
+      --splash-bg: #0E0B12;
+      --surface-raised: #161118;
+      --text-primary: #FAF7F2;
+      --text-muted: #9A8F80;
+      --accent: #E8C77E;
+      --accent-deep: #B8860B;
+      --border-hairline: rgba(232, 199, 126, 0.18);
+      --btn-text: #0E0B12;
+    }
+    html.light-theme {
+      --splash-bg: #FAF7F2;
+      --surface-raised: #F2EDE3;
+      --text-primary: #14110E;
+      --text-muted: #6E6358;
+      --accent: #B8860B;
+      --accent-deep: #8A6508;
+      --border-hairline: rgba(184, 134, 11, 0.28);
+      --btn-text: #FAF7F2;
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--splash-bg);
+      color: var(--text-primary);
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      text-align: center;
+      padding: 24px;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      max-width: 420px;
+      width: 100%;
+      padding: 40px 28px;
+      border: 1px solid var(--border-hairline);
+      border-radius: 20px;
+      background: var(--surface-raised);
+    }
+    .logo { width: 84px; height: 84px; margin: 0 auto 20px; display: block; border-radius: 20px; }
+    h1 { font-size: 1.35rem; margin: 0 0 8px; letter-spacing: 0.01em; }
+    p { color: var(--text-muted); font-size: 0.95rem; line-height: 1.55; margin: 0 0 24px; }
+    .actions { display: flex; flex-direction: column; gap: 12px; }
+    button, a.btn {
+      appearance: none;
+      border: 0;
+      border-radius: 12px;
+      padding: 13px 20px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      font-family: inherit;
+    }
+    .retry { background: var(--accent); color: var(--btn-text); }
+    .back { background: transparent; color: var(--accent); border: 1px solid var(--border-hairline); }
+    .status { margin-top: 18px; font-size: 0.8rem; color: var(--text-muted); min-height: 1em; }
+    .status.ok { color: var(--accent); }
+    @media (prefers-reduced-motion: no-preference) {
+      .retry:active { transform: scale(0.98); }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <img class="logo" src="/icon-192.png" alt="" width="84" height="84" />
+    <h1>You're offline</h1>
+    <p>
+      Epimetheus needs a connection for AI analyses and advisor sessions.
+      Cached pages you visited before are still available once you're back online.
+    </p>
+    <div class="actions">
+      <button class="retry" id="retry" type="button">Try again</button>
+      <a class="btn back" id="back-link" href="/" hidden>Go to last visited page</a>
+    </div>
+    <div class="status" id="status" role="status" aria-live="polite"></div>
+  </main>
+
+  <script>
+    // Theme: match the app's persisted preference before first paint.
+    (function () {
+      try {
+        var t = localStorage.getItem('theme');
+        if (t === 'light') document.documentElement.classList.add('light-theme');
+      } catch (e) { /* storage unavailable — stay dark (default) */ }
+    })();
+
+    // Offer a link back to the page the user came from, if it's cached.
+    (function () {
+      var link = document.getElementById('back-link');
+      var status = document.getElementById('status');
+      if (!document.referrer) return;
+      var referrer = new URL(document.referrer);
+      if (referrer.origin !== location.origin || referrer.pathname === '/') return;
+      if ('caches' in window) {
+        caches.match(referrer.pathname).then(function (hit) {
+          if (hit) {
+            link.hidden = false;
+            link.textContent = 'Back to ' + (referrer.pathname.replace(/^\//, '') || 'previous page');
+          }
+        }).catch(function () {});
+      }
+    })();
+
+    // Retry button: reload now; if the network is back the app loads normally.
+    document.getElementById('retry').addEventListener('click', function () {
+      location.reload();
+    });
+
+    // Auto-refresh when connectivity returns.
+    window.addEventListener('online', function () {
+      var status = document.getElementById('status');
+      status.textContent = 'Connection restored — reloading…';
+      status.classList.add('ok');
+      setTimeout(function () { location.reload(); }, 600);
+    });
+  </script>
+</body>
+</html>

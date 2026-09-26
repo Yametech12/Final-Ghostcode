@@ -8,6 +8,7 @@ import './index.css';
 import { Toaster } from 'sonner';
 import { validateEnvironment } from './utils/env';
 import { initSentry } from './lib/sentry';
+import { registerServiceWorker } from './lib/sw';
 
 // Initialize Sentry early (no-op in dev or without DSN)
 initSentry();
@@ -103,67 +104,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA installability.
-// On every load we check for a new SW; if one is waiting, prompt the user
-// to refresh so they don't stay stuck on stale code after a deploy.
+// Register the service worker for offline-first PWA behavior.
+// All lifecycle logic lives in src/lib/sw.ts: PROD-only gating, immediate
+// update checks, old-cache cleanup, and the `swUpdated` event consumed by
+// src/components/pwa/UpdatePrompt.tsx.
 if ('serviceWorker' in navigator && import.meta.env.PROD) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('[SW] Registered:', registration.scope);
-
-        // Force an update check on every load so newly deployed SWs are
-        // discovered without a cold reload.
-        registration.update().catch(() => undefined);
-
-        const promptUpdate = (worker: ServiceWorker) => {
-          // Lazy import sonner to avoid pulling it into the SW registration path
-          // before the main bundle has loaded it.
-          import('sonner')
-            .then(({ toast }) => {
-              toast('A new version is available', {
-                description: 'Refresh to load the latest update.',
-                action: {
-                  label: 'Refresh',
-                  onClick: () => {
-                    worker.postMessage({ type: 'SKIP_WAITING' });
-                    // The new SW will take control; reload once it does.
-                    navigator.serviceWorker.addEventListener(
-                      'controllerchange',
-                      () => window.location.reload(),
-                      { once: true },
-                    );
-                  },
-                },
-                duration: Infinity,
-              });
-            })
-            .catch(() => {
-              // Toast unavailable — fall back to a console hint.
-              console.info('[SW] New version available. Reload to update.');
-            });
-        };
-
-        // A waiting worker exists at registration time when the user was
-        // already on a page when the SW updated.
-        if (registration.waiting) promptUpdate(registration.waiting);
-
-        registration.addEventListener('updatefound', () => {
-          const installing = registration.installing;
-          if (!installing) return;
-          installing.addEventListener('statechange', () => {
-            if (
-              installing.state === 'installed' &&
-              navigator.serviceWorker.controller
-            ) {
-              promptUpdate(installing);
-            }
-          });
-        });
-      })
-      .catch((err) => {
-        console.warn('[SW] Registration failed:', err);
-      });
+    void registerServiceWorker();
   });
 }
