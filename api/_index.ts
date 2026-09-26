@@ -355,19 +355,6 @@ async function send(res: express.Response, normReq: NormalizedRequest, handler: 
 }
 
 // ---------------------------------------------------------------------------
-// Routes — mounted from the declarative table exported by
-// api/lib/handlers/index.ts, one entry per domain module.
-//
-// Behaviour is identical to the 16 hand-written app.get/post/patch/delete
-// registrations this replaces:
-//   • the array is concatenated in the ORIGINAL registration order, and
-//     Express matches in registration order, so first-match semantics are
-//     unchanged;
-//   • every non-static route still runs normalize() (JWT resolution) then
-//     send() (SSE plumbing + the 500 fallback that logs to Sentry);
-//   • the one static route (/api/ai/credits) still answers WITHOUT touching
-//     Supabase or the auth header, exactly as the previous inline handler did.
-// ---------------------------------------------------------------------------
 app.get('/api/health', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, handleHealth);
@@ -426,65 +413,6 @@ app.delete('/api/advisor/session/:sessionId', async (req, res) => {
   await send(res, n, (nr) => handleDeleteAdvisorSession(nr, supabase));
 });
 
-for (const route of routes) {
-  const verb = route.method.toLowerCase() as ExpressVerb;
-
-  if (isStaticRoute(route)) {
-    app[verb](route.path, (_req, res) => {
-      res.status(route.staticResponse.status).json(route.staticResponse.body);
-    });
-    continue;
-  }
-
-// Billing — Stripe checkout & customer portal (JWT required; CSRF applies via
-// the JSON content-type the client always sends).
-app.post('/api/billing/create-checkout-session', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleCreateCheckoutSession(nr, supabase));
-});
-
-app.post('/api/billing/create-portal-session', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleCreatePortalSession(nr, supabase));
-});
-
-// RAG management. Registered in the same explicit style as every other route
-// in this file (this baseline has no route loop). All three are authenticated
-// and soft-fail with HTTP 200 + { ok: false } on operational errors, so a
-// missing migration or embedding outage never breaks the advisor.
-app.post('/api/rag/reindex', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleRagReindex(nr, supabase));
-});
-
-app.post('/api/rag/toggle', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleRagToggle(nr, supabase));
-});
-
-app.get('/api/rag/status', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleRagStatus(nr, supabase));
-});
-
-// Self-serve account deletion. Body: { confirm: "<email>" }. Cascades
-// through public.users → all child tables, and the storage trigger
-// handles the bucket files.
-app.delete('/api/users/me', async (req, res) => {
-  const n = await normalize(req);
-  await send(res, n, (nr) => handleDeleteMyAccount(nr, supabase));
-});
-
-// Machine-readable route table, used by scripts/route-table-modules.ts to
-// diff the mounted surface against the pre-refactor registration list.
-export const routeTable: string[] = routes.map((r) => `${r.method} ${r.path}`);
-
-// Static serving (production)
-if (process.env.NODE_ENV === 'production') {
-  app.use(express.static(path.join(__dirname, '../dist')));
-}
-
-// Generic error handler
 app.use((err: any, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
   const requestId = requestIdFrom(_req.headers as Record<string, string | string[] | undefined>);
   const route = `${_req.method} ${_req.path}`;
