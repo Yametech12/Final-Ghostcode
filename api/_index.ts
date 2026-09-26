@@ -43,10 +43,17 @@ import {
   type NormalizedRequest,
 } from './lib/handlers.js';
 import {
+<<<<<<< ours
   handleCreateCheckoutSession,
   handleCreatePortalSession,
   handleStripeWebhook,
 } from './lib/subscription.js';
+=======
+  handleRagReindex,
+  handleRagStatus,
+  handleRagToggle,
+} from './lib/handlers/rag.js';
+>>>>>>> theirs
 
 console.log('Server starting...');
 console.log(
@@ -514,6 +521,25 @@ app.post('/api/billing/create-checkout-session', async (req, res) => {
 app.post('/api/billing/create-portal-session', async (req, res) => {
   const n = await normalize(req);
   await send(res, n, (nr) => handleCreatePortalSession(nr, supabase));
+});
+
+// RAG management. Registered in the same explicit style as every other route
+// in this file (this baseline has no route loop). All three are authenticated
+// and soft-fail with HTTP 200 + { ok: false } on operational errors, so a
+// missing migration or embedding outage never breaks the advisor.
+app.post('/api/rag/reindex', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagReindex(nr, supabase));
+});
+
+app.post('/api/rag/toggle', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagToggle(nr, supabase));
+});
+
+app.get('/api/rag/status', async (req, res) => {
+  const n = await normalize(req);
+  await send(res, n, (nr) => handleRagStatus(nr, supabase));
 });
 
 // Self-serve account deletion. Body: { confirm: "<email>" }. Cascades

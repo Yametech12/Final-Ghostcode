@@ -21,6 +21,7 @@ import {
   PROMPT_BLOCK_TTL_SEC,
 } from './featuredCaches.js';
 import { log, serializeErr } from './log.js';
+<<<<<<< ours
 import {
   BOUNDS,
   ValidationError,
@@ -30,6 +31,12 @@ import {
   clampInt,
   clampFloat,
 } from './validation.js';
+=======
+import { retrieveChunks, type RetrievedChunk } from './rag/retriever.js';
+import { buildRagPrompt } from './rag/promptBuilder.js';
+import { reindexUser } from './rag/scheduler.js';
+import { isRagEnabledForUser } from './handlers/rag.js';
+>>>>>>> theirs
 
 export interface NormalizedRequest {
   method: string;
@@ -825,6 +832,13 @@ async function buildAdvisorMessages(
    * blocks it) but treats free as Strategist if it does.
    */
   tier: 'free' | 'strategist' | 'oracle' = 'strategist',
+  /**
+   * Retrieval-augmented context for this turn. An empty array (or an omitted
+   * argument) keeps the pre-RAG prompt shape, so behaviour is unchanged when
+   * retrieval yields nothing — the no-context path is the fallback, not an
+   * error state.
+   */
+  retrieved: RetrievedChunk[] = [],
 ): Promise<Array<{ role: string; content: string }>> {
   const { typeFramework, responseGuidelines } = await loadAdvisorPromptBlocks();
   const [{ data: calibrations }, { data: history }, { data: recentActivity }] = await Promise.all([
@@ -911,11 +925,17 @@ ${responseGuidelines}`;
     if (removed) totalChars -= removed.content.length;
   }
 
-  return [
-    { role: 'system', content: systemPrompt },
-    ...historyMessages,
-    { role: 'user', content: message },
-  ];
+  // Sectioned prompt (SYSTEM / RETRIEVED CONTEXT / RECENT MESSAGES / USER
+  // QUERY) when we have retrieved context; the legacy shape otherwise. Keeping
+  // both means a retrieval outage degrades to exactly the prompt the advisor
+  // used before RAG existed, rather than to a worse one.
+  return buildRagPrompt({
+    baseSystemPrompt: systemPrompt,
+    chunks: retrieved,
+    history: historyMessages,
+    query: message,
+    sectioned: retrieved.length > 0,
+  });
 }
 
 /**
@@ -956,12 +976,33 @@ export async function handleAdvisorChatStream(
   const effectiveTier = isAdmin ? 'oracle' : tier;
   const ADVISOR_MAX_TOKENS = effectiveTier === 'oracle' ? 1200 : 600;
 
+  // Retrieval runs before the prompt is built so the retrieved chunks can be
+  // placed inside the system prompt. Soft-fail by construction: a disabled
+  // preference skips retrieval entirely, and `retrieveChunks` resolves to `[]`
+  // on any error, which routes us to the no-context prompt path.
+  const ragPreferenceEnabled = await isRagEnabledForUser(supabase, userId);
+  const ragRequested =
+    ragPreferenceEnabled && String(req.query?.no_rag ?? '') !== '1';
+  const retrievalStartedAt = Date.now();
+  const retrieved = ragRequested
+    ? await retrieveChunks(userId, String(message), supabase)
+    : [];
+  const retrievalMs = Date.now() - retrievalStartedAt;
+  log.info('advisor_retrieval', {
+    userId,
+    sessionId,
+    ragRequested,
+    chunks: retrieved.length,
+    retrievalMs,
+  });
+
   const messages = await buildAdvisorMessages(
     supabase,
     userId,
     sessionId,
     validatedMessage,
     effectiveTier,
+    retrieved,
   );
 
   // Save user message first, before streaming.
@@ -981,6 +1022,22 @@ export async function handleAdvisorChatStream(
   };
 
   const stream = (async function* (): AsyncGenerator<string> {
+    // Emit the retrieved-context frame before the first token so the client can
+    // render the "Context used" panel without waiting for the answer.
+    if (retrieved.length > 0) {
+      yield `data: ${JSON.stringify({
+        type: 'rag',
+        retrievalMs,
+        chunks: retrieved.map((chunk) => ({
+          sourceTable: chunk.sourceTable,
+          sourceId: chunk.sourceId,
+          score: Number(chunk.score.toFixed(4)),
+          preview:
+            chunk.text.length > 180 ? `${chunk.text.slice(0, 177)}...` : chunk.text,
+        })),
+      })}\n\n`;
+    }
+
     let fullContent = '';
     let sourceReader: ReadableStreamDefaultReader<Uint8Array> | null = null;
     try {
@@ -1249,6 +1306,15 @@ export async function handleCreateOracleAnalysis(
     log.error('oracle_analysis_insert_failed', { userId, err: serializeErr(error) });
     return serverError('Failed to save analysis', 'DB_INSERT_ERROR');
   }
+
+  // Fire-and-forget re-index so a new analysis becomes retrievable context for
+  // the advisor. Deliberately not awaited: the response must not depend on an
+  // embedding round trip, and `reindexUser` is idempotent and never throws.
+  void reindexUser(userId, supabase, { reason: 'oracle-analysis' }).then((result) => {
+    if (!result.ok) {
+      log.warn('oracle_reindex_failed', { userId, error: result.error });
+    }
+  });
 
   return { status: 200, body: { id: inserted.id, analysis: inserted } };
 }

@@ -5,6 +5,8 @@ import { useAdvisorChat } from '../hooks/useAdvisorChat';
 import { AdvisorHeader } from '../components/advisor/AdvisorHeader';
 import { MessageList } from '../components/advisor/MessageList';
 import { Composer } from '../components/advisor/Composer';
+import { RetrievedContext } from '../components/advisor/RetrievedContext';
+import { RagHint } from '../components/advisor/RagHint';
 
 /**
  * Advisor page — chat with the Epimetheus AI advisor.
@@ -23,6 +25,7 @@ export default function AdvisorPage() {
     isLoadingSession,
     clearChat,
     setReaction,
+    retrievedContext,
   } = useAdvisorChat();
 
   const [input, setInput] = useState('');
@@ -115,6 +118,11 @@ export default function AdvisorPage() {
         onRetry={retryMessage}
         onSelectPrompt={handleSelectPrompt}
       />
+      {/* Transparency layer: what was retrieved for this turn, and the
+          first-run explainer that lets users turn retrieval off. Both render
+          nothing when there is no context / nothing to explain. */}
+      <RetrievedContext chunks={retrievedContext} />
+      <RagHint />
       <div className="mt-3">
         <Composer
           value={input}

@@ -29,6 +29,17 @@ export interface AdvisorMessage {
   reaction?: 'like' | 'dislike';
 }
 
+/**
+ * One retrieved chunk reported by the server on the RAG metadata frame of
+ * `/api/advisor/chat`. Used by the "Context used" panel.
+ */
+export interface RetrievedContextChunk {
+  sourceTable: string;
+  sourceId: string;
+  score: number;
+  preview: string;
+}
+
 interface RawMessage {
   id: string;
   role: 'user' | 'model';
@@ -45,12 +56,17 @@ export function useAdvisorChat() {
   const [messages, setMessages] = useState<AdvisorMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [retrievedContext, setRetrievedContext] = useState<RetrievedContextChunk[]>([]);
+  const [ragEnabled, setRagEnabledState] = useState(true);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Refs that always read latest values inside callbacks (avoids stale closures).
   const sessionIdRef = useRef<string | null>(null);
   const userIdRef = useRef<string | null>(null);
   const isStreamingRef = useRef(false);
+  // Mirrors the server-side preference for use inside performSend (which has an
+  // empty dep array and therefore must not close over state directly).
+  const ragEnabledRef = useRef(true);
 
   useEffect(() => { sessionIdRef.current = sessionId; }, [sessionId]);
   useEffect(() => { userIdRef.current = user?.id ?? null; }, [user]);
@@ -118,6 +134,26 @@ export function useAdvisorChat() {
     initializeSession();
   }, [user]);
 
+  // Read the RAG preference once per session so the chat request can carry the
+  // per-request opt-out. Server remains the source of truth; on failure we keep
+  // the product default (enabled) rather than silently turning the feature off.
+  useEffect(() => {
+    let cancelled = false;
+    apiFetch('/api/rag/status')
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: { useRagForAdvisor?: boolean } | null) => {
+        if (cancelled || !data || typeof data.useRagForAdvisor !== 'boolean') return;
+        setRagEnabledState(data.useRagForAdvisor);
+        ragEnabledRef.current = data.useRagForAdvisor;
+      })
+      .catch(() => {
+        /* advisory only — keep the default */
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   /**
    * Send the request, stream the response, and update messages in place.
    * Reads sessionId/userId from refs to avoid stale closures.
@@ -137,7 +173,9 @@ export function useAdvisorChat() {
 
     // userId is derived server-side from JWT; only sessionId + message are needed.
     void uid;
-    const response = await apiFetch('/api/advisor/chat', {
+    // Per-request opt-out so a disabled preference never triggers retrieval.
+    const chatUrl = ragEnabledRef.current ? '/api/advisor/chat' : '/api/advisor/chat?no_rag=1';
+    const response = await apiFetch(chatUrl, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ sessionId: sid, message: content }),
@@ -235,6 +273,27 @@ export function useAdvisorChat() {
               if (parsed.error) {
                 throw new Error(parsed.error);
               }
+              // RAG metadata frame: sent before the first token when retrieval
+              // produced context. Rendering is informational; it never feeds
+              // back into the model.
+              if (parsed.type === 'rag' && Array.isArray(parsed.chunks)) {
+                const chunks: RetrievedContextChunk[] = parsed.chunks
+                  .filter(
+                    (chunk: any) =>
+                      chunk &&
+                      typeof chunk.sourceTable === 'string' &&
+                      typeof chunk.sourceId === 'string' &&
+                      typeof chunk.preview === 'string',
+                  )
+                  .map((chunk: any) => ({
+                    sourceTable: chunk.sourceTable,
+                    sourceId: chunk.sourceId,
+                    score: typeof chunk.score === 'number' ? chunk.score : 0,
+                    preview: chunk.preview,
+                  }));
+                setRetrievedContext(chunks);
+                continue;
+              }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
                 assistantContent += stripControlChars(parsed.content);
                 scheduleFlush();
@@ -280,6 +339,7 @@ export function useAdvisorChat() {
       timestamp: new Date(),
     };
     setMessages(prev => [...prev, userMessage]);
+    setRetrievedContext([]);
     setIsStreaming(true);
 
     try {
@@ -406,6 +466,33 @@ export function useAdvisorChat() {
     }
   }, [messages]);
 
+  /**
+   * Persist the context preference. Optimistic locally, but the server is the
+   * source of truth: a rejected write reverts the UI instead of pretending to
+   * have saved.
+   */
+  const setRagEnabled = useCallback(async (next: boolean) => {
+    setRagEnabledState(next);
+    ragEnabledRef.current = next;
+    try {
+      const response = await apiFetch('/api/rag/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ enabled: next }),
+      });
+      const data = response.ok ? await response.json() : null;
+      if (!data || data.ok !== true) {
+        setRagEnabledState(!next);
+        ragEnabledRef.current = !next;
+        toast.error('Could not save your context preference.');
+      }
+    } catch {
+      setRagEnabledState(!next);
+      ragEnabledRef.current = !next;
+      toast.error('Could not save your context preference.');
+    }
+  }, []);
+
   return {
     messages,
     sendMessage,
@@ -416,6 +503,9 @@ export function useAdvisorChat() {
     sessionId,
     clearChat,
     setReaction,
+    retrievedContext,
+    ragEnabled,
+    setRagEnabled,
   };
 }
 
