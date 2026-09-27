@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import {
   handleSecurityLog,
   handleUploadProfilePhoto,
-  handleCalibrationAnalyze,
+  handleCreateAdvisorSession,
   handleCreateOracleAnalysis,
   handleUpdateOracleAnalysisTasks,
   handleDeleteOracleAnalysis,
@@ -237,94 +237,6 @@ describe('handleUploadProfilePhoto', () => {
     // mocked getPublicUrl.
     expect(r.body.url.startsWith('https://cdn/photo.png?v=')).toBe(true);
     expect(r.body.fileName).toMatch(/^users\/550e8400-/);
-  });
-});
-
-// ---------------------------------------------------------------------------
-// handleCalibrationAnalyze (covers shape clamps on AI output)
-// ---------------------------------------------------------------------------
-
-vi.mock('../_config.js', () => ({
-  DEFAULT_MODEL: 'fake',
-  VISION_MODEL: 'fake',
-  // SEC-09 allow-list is built from this set; the 'fake' entry keeps the
-  // existing tests' requests inside the allow-list.
-  FALLBACK_MODELS: ['fake'],
-  // Default mock — individual tests override via mockImplementationOnce.
-  createCompletion: vi.fn(),
-}));
-
-import { createCompletion } from '../_config.js';
-
-describe('handleCalibrationAnalyze', () => {
-  beforeEach(() => {
-    vi.spyOn(console, 'error').mockImplementation(() => {});
-  });
-
-  it('returns 401 when unauthenticated', async () => {
-    const { client } = makeSupabase();
-    const r = await handleCalibrationAnalyze(makeReq({ user: null }), client);
-    expect(r.status).toBe(401);
-  });
-
-  it('returns 400 on missing required fields', async () => {
-    const { client } = makeSupabase();
-    const r = await handleCalibrationAnalyze(makeReq({ body: {} }), client);
-    expect(r.status).toBe(400);
-  });
-
-  it('clamps oversized AI response fields', async () => {
-    const { client, setInsertSingle } = makeSupabase();
-    setInsertSingle({
-      data: { id: 'cal-1', user_id: fakeUser.id, type_id: 'TDI' },
-      error: null,
-    });
-
-    const oversize = 'x'.repeat(5000);
-    (createCompletion as any).mockResolvedValueOnce({
-      choices: [{
-        message: {
-          content: JSON.stringify({
-            traits: Array.from({ length: 20 }, (_, _i) => ({
-              name: oversize, // oversize name
-              score: 999,     // out-of-range score
-            })),
-            archetypes: Array.from({ length: 20 }, () => oversize),
-            summary: oversize,
-          }),
-        },
-      }],
-    });
-
-    const r = await handleCalibrationAnalyze(
-      makeReq({ body: { typeId: 'TDI', answers: { q: 'a' } } }),
-      client,
-    );
-
-    expect(r.status).toBe(200);
-    expect(r.body.success).toBe(true);
-    const traits = r.body.traits;
-    expect(traits.summary.length).toBeLessThanOrEqual(1000);
-    expect(traits.archetypes.length).toBeLessThanOrEqual(5);
-    expect(traits.archetypes[0].length).toBeLessThanOrEqual(200);
-    expect(traits.traits.length).toBeLessThanOrEqual(10);
-    expect(traits.traits[0].name.length).toBeLessThanOrEqual(100);
-    // score is clamped to [0,100]
-    expect(traits.traits[0].score).toBeGreaterThanOrEqual(0);
-    expect(traits.traits[0].score).toBeLessThanOrEqual(100);
-  });
-
-  it('returns 500 when AI returns invalid JSON', async () => {
-    const { client } = makeSupabase();
-    (createCompletion as any).mockResolvedValueOnce({
-      choices: [{ message: { content: 'not json' } }],
-    });
-    const r = await handleCalibrationAnalyze(
-      makeReq({ body: { typeId: 'TDI', answers: { q: 'a' } } }),
-      client,
-    );
-    expect(r.status).toBe(500);
-    expect(r.body.code).toBe('AI_PARSE_ERROR');
   });
 });
 
@@ -567,10 +479,7 @@ describe('server-side tier gate', () => {
       data: { role: 'user', subscription_tier: 'free', subscription_expires_at: null },
       error: null,
     });
-    const r = await handleCalibrationAnalyze(
-      makeReq({ body: { typeId: 'TDI', answers: { q1: 'a' } } }),
-      client,
-    );
+    const r = await handleCreateAdvisorSession(makeReq({ body: {} }), client);
     expect(r.status).toBe(402);
     expect(r.body.code).toBe('PAYMENT_REQUIRED');
     expect(r.body.requiredTier).toBe('strategist');
@@ -578,19 +487,16 @@ describe('server-side tier gate', () => {
   });
 
   it('admins bypass tier gating regardless of subscription_tier', async () => {
-    const { client, setUsersRow, setSelectMaybeSingle, setInsertSingle } = makeSupabase();
+    const { client, setUsersRow, setInsertSingle } = makeSupabase();
     setUsersRow({
       data: { role: 'admin', subscription_tier: 'free', subscription_expires_at: null },
       error: null,
     });
-    // Calibration also performs an insert; stub it so the path completes.
-    setInsertSingle({ data: { id: 'cal-1' }, error: null });
-    // Avoid the AI call by sending an obviously invalid body — the gate
-    // should clear first, then a downstream validation error returns. We
-    // assert specifically that the response is NOT 402.
-    setSelectMaybeSingle({ data: null, error: null });
-    const r = await handleCalibrationAnalyze(makeReq({ body: {} }), client);
-    expect(r.status).not.toBe(402);
+    // Session creation performs an insert; stub it so the path completes.
+    setInsertSingle({ data: { id: 'sess-1' }, error: null });
+    const r = await handleCreateAdvisorSession(makeReq({ body: {} }), client);
+    expect(r.status).toBe(200);
+    expect(r.body.sessionId).toBe('sess-1');
   });
 
   it('treats an expired paid tier as free', async () => {
@@ -603,10 +509,7 @@ describe('server-side tier gate', () => {
       },
       error: null,
     });
-    const r = await handleCalibrationAnalyze(
-      makeReq({ body: { typeId: 'TDI', answers: { q1: 'a' } } }),
-      client,
-    );
+    const r = await handleCreateAdvisorSession(makeReq({ body: {} }), client);
     expect(r.status).toBe(402);
     expect(r.body.currentTier).toBe('free');
   });
