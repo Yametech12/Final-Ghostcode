@@ -72,7 +72,7 @@ All routes require authentication except `/login`, `/register`, and `/reset-pass
 
 ## Database
 
-The canonical schema lives in `supabase/migrations/` (10 migrations, applied in lexicographic order — the Supabase CLI does this automatically). Key tables actually used by the code:
+The canonical schema lives in `supabase/migrations/` (11 migrations, applied in lexicographic order — the Supabase CLI does this automatically). Key tables actually used by the code:
 
 | Table | Purpose |
 |---|---|
@@ -121,7 +121,7 @@ In your Supabase project, run the migrations in `supabase/migrations/` in lexico
 supabase db reset
 ```
 
-Without the CLI, run every file in `supabase/migrations/` in lexicographic order (10 files as of `20240101000900_security_patch_pack.sql`) in the SQL editor.
+Without the CLI, run every file in `supabase/migrations/` in lexicographic order (11 files as of `20240101001000_promote_admin.sql`) in the SQL editor.
 
 The legacy SQL files at the repo root (`supabase-schema-v2.sql`) and under `scripts/` (`rls-audit.sql`, `create-rate-limits-table.sql`) are kept on disk for one release cycle but are no longer authoritative. Apply only the migrations.
 
