@@ -78,7 +78,7 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey);
 // ---------------------------------------------------------------------------
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const AI_LIMIT = 10;
-const LOG_LIMIT = 30; // /api/security/log is public, so it gets its own bucket
+const LOG_LIMIT = 30; // /api/security/log has its own bucket (30/min/IP)
 const ACCOUNT_DELETE_LIMIT = 3; // Destructive — keep tight. Matches Vercel.
 const RATE_WINDOW = 60_000;
 const ACCOUNT_DELETE_WINDOW = 5 * 60_000; // 5min window for account delete
@@ -90,7 +90,10 @@ function rateLimitMiddleware(req: express.Request, res: express.Response, next: 
   // its own much tighter bucket since it's destructive and must match the
   // Vercel-side gate (otherwise dev/self-host would have a wider hole than
   // production).
-  const isAiPath = req.path.startsWith('/api/ai') || req.path.startsWith('/api/advisor') || req.path.startsWith('/api/calibration');
+  // SEC-07: /api/oracle/* spends Regolo tokens too — it must share the AI
+  // rate-limit bucket. Previously only ai/advisor/calibration were counted,
+  // so /api/oracle/analyses was effectively unmetered.
+  const isAiPath = req.path.startsWith('/api/ai') || req.path.startsWith('/api/advisor') || req.path.startsWith('/api/calibration') || req.path.startsWith('/api/oracle');
   const isLogPath = req.path === '/api/security/log';
   const isAccountDelete = req.method === 'DELETE' && req.path === '/api/users/me';
   if (!isAiPath && !isLogPath && !isAccountDelete) return next();
@@ -159,8 +162,9 @@ app.options('/', (_req, res) => res.status(204).end());
 // ---------------------------------------------------------------------------
 // API versioning: /api/v1/* is rewritten to /api/* for forward compatibility.
 // This lets clients optionally pin to v1 without us having to duplicate routes.
-// Must run BEFORE the CSRF check so /api/v1/security/log gets the same
-// public-endpoint exemption as /api/security/log.
+// Must run BEFORE the CSRF check so /api/v1/* paths are normalized
+// uniformly (security/log no longer has a public exemption, but v1
+// rewriting must still happen before path matching everywhere).
 // ---------------------------------------------------------------------------
 app.use((req, _res, next) => {
   if (req.url.startsWith('/api/v1/')) {
@@ -175,7 +179,10 @@ app.use((req, _res, next) => {
 // ---------------------------------------------------------------------------
 app.use((req, res, next) => {
   if (req.method === 'GET' || req.method === 'HEAD' || req.method === 'OPTIONS') return next();
-  if (req.path === '/api/security/log') return next(); // Public logging endpoint
+  // SEC-10: /api/security/log is no longer a public endpoint (it requires a
+  // JWT), so it goes through the normal CSRF check like everything else.
+  // apiFetch always sends X-Requested-With, so legitimate clients are
+  // unaffected.
 
   const hasCustomHeader = req.headers['x-requested-with'] === 'XMLHttpRequest' ||
                           req.headers['content-type']?.includes('application/json');

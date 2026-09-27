@@ -98,7 +98,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // has been seen abused via stolen JWTs to enumerate users by timing
   // the CONFIRM_REQUIRED vs CONFIRM_MISMATCH responses, so it gets a
   // tight bucket on top of the auth-token check the handler does.
-  const isAiPath = pathname.startsWith('ai/') || pathname.startsWith('advisor/') || pathname.startsWith('calibration/');
+  // SEC-07: oracle paths spend Regolo tokens — same bucket as ai/advisor.
+  const isAiPath = pathname.startsWith('ai/') || pathname.startsWith('advisor/') || pathname.startsWith('calibration/') || pathname.startsWith('oracle/');
   const isLogPath = pathname === 'security/log';
   const isAccountDelete = pathname === 'users/me' && req.method === 'DELETE';
   if (isAiPath || isLogPath || isAccountDelete) {
@@ -124,12 +125,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       );
 
       if (rpcErr) {
-        // RPC missing or query failed — fall back to allowing the request so
-        // a deploy without the migration doesn't break the app.
-        log.warn('rate_limit_rpc_failed', {
+        // SEC-08: fail CLOSED. The previous fail-open fallback turned the
+        // entire rate limiter into a no-op whenever the RPC was missing or
+        // errored — an outage of one SQL function disabled all metering
+        // (estimated $12k–$24k/day exposure at full burn). A missing
+        // migration is a deploy-time bug; an RPC error is a database
+        // problem. Both should stop traffic, not unbill it.
+        log.error('rate_limit_rpc_failed_blocking', {
           rateLimitKey,
           err: serializeErr(rpcErr),
         });
+        res.status(503).json({
+          error: 'Rate limiting unavailable, try again shortly',
+          code: 'RATE_LIMITER_UNAVAILABLE',
+        });
+        return;
       } else if (typeof count === 'number' && count > RATE_LIMIT) {
         res.status(429).json({
           error: 'Rate limited',
@@ -181,7 +191,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // CSRF protection: state-changing requests must include a custom header.
   // Browsers won't send custom headers in cross-origin form submissions or simple requests.
-  if (req.method !== 'GET' && req.method !== 'HEAD' && pathname !== 'security/log') {
+  // SEC-10: security/log is authenticated now, so it goes through this
+  // check like every other POST (apiFetch always sends the header).
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
     const hasCustomHeader = req.headers['x-requested-with'] === 'XMLHttpRequest' ||
                             req.headers['content-type']?.includes('application/json');
     if (!hasCustomHeader) {

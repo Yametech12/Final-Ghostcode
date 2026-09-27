@@ -7,12 +7,14 @@ build/
 .next/
 out/
 
-# Environment variables
+# Environment variables (SEC-02: every variant, committed or not)
 .env
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
+.env.*
+!.env.example
+.env*.local
+.env.production
+.env.development
+.env.test
 
 # Logs
 npm-debug.log*

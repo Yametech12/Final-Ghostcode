@@ -23,6 +23,10 @@ export async function initSentry(): Promise<void> {
 
     Sentry.init({
       dsn,
+      // SEC-13: release tag ties every event to the exact deploy. The value
+      // is baked at build time (vite.config.ts define); empty when unset,
+      // in which case Sentry falls back to its default release naming.
+      release: typeof __SENTRY_RELEASE__ === 'string' && __SENTRY_RELEASE__ ? __SENTRY_RELEASE__ : undefined,
       // Privacy: don't send IP addresses or user agents by default. We
       // attach a minimal user.id in setUser() so errors are still
       // correlatable per account, but we don't ship browser fingerprint

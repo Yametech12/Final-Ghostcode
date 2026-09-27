@@ -16,3 +16,6 @@ interface ImportMetaEnv {
 interface ImportMeta {
   readonly env: ImportMetaEnv;
 }
+
+/** SEC-13: release identifier baked in at build time (see vite.config.ts). */
+declare const __SENTRY_RELEASE__: string;

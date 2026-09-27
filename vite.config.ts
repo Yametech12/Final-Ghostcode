@@ -35,6 +35,18 @@ export default defineConfig(({ mode }) => {
   assertNoLeakedSecrets(loadEnv(mode, process.cwd(), 'VITE_'));
 
   return {
+  // SEC-13: bake the deploy's release identifier at build time so both the
+  // client Sentry SDK and the uploaded sourcemaps reference the same
+  // version. Vercel build env provides VERCEL_GIT_COMMIT_SHA; CI provides
+  // GITHUB_SHA; SENTRY_RELEASE is the manual override.
+  define: {
+    __SENTRY_RELEASE__: JSON.stringify(
+      process.env.SENTRY_RELEASE ||
+        process.env.VERCEL_GIT_COMMIT_SHA ||
+        process.env.GITHUB_SHA ||
+        '',
+    ),
+  },
   plugins: [react()],
   resolve: {
     alias: {
@@ -84,7 +96,11 @@ export default defineConfig(({ mode }) => {
       },
     },
     chunkSizeWarningLimit: 1000,
-    sourcemap: false,
+    // SEC-13: 'hidden' generates sourcemaps for upload to Sentry without
+    // referencing them from the shipped bundles (no sourceMappingURL
+    // comment, no public map exposure). scripts/upload-sourcemaps.mjs
+    // pushes them to Sentry when SENTRY_AUTH_TOKEN is configured.
+    sourcemap: 'hidden',
     minify: 'esbuild',
     cssMinify: true,
   },

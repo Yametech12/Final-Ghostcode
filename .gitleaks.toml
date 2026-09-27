@@ -1,0 +1,29 @@
+# SEC-11: secret-scanning config (https://github.com/gitleaks/gitleaks)
+#
+# Extends gitleaks' built-in rules with this repo's known false positives:
+#   • .env.example contains deliberately fake placeholder credentials
+#   • lockfiles contain base64/hex blobs that occasionally trip entropy rules
+#
+# CI runs this via .github/workflows/secret-scan.yml on every push/PR and a
+# nightly full-history scan. Local pre-commit (scripts/hooks/pre-commit)
+# scans staged changes only.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known false positives"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)package-lock\.json$''',
+  '''(^|/)bun\.lockb$''',
+  '''(^|/)supabase/''',
+]
+# Placeholder tokens used by .env.example and docs.
+regexes = [
+  '''your[_-]''',
+  '''(?i)changeme''',
+  '''(?i)placeholder''',
+  '''(?i)example[_-]?key''',
+  '''eyJhbGciOi[A-Za-z0-9._-]{0,40}(JWT|jwt)''',
+]
