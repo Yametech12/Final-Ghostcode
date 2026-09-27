@@ -25,19 +25,9 @@
         100% { width: 10%; margin-left: 90%; }
       }
     </style>
-    <script>
-      // Apply theme before React hydrates to avoid FOUC
-      (function() {
-        try {
-          var saved = localStorage.getItem('theme');
-          var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-          var isDark = saved === 'dark' || (!saved && prefersDark);
-          if (!isDark) {
-            document.documentElement.classList.add('light-theme');
-          }
-        } catch (e) { /* localStorage unavailable */ }
-      })();
-    </script>
+    <!-- Theme init is external (public/theme-init.js) so the static CSP
+         in vercel.json stays hash-free under script-src 'self'. -->
+    <script src="/theme-init.js"></script>
   </head>
   <body>
     <div id="root">
