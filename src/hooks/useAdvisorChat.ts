@@ -358,7 +358,10 @@ export function useAdvisorChat() {
     setMessages(prev => {
       const idx = prev.findIndex(m => m.id === messageId);
       if (idx === -1) return prev;
-      return prev.slice(0, idx + 1).map(m => (m.id === messageId ? { ...m, failed: false } : m));
+      // Drop the failed bubble entirely — sendMessage appends a fresh user
+      // message. Keeping the original here (slice(0, idx + 1)) rendered the
+      // same text twice after a retry.
+      return prev.slice(0, idx);
     });
     await sendMessage(target.content);
   }, [messages, sendMessage]);
