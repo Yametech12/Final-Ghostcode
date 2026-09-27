@@ -45,6 +45,14 @@ export async function initSentryNode(): Promise<void> {
     const Sentry = await import('@sentry/node');
     Sentry.init({
       dsn,
+      // SEC-13: tag server events with the same release as the client.
+      // Vercel injects VERCEL_GIT_COMMIT_SHA into function env; CI provides
+      // GITHUB_SHA; SENTRY_RELEASE is the manual override.
+      release:
+        process.env.SENTRY_RELEASE ||
+        process.env.VERCEL_GIT_COMMIT_SHA ||
+        process.env.GITHUB_SHA ||
+        undefined,
       environment: process.env.NODE_ENV || 'production',
       // Privacy: same posture as the client. No IP / user-agent / cookies
       // until consent UX is in place.

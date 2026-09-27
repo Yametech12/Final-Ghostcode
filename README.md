@@ -44,7 +44,7 @@ src/
   data/                  Static seed data (assessment questions, types)
   hooks/                 useAdvisorChat, useFavorites, route preloading…
   lib/                   supabase, fetch (apiFetch with JWT injection), utils
-  pages/                 22 pages — see AnimatedRoutes.tsx
+  pages/                 27 routes — see AnimatedRoutes.tsx
   stores/                Zustand uiStore (persisted)
   utils/                 errorHandling, json, validation, sanitizeHtml…
 scripts/
@@ -72,7 +72,7 @@ All routes require authentication except `/login`, `/register`, and `/reset-pass
 
 ## Database
 
-The canonical schema is in `supabase-schema-v2.sql`. Key tables actually used by the code:
+The canonical schema lives in `supabase/migrations/` (10 migrations, applied in lexicographic order — the Supabase CLI does this automatically). Key tables actually used by the code:
 
 | Table | Purpose |
 |---|---|
@@ -121,10 +121,7 @@ In your Supabase project, run the migrations in `supabase/migrations/` in lexico
 supabase db reset
 ```
 
-Without the CLI, run each file in the SQL editor in this order:
-1. `supabase/migrations/20240101000000_initial_schema.sql`
-2. `supabase/migrations/20240101000100_rls_audit.sql`
-3. `supabase/migrations/20240101000200_rate_limits.sql`
+Without the CLI, run every file in `supabase/migrations/` in lexicographic order (10 files as of `20240101000900_security_patch_pack.sql`) in the SQL editor.
 
 The legacy SQL files at the repo root (`supabase-schema-v2.sql`) and under `scripts/` (`rls-audit.sql`, `create-rate-limits-table.sql`) are kept on disk for one release cycle but are no longer authoritative. Apply only the migrations.
 
@@ -165,15 +162,15 @@ Optional:
 
 - **Vercel** is the primary target. The `api/` folder maps to serverless functions; `dist/` is the static frontend.
 - Set the same environment variables in the Vercel project settings. `SUPABASE_SERVICE_ROLE_KEY` and `REGOLO_API_KEY` must NOT be `VITE_`-prefixed.
-- Run all three SQL files in Supabase before the first deploy.
+- Run every migration in `supabase/migrations/` (lexicographic order) in Supabase before the first deploy.
 
 ## Known caveats
 
 - **Tests**: Vitest is wired up but coverage is sparse (one util test). New features should ship with coverage.
 - **Schema sources of truth**: `supabase/migrations/` is canonical; the legacy files (`supabase-schema-v2.sql`, `scripts/rls-audit.sql`, `scripts/create-rate-limits-table.sql`) are kept for one release cycle and should not be edited.
-- **Custom Supabase auth lock**: `src/lib/supabase.ts` uses a no-op lock to dodge a Web Locks API timeout warning under React StrictMode. Single-tab use is fine; multi-tab token refresh can theoretically race. Acceptable for now.
+- **Supabase auth lock**: `src/lib/supabase.ts` implements a per-name async mutex (`namedLock`) that serializes token refreshes across tabs and React StrictMode double-invokes. It supersedes an earlier no-op lock that could race multi-tab refreshes.
 - **Dependency audit**: run `npm audit` periodically. The codebase doesn't pin transitive deps.
 
 ## License
 
-Private and proprietary.
+Private and proprietary. No open-source license is granted; all rights reserved by the repository owner. (There is intentionally no LICENSE file — do not publish this code.)

@@ -9,10 +9,18 @@
  */
 
 import type { SupabaseClient, User } from '@supabase/supabase-js';
-import { createCompletion, DEFAULT_MODEL, VISION_MODEL } from '../_config.js';
+import { createCompletion, DEFAULT_MODEL, VISION_MODEL, FALLBACK_MODELS } from '../_config.js';
 import { isValidUUID } from './auth.js';
 import { requireTier, getEffectiveTier } from './tierGate.js';
 import { log, serializeErr } from './log.js';
+import { sanitizePromptField, sanitizeChatMessage, sanitizeMessageArray } from './sanitizePrompt.js';
+import {
+  consumeDailyTokens,
+  estimateMessagesTokens,
+  estimateTokens,
+  budgetExceededResponse,
+  type BudgetTier,
+} from './aiBudget.js';
 
 export interface NormalizedRequest {
   method: string;
@@ -35,6 +43,17 @@ export interface NormalizedResponse {
 }
 
 const REGOLO_BASE_URL = 'https://api.regolo.ai/v1/chat/completions';
+
+// SEC-09: the generic AI proxy used to forward any client-supplied `model`
+// string straight to Regolo. A crafted JWT-holder could request expensive
+// or non-existent models at our cost. Restrict to the same set the internal
+// fallback chain already uses, and cap output tokens regardless of input.
+const ALLOWED_CLIENT_MODELS: ReadonlySet<string> = new Set([
+  DEFAULT_MODEL,
+  VISION_MODEL,
+  ...FALLBACK_MODELS,
+]);
+const MAX_TOKENS_CEILING = 4096;
 
 function unauthorized(): NormalizedResponse {
   return { status: 401, body: { error: 'Authentication required', code: 'UNAUTHORIZED' } };
@@ -79,12 +98,19 @@ export async function handleTestKey(): Promise<NormalizedResponse> {
 }
 
 /**
- * POST /api/security/log — public (best-effort logging).
- * In production this should write to a real log sink. For now, console only.
- * Rate-limited by payload size to prevent abuse.
+ * POST /api/security/log — authenticated (SEC-10).
+ *
+ * Previously public, which let unauthenticated clients flood the sink with
+ * attacker-chosen userId/ip fields (log spoofing). Now: a valid Supabase JWT
+ * is required, `userId` is always derived from that JWT, and the
+ * client-supplied `ip` field is dropped entirely — the HTTP layer's own
+ * peer view (already present in platform/edge logs) is authoritative.
+ * Payload-size limits kept as the DoS bound.
  */
 export async function handleSecurityLog(req: NormalizedRequest): Promise<NormalizedResponse> {
-  const { event, userId, email, ip, userAgent, timestamp, details } = req.body || {};
+  if (!req.user) return unauthorized();
+
+  const { event, email, userAgent, timestamp, details } = req.body || {};
   if (!event || typeof event !== 'string') return badRequest('Event type is required');
 
   // Limit payload size to prevent log injection / DoS
@@ -94,14 +120,14 @@ export async function handleSecurityLog(req: NormalizedRequest): Promise<Normali
 
   const logEntry = {
     event: event.slice(0, 100),
-    userId: typeof userId === 'string' ? userId.slice(0, 50) : undefined,
+    // SEC-10: server-derived. The body's userId/ip are never trusted.
+    userId: req.user.id,
     // Redact emails so log sinks (Vercel/Datadog) don't accumulate PII.
     // Keep enough to correlate complaints (first char + domain) without
     // storing the full address.
     email: typeof email === 'string'
       ? email.replace(/^([^@]).*@/, '$1***@').slice(0, 100)
       : undefined,
-    ip: typeof ip === 'string' ? ip.slice(0, 45) : undefined,
     userAgent: typeof userAgent === 'string' ? userAgent.slice(0, 200) : undefined,
     timestamp: timestamp || new Date().toISOString(),
     details: detailsStr.length <= 2000 ? details : undefined,
@@ -519,9 +545,12 @@ export async function handleAdvisorChatStream(
   const denied = await requireTier(req, supabase, 'strategist');
   if (denied) return denied;
   const userId = req.user.id;
-  const { sessionId, message } = req.body || {};
+  const { sessionId, message: rawMessage } = req.body || {};
 
-  if (!message?.trim()) return badRequest('Message is required');
+  // SEC-12: sanitize before persistence and model dispatch — strips control
+  // characters, zero-width/bidi smuggles, and fake role-prefix lines.
+  const message = sanitizeChatMessage(rawMessage);
+  if (!message) return badRequest('Message is required');
   if (!isValidUUID(sessionId)) return badRequest('Invalid sessionId', 'INVALID_UUID');
 
   // Confirm ownership of the session.
@@ -543,6 +572,15 @@ export async function handleAdvisorChatStream(
   // the existing under-250-words system prompt cap.
   const { tier, isAdmin } = await getEffectiveTier(req, supabase);
   const effectiveTier = isAdmin ? 'oracle' : tier;
+
+  // SEC-14: reserve the user's daily AI budget BEFORE any upstream spend.
+  // estimateTokens covers the user message; +1500 chars≈headroom for the
+  // assembled system prompt + calibration context + model reply.
+  const budgetTier: BudgetTier = effectiveTier === 'oracle' ? 'oracle' : 'strategist';
+  const estTokens = estimateTokens(message) + 1500;
+  const budget = await consumeDailyTokens(supabase, userId, estTokens, budgetTier);
+  if (!budget.allowed) return budgetExceededResponse(budget.cap ?? 0);
+
   const ADVISOR_MAX_TOKENS = effectiveTier === 'oracle' ? 1200 : 600;
 
   const messages = await buildAdvisorMessages(
@@ -1089,6 +1127,31 @@ export async function handleAiChat(
     return badRequest('Total message content too large (max 100KB)');
   }
 
+  // SEC-12: sanitize every inbound message server-side. maxLength matches
+  // the size gate above so legitimately-large image data URLs survive;
+  // the per-message text transform below re-sanitizes its extracted text.
+  const safeMessages = sanitizeMessageArray(messages, { maxLength: 100_000 });
+
+  // SEC-09: model allow-list + output-token ceiling. Never let the client
+  // pick an arbitrary (potentially pricier) model, and never let it push
+  // max_tokens past 4096.
+  if (model !== undefined && model !== null && !ALLOWED_CLIENT_MODELS.has(String(model))) {
+    return badRequest('Requested model is not available', 'MODEL_NOT_ALLOWED');
+  }
+  const safeMaxTokens = Math.min(
+    typeof max_tokens === 'number' && Number.isFinite(max_tokens) && max_tokens > 0
+      ? Math.floor(max_tokens)
+      : 4096,
+    MAX_TOKENS_CEILING,
+  );
+
+  // SEC-14: daily budget check before dispatching to Regolo.
+  const { tier: aiChatTier, isAdmin: aiChatIsAdmin } = await getEffectiveTier(req, supabase);
+  const aiChatBudgetTier: BudgetTier = aiChatIsAdmin || aiChatTier === 'oracle' ? 'oracle' : 'strategist';
+  const aiChatEstTokens = estimateMessagesTokens(safeMessages) + 800;
+  const aiChatBudget = await consumeDailyTokens(supabase, req.user.id, aiChatEstTokens, aiChatBudgetTier);
+  if (!aiChatBudget.allowed) return budgetExceededResponse(aiChatBudget.cap ?? 0);
+
   const hasImage = (messages || []).some((m: any) => {
     if (!m?.content) return false;
     if (typeof m.content === 'string') {
@@ -1120,21 +1183,21 @@ export async function handleAiChat(
 
   const requestBody: any = {
     model: effectiveModel,
-    messages: messages || [],
+    messages: safeMessages,
     temperature: temperature ?? 0.7,
-    max_tokens: max_tokens ?? 4096,
+    max_tokens: safeMaxTokens,
     stream: !!stream,
   };
 
   if (hasImage) {
-    requestBody.messages = messages.map((m: any) => {
+    requestBody.messages = safeMessages.map((m: any) => {
       if (!m.content || typeof m.content !== 'string') return m;
       const base64Match = m.content.match(/data:image\/(\w+);base64,/);
       if (base64Match) {
         return {
           role: m.role,
           content: [
-            { type: 'text', text: m.content.replace(/data:image\/(\w+);base64,[\w+/=]+/, '').trim() },
+            { type: 'text', text: sanitizePromptField(m.content.replace(/data:image\/(\w+);base64,[\w+/=]+/, '').trim(), 'chatMessage').text },
             { type: 'image_url', image_url: { url: m.content } },
           ],
         };

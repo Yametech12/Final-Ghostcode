@@ -1,0 +1,30 @@
+#!/bin/sh
+# SEC-11: pre-commit secret scan (staged changes only).
+#
+# Install once per clone:
+#   git config core.hooksPath scripts/hooks
+#
+# Soft-skips when gitleaks is not installed so contributors without it can
+# still commit — CI (.github/workflows/secret-scan.yml) is the hard gate.
+
+if ! command -v gitleaks >/dev/null 2>&1; then
+  echo "[pre-commit] gitleaks not installed — skipping secret scan."
+  echo "             Install: https://github.com/gitleaks/gitleaks#installing"
+  echo "             CI will still scan this push."
+  exit 0
+fi
+
+# --staged: only what is about to be committed. --redact keeps any finding
+# out of terminal scrollback.
+gitleaks protect --staged --redact -v
+status=$?
+
+if [ $status -ne 0 ]; then
+  echo ""
+  echo "[pre-commit] Potential secret detected — commit blocked."
+  echo "  • Remove the secret, or"
+  echo "  • add an inline '# gitleaks:allow' comment if it is a false positive,"
+  echo "  • see .gitleaks.toml for repo-wide allowlist entries."
+fi
+
+exit $status
