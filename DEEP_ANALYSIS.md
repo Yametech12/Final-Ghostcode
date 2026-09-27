@@ -1,6 +1,8 @@
 # Deep Analysis — Epimetheus
 
-Snapshot of the architecture and security posture as of the most recent hardening pass.
+Verified snapshot of the architecture and security posture as of **2026-09-27**.
+Every claim in this document was checked against the current code; verification
+commands and results are logged at the bottom.
 
 ## Tech stack
 
@@ -8,9 +10,9 @@ Snapshot of the architecture and security posture as of the most recent hardenin
 - React Router 7, Motion 12, Lenis (smooth scroll)
 - TanStack Query 5, Zustand 5, React Context (Auth/Theme/Language)
 - Supabase Postgres + Storage
-- Regolo AI (`Llama-3.3-70B-Instruct` default, with Llama 3.1 8B / gemma4-31b / mistral-small3.2 fallbacks)
-- Express 5 for the dev API; Vercel serverless for prod (shared handler module)
-- Sentry (optional), Workbox (PWA)
+- Regolo AI (`Llama-3.3-70B-Instruct` default, with `gemma4-31b` / `mistral-small3.2` fallbacks; `Llama-3.1-8B` was removed as invalid on Regolo)
+- Express 5 for the dev API (`api/_index.ts`); Vercel serverless (`api/server.ts`) for prod — both delegate to the shared handler module
+- Sentry (optional, client + server DSNs), hand-rolled PWA service worker (not Workbox)
 
 ## Architecture
 
@@ -24,7 +26,7 @@ main.tsx
                  ├─ LanguageProvider
                  ├─ ThemeProvider
                  ├─ ReactLenis
-                 └─ AnimatedRoutes      ← 23 routes, all lazy()
+                 └─ AnimatedRoutes      ← 27 routes, all lazy()
                       └─ ProtectedRoute → Layout → PageWrapper(motion)
 
 api/lib/handlers.ts  (framework-agnostic)
@@ -32,104 +34,253 @@ api/lib/handlers.ts  (framework-agnostic)
    └─ used by  api/server.ts   (Vercel serverless)
 ```
 
-The shared handler module is the most important architectural choice: dev and prod use the same business logic, which prevents drift.
+The shared handler module is the most important architectural choice: dev and
+prod use the same business logic, which prevents drift.
+
+`main.tsx` also installs a filtered `unhandledrejection` handler (AbortError /
+ResizeObserver noise suppressed, everything else surfaces) and a service-worker
+update flow that prompts the user with a Refresh action when a new SW is
+waiting (`SKIP_WAITING` + reload on `controllerchange`).
 
 ## Routing
 
-23 lazy-loaded routes. Public: `/login`, `/register`, `/reset-password`. Admin-gated: `/admin`. Everything else requires auth. Catch-all redirects to `/`.
+27 lazy-loaded routes plus a catch-all redirect to `/`.
+
+- **Public:** `/login`, `/register`, `/reset-password` (deliberately not
+  `PublicRoute`-wrapped so the PASSWORD_RECOVERY flow works), `/terms`,
+  `/privacy`, `/welcome` (landing), `/pricing`.
+- **Authenticated:** everything else. `/admin` additionally requires
+  `users.role = 'admin'`.
+- **Tier-gated (client):** `/advisor`, `/decryptor`, `/simulation`,
+  `/calibration` etc. carry `requireTier` on `ProtectedRoute` with per-feature
+  paywall copy; locked users get `PaywallScreen` instead of the page.
+- `/` is a root splitter: signed-out visitors see the landing page, signed-in
+  users see the `HomePage` dashboard under `Layout`.
 
 ## Authentication
 
-Supabase email/password and Google OAuth (with embedded-WebView detection). Sessions persist via localStorage with auto-refresh. The auth provider runs `loadSession` with up to 3 retries and an 8-second hard safety timer that forces `loading=false` so the app can never get stuck on the loading screen.
+Supabase email/password and Google OAuth (with embedded-WebView detection).
+Sessions persist via localStorage (`epimetheus-auth-token`) with auto-refresh.
+The auth provider runs `loadSession` with up to 2 retries (exponential
+backoff) and an 8-second hard safety timer that forces `loading=false`, so the
+app can never get stuck on the loading screen.
 
-A SECURITY DEFINER `is_admin()` helper reads `users.role = 'admin'` without triggering RLS recursion on the `users` table. Admin policies on `users`, `feedback`, and community tables consult this helper.
+Notable hardening in `EnhancedAuthContext`:
+
+- `loadUserData` is deduplicated two ways: an in-flight Promise map (concurrent
+  callers share one fetch) and a 30-second freshness window (skips redundant
+  SELECTs). This fixed a bug where a single sign-in fired 20+ identical
+  `users` SELECTs.
+- Tab-visibility refresh: when a tab hidden for ≥30s becomes visible, userData
+  (including tier) is force-refetched so a Stripe webhook tier change made
+  elsewhere shows up within one focus.
+- Email sync from auth → `users.email` is an upsert that only fires when the
+  cached email differs.
+- `signOutAndWait` exists for destructive flows (account deletion) that need
+  auth state fully settled before navigating.
+
+`src/lib/supabase.ts` wraps the client with a per-name async mutex
+(`namedLock`) serializing token refreshes across tabs and StrictMode
+double-invokes. Note: its cleanup path is best-effort (the reference-equality
+check across `then` chains is unreliable), but a bounded sweep at >32 entries
+keeps the Map from growing unboundedly.
+
+A SECURITY DEFINER `is_admin()` helper (search_path pinned, EXECUTE revoked
+from PUBLIC) reads `users.role = 'admin'` without RLS recursion; admin RLS
+policies consult it.
 
 ## Server endpoints
 
-All under `/api/` (also reachable via `/api/v1/`):
+All under `/api/` (also reachable via `/api/v1/`). Auth column reflects the
+code, not older docs:
 
-| Method | Path | Auth | Purpose |
+| Method | Path | Auth | Notes |
 |---|---|---|---|
-| GET | `/api/health` | public | Status + flags |
-| GET | `/api/ai/test-key` | public | Reports whether `REGOLO_API_KEY` is set |
-| POST | `/api/security/log` | public (rate-limited) | Best-effort security event logging |
-| POST | `/api/upload/profile-photo` | required | Magic-byte sniffed, 1MB cap, JWT-derived path |
-| POST | `/api/advisor/session` | required | Create chat session |
-| GET | `/api/advisor/session` | required | Latest session + last 50 messages |
-| DELETE | `/api/advisor/session/:id` | required | Owner-only delete |
-| POST | `/api/advisor/chat` | required | SSE streaming with token-aware history truncation |
-| POST | `/api/calibration/analyze` | required | Server-validated trait analysis |
-| POST | `/api/oracle/analyses` | required | Server-validated Oracle insert (replaces direct client write) |
-| PATCH | `/api/oracle/analyses/:id/tasks` | required (owner) | Server-validated task replacement |
-| DELETE | `/api/oracle/analyses/:id` | required (owner) | Owner-only Oracle analysis delete |
-| POST | `/api/ai/chat` | required | Generic Regolo proxy (validated, image-aware) |
-| DELETE | `/api/users/me` | required | Self-serve account deletion (rate-limited 3/5min). Body `{ confirm: <email> }`. Cascades through public.users → child tables → storage trigger. |
-| DELETE | `/api/admin/users/:id` | required (admin) | Admin user deletion. Drives the deletion through `auth.admin.deleteUser` so the FK cascade fires; replaces the previous direct-DB-delete in AdminDashboard which left auth.users orphans. |
+| GET | `/api/health` | public | Status + `regolo` key flag |
+| GET | `/api/ai/test-key` | public | Whether `REGOLO_API_KEY` is set |
+| GET | `/api/ai/credits` | dev only | Always 404 (no Regolo equivalent) |
+| POST | `/api/security/log` | **required** (SEC-10) | 30/min/IP bucket; server-derived userId; body `ip` dropped; email redacted |
+| POST | `/api/upload/profile-photo` | required | Magic-byte sniff (PNG/JPEG/GIF/WEBP), 1MB cap, stable `users/<uid>/profile.<ext>` with upsert + legacy-file cleanup |
+| POST | `/api/advisor/session` | required + strategist | Create chat session |
+| GET | `/api/advisor/session` | required + strategist | Latest session + last 50 messages |
+| DELETE | `/api/advisor/session/:id` | required | No tier gate by design (downgraded users can still delete) |
+| PATCH | `/api/advisor/messages/:messageId/reaction` | required + strategist | like/dislike/null, owner-checked |
+| POST | `/api/advisor/chat` | required + strategist | SSE stream, 600/1200 token replies (strategist/oracle), daily budget check |
+| POST | `/api/oracle/analyses` | required + strategist | Server-validated/clamped Oracle insert |
+| PATCH | `/api/oracle/analyses/:id/tasks` | required (owner) | Validated task replacement |
+| DELETE | `/api/oracle/analyses/:id` | required (owner) | |
+| POST | `/api/ai/chat` | required + strategist | Generic Regolo proxy; images additionally require oracle; model allow-list; max_tokens ceiling 4096; 55s upstream timeout |
+| DELETE | `/api/users/me` | required | 3/min/IP bucket; body `{ confirm: <email> }`; cascades public.users → children → storage |
+| DELETE | `/api/admin/users/:id` | required + admin role | Drives deletion through `auth.admin.deleteUser` so the FK cascade fires; self-deletion refused |
 
-`getAuthenticatedUser` resolves the Supabase JWT on every request and supplies `req.user` to handlers. Handlers always use `req.user.id`, never a body/query userId.
+`getAuthenticatedUser` (`api/lib/auth.ts`) resolves the Supabase JWT on every
+request; handlers always use `req.user.id`, never a body/query userId.
 
-## AI integration
+### In-process caches on the server (current, and load-bearing)
 
-- Provider: Regolo AI, `https://api.regolo.ai/v1/chat/completions`
-- Streaming: handler returns an `AsyncIterable<string>` of SSE chunks; both Express and Vercel iterate and flush. The client (`useAdvisorChat`) parses both `\n\n` and `\r\n\r\n` boundaries, sanitizes each chunk via `sanitizeAiResponse`, and supports abort.
-- Persistence: user message is saved before streaming starts; assistant reply is saved after the stream completes. Stream interruptions never lose the user's prompt.
-- Truncation: history is trimmed when total content exceeds ~5k tokens worth of chars, leaving headroom for the system prompt and a 600-token reply inside Llama 3.3 70B's 8192-token context.
-- Fallback: per-model retry chain in `createCompletion`. 429s honor `Retry-After`; 401/402/403 short-circuit.
+- **JWT cache** (`auth.ts`): positive 60s / negative 5s TTL, LRU-capped at
+  10k entries, keyed by SHA-256(token), and clamped to the JWT's own `exp`
+  claim. Cuts a 30–150ms Supabase round-trip off every authenticated request,
+  including time-to-first-token on the streaming chat path. Tradeoff: admin
+  force-signout takes up to 60s to propagate.
+- **Tier cache** (`tierGate.ts`): 30s TTL, LRU-capped at 5k entries, also
+  clamped to the subscription's own `subscription_expires_at`. A cold gated
+  request can additionally self-heal a missing `users` row via upsert
+  (`ignoreDuplicates`), so a brand-new account's first gated call doesn't 402
+  on a missing FK row.
+- **Rate limiter** (Vercel path): atomic `record_and_count_rate_limit` RPC,
+  **fails closed** with `503 RATE_LIMITER_UNAVAILABLE` on RPC error (SEC-08).
+  Buckets: AI/advisor/oracle 15/min/IP, log 30/min/IP, account-delete 3/min/IP.
+
+### AI spend controls
+
+1. Per-IP rate limit (above).
+2. Server-side tier gate (`requireTier`) — the client route guard is not
+   trusted; a free user curling with a valid JWT gets 402.
+3. Per-user **daily token ledger** (SEC-14): `consume_ai_tokens` RPC reserves
+   estimated tokens atomically (PK `user_id, day`); exhaustion → `429
+   DAILY_BUDGET_EXCEEDED`. Caps: strategist 120k/day, oracle 400k/day
+   (estimated tokens, ~4 chars/token +10%, images flat 1200). Ledger *errors*
+   fail open (`ledgerError: true`) — availability beats a hard outage of one
+   table, and the per-minute limiter still bounds abuse.
+4. Model allow-list + `max_tokens ≤ 4096` (SEC-09).
+5. Prompt sanitization (SEC-12): `sanitizePrompt.ts` strips control/zero-width/
+   bidi chars and neutralizes `system:`/`assistant:` role-spoof lines before
+   persistence and dispatch, on both advisor chat and the generic AI proxy.
+
+### Advisor stream robustness (`handleAdvisorChatStream`)
+
+- Client disconnect flips a cancel token wired to the HTTP layer's `close`
+  event; the generator stops reading (and billing) Regolo tokens.
+- Inactivity guard (30s without a chunk), max 500 chunks, and a 1MB
+  buffer-overflow cap defensively bound the stream parse loop.
+- Persistence is crash-tolerant: the user message is saved before streaming;
+  the assistant reply (even partial) is saved in `finally`. A cancel before
+  the first token persists a `[interrupted before reply]` placeholder so the
+  conversation shape stays balanced for future turns.
 
 ## Data layer
 
-Canonical schema lives in `supabase-schema-v2.sql`. Active tables:
+Canonical schema: `supabase/migrations/` — 11 migrations applied in
+lexicographic order. `supabase-schema-v2.sql` and the `scripts/*.sql` files
+are explicitly non-authoritative (and demonstrably stale: they predate
+`ai_token_usage`).
 
-- `users`, `assessment_results`, `calibrations`, `oracle_analyses`
-- `advisor_sessions`, `advisor_messages`
-- `field_reports`, `field_report_comments`, `feedback`
-- `favorites`, `dossiers`
-- `rate_limits` (Vercel-only)
-- `verification_codes`, `public_config`, `private_config`
+Active tables: `users`, `assessment_results`, `calibrations`,
+`oracle_analyses`, `advisor_sessions`, `advisor_messages`, `field_reports`,
+`field_report_comments`, `report_likes`, `feedback`, `favorites`, `dossiers`,
+`rate_limits`, `ai_token_usage`, `verification_codes`, `public_config`,
+`private_config`.
 
-RLS policies for all user-data tables are in `scripts/rls-audit.sql`. Storage policies restrict `user-uploads` writes to `users/<auth.uid()>/…`. The `feedback` table allows anonymous (`user_id IS NULL`) inserts; reads are owner or admin only.
+Key integrity machinery:
 
-`public.users.id` has a `FOREIGN KEY ... REFERENCES auth.users(id) ON DELETE CASCADE` (added in `20240101000700_users_auth_fk.sql`). This is what makes both self-serve account deletion and admin user deletion actually purge user data: deleting the auth row cascades to `public.users`, which cascades to every child table (advisor_*, calibrations, oracle_analyses, dossiers, favorites, assessment_results, …) and fires the `trg_purge_user_storage_objects` AFTER DELETE trigger to clean storage. Before this migration, a deletion via `auth.admin.deleteUser` left the public row (and all its children) orphaned, and a deletion via `DELETE FROM public.users` left the auth row alive — creating ghost accounts that could re-authenticate.
+- `public.users.id → auth.users(id) ON DELETE CASCADE` (migration 00700) —
+  the linchpin for both deletion flows.
+- `lock_privileged_user_columns` BEFORE UPDATE trigger (00400): non-admin,
+  non-service-role callers cannot change `users.role` or
+  `users.subscription_tier`. It reads `request.jwt.claims` (JSON) *and*
+  falls back to `current_user`/`session_user`, fixing an earlier version that
+  broke service-role writes because `request.jwt.claim.role` is NULL on
+  modern Supabase Postgres. (BYPASSRLS skips policies, not triggers.)
+- `feedback` abuse mitigations: `NOT VALID` CHECK constraints cap message/url/
+  UA/email lengths; anonymous inserts allowed, reads are owner-or-admin only.
+- `rate_limits` cleanup trigger samples ~1% of inserts to prune old rows.
+- Storage: `user-uploads` writes restricted to `users/<auth.uid()>/…`; an
+  AFTER DELETE trigger purges a user's storage objects when their row goes.
 
-## Security posture
+## Security posture (verified in code)
 
-Hardened in this pass:
+All 15 SEC patches from the last pass are present and wired:
 
-1. **RLS coverage** — `field_reports`, `field_report_comments`, `feedback` all have owner-scoped policies plus admin overrides. An atomic `increment_field_report_comments(uuid)` RPC replaces the racy client-side comment-count update.
-2. **Server-validated `oracle_analyses` writes** — the client previously wrote the AI JSON blob directly. Now it goes through `POST /api/oracle/analyses` which whitelists type codes, clamps every string, validates task enums, and caps array lengths.
-3. **Profile photo uploads through the API** — `EditProfileModal` no longer writes directly to storage. The endpoint sniffs magic bytes, enforces a 1MB cap, and derives the user folder from the JWT.
-4. **Atomic Vercel rate limiter** — `record_and_count_rate_limit(key, window_seconds)` RPC inserts and counts in a single statement, eliminating the SELECT-then-INSERT race that let bursts slip past the limit.
-5. **`/api/security/log` is rate-limited** — separate bucket per IP (30/min in dev, same on Vercel) so the public endpoint can't be flooded.
-6. **`/reset-password` route exists** — handles both the request-email step and the post-recovery set-new-password step. The faulty `origin + path || fallback` redirect logic in the auth context was fixed.
-7. **`is_admin()` SECURITY DEFINER helper** — recursion-safe admin check used by RLS policies.
+- SEC-08 fail-closed rate limiter: confirmed in `api/server.ts` (503 on RPC
+  error, `rate_limit_rpc_failed_blocking` log).
+- SEC-09: `ALLOWED_CLIENT_MODELS` + `MAX_TOKENS_CEILING` confirmed in
+  `handleAiChat`.
+- SEC-10: `handleSecurityLog` returns 401 without a JWT; CSRF exemption for
+  the path removed in both servers.
+- SEC-12/14: both AI paths sanitize + budget-check before dispatch.
+- SEC-11: `.gitleaks.toml`, nightly full-history CI scan, optional pre-commit
+  hook (`git config core.hooksPath scripts/hooks`).
+- SEC-13: `vite.config.ts` bakes `__SENTRY_RELEASE__` from
+  `SENTRY_RELEASE || VERCEL_GIT_COMMIT_SHA || GITHUB_SHA`, builds with
+  `sourcemap: 'hidden'`, and `scripts/upload-sourcemaps.mjs` uploads then
+  deletes maps when Sentry credentials are present.
+- **Bonus guard:** `assertNoLeakedSecrets` in `vite.config.ts` fails the build
+  if any `VITE_REGOLO_API_KEY` / `VITE_STRIPE_SECRET*` / `VITE_SUPABASE_SERVICE*`
+  / `VITE_GMAIL_*` / `VITE_SENTRY_AUTH_TOKEN` variable is ever re-introduced.
 
-Pre-existing strengths kept:
+Pre-existing strengths kept: JWT-derived userId everywhere, explicit CORS
+allow-list with `Vary: Origin`, CSRF header check enforced for all
+state-changing routes, CSP without `unsafe-inline` on `script-src`, HSTS in
+production.
 
-- JWT-derived `userId` everywhere on the server
-- Explicit CORS allow-list with `Vary: Origin`, never `*` + credentials
-- `X-Requested-With` / JSON content-type CSRF check
-- CSP without `unsafe-inline` on `script-src` (still required for `style-src` because Tailwind 4 inlines critical CSS)
-- HSTS in production
-- Server-side calibration validation with length clamps
+## Findings from this pass
 
-Remaining trade-offs:
-
-- The custom Supabase auth `lock` is a no-op — fine for single-tab SPA use, theoretically races on multi-tab token refresh. Not fixed.
-- Tailwind 4 still requires `style-src 'unsafe-inline'`. Move to nonce-based styling later.
-
-## Code-quality cleanups in this pass
-
-- **`cn()` consolidation** — six local copies in `CalibrationPage`, `EncyclopediaPage`, `FieldGuidePage`, `GuidePage`, `Logo`, `CommandCenter` were replaced with `import { cn } from '@/lib/utils'`. Single source of truth.
-- **`sanitizeInput` / `isValidEmail` consolidation** — `validation.ts` is canonical; `errorHandling.ts` re-exports from it so existing import paths keep working.
-- **`README.md` and this file** — rewritten to match what the code actually does. The old docs claimed Gemini/GPT-4/Claude as AI providers, listed nonexistent files (`services/regolo.ts`, `auth/send-code.js`, `ai/models.js`), and described a 16-table schema with names that don't exist.
+1. **`handleCalibrationAnalyze` was dead code — removed.** It was exported
+   from `api/lib/handlers.ts`, covered by tests, and referenced in the
+   tierGate docs, but never mounted in `api/_index.ts` or `api/server.ts`,
+   and no client code called `/api/calibration/analyze`. Deleted in this
+   pass along with its tests; the tier-gate test suite now exercises
+   `handleCreateAdvisorSession` instead. The `calibrations` table remains
+   live — it is written directly by the client (ProfilerPage) and read by
+   Profile/Insights pages and `buildAdvisorMessages`.
+2. **Self-serve deletion ordering has a resurrect window.**
+   `handleDeleteMyAccount` deletes `public.users` first, then
+   `auth.admin.deleteUser`. If the second step fails, the auth row survives
+   and `EnhancedAuthContext` will happily re-create the public row on next
+   sign-in — an account resurrected with empty data. The handler logs
+   `account_delete_auth_step_orphan` for manual cleanup; a retry of the auth
+   delete (or a tombstone check) would close the gap. Ghosting in the reverse
+   direction is already solved by the auth→public FK.
+3. **Cold gated requests double-read `users`.** `requireTier` then
+   `getEffectiveTier` can both miss the tier cache on the same request (the
+   second call doesn't see the entry the first just cached when the first had
+   to upsert). One extra query per cold request per user; harmless at this
+   scale, easy to unify if it ever shows up in profiles.
+4. **`[interrupted before reply]` placeholders become model turns.** The
+   early-cancel placeholder is persisted as `role: 'model'`, so the next
+   prompt's history contains it verbatim. Minor prompt-hygiene nit; filter it
+   in `buildAdvisorMessages` if it ever skews replies.
+5. **Two self-heal paths for the `users` row.** The client
+   (`EnhancedAuthContext.loadUserData`) inserts a bare row, and the server
+   (`requireTier`) upserts one. Both are idempotent and RLS-bound to
+   `auth.uid() = id`, so they compose fine — just duplicated logic.
+6. **Legacy SQL files are stale by design.** `supabase-schema-v2.sql` and
+   `scripts/*.sql` predate `ai_token_usage` and the 00900 hardening. They are
+   documented as non-authoritative; keep them for the promised one-release
+   cycle, then delete.
 
 ## What still warrants attention
 
-- **Test coverage** — Vitest is configured but only `src/utils/json.test.ts` exists. New work should ship with coverage.
-- **Large components** — `Layout.tsx` (~830 lines) and `CalibrationPage.tsx` (~1600 lines) still warrant splitting for HMR speed and readability.
-- **Streaming UI updates** — `useAdvisorChat.performSend` does `setMessages(prev => prev.map(...))` per token. Switch to ref + `flushSync` + RAF batching for long replies.
-- **`AdminDashboard`** — three unbounded `select('*')` calls in parallel. Add pagination + projections.
-- **`oracle_analyses` task toggles** — still round-trip per click via JSON-path update. Debounce or batch.
-- **`Layout.tsx`** — references Firebase error codes (`auth/popup-closed-by-user`) that Supabase never emits. Dead defensive code.
-- **`npm audit`** — re-run periodically.
-- **Schema sources of truth** — `supabase-schema-v2.sql` and `scripts/rls-audit.sql` need to be kept in sync manually. Worth migrating to a `supabase/migrations/` folder long term.
+- **Large components:** `CalibrationPage.tsx` (~1,930 lines) and
+  `Layout.tsx` (~890 lines) remain the two files most worth splitting for
+  HMR speed and readability. (Previously-flagged items that are now *done*:
+  AdminDashboard is paginated with column projections; `useAdvisorChat`
+  flushes per animation frame instead of per token; the Firebase error-code
+  dead code in Layout is gone.)
+- **`oracle_analyses` task toggles** still round-trip per click via the JSON
+  path PATCH. Debounce or batch.
+- **`npm audit`** — prod tree was 0-vulnerability at the last pass; re-run
+  periodically. `npm install` still needs `--legacy-peer-deps` (npm arborist
+  crash on jsdom's optional `canvas` peer).
+- **Stripe** is wired as env-var scaffolding only (`.env.example` price IDs,
+  pricing page shows a "not live yet" state). Checkout is Phase-2 work.
+- **Test coverage** is respectable for utils/API (110 tests) but pages and
+  hooks have none; new features should keep shipping with tests.
+
+## Verification log (2026-09-27)
+
+| Check | Command | Result |
+|---|---|---|
+| Frontend + shared TS | `npm run lint` (`tsc --noEmit`) | ✅ clean |
+| API TS | `npm run lint:api` (`tsc --noEmit --project tsconfig.api.json`) | ✅ clean |
+| Tests | `npm test` | ✅ 5 files, **110/110 passing** (`api/lib/auth.test.ts`, `api/lib/handlers.test.ts`, `src/utils/{json,validation,sanitizeHtml}.test.ts`) |
+| Route count | grep `path=` in `AnimatedRoutes.tsx` | 27 routes + catch-all |
+| Handler wiring | grep in `api/_index.ts` / `api/server.ts` | 15 routes mounted; every exported handler reachable (the never-mounted `handleCalibrationAnalyze` was removed) |
+| Migration count | `ls supabase/migrations` | 11 files |
+| Secret hygiene | `git log --all --diff-filter=A -- '.env*'` (SEC-01 baseline) | only `.env.example` ever committed |
+
+Environment note: verification ran with `npm install --legacy-peer-deps`
+(see TODO.md for the arborist crash rationale). No Supabase/Regolo env vars
+were present, so checks were static + unit-level; live smoke testing still
+requires a configured dev environment.

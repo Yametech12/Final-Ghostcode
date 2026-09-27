@@ -6,8 +6,8 @@ import type { NormalizedRequest, NormalizedResponse } from './handlers.js';
  *
  * The React layer enforces tier requirements via ProtectedRoute, but the
  * route guard runs in the user's browser — a free-tier user who knows the
- * URL can call /api/advisor/chat or /api/calibration/analyze directly with
- * a valid JWT and still get paid features. This helper closes that hole by
+ * URL can call /api/advisor/chat directly with a valid JWT and still get
+ * paid features. This helper closes that hole by
  * checking users.role and users.subscription_tier server-side before any
  * gated handler does work.
  *
