@@ -51,6 +51,20 @@ export const FALLBACK_MODELS = [
 ];
 export const VISION_MODEL = "gpt-oss-120b";
 
+/**
+ * Strip hidden reasoning blocks emitted by thinking models (gpt-oss-120b,
+ * qwen3.5-122b) before parsing/displaying content. Without this, a
+ * `<think>...</think>` prefix breaks JSON extraction (CalibrationPage,
+ * scenario generator) or leaks raw chain-of-thought prose into chat UIs
+ * (Decryptor, Simulation).
+ */
+export function stripThinking(text: string | null | undefined): string {
+  return (text ?? '')
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/^<think>[\s\S]*/i, (m) => (m.includes('</think>') ? m : ''))
+    .trim();
+}
+
 function hasImageContent(messages: any[]): boolean {
   return messages.some((m: any) => {
     if (!m.content) return false;

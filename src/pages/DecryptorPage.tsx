@@ -5,7 +5,7 @@ import { personalityTypes } from '../data/personalityTypes';
 import { PersonalityType } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
-import { chatCompletion } from '../lib/ai';
+import { chatCompletion, stripThinking } from '../lib/ai';
 import { cn } from '../lib/utils';
 
 export default function DecryptorPage() {
@@ -62,7 +62,8 @@ Keep responses concise, professional, and highly strategic. Use EPIMETHEUS termi
         { role: "user", content: `Analyze this message: "${input.trim()}"` }
       ], undefined, { max_tokens: 800 });
 
-      const content = response.choices?.[0]?.message?.content;
+      // gpt-oss-120b can prepend <think> reasoning blocks — never render them.
+      const content = stripThinking(response.choices?.[0]?.message?.content);
       if (!content) {
         throw new Error('No response from AI');
       }
