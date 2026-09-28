@@ -2,7 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import Layout from './Layout';
-import { LoadingScreen, InlineLoader } from '../LoadingComponents';
+import { DelayedFallback, PageSkeleton, LoadingScreen } from '../LoadingComponents';
 import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 
 // Critical pages - loaded immediately without retry wrapper
@@ -62,6 +62,16 @@ const pageTransition = {
   mass: 1
 };
 
+// Shared Suspense fallback for every lazy page: a delayed layout-matching
+// skeleton. One element instance is reused across all route declarations —
+// React elements are immutable descriptors, so sharing is safe and keeps
+// the fallback consistent everywhere.
+const FallbackSkeleton = (
+  <DelayedFallback>
+    <PageSkeleton />
+  </DelayedFallback>
+);
+
 function ProtectedRoute({
   children,
   requireAdmin,
@@ -84,7 +94,11 @@ function ProtectedRoute({
   const { user, userData, loading } = auth;
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <DelayedFallback>
+        <PageSkeleton />
+      </DelayedFallback>
+    );
   }
 
   if (!user) {
@@ -110,7 +124,7 @@ function ProtectedRoute({
     if (!meetsTier) {
       return (
         <Layout forceScrollable>
-          <Suspense fallback={<InlineLoader />}>
+          <Suspense fallback={FallbackSkeleton}>
             <PaywallScreen
               requiredTier={requireTier}
               featureName={featureName ?? 'This feature'}
@@ -133,7 +147,11 @@ function PublicRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = auth;
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <DelayedFallback>
+        <PageSkeleton />
+      </DelayedFallback>
+    );
   }
 
   if (user) {
@@ -158,12 +176,16 @@ function RootRoute() {
   const { user, loading } = auth;
 
   if (loading) {
-    return <LoadingScreen />;
+    return (
+      <DelayedFallback>
+        <PageSkeleton />
+      </DelayedFallback>
+    );
   }
 
   if (!user) {
     return (
-      <Suspense fallback={<InlineLoader />}>
+      <Suspense fallback={FallbackSkeleton}>
         <LandingPage />
       </Suspense>
     );
@@ -171,7 +193,7 @@ function RootRoute() {
 
   return (
     <Layout>
-      <Suspense fallback={<InlineLoader />}>
+      <Suspense fallback={FallbackSkeleton}>
         <PageWrapper><HomePage /></PageWrapper>
       </Suspense>
     </Layout>
@@ -209,7 +231,7 @@ export default function AnimatedRoutes() {
             home before they can set a new password.
           */}
           <Route path="/reset-password" element={
-            <Suspense fallback={<InlineLoader />}>
+            <Suspense fallback={FallbackSkeleton}>
               <ResetPasswordPage />
             </Suspense>
           } />
@@ -220,12 +242,12 @@ export default function AnimatedRoutes() {
             user who follows a footer link can still review them.
           */}
           <Route path="/terms" element={
-            <Suspense fallback={<InlineLoader />}>
+            <Suspense fallback={FallbackSkeleton}>
               <TermsPage />
             </Suspense>
           } />
           <Route path="/privacy" element={
-            <Suspense fallback={<InlineLoader />}>
+            <Suspense fallback={FallbackSkeleton}>
               <PrivacyPage />
             </Suspense>
           } />
@@ -235,12 +257,12 @@ export default function AnimatedRoutes() {
             can still visit them without being bounced home.
           */}
           <Route path="/welcome" element={
-            <Suspense fallback={<InlineLoader />}>
+            <Suspense fallback={FallbackSkeleton}>
               <LandingPage />
             </Suspense>
           } />
           <Route path="/pricing" element={
-            <Suspense fallback={<InlineLoader />}>
+            <Suspense fallback={FallbackSkeleton}>
               <PricingPage />
             </Suspense>
           } />
@@ -250,7 +272,7 @@ export default function AnimatedRoutes() {
               featureName="Calibration"
               featurePitch="Train your eye to read her archetype in thirty seconds. Drill the signals until they're second nature."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><CalibrationPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -264,21 +286,21 @@ export default function AnimatedRoutes() {
           <Route path="/" element={<RootRoute />} />
           <Route path="/profile" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><ProfilePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/encyclopedia" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><EncyclopediaPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/guide" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><GuidePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -289,7 +311,7 @@ export default function AnimatedRoutes() {
               featureName="Field Guide"
               featurePitch="Quick-reference scenarios and tactical lines for the moments that move too fast to think."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><FieldGuidePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -300,70 +322,70 @@ export default function AnimatedRoutes() {
               featureName="AI Advisor"
               featurePitch="Consult the Oracle in real time. Strategic guidance grounded in the EPIMETHEUS framework, on call 24/7."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><AdvisorPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/compare" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><ComparePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/glossary" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><GlossaryPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/quick-reference" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><QuickReferencePage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/assessment" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><AssessmentPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/assessment-result" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><AssessmentResultPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/admin" element={
             <ProtectedRoute requireAdmin>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><AdminDashboard /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/profiler" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><ProfilerPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/quiz" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><QuizPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/favorites" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><FavoritesPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -374,7 +396,7 @@ export default function AnimatedRoutes() {
               featureName="Subject Dossiers"
               featurePitch="Profile the women in your orbit. Track interactions, log signals, spot patterns over time."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><DossiersPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -385,7 +407,7 @@ export default function AnimatedRoutes() {
               featureName="Signal Decryptor"
               featurePitch="Paste a message. Read the subtext, the emotional state, and the move beneath the words."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><DecryptorPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
@@ -396,14 +418,14 @@ export default function AnimatedRoutes() {
               featureName="Simulation Matrix"
               featurePitch="Interactive roleplay. Rehearse the conversations that decide everything, before the real one happens."
             >
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><SimulationPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>
           } />
           <Route path="/insights" element={
             <ProtectedRoute>
-              <Suspense fallback={<InlineLoader />}>
+              <Suspense fallback={FallbackSkeleton}>
                 <PageWrapper><InsightsPage /></PageWrapper>
               </Suspense>
             </ProtectedRoute>

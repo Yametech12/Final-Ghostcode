@@ -8,6 +8,7 @@
  */
 
 import { supabase } from './supabase';
+import { toast } from 'sonner';
 
 interface FetchOptions extends RequestInit {
   timeout?: number;
@@ -16,7 +17,11 @@ interface FetchOptions extends RequestInit {
 /**
  * Get the current Supabase access token (JWT) for authenticating server requests.
  * Uses getSession() which auto-refreshes expired tokens when possible.
- * Falls back to null if no active session or refresh fails.
+ *
+ * Returns null when the session is gone OR when a refresh fails — never a
+ * token we know is dead. Sending a known-expired JWT just guarantees a 401
+ * round-trip and, worse, lets callers mistake "expired session" for a
+ * normal API error.
  */
 export async function getAuthToken(): Promise<string | null> {
   try {
@@ -40,9 +45,10 @@ export async function getAuthToken(): Promise<string | null> {
       }
       const { data: refreshed, error: refreshError } = await supabase.auth.refreshSession();
       if (refreshError || !refreshed.session) {
-        console.warn('[apiFetch] Token refresh failed:', refreshError?.message);
-        // Still try the old token — server will reject if truly expired
-        return access_token;
+        console.warn('[apiFetch] Token refresh failed — treating session as expired:', refreshError?.message);
+        // Return null, NOT the dead token. Callers see the same shape as
+        // "no session" and the 401 path below explains what happened.
+        return null;
       }
       return refreshed.session.access_token;
     }
@@ -75,7 +81,52 @@ export async function apiFetch(input: RequestInfo, init: RequestInit = {}): Prom
   if (import.meta.env.DEV && !token) {
     console.warn('[apiFetch] Sending request WITHOUT auth token to:', typeof input === 'string' ? input : (input as Request).url);
   }
-  return fetch(input, { ...init, headers });
+  const response = await fetch(input, { ...init, headers });
+
+  // Session-expiry UX: a 401 from our API means the JWT was rejected
+  // (expired/revoked session). React once — per browser tab — so parallel
+  // calls don't stack toasts and the redirect loop can't re-fire while the
+  // toast is up, then bounce the user to /login to start a clean session.
+  if (response.status === 401 && !handled401InThisTab()) {
+    mark401Handled();
+    console.warn('[apiFetch] 401 received — session expired or invalid. Redirecting to login.');
+    toast.error('Your session has expired. Please sign in again.');
+    if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      window.location.assign('/login');
+    }
+  }
+
+  return response;
+}
+
+// --- 401 single-fire guard -------------------------------------------------
+// Module-scoped, per-tab. sessionStorage survives bfcache restores and soft
+// reloads (unlike a module flag, which resets on hard navigation), so the
+// "session expired" toast can't double-fire from React StrictMode double
+// fetches or parallel calls racing through the same 401.
+const SESSION_EXPIRED_FLAG = 'epimetheus:session-expired-redirect';
+
+function handled401InThisTab(): boolean {
+  try {
+    return window.sessionStorage.getItem(SESSION_EXPIRED_FLAG) === '1';
+  } catch {
+    return false;
+  }
+}
+
+function mark401Handled(): void {
+  try {
+    window.sessionStorage.setItem(SESSION_EXPIRED_FLAG, '1');
+    // Clear the flag once the redirect lands on /login — a fresh sign-in
+    // there must be able to trigger another redirect later if it expires again.
+    window.setTimeout(() => {
+      try {
+        window.sessionStorage.removeItem(SESSION_EXPIRED_FLAG);
+      } catch { /* ignore */ }
+    }, 3000);
+  } catch {
+    /* storage unavailable (private mode) — worst case: duplicate toast */
+  }
 }
 
 export async function fetchWithErrorHandling<T>(
