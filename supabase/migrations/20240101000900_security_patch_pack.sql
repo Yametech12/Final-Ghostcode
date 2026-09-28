@@ -104,6 +104,10 @@ GRANT EXECUTE ON FUNCTION public.has_paid_subscription() TO authenticated;
 DROP POLICY IF EXISTS "Users can manage their own messages" ON public.advisor_messages;
 DROP POLICY IF EXISTS "Users can insert own messages" ON public.advisor_messages;
 DROP POLICY IF EXISTS advisor_messages_update_reaction ON public.advisor_messages;
+-- The audit migration (00100) already created these two in a fresh sequential
+-- run — drop before recreate so this migration stays idempotent.
+DROP POLICY IF EXISTS "Users can view own messages" ON public.advisor_messages;
+DROP POLICY IF EXISTS "Users can delete own messages" ON public.advisor_messages;
 
 -- Read/delete stay as the audit left them (owner-scoped, no session join
 -- needed — reading your own rows is harmless).

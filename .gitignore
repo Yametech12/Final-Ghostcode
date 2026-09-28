@@ -112,3 +112,9 @@ Desktop.ini
 # Local development files
 debug-script.js
 console-error-check.js
+
+# Supabase CLI local state (regenerated on every CLI invocation)
+supabase/.temp/
+
+# One-time secrets handoff file (operator reads it once, then deletes it)
+.admin-credentials.tmp

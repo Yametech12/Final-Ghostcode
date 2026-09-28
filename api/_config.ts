@@ -2,13 +2,16 @@ import "dotenv/config";
 
 const apiKey: string | null = process.env.REGOLO_API_KEY || null;
 
-// Regolo AI models (from https://docs.regolo.ai/)
-export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
-export const VISION_MODEL = "Llama-3.3-70B-Instruct";
+// Regolo AI models — verified against GET https://api.regolo.ai/v1/models
+// (2026-09-28). The previous `Llama-3.3-70B-Instruct` default and
+// `mistral-small3.2` fallback no longer exist on Regolo and now 400.
+export const DEFAULT_MODEL = "gpt-oss-120b";
+export const VISION_MODEL = "gpt-oss-120b";
 export const FALLBACK_MODELS = [
-  "Llama-3.3-70B-Instruct",
+  "gpt-oss-120b",
+  "qwen3.5-122b",
   "gemma4-31b",
-  "mistral-small3.2",
+  "mistral-small-4-119b",
 ];
 
 export async function getApiKey(): Promise<string | null> {
