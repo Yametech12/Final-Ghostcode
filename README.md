@@ -17,12 +17,12 @@ Personality profiling and relationship-intelligence web app. React 19 SPA with a
 | Layer | Stack |
 |---|---|
 | UI | React 19, Vite 6, TypeScript 5.8 (strict), Tailwind 4, Motion, Lenis, Lucide |
-| Routing | React Router 7 (`AnimatedRoutes.tsx`, all pages lazy-loaded) |
+| Routing | React Router 7 (`src/components/layout/AnimatedRoutes.tsx`, all pages lazy-loaded) |
 | State | TanStack Query 5, Zustand 5 (persisted), Context (Auth/Theme/Language) |
 | Backend (dev) | Express 5 + helmet (`api/_index.ts`, port 3000) |
 | Backend (prod) | Vercel serverless (`api/server.ts`) — same handler module |
 | Data | Supabase Postgres + Storage (`user-uploads` bucket) |
-| AI | Regolo AI — `Llama-3.3-70B-Instruct` default + 3 fallbacks |
+| AI | Regolo AI — `gpt-oss-120b` default/vision + 3 fallbacks (see `api/_config.ts`) |
 | Tests | Vitest + Testing Library (configured; minimal coverage today) |
 | Observability | Sentry (optional via `VITE_SENTRY_DSN`) |
 
@@ -44,7 +44,7 @@ src/
   data/                  Static seed data (assessment questions, types)
   hooks/                 useAdvisorChat, useFavorites, route preloading…
   lib/                   supabase, fetch (apiFetch with JWT injection), utils
-  pages/                 27 routes — see AnimatedRoutes.tsx
+  pages/                 27 routes — see src/components/layout/AnimatedRoutes.tsx
   stores/                Zustand uiStore (persisted)
   utils/                 errorHandling, json, validation, sanitizeHtml…
 scripts/

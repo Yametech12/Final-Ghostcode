@@ -131,51 +131,29 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
             contactInfo: data.contact_info,
             createdAt: data.created_at,
             lastLoginAt: data.last_login_at,
+            // role fallback: legacy rows (pre-role-column) can hold NULL, and
+            // a raw NULL spread would make `userData?.role !== 'admin'`
+            // behave the same as before but `=== 'admin'` checks elsewhere
+            // would silently fail. Normalize to 'user'.
+            role: data.role ?? 'user',
             // Default to 'free' if column doesn't exist yet (pre-migration safety).
             subscriptionTier: data.subscription_tier ?? 'free',
             subscriptionExpiresAt: data.subscription_expires_at ?? null,
           };
           setUserData(mappedData);
         } else {
-          // Attempt to create the user record if it doesn't exist
-          try {
-            const { error: insertError } = await supabase
-              .from('users')
-              .insert({
-                id: userId,
-                email: null, // will be updated on next session refresh if available
-                display_name: null,
-                photo_url: null,
-              });
-            if (insertError) {
-              console.error('Failed to create user record:', insertError);
-              setUserData(null);
-            } else {
-              console.log('User record created successfully for:', userId);
-              const { data: newData } = await supabase
-                .from('users')
-                .select('*')
-                .eq('id', userId)
-                .maybeSingle();
-              if (newData) {
-                setUserData({
-                  ...newData,
-                  displayName: newData.display_name,
-                  photoURL: newData.photo_url,
-                  contactInfo: newData.contact_info,
-                  createdAt: newData.created_at,
-                  lastLoginAt: newData.last_login_at,
-                  subscriptionTier: newData.subscription_tier ?? 'free',
-                  subscriptionExpiresAt: newData.subscription_expires_at ?? null,
-                });
-              } else {
-                setUserData(null);
-              }
-            }
-          } catch (createErr) {
-            console.error('Error creating user record:', createErr);
-            setUserData(null);
-          }
+          // No users row (yet). Provisioning is owned EXCLUSIVELY by the
+          // AFTER INSERT ON auth.users trigger (20240101001100) — client
+          // code deliberately does NOT .insert() here. Two independent
+          // writers racing on the same PK is exactly what produced the
+          // intermittent "Failed to create user record" errors: loadUserData,
+          // signUp and loadSession's upsert all fought the trigger's own
+          // insert. The trigger fires in the same transaction as the auth
+          // user insert, so a signed-in user reaching this branch means the
+          // read simply outran provisioning — the auth listeners below will
+          // re-run loadUserData on the next SIGNED_IN/TOKEN_REFRESHED event.
+          console.warn('No users row yet for', userId, '— waiting for trigger provisioning');
+          setUserData(null);
         }
         lastUserLoadAtRef.current.set(userId, Date.now());
       } catch (error) {
@@ -206,18 +184,20 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
           loadUserData(data.session.user.id).catch(err =>
             console.error('Background user data load failed:', err)
           );
-          // Sync email from Supabase auth to users table (fire and forget).
-          // Skipped when local userData already has the right email — avoids
-          // a redundant write on every page load. The trigger added in
-          // 20240101000400 still allows id/email updates; only role and
-          // subscription_tier are pinned.
+          // Sync email from Supabase auth to users row (fire and forget).
+          // Plain UPDATE, not upsert: a row-creating write here would race
+          // the trigger that provisions users rows (20240101001100). If the
+          // row doesn't exist yet the update is a no-op and provisioning is
+          // left to the trigger. Skipped when local userData already has
+          // the right email — avoids a redundant write on every page load.
           const userEmail = data.session.user?.email;
           if (userEmail && userDataRef.current?.email !== userEmail) {
             supabase
               .from('users')
-              .upsert({ id: data.session.user.id, email: userEmail }, { ignoreDuplicates: false })
-              .then(({ error: upsertErr }) => {
-                if (upsertErr) console.error('Email sync failed:', upsertErr);
+              .update({ email: userEmail })
+              .eq('id', data.session.user.id)
+              .then(({ error: updateErr }) => {
+                if (updateErr) console.error('Email sync failed:', updateErr);
               });
           }
           return data.session;
@@ -393,20 +373,11 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
       if (error) throw error;
 
-      if (data.user) {
-        try {
-          await supabase
-            .from('users')
-            .insert({
-              id: data.user.id,
-              email: data.user.email,
-              display_name: displayName,
-              photo_url: data.user.user_metadata?.avatar_url || null
-            });
-        } catch (insertError) {
-          console.error('Error creating user record:', insertError);
-        }
-      }
+      // NOTE: no public.users .insert() here. Row provisioning happens in
+      // the database via the on_auth_user_created trigger (20240101001100),
+      // which fires in the same transaction as this auth.users insert. The
+      // client-side insert this replaces collided with the trigger's insert
+      // on the PK ("duplicate key"), surfacing as random signup failures.
 
       return { requiresVerification: !data.user?.email_confirmed_at };
     } catch (error: any) {
