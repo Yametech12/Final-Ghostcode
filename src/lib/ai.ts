@@ -37,17 +37,19 @@ export class AiApiError extends Error {
   }
 }
 
-// Regolo AI model configuration — shared with api/_config.ts
-// If you change models here, update api/_config.ts as well (or import from a shared module).
-export const DEFAULT_MODEL = "Llama-3.3-70B-Instruct";
-// Fallback models in order of preference — Llama-3.1-8B removed (invalid on Regolo)
+// Regolo AI model configuration — MUST stay in sync with api/_config.ts.
+// (2026-09-28) The old Llama-3.3-70B-Instruct / mistral-small3.2 models no
+// longer exist on Regolo and the server-side allow-list (SEC-09) now rejects
+// them with 400, which burned through the whole client fallback chain with
+// three guaranteed failures before ever reaching a working model.
+export const DEFAULT_MODEL = "gpt-oss-120b";
 export const FALLBACK_MODELS = [
-  "Llama-3.3-70B-Instruct",
+  "gpt-oss-120b",
+  "qwen3.5-122b",
   "gemma4-31b",
-  "mistral-small3.2",
+  "mistral-small-4-119b",
 ];
-// Vision support enabled with Regolo
-export const VISION_MODEL = "Llama-3.3-70B-Instruct";
+export const VISION_MODEL = "gpt-oss-120b";
 
 function hasImageContent(messages: any[]): boolean {
   return messages.some((m: any) => {

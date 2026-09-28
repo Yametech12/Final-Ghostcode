@@ -257,10 +257,18 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
     // Hard safety net: if loading is still true after 8s, force it off.
     // This prevents the app from being permanently stuck on the loading screen.
+    // The warn only fires when auth is genuinely still loading — the
+    // functional setState lets us peek at the current value so a healthy
+    // page load doesn't log a false-positive timeout every visit.
     const safetyTimer = setTimeout(() => {
       if (mounted) {
-        console.warn('Auth loading timed out after 8s — forcing loading=false');
-        setLoading(false);
+        setLoading((stillLoading) => {
+          if (stillLoading) {
+            console.warn('Auth loading timed out after 8s — forcing loading=false');
+            return false;
+          }
+          return stillLoading;
+        });
       }
     }, 8000);
 
