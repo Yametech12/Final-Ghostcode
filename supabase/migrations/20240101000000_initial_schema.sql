@@ -2,54 +2,11 @@
 -- Initial schema (consolidated from supabase-schema-v2.sql)
 -- Tables, enable-RLS, base policies, helper functions, triggers, indexes.
 --
--- Idempotent: drops policies before recreating them so re-running this
--- migration on an already-migrated database is safe.
+-- Idempotent: creates tables if missing, then drops/recreates policies so
+-- re-running this migration on an already-migrated database is safe. Policy
+-- drops must run AFTER the tables exist — `DROP POLICY ... ON <table>` fails
+-- with SQLSTATE 42P01 on a fresh database when the table isn't there yet.
 -- =====================================================================
-
--- Drop existing policies first so re-applying the migration is idempotent.
-DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
-DROP POLICY IF EXISTS "Admins can see all users" ON users;
-DROP POLICY IF EXISTS "Admins can update any user" ON users;
-DROP POLICY IF EXISTS "Admins can delete any user" ON users;
-
-DROP POLICY IF EXISTS "Users can read/write their own calibrations" ON calibrations;
-DROP POLICY IF EXISTS "Users can read/write their own analyses" ON oracle_analyses;
-
-DROP POLICY IF EXISTS "Anyone can read feedback" ON feedback;
-DROP POLICY IF EXISTS "Authenticated users can create feedback" ON feedback;
-DROP POLICY IF EXISTS "Users can update their own feedback" ON feedback;
-DROP POLICY IF EXISTS "Users can delete their own feedback" ON feedback;
-DROP POLICY IF EXISTS "Admins can manage all feedback" ON feedback;
-
-DROP POLICY IF EXISTS "Anyone can read field reports" ON field_reports;
-DROP POLICY IF EXISTS "Authenticated users can create reports" ON field_reports;
-DROP POLICY IF EXISTS "Users can update their own reports" ON field_reports;
-DROP POLICY IF EXISTS "Users can delete their own reports" ON field_reports;
-DROP POLICY IF EXISTS "Admins can delete any report" ON field_reports;
-
-DROP POLICY IF EXISTS "Anyone can read likes" ON report_likes;
-DROP POLICY IF EXISTS "Authenticated users can manage their likes" ON report_likes;
-
-DROP POLICY IF EXISTS "Anyone can read comments" ON field_report_comments;
-DROP POLICY IF EXISTS "Authenticated users can create comments" ON field_report_comments;
-DROP POLICY IF EXISTS "Users can update their own comments" ON field_report_comments;
-DROP POLICY IF EXISTS "Users can delete their own comments" ON field_report_comments;
-
-DROP POLICY IF EXISTS "Users can manage their own favorites" ON favorites;
-DROP POLICY IF EXISTS "Users can manage their own dossiers" ON dossiers;
-DROP POLICY IF EXISTS "Users can manage their own sessions" ON advisor_sessions;
-DROP POLICY IF EXISTS "Users can manage their own messages" ON advisor_messages;
-DROP POLICY IF EXISTS "Users can manage their own assessment results" ON assessment_results;
-
-DROP POLICY IF EXISTS "Service role can manage verification codes" ON verification_codes;
-
-DROP POLICY IF EXISTS "Anyone can read public config" ON public_config;
-DROP POLICY IF EXISTS "Admins can manage public config" ON public_config;
-
-DROP POLICY IF EXISTS "Admins can manage private config" ON private_config;
-
--- Drop legacy uid column if it lingers from an older schema version.
-ALTER TABLE IF EXISTS users DROP COLUMN IF EXISTS uid CASCADE;
 
 -- =====================================================================
 -- TABLES
@@ -195,6 +152,54 @@ CREATE TABLE IF NOT EXISTS private_config (
 -- Backfill field_reports.title if it was added later.
 ALTER TABLE field_reports ADD COLUMN IF NOT EXISTS title TEXT;
 UPDATE field_reports SET title = scenario WHERE title IS NULL;
+
+-- =====================================================================
+-- POLICY RESET (must come after tables exist)
+-- Drop existing policies first so re-applying the migration is idempotent.
+-- =====================================================================
+DROP POLICY IF EXISTS "Users can read/write their own data" ON users;
+DROP POLICY IF EXISTS "Admins can see all users" ON users;
+DROP POLICY IF EXISTS "Admins can update any user" ON users;
+DROP POLICY IF EXISTS "Admins can delete any user" ON users;
+
+DROP POLICY IF EXISTS "Users can read/write their own calibrations" ON calibrations;
+DROP POLICY IF EXISTS "Users can read/write their own analyses" ON oracle_analyses;
+
+DROP POLICY IF EXISTS "Anyone can read feedback" ON feedback;
+DROP POLICY IF EXISTS "Authenticated users can create feedback" ON feedback;
+DROP POLICY IF EXISTS "Users can update their own feedback" ON feedback;
+DROP POLICY IF EXISTS "Users can delete their own feedback" ON feedback;
+DROP POLICY IF EXISTS "Admins can manage all feedback" ON feedback;
+
+DROP POLICY IF EXISTS "Anyone can read field reports" ON field_reports;
+DROP POLICY IF EXISTS "Authenticated users can create reports" ON field_reports;
+DROP POLICY IF EXISTS "Users can update their own reports" ON field_reports;
+DROP POLICY IF EXISTS "Users can delete their own reports" ON field_reports;
+DROP POLICY IF EXISTS "Admins can delete any report" ON field_reports;
+
+DROP POLICY IF EXISTS "Anyone can read likes" ON report_likes;
+DROP POLICY IF EXISTS "Authenticated users can manage their likes" ON report_likes;
+
+DROP POLICY IF EXISTS "Anyone can read comments" ON field_report_comments;
+DROP POLICY IF EXISTS "Authenticated users can create comments" ON field_report_comments;
+DROP POLICY IF EXISTS "Users can update their own comments" ON field_report_comments;
+DROP POLICY IF EXISTS "Users can delete their own comments" ON field_report_comments;
+
+DROP POLICY IF EXISTS "Users can manage their own favorites" ON favorites;
+DROP POLICY IF EXISTS "Users can manage their own dossiers" ON dossiers;
+DROP POLICY IF EXISTS "Users can manage their own sessions" ON advisor_sessions;
+DROP POLICY IF EXISTS "Users can manage their own messages" ON advisor_messages;
+DROP POLICY IF EXISTS "Users can manage their own assessment results" ON assessment_results;
+
+DROP POLICY IF EXISTS "Service role can manage verification codes" ON verification_codes;
+
+DROP POLICY IF EXISTS "Anyone can read public config" ON public_config;
+DROP POLICY IF EXISTS "Admins can manage public config" ON public_config;
+
+DROP POLICY IF EXISTS "Admins can manage private config" ON private_config;
+
+-- Drop legacy uid column if it lingers from an older schema version.
+ALTER TABLE IF EXISTS users DROP COLUMN IF EXISTS uid CASCADE;
 
 -- =====================================================================
 -- ENABLE RLS on every public table
