@@ -6,7 +6,7 @@ import { PersonalityType } from '../types';
 import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
-import { chatCompletion } from '../lib/ai';
+import { chatCompletion, stripThinking } from '../lib/ai';
 
 interface Message {
   id: string;
@@ -80,7 +80,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
         { role: 'user', content: 'Start the conversation as a typical opening message from your personality type.' }
       ], undefined, { max_tokens: 200 });
 
-      const aiResponse = response.choices?.[0]?.message?.content || 'Hey there! 😊';
+      const aiResponse = stripThinking(response.choices?.[0]?.message?.content) || 'Hey there! 😊';
 
       setMessages([
         initialMessage,
@@ -143,7 +143,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
 
       const response = await chatCompletion(fullContext, undefined, { max_tokens: 300 });
 
-      const aiContent = response.choices?.[0]?.message?.content || '...';
+      const aiContent = stripThinking(response.choices?.[0]?.message?.content) || '...';
       const assistantMsg: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -204,7 +204,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
 
       const response = await chatCompletion([{ role: 'user', content: feedbackInstruction }], undefined, { max_tokens: 1000 });
 
-      setFeedback(response.choices[0]?.message?.content || 'Feedback unavailable.');
+      setFeedback(stripThinking(response.choices[0]?.message?.content) || 'Feedback unavailable.');
       toast.success('Simulation completed! Check your performance analysis.');
 
     } catch (error: any) {
