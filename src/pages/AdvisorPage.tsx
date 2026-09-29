@@ -21,6 +21,8 @@ export default function AdvisorPage() {
     retryMessage,
     isStreaming,
     isLoadingSession,
+    errorMessage,
+    dismissError,
     clearChat,
     setReaction,
   } = useAdvisorChat();
@@ -48,6 +50,16 @@ export default function AdvisorPage() {
   const handleSelectPrompt = useCallback((prompt: string) => {
     void send(prompt);
   }, [send]);
+
+  // Retry the most recent failed exchange. retryMessage already drops the
+  // stale bubbles (failed user message + trailing assistant placeholder)
+  // and re-sends the same text, so this just locates the target.
+  const handleRetryLast = useCallback(() => {
+    if (isStreaming || isSending) return;
+    const lastUser = [...messages].reverse().find(m => m.role === 'user');
+    if (!lastUser) return;
+    void retryMessage(lastUser.id);
+  }, [messages, retryMessage, isStreaming, isSending]);
 
   const handleReaction = useCallback((id: string, reaction: 'like' | 'dislike') => {
     const message = messages.find(m => m.id === id);
@@ -110,7 +122,9 @@ export default function AdvisorPage() {
         messages={messages}
         isStreaming={isStreaming}
         isSending={isSending}
-        reactions={{}}
+        errorMessage={errorMessage}
+        onRetryLast={handleRetryLast}
+        onDismissError={dismissError}
         onReaction={handleReaction}
         onRetry={retryMessage}
         onSelectPrompt={handleSelectPrompt}

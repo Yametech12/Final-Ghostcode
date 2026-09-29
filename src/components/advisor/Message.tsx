@@ -8,7 +8,6 @@ import type { AdvisorMessage } from '../../hooks/useAdvisorChat';
 
 interface MessageProps {
   message: AdvisorMessage;
-  reaction?: 'like' | 'dislike';
   onReaction: (id: string, reaction: 'like' | 'dislike') => void;
   onRetry?: (id: string) => void;
 }
@@ -47,9 +46,11 @@ function prepareMarkdown(input: string): string {
  * A single message bubble. The action toolbar is anchored below the bubble
  * (not floated to the right) so it works on mobile without clipping.
  */
-export function Message({ message, reaction, onReaction, onRetry }: MessageProps) {
+export function Message({ message, onReaction, onRetry }: MessageProps) {
   const [copied, setCopied] = useState(false);
   const isUser = message.role === 'user';
+  // Reactions live on the message itself (persisted via useAdvisorChat).
+  const reaction = message.reaction;
 
   const handleCopy = async () => {
     try {
@@ -97,13 +98,21 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
               'italic text-slate-400 bg-slate-800/40 border border-dashed border-slate-600/40',
           )}
         >
-          {/* Empty assistant placeholder while waiting for the first token */}
+          {/* Empty assistant placeholder while waiting for the first token —
+              or a failure notice when the stream broke before producing any. */}
           {!isUser && message.content === '' ? (
-            <span className="inline-flex items-center gap-1 text-slate-400 italic">
-              <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" />
-              <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '150ms' }} />
-              <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '300ms' }} />
-            </span>
+            message.error ? (
+              <span className="inline-flex items-center gap-1.5 text-xs text-status-error italic">
+                <AlertTriangle aria-hidden="true" className="w-3 h-3 shrink-0" />
+                {message.error}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 text-slate-400 italic">
+                <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" />
+                <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '150ms' }} />
+                <span className="w-1 h-1 rounded-full bg-slate-400 animate-pulse" style={{ animationDelay: '300ms' }} />
+              </span>
+            )
           ) : !isUser && message.content === '[interrupted before reply]' ? (
             <span className="inline-flex items-center gap-1.5 text-xs">
               <RotateCcw aria-hidden="true" className="w-3 h-3" />
@@ -140,6 +149,15 @@ export function Message({ message, reaction, onReaction, onRetry }: MessageProps
             </div>
           )}
         </div>
+
+        {/* Inline stream/response error — sits directly under the broken reply so the
+            failure reads as part of the transcript, not a detached toast. */}
+        {!isUser && message.error && (
+          <div className="flex items-center gap-1.5 px-1 text-xs text-status-error">
+            <AlertTriangle aria-hidden="true" className="w-3 h-3 shrink-0" />
+            <span className="min-w-0 break-words">{message.error}</span>
+          </div>
+        )}
 
         {/* Action row — visible on mobile (always) and on hover for desktop */}
         <div

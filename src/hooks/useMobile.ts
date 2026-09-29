@@ -51,53 +51,9 @@ export function useSwipeGesture(onSwipeLeft?: () => void, onSwipeRight?: () => v
   return { onTouchStart, onTouchMove, onTouchEnd };
 }
 
-// Pull to refresh hook
-export function usePullToRefresh(onRefresh: () => Promise<void>) {
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  const [pullDistance, setPullDistance] = useState(0);
-  const [startY, setStartY] = useState<number | null>(null);
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setStartY(e.touches[0].clientY);
-  };
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!startY || isRefreshing) return;
-    // Only engage pull-to-refresh when scrolled to the very top, otherwise
-    // mid-page swipes during normal scrolling would trigger refreshes.
-    if (window.scrollY > 0) {
-      setPullDistance(0);
-      return;
-    }
-
-    const currentY = e.touches[0].clientY;
-    const distance = currentY - startY;
-
-    if (distance > 0) {
-      e.preventDefault();
-      setPullDistance(Math.min(distance * 0.5, 80));
-    }
-  };
-
-  const handleTouchEnd = async () => {
-    if (pullDistance > 60 && !isRefreshing) {
-      setIsRefreshing(true);
-      try {
-        await onRefresh();
-      } finally {
-        setIsRefreshing(false);
-      }
-    }
-    setPullDistance(0);
-    setStartY(null);
-  };
-
-  return {
-    isRefreshing,
-    pullDistance,
-    handlers: { handleTouchStart, handleTouchMove, handleTouchEnd }
-  };
-}
+// Pull to refresh hook — REMOVED. The old usePullToRefresh hijacked vertical
+// touch swipes near the top of the page, competed with the browser/PWA's native
+// refresh affordance, and its only caller (Layout) has been unwired.
 
 // Mobile performance optimizations
 export function useMobileOptimizations() {
