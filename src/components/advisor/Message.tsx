@@ -51,6 +51,11 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
   const isUser = message.role === 'user';
   // Reactions live on the message itself (persisted via useAdvisorChat).
   const reaction = message.reaction;
+  // An empty model bubble with no error is the "waiting for first token"
+  // state — dots render inside the bubble and the action toolbar is hidden
+  // (copy/like/dislike on an empty pending bubble is noise, and the toolbar
+  // appearing before any content lands looks broken).
+  const isPending = !isUser && message.content === '' && !message.error;
 
   const handleCopy = async () => {
     try {
@@ -86,6 +91,10 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
             isUser
               ? 'bg-accent-primary text-mystic-950 rounded-tr-sm'
               : 'bg-slate-800/80 text-slate-100 rounded-tl-sm',
+            // An empty bubble (pending dots or in-bubble error) hugs its
+            // content — a full-width bubble holding three tiny dots reads as
+            // a broken layout.
+            !isUser && message.content === '' && 'w-fit',
             message.failed && 'border border-red-500/40',
             // Visually distinguish the persisted "stream interrupted"
             // placeholder from a real model reply. Without this, the
@@ -150,16 +159,20 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
           )}
         </div>
 
-        {/* Inline stream/response error — sits directly under the broken reply so the
-            failure reads as part of the transcript, not a detached toast. */}
-        {!isUser && message.error && (
+        {/* Inline stream/response error for PARTIAL replies — the failure notice
+            sits directly under the broken reply so it reads as part of the
+            transcript. (An empty bubble renders its error INSIDE the bubble
+            above, so this would duplicate it.) */}
+        {!isUser && message.error && message.content !== '' && (
           <div className="flex items-center gap-1.5 px-1 text-xs text-status-error">
             <AlertTriangle aria-hidden="true" className="w-3 h-3 shrink-0" />
             <span className="min-w-0 break-words">{message.error}</span>
           </div>
         )}
 
-        {/* Action row — visible on mobile (always) and on hover for desktop */}
+        {/* Action row — visible on mobile (always) and on hover for desktop.
+            Hidden entirely while the bubble is still pending its first token. */}
+        {!isPending && (
         <div
           className={cn(
             'flex items-center gap-1 px-1',
@@ -232,6 +245,7 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
           )}
           <span className="text-[10px] text-slate-500 ml-1">{formatTime(message.timestamp)}</span>
         </div>
+        )}
       </div>
     </motion.div>
   );
