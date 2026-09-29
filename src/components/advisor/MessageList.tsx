@@ -1,8 +1,6 @@
 import { ArrowDown, AlertTriangle, X } from 'lucide-react';
-import { AnimatePresence } from 'motion/react';
 import { useSmartScroll } from '../../hooks/useSmartScroll';
 import { Message } from './Message';
-import { TypingIndicator } from '../TypingIndicator';
 import { EmptyState } from './EmptyState';
 import type { AdvisorMessage } from '../../hooks/useAdvisorChat';
 
@@ -39,9 +37,10 @@ export function MessageList({
   const totalContent = messages.reduce((acc, m) => acc + m.content.length, 0);
   const { containerRef, isAtBottom, scrollToBottom } = useSmartScroll(totalContent);
 
-  // Show typing indicator only when streaming AND the last message is empty (no tokens yet).
-  const lastMessage = messages[messages.length - 1];
-  const showTyping = isStreaming && (!lastMessage || lastMessage.role !== 'model' || lastMessage.content === '');
+  // NOTE: no separate <TypingIndicator> here. The assistant bubble is
+  // pre-added before the request fires and renders its own inline dots while
+  // empty, so a standalone indicator would duplicate it (two "..." pills at
+  // once — a regression the pre-added placeholder introduced).
 
   return (
     <div className="relative flex-1 min-h-0">
@@ -72,7 +71,6 @@ export function MessageList({
                 onRetry={onRetry}
               />
             ))}
-            <AnimatePresence>{showTyping && <TypingIndicator />}</AnimatePresence>
           </div>
         )}
       </div>
