@@ -2,6 +2,8 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
 import { sanitizeAiResponse } from '../utils/sanitizeHtml';
+import { stripThinking } from '../lib/ai';
+import { ThinkStripper } from '../utils/thinkStrip';
 import { toast } from 'sonner';
 import { apiFetch } from '../lib/fetch';
 import { parseApiError, type ParsedApiError } from '../lib/apiError';
@@ -100,7 +102,9 @@ export function useAdvisorChat() {
               setMessages(data.messages.map((msg: RawMessage) => ({
                 id: msg.id,
                 role: msg.role,
-                content: msg.content,
+                // History can contain persisted <think> blocks from before
+                // the server-side strip landed — clean them for display too.
+                content: msg.role === 'model' ? stripThinking(msg.content) : msg.content,
                 timestamp: msg.timestamp ? new Date(msg.timestamp) : undefined,
                 reaction: msg.reaction,
               })));
@@ -178,6 +182,10 @@ export function useAdvisorChat() {
     const decoder = new TextDecoder();
     let buffer = '';
     let assistantContent = '';
+    // Incremental <think> remover: gpt-oss-120b / qwen3.5-122b stream their
+    // chain-of-thought wrapped in <think> tags (often split across chunks).
+    // Without this, raw reasoning prose leaks into the visible reply.
+    const thinkStripper = new ThinkStripper();
     let placeholderAdded = false;
 
     // RAF-batched flush: each token mutates the local accumulator and schedules
@@ -260,8 +268,11 @@ export function useAdvisorChat() {
                 throw new StreamError(parsed.error, assistantContent);
               }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
-                assistantContent += sanitizeAiResponse(parsed.content);
-                scheduleFlush();
+                const cleaned = sanitizeAiResponse(thinkStripper.push(parsed.content));
+                if (cleaned.length > 0) {
+                  assistantContent += cleaned;
+                  scheduleFlush();
+                }
               }
             } catch (err) {
               // SyntaxError messages are localized across browsers ("Unexpected"
@@ -282,6 +293,10 @@ export function useAdvisorChat() {
         throw new StreamError('The advisor returned an empty response. Please try again.', '');
       }
     } finally {
+      // Release any text the stripper held back at end of stream (an
+      // unterminated think block is dropped — it was all reasoning).
+      const tail = thinkStripper.flush();
+      if (tail.length > 0) assistantContent += tail;
       cancelScheduled();
       // Ensure the user sees the final state even if the stream ended without [DONE].
       if (assistantContent && (placeholderAdded || assistantContent.length > 0)) {

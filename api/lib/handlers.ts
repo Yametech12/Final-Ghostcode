@@ -68,6 +68,22 @@ function serverError(message = 'Internal error', code = 'INTERNAL_ERROR'): Norma
 }
 
 /**
+ * Remove <think>…</think> reasoning blocks (and an unterminated leading
+ * <think> run) from a COMPLETE model reply. Applied to the advisor's
+ * accumulated content before persisting so chain-of-thought from the
+ * thinking models (gpt-oss-120b, qwen3.5-122b) never lands in the database
+ * — otherwise it would re-enter the UI via session history AND get fed back
+ * into context on later turns. The live SSE yield stays raw; the client
+ * strips incrementally per chunk (src/utils/thinkStrip.ts).
+ */
+function stripThinkBlocks(text: string): string {
+  return text
+    .replace(/<think>[\s\S]*?<\/think>/gi, '')
+    .replace(/^<think>[\s\S]*/i, (m) => (m.includes('</think>') ? m : ''))
+    .trim();
+}
+
+/**
  * GET /api/health — public.
  */
 export async function handleHealth(): Promise<NormalizedResponse> {
@@ -716,11 +732,17 @@ export async function handleAdvisorChatStream(
       // which distorts buildAdvisorMessages on the next turn (model sees
       // a lopsided history). Insert a placeholder so the conversation
       // shape stays balanced.
+      //
+      // Strip reasoning blocks from the accumulated reply first: the
+      // visible transcript (and future context assembly) must never
+      // contain raw chain-of-thought. A cancel that produced only thinking
+      // content therefore counts as "interrupted before reply".
+      const stripped = stripThinkBlocks(fullContent);
       const wasCancelledEarly =
-        cancelToken.cancelled && fullContent.length === 0;
+        cancelToken.cancelled && stripped.length === 0;
       const persistedContent = wasCancelledEarly
         ? '[interrupted before reply]'
-        : fullContent;
+        : stripped;
 
       if (persistedContent.length > 0) {
         try {
