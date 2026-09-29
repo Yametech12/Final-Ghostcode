@@ -30,6 +30,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
   // only to preserve the reset/cleanup behavior on discard/unmount.
   const [, setPhotoFile] = useState<File | null>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [removingPhoto, setRemovingPhoto] = useState(false);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [cropperImage, setCropperImage] = useState<string | null>(null); // URL for cropper
 
@@ -218,12 +219,28 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
     }
   };
 
-  const handleRemovePhoto = () => {
+  const handleRemovePhoto = async () => {
+    if (removingPhoto) return;
+    const previousPhotoUrl = photoUrl;
+    // Optimistic: clear the preview immediately so the UI reflects removal.
     setPhotoFile(null);
     setPhotoUrl(null);
     setPhotoPreview(null);
-    if (userData?.id) {
-      updateUserProfile({ photoURL: undefined });
+    if (!userData?.id) return;
+    setRemovingPhoto(true);
+    try {
+      // `null` (NOT undefined) is the explicit removal signal. The old call
+      // passed `photoURL: undefined`, which every update path silently
+      // skipped — so "Remove" never actually cleared photo_url in the
+      // database and the photo reappeared after a reload.
+      await updateUserProfile({ photoURL: null });
+      toast.success('Profile photo removed');
+    } catch {
+      // Roll back the optimistic UI; updateUserProfile already toasted the error.
+      setPhotoUrl(previousPhotoUrl);
+      setPhotoPreview(previousPhotoUrl);
+    } finally {
+      setRemovingPhoto(false);
     }
   };
 
@@ -344,11 +361,12 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                  <button
                    type="button"
                    onClick={handleRemovePhoto}
-                   className="flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors"
+                   disabled={removingPhoto}
+                   className={`flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors ${removingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
                    aria-label="Remove profile photo"
                  >
                    <X className="w-4 h-4" aria-hidden="true" />
-                   Remove
+                   {removingPhoto ? 'Removing...' : 'Remove'}
                  </button>
                )}
                 </div>

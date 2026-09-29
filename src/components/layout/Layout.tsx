@@ -4,12 +4,11 @@ import { motion, AnimatePresence } from 'motion/react';
 import { Home, BookOpen, Compass, Target, Menu, X, Shield, Map, GitCompare, BookA, Zap, Sun, Moon, User, Users, Search, Crosshair, MessageSquare, ChevronDown, Star, Brain, Activity, PieChart, LogIn, LogOut, Sparkles } from 'lucide-react';
 import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
-import { useIsMobile, usePullToRefresh, useMobilePerformance } from '../../hooks/useMobile';
+import { useMobilePerformance } from '../../hooks/useMobile';
 import { useSessionTimeout } from '../../hooks/useSessionTimeout';
 import { toast } from 'sonner';
 import { cn } from '../../lib/utils';
 import { isAppError } from '../../lib/errors';
-import { queryClient } from '../../lib/queryClient';
 import { BottomNav } from './BottomNav';
 
 import Logo from '../Logo';
@@ -86,17 +85,10 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
   const auth = useEnhancedAuth();
   const { user, signOut, userData } = auth || {};
 
-  // Mobile optimizations
-  const isMobile = useIsMobile();
   // Swipe gestures intentionally NOT wired to the whole layout — they conflict with vertical scroll
   // on long pages. The mobile menu has explicit close button and Escape handler instead.
-
-  // Pull to refresh — invalidate React Query cache instead of nuking the SPA.
-  // Using window.location.reload() loses auth/session state and tears down React.
-  const { pullDistance, handlers: pullHandlers } = usePullToRefresh(async () => {
-    await queryClient.invalidateQueries();
-    toast.success('Refreshed');
-  });
+  // Pull-to-refresh was removed: it hijacked vertical swipes and duplicated the
+  // PWA/browser's native refresh affordance without adding value.
 
   // Mobile performance optimizations
   useMobilePerformance();
@@ -255,38 +247,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
         "min-h-screen bg-mystic-950 text-slate-300 selection:bg-accent-primary/30 selection:text-accent-primary relative overflow-x-hidden",
         location.pathname === '/advisor' && !forceScrollable ? "h-[100dvh] overflow-hidden" : ""
       )}
-      // Pull-to-refresh handlers only attach on mobile. The hook short-circuits
-      // when window.scrollY > 0 so this can't accidentally trigger during a
-      // normal mid-page swipe.
-      onTouchStart={isMobile ? pullHandlers.handleTouchStart : undefined}
-      onTouchMove={isMobile ? pullHandlers.handleTouchMove : undefined}
-      onTouchEnd={isMobile ? pullHandlers.handleTouchEnd : undefined}
     >
-      {/* Pull to Refresh Indicator */}
-      {isMobile && pullDistance > 0 && (
-        <div className="fixed top-0 left-0 right-0 z-[60] bg-mystic-950 border-b border-white/10">
-          <div className="flex items-center justify-center py-4">
-            <div className={cn(
-              "w-6 h-6 transition-transform duration-200",
-              pullDistance > 60 ? "rotate-180 text-accent-primary" : "text-slate-400"
-            )}>
-              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-              </svg>
-            </div>
-            <span className="ml-2 text-sm text-slate-400">
-              {pullDistance > 60 ? "Release to refresh" : "Pull to refresh"}
-            </span>
-          </div>
-          <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-primary/30">
-            <div
-              className="h-full bg-accent-primary transition-all duration-200"
-              style={{ width: `${Math.min((pullDistance / 60) * 100, 100)}%` }}
-            />
-          </div>
-        </div>
-      )}
-
       <Suspense fallback={null}>
         <CommandPalette />
       </Suspense>

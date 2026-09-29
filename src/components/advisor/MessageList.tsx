@@ -1,4 +1,4 @@
-import { ArrowDown } from 'lucide-react';
+import { ArrowDown, AlertTriangle, X } from 'lucide-react';
 import { AnimatePresence } from 'motion/react';
 import { useSmartScroll } from '../../hooks/useSmartScroll';
 import { Message } from './Message';
@@ -10,7 +10,11 @@ interface MessageListProps {
   messages: AdvisorMessage[];
   isStreaming: boolean;
   isSending: boolean;
-  reactions: Record<string, 'like' | 'dislike' | undefined>; // DEPRECATED: reactions now stored in message.reaction
+  /** Fatal send failure (auth/plan/network) — shown as a banner above the composer. */
+  errorMessage?: string | null;
+  /** Retry the most recent failed exchange (re-sends the last user message). */
+  onRetryLast?: () => void;
+  onDismissError?: () => void;
   onReaction: (id: string, reaction: 'like' | 'dislike') => void;
   onRetry: (id: string) => void;
   onSelectPrompt: (prompt: string) => void;
@@ -24,7 +28,9 @@ export function MessageList({
   messages,
   isStreaming,
   isSending,
-  reactions: _reactions, // DEPRECATED: reactions now stored in message.reaction; kept for call-site compatibility
+  errorMessage,
+  onRetryLast,
+  onDismissError,
   onReaction,
   onRetry,
   onSelectPrompt,
@@ -62,7 +68,6 @@ export function MessageList({
               <Message
                 key={message.id}
                 message={message}
-                reaction={message.reaction}
                 onReaction={onReaction}
                 onRetry={onRetry}
               />
@@ -83,6 +88,37 @@ export function MessageList({
           <ArrowDown aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
           <span>Latest</span>
         </button>
+      )}
+
+      {/* Fatal send error — dismissible banner with retry, rendered inside the
+          scroll area's parent so it stays visible regardless of scroll position. */}
+      {errorMessage && !isStreaming && (
+        <div
+          role="alert"
+          className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 max-w-[90%] pl-3 pr-1.5 py-2 rounded-xl bg-status-error/10 border border-status-error/30 backdrop-blur shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)]"
+        >
+          <AlertTriangle aria-hidden="true" className="w-4 h-4 text-status-error shrink-0" strokeWidth={1.5} />
+          <span className="text-xs text-slate-100 min-w-0 truncate">{errorMessage}</span>
+          {onRetryLast && (
+            <button
+              type="button"
+              onClick={onRetryLast}
+              className="shrink-0 px-2 py-1 rounded-lg text-xs font-semibold text-status-error hover:bg-status-error/15 transition-colors"
+            >
+              Retry
+            </button>
+          )}
+          {onDismissError && (
+            <button
+              type="button"
+              onClick={onDismissError}
+              aria-label="Dismiss error"
+              className="shrink-0 p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <X aria-hidden="true" className="w-3.5 h-3.5" />
+            </button>
+          )}
+        </div>
       )}
     </div>
   );

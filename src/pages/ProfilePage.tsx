@@ -14,6 +14,7 @@ import { motion } from 'motion/react';
 import EditProfileModal from '../components/EditProfileModal';
 import SubscriptionCard from '../components/SubscriptionCard';
 import DeleteAccountSection from '../components/DeleteAccountSection';
+import { DelayedFallback, PageSkeleton } from '../components/LoadingComponents';
 import { cn } from '../lib/utils';
 
 type Assessment = {
@@ -133,7 +134,15 @@ export default function ProfilePage() {
     fetchData();
   }, [user]);
 
-  if (!auth) return <div>Loading...</div>;
+  // Sub-180ms loads render nothing (no flash); slower loads get the
+  // layout-matching skeleton instead of an unstyled bare "Loading..." text.
+  if (!auth) {
+    return (
+      <DelayedFallback>
+        <PageSkeleton />
+      </DelayedFallback>
+    );
+  }
 
   return (
     <div className="space-y-8 pb-24 max-w-5xl mx-auto">

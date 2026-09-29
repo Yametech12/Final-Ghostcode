@@ -21,6 +21,21 @@ class AdvisorChatError extends Error {
   }
 }
 
+/**
+ * Thrown when the SSE stream breaks mid-reply (server error event, network
+ * drop, or malformed stream). `partial` carries the text that arrived before
+ * the failure so the caller can keep it in the transcript and attach an
+ * inline error marker instead of pretending the whole exchange failed.
+ */
+class StreamError extends Error {
+  readonly partial: string;
+  constructor(message: string, partial: string) {
+    super(message);
+    this.name = 'StreamError';
+    this.partial = partial;
+  }
+}
+
 export interface AdvisorMessage {
   id: string;
   role: 'user' | 'model';
@@ -28,6 +43,8 @@ export interface AdvisorMessage {
   timestamp?: Date;
   failed?: boolean;
   reaction?: 'like' | 'dislike';
+  /** Inline stream/response error for model bubbles (rendered under the bubble). */
+  error?: string;
 }
 
 interface RawMessage {
@@ -46,6 +63,7 @@ export function useAdvisorChat() {
   const [messages, setMessages] = useState<AdvisorMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isLoadingSession, setIsLoadingSession] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
 
   // Refs that always read latest values inside callbacks (avoids stale closures).
@@ -128,7 +146,7 @@ export function useAdvisorChat() {
    * `setMessages(prev => prev.map(...))` was O(messages × tokens) and made
    * long replies janky on slower devices.
    */
-  const performSend = useCallback(async (content: string) => {
+  const performSend = useCallback(async (content: string, assistantId: string) => {
     const sid = sessionIdRef.current;
     const uid = userIdRef.current;
     if (!sid || !uid) throw new Error('Session not ready');
@@ -155,10 +173,9 @@ export function useAdvisorChat() {
     }
 
     const reader = response.body?.getReader();
-    if (!reader) throw new Error('No response stream');
+    if (!reader) throw new StreamError('No response stream from the server.', '');
 
     const decoder = new TextDecoder();
-    const assistantId = `model-${Date.now()}`;
     let buffer = '';
     let assistantContent = '';
     let placeholderAdded = false;
@@ -186,17 +203,20 @@ export function useAdvisorChat() {
       rafId = null;
       timeoutId = null;
       const snapshot = assistantContent;
-      if (!placeholderAdded) {
-        placeholderAdded = true;
-        setMessages(prev => [
-          ...prev,
-          { id: assistantId, role: 'model', content: snapshot, timestamp: new Date() },
-        ]);
-      } else {
-        setMessages(prev =>
-          prev.map(m => (m.id === assistantId ? { ...m, content: snapshot } : m)),
-        );
-      }
+      // The assistant bubble is PRE-ADDED by sendMessage (empty placeholder)
+      // so early failures still render a bubble. Update it in place when it
+      // exists; append only as a fallback if it was somehow never added.
+      // (The old append-first logic would now create a duplicate bubble.)
+      placeholderAdded = true;
+      setMessages(prev => {
+        const idx = prev.findIndex(m => m.id === assistantId);
+        if (idx === -1) {
+          return [...prev, { id: assistantId, role: 'model', content: snapshot, timestamp: new Date() }];
+        }
+        const next = [...prev];
+        next[idx] = { ...next[idx], content: snapshot };
+        return next;
+      });
     };
     const scheduleFlush = () => {
       if (rafId !== null || timeoutId !== null) return;
@@ -234,7 +254,10 @@ export function useAdvisorChat() {
             try {
               const parsed = JSON.parse(data);
               if (parsed.error) {
-                throw new Error(parsed.error);
+                // Server-side failure mid-stream. StreamError (not Error) so
+                // the outer catch can surface it inline instead of marking
+                // the whole exchange as failed-to-send.
+                throw new StreamError(parsed.error, assistantContent);
               }
               if (typeof parsed.content === 'string' && parsed.content.length > 0) {
                 assistantContent += sanitizeAiResponse(parsed.content);
@@ -251,6 +274,12 @@ export function useAdvisorChat() {
             }
           }
         }
+      }
+      // Stream ended without a server error but also without any content and
+      // without [DONE] — the reply died silently. Previously this rendered
+      // as "message sent, no reply ever appeared" with zero feedback.
+      if (assistantContent.length === 0) {
+        throw new StreamError('The advisor returned an empty response. Please try again.', '');
       }
     } finally {
       cancelScheduled();
@@ -280,14 +309,31 @@ export function useAdvisorChat() {
       content: trimmed,
       timestamp: new Date(),
     };
-    setMessages(prev => [...prev, userMessage]);
+    // Assistant bubble placeholder is added BEFORE the request so that if
+    // the HTTP exchange fails (402/429/500), the retry affordance lives on
+    // the user bubble — and crucially the user bubble still exists to be
+    // retried. The old flow only created the assistant bubble once the
+    // stream produced its first token, so an early failure left the user
+    // message with no retry path and a "failed" flag nothing could use.
+    const assistantId = `model-${Date.now()}`;
+    setMessages(prev => [...prev, userMessage, { id: assistantId, role: 'model', content: '' }]);
     setIsStreaming(true);
+    setErrorMessage(null);
+    // Written by the catch block below, read by the finally block. A let
+    // binding shared across both keeps the failed-send notice in sync with
+    // the toast without duplicating the branch logic.
+    let errorToSurface: string | null = null;
 
     try {
-      await performSend(trimmed);
+      await performSend(trimmed, assistantId);
     } catch (error) {
       // User-initiated abort isn't an error
       if (error instanceof Error && error.name === 'AbortError') {
+        // Drop the assistant placeholder if the stop landed before any tokens
+        // arrived — an empty bubble after "Stop" is just dead UI. Partial
+        // replies (content already flushed) are kept, matching the server,
+        // which persists the partial text.
+        setMessages(prev => prev.filter(m => !(m.id === assistantId && m.content === '' && !m.error)));
         return;
       }
       console.error('Chat error:', error);
@@ -335,22 +381,41 @@ export function useAdvisorChat() {
         } else {
           toast.error(message || 'Message failed to send');
         }
+      } else if (error instanceof StreamError) {
+        // Stream broke mid-reply (or came back empty). The partial text is
+        // already in the transcript — surface the failure inline on the
+        // assistant bubble so the error sits next to the reply it broke,
+        // instead of a disconnected toast.
+        toast.error(error.message);
+        errorToSurface = error.message;
       } else {
         const msg = error instanceof Error ? error.message : 'Message failed to send';
         toast.error(msg);
+        errorToSurface = msg;
+      }
+
+      if (errorToSurface) {
+        // Inline error marker on the assistant bubble. A blank model bubble
+        // becomes a visible retry-style notice instead of a silent gap.
+        setMessages(prev => prev.map(m => (m.id === assistantId ? { ...m, error: errorToSurface! } : m)));
       }
 
       // Mark the user message as failed so the user can retry it.
       setMessages(prev => prev.map(m => (m.id === userMessage.id ? { ...m, failed: true } : m)));
     } finally {
       setIsStreaming(false);
+      setErrorMessage(errorToSurface);
     }
   }, [performSend]);
 
   const stopStreaming = useCallback(() => {
     abortControllerRef.current?.abort();
     setIsStreaming(false);
+    setErrorMessage(null);
   }, []);
+
+  // Manually clear the fatal-error banner (dismiss button in the UI).
+  const dismissError = useCallback(() => setErrorMessage(null), []);
 
   const retryMessage = useCallback(async (messageId: string) => {
     const target = messages.find(m => m.id === messageId);
@@ -372,6 +437,7 @@ export function useAdvisorChat() {
     try {
       await apiFetch(`/api/advisor/session/${sid}`, { method: 'DELETE' });
       setMessages([]);
+      setErrorMessage(null);
       toast.success('Chat cleared');
     } catch (error) {
       console.error('Clear chat error:', error);
@@ -380,10 +446,20 @@ export function useAdvisorChat() {
   }, []);
 
   const setReaction = useCallback(async (messageId: string, reaction: 'like' | 'dislike' | undefined) => {
-    // Optimistically update local state
-    setMessages(prev => prev.map(m => 
-      m.id === messageId ? { ...m, reaction } : m
-    ));
+    // Capture the previous reaction BEFORE the optimistic update. The old
+    // rollback read `messages` from this callback's closure, which still
+    // held the pre-optimistic state — except it ran after the optimistic
+    // setMessages in the same tick, so the "original" it restored was
+    // actually already-correct data in most cases but stale-incorrect when
+    // another update landed between the two calls. Snapshot is exact.
+    let previousReaction: 'like' | 'dislike' | undefined;
+    setMessages(prev => prev.map(m => {
+      if (m.id === messageId) {
+        previousReaction = m.reaction;
+        return { ...m, reaction };
+      }
+      return m;
+    }));
 
     // Persist to database
     try {
@@ -397,18 +473,13 @@ export function useAdvisorChat() {
       }
     } catch (error) {
       console.error('Failed to save reaction:', error);
-      // Revert optimistic update on error
-      setMessages(prev => prev.map(m => {
-        if (m.id === messageId) {
-          // Find original reaction from messages before the optimistic update
-          const original = messages.find(msg => msg.id === messageId);
-          return { ...m, reaction: original?.reaction };
-        }
-        return m;
-      }));
+      // Revert optimistic update on error using the captured snapshot.
+      setMessages(prev => prev.map(m =>
+        m.id === messageId ? { ...m, reaction: previousReaction } : m,
+      ));
       toast.error('Failed to save reaction');
     }
-  }, [messages]);
+  }, []);
 
   return {
     messages,
@@ -418,6 +489,8 @@ export function useAdvisorChat() {
     isStreaming,
     isLoadingSession,
     sessionId,
+    errorMessage,
+    dismissError,
     clearChat,
     setReaction,
   };

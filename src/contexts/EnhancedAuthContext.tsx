@@ -47,7 +47,7 @@ interface EnhancedAuthContextType {
    */
   signOutAndWait: (timeoutMs?: number) => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
-  updateUserProfile: (data: { displayName?: string, photoURL?: string }) => Promise<void>;
+  updateUserProfile: (data: { displayName?: string, photoURL?: string | null }) => Promise<void>;
   updateUserData: (data: Partial<UserData>) => Promise<void>;
   retrySession: () => Promise<void>;
   forceRefreshSession: () => Promise<void>;
@@ -474,31 +474,48 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const updateUserProfile = async (data: { displayName?: string, photoURL?: string }) => {
+  const updateUserProfile = async (data: { displayName?: string, photoURL?: string | null }) => {
     if (!user) return;
 
     try {
-      const { error: authError } = await supabase.auth.updateUser({
-        data: {
-          display_name: data.displayName,
-          avatar_url: data.photoURL
-        }
-      });
+      // Supabase auth metadata has no notion of null — the only way to clear a
+      // metadata field is to set it to an empty string. A plain `avatar_url:
+      // null` here would throw "user_bad_data: invalid properties". The empty
+      // string normalizes back to null when read via wrapUser() (the `|| null`
+      // in the photoURL/displayName mapping).
+      const authMetadata: Record<string, string | null> = {
+        display_name: data.displayName ?? null,
+        avatar_url: data.photoURL ?? null,
+      };
+      if (authMetadata.display_name === null) delete authMetadata.display_name;
+      if (authMetadata.avatar_url === null) delete authMetadata.avatar_url;
+      if (data.photoURL === null) authMetadata.avatar_url = '';
+
+      const { error: authError } = await supabase.auth.updateUser({ data: authMetadata });
 
       if (authError) throw authError;
 
-      const { error: dbError } = await supabase
-        .from('users')
-        .update({
-          display_name: data.displayName,
-          photo_url: data.photoURL
-        })
-        .eq('id', user.id);
+      // The users table column is nullable, so photo removal is a genuine
+      // `photo_url = NULL` write. (The old code never mapped an explicit
+      // removal — `photoURL: undefined` was skipped by updateUserData and
+      // nothing here handled null — so "Remove photo" was a silent no-op.)
+      const dbUpdate: Record<string, string | null> = {};
+      if (data.displayName !== undefined) dbUpdate.display_name = data.displayName;
+      if (data.photoURL !== undefined) dbUpdate.photo_url = data.photoURL;
 
-      if (dbError) throw dbError;
+      if (Object.keys(dbUpdate).length > 0) {
+        const { error: dbError } = await supabase
+          .from('users')
+          .update(dbUpdate)
+          .eq('id', user.id);
+
+        if (dbError) throw dbError;
+      }
 
       if (userData) {
-        setUserData({ ...userData, ...data });
+        // Spread `data` as-is: a `photoURL: null` removal propagates to local
+        // state (the modal's effect on userData then re-renders with no photo).
+        setUserData({ ...userData, ...data } as UserData);
       }
 
       toast.success('Profile updated');
