@@ -15,6 +15,7 @@ import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
+import { trackPlanCtaClick, trackWaitlistJoin } from '../utils/analytics';
 import { toast } from 'sonner';
 
 /**
@@ -204,6 +205,11 @@ export default function PricingPage() {
    * silently routing them somewhere meaningless.
    */
   const handleCTA = (plan: Plan) => {
+    // Funnel: pricing CTA clicked (anonymous params only).
+    trackPlanCtaClick(plan.tier, {
+      signedIn: isSignedIn,
+      intent: !isSignedIn && plan.tier !== 'free' ? plan.tier : undefined,
+    });
     // Logged-out users always go through registration first.
     if (!isSignedIn) {
       if (plan.tier === 'free') {
@@ -234,6 +240,7 @@ export default function PricingPage() {
     }
 
     // Upgrade path — Stripe checkout not yet live.
+    trackWaitlistJoin(plan.tier);
     toast.info('Paid checkout is launching soon. We will email you when it goes live.');
   };
 
@@ -241,7 +248,10 @@ export default function PricingPage() {
   const ctaFor = (plan: Plan): { label: string; disabled: boolean; isCurrent: boolean } => {
     if (!isSignedIn) {
       if (plan.tier === 'free') return { label: 'Start free', disabled: false, isCurrent: false };
-      return { label: 'Join waitlist', disabled: false, isCurrent: false };
+      // Paid checkout isn't live yet — the CTA takes them through free
+      // registration first (intent preserved via ?intent=), so the label
+      // must say that instead of promising a waitlist that doesn't exist.
+      return { label: 'Create account', disabled: false, isCurrent: false };
     }
     if (sub.isAdmin) {
       return { label: 'Admin · full access', disabled: true, isCurrent: false };
@@ -280,7 +290,7 @@ export default function PricingPage() {
             <Link to="/welcome" className="hover:text-slate-100 transition-colors">
               Home
             </Link>
-            <Link to="/welcome#features" className="hover:text-slate-100 transition-colors">
+            <Link to="/#features" className="hover:text-slate-100 transition-colors">
               Features
             </Link>
             <span className="text-slate-100" aria-current="page">Pricing</span>
@@ -368,7 +378,7 @@ export default function PricingPage() {
               Home
             </Link>
             <Link
-              to="/welcome#features"
+              to="/#features"
               onClick={() => setMobileNavOpen(false)}
               className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
             >

@@ -21,7 +21,8 @@ import {
 import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import OracleDraw from '../components/OracleDraw';
-import Sigil from '../components/Sigil';
+import EmblemCanvas from '../components/EmblemCanvas';
+import ExitIntentModal from '../components/ExitIntentModal';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
@@ -422,9 +423,9 @@ export default function LandingPage() {
       <section id="features" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
           <span className="codex-label">The instruments</span>
-          <h2 className="hero-headline text-4xl sm:text-5xl text-slate-50">
+          <h1 className="hero-headline text-4xl sm:text-5xl text-slate-50">
             Eight instruments. <span className="text-gradient">One framework.</span>
-          </h2>
+          </h1>
           <p className="text-slate-400">
             Two are free, forever. Six unlock with Strategist. Every tool is built on the same
             behavioral spine — so the advisor, the decryptor, and the dossiers all speak the
@@ -448,12 +449,12 @@ export default function LandingPage() {
               {/* Tier badge */}
               <div className="absolute top-4 right-4">
                 {f.locked ? (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[9px] font-mono tracking-[0.2em] uppercase text-accent-primary">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[10px] font-mono tracking-[0.2em] uppercase text-accent-primary">
                     <Lock className="w-2.5 h-2.5" aria-hidden="true" />
                     Strategist
                   </span>
                 ) : (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-status-success/10 border border-status-success/20 text-[9px] font-mono tracking-[0.2em] uppercase text-status-success">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-status-success/10 border border-status-success/20 text-[10px] font-mono tracking-[0.2em] uppercase text-status-success">
                     Free
                   </span>
                 )}
@@ -463,9 +464,9 @@ export default function LandingPage() {
               <div className="w-12 h-12 rounded-full bg-iris-500/10 border border-iris-500/25 flex items-center justify-center text-iris-300 mb-5 group-hover:bg-iris-500/20 group-hover:shadow-[0_0_16px_-4px_rgba(139,124,246,0.5)] transition-all">
                 <f.icon className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
               </div>
-              <h3 className="text-lg font-semibold tracking-tight text-slate-100 group-hover:text-accent-primary transition-colors mb-2 pr-16">
+              <h2 className="text-lg font-semibold tracking-tight text-slate-100 group-hover:text-accent-primary transition-colors mb-2 pr-16">
                 {f.title}
-              </h3>
+              </h2>
               <p className="text-slate-400 text-sm leading-relaxed">{f.desc}</p>
             </motion.div>
           ))}
@@ -512,20 +513,20 @@ export default function LandingPage() {
                   </span>
                   {a.locked ? (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-iris-500/10 border border-iris-500/25 text-[9px] font-mono tracking-[0.15em] uppercase text-iris-300"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-iris-500/10 border border-iris-500/25 text-[10px] font-mono tracking-[0.15em] uppercase text-iris-300"
                       title="Strategist plan required"
                     >
                       <Lock className="w-2.5 h-2.5" aria-hidden="true" />
                       Locked
                     </span>
                   ) : (
-                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-status-success/10 border border-status-success/20 text-[9px] font-mono tracking-[0.15em] uppercase text-status-success">
+                    <span className="inline-flex items-center px-2 py-0.5 rounded-full bg-status-success/10 border border-status-success/20 text-[10px] font-mono tracking-[0.15em] uppercase text-status-success">
                       Free
                     </span>
                   )}
                 </div>
                 <div className="text-iris-300 my-3">
-                  <Sigil id={a.id} size={56} title={`${a.name} constellation sigil`} />
+                  <EmblemCanvas id={a.id} size={56} title={`${a.name} constellation sigil`} />
                 </div>
                 <h3 className="font-semibold text-lg mb-1 text-slate-100">{a.name}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{a.tagline}</p>
@@ -793,9 +794,19 @@ export default function LandingPage() {
             <Link to="/login" className="hover:text-slate-200 transition-colors">
               Sign in
             </Link>
+            <a
+              href="mailto:epimetheus.support@gmail.com?subject=Question%20about%20Epimetheus"
+              className="hover:text-slate-200 transition-colors"
+            >
+              Contact
+            </a>
           </div>
         </div>
       </footer>
+
+      {/* Exit-intent recovery — desktop visitors only, once per session,
+          never for signed-in users (handled inside the component). */}
+      <ExitIntentModal />
     </div>
   );
 }
