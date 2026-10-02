@@ -1,1 +1,177 @@
-LyoqCiAqIE9ic2VydmF0b3J5IHJlZGVzaWduIOKAlCBjb21wb25lbnQgc21va2UgdGVzdHMgKE9jdCAyMDI2KS4KICoKICogVmVyaWZpZXMgdGhlIHRocmVlIG5ldyBzaWduYXR1cmUgY29tcG9uZW50cyByZW5kZXIgd2l0aG91dCBjcmFzaGluZywKICogZXhwb3NlIHRoZSByaWdodCBhY2Nlc3NpYmxlIG5hbWVzLCBhbmQga2VlcCB0aGUgRW5nbGlzaC1vbmx5LAogKiByZWR1Y2VkLW1vdGlvbi1zYWZlIGNvbnRyYWN0cy4KICovCmltcG9ydCB7IGRlc2NyaWJlLCBpdCwgZXhwZWN0LCB2aSB9IGZyb20gJ3ZpdGVzdCc7CmltcG9ydCB7IHJlbmRlciwgc2NyZWVuLCBmaXJlRXZlbnQgfSBmcm9tICdAdGVzdGluZy1saWJyYXJ5L3JlYWN0JzsKaW1wb3J0IHsgTWVtb3J5Um91dGVyIH0gZnJvbSAncmVhY3Qtcm91dGVyLWRvbSc7CmltcG9ydCBTaWdpbCwgeyBTSUdJTF9JRFMgfSBmcm9tICcuLi9jb21wb25lbnRzL1NpZ2lsJzsKaW1wb3J0IEVtYmxlbUNhbnZhcyBmcm9tICcuLi9jb21wb25lbnRzL0VtYmxlbUNhbnZhcyc7CmltcG9ydCBPcmFjbGVEcmF3IGZyb20gJy4uL2NvbXBvbmVudHMvT3JhY2xlRHJhdyc7CmltcG9ydCBDb25zdGVsbGF0aW9uRmllbGQgZnJvbSAnLi4vY29tcG9uZW50cy9Db25zdGVsbGF0aW9uRmllbGQnOwoKLy8gbW90aW9uL3JlYWN0OiBieXBhc3MgQW5pbWF0ZVByZXNlbmNlIGV4aXQgZ2F0aW5nIGluIGpzZG9tIChleGl0Ci8vIGFuaW1hdGlvbnMgbmV2ZXIgY29tcGxldGUgdGhlcmUsIHdoaWNoIHdvdWxkIGxlYXZlIHN0YWxlIGNvbnRlbnQKLy8gbW91bnRlZCBhbmQgYnJlYWsgYXNzZXJ0aW9ucykuIEJlaGF2aW9yIGluIGEgcmVhbCBicm93c2VyIGlzIHVuY2hhbmdlZC4KdmkubW9jaygnbW90aW9uL3JlYWN0JywgYXN5bmMgKCkgPT4gewogIGNvbnN0IGFjdHVhbCA9IGF3YWl0IHZpLmltcG9ydEFjdHVhbDxhbnk+KCdtb3Rpb24vcmVhY3QnKTsKICBjb25zdCBSZWFjdCA9IGF3YWl0IGltcG9ydCgncmVhY3QnKTsKICBjb25zdCBwYXNzdGhyb3VnaCA9ICh7IGNoaWxkcmVuLCAuLi5wcm9wcyB9OiBhbnkpID0+IHsKICAgIGNvbnN0IHsgaW5pdGlhbCwgYW5pbWF0ZSwgZXhpdCwgdHJhbnNpdGlvbiwgdmFyaWFudHMsIC4uLnJlc3QgfSA9IHByb3BzOwogICAgcmV0dXJuIFJlYWN0LmNyZWF0ZUVsZW1lbnQoJ2RpdicsIHJlc3QsIGNoaWxkcmVuKTsKICB9OwogIHJldHVybiB7CiAgICAuLi5hY3R1YWwsCiAgICBBbmltYXRlUHJlc2VuY2U6ICh7IGNoaWxkcmVuIH06IGFueSkgPT4KICAgICAgUmVhY3QuY3JlYXRlRWxlbWVudChSZWFjdC5GcmFnbWVudCwgbnVsbCwgY2hpbGRyZW4pLAogICAgbW90aW9uOiB7IC4uLmFjdHVhbC5tb3Rpb24sIGRpdjogcGFzc3Rocm91Z2ggfSwKICB9Owp9KTsKCmRlc2NyaWJlKCdTaWdpbCcsICgpID0+IHsKICBpdCgncmVuZGVycyBhIGRpc3RpbmN0IHNpZ2lsIGZvciBlYWNoIG9mIHRoZSA4IGFyY2hldHlwZSBpZHMnLCAoKSA9PiB7CiAgICBleHBlY3QoU0lHSUxfSURTKS50b0hhdmVMZW5ndGgoOCk7CiAgICBjb25zdCB7IGNvbnRhaW5lciwgdW5tb3VudCB9ID0gcmVuZGVyKAogICAgICA8PgogICAgICAgIHtTSUdJTF9JRFMubWFwKChpZCkgPT4gKAogICAgICAgICAgPFNpZ2lsIGtleT17aWR9IGlkPXtpZH0gLz4KICAgICAgICApKX0KICAgICAgPC8+CiAgICApOwogICAgY29uc3Qgc3ZncyA9IGNvbnRhaW5lci5xdWVyeVNlbGVjdG9yQWxsKCdzdmcuc2lnaWwnKTsKICAgIGV4cGVjdChzdmdzKS50b0hhdmVMZW5ndGgoOCk7CiAgICAvLyBFYWNoIHNpZ2lsIG11c3QgaGF2ZSBhIGRpc3RpbmN0IGxpbmUgc3RydWN0dXJlIChubyBkdXBsaWNhdGVzKS4KICAgIGNvbnN0IHN0cnVjdHVyZXMgPSBuZXcgU2V0KAogICAgICBBcnJheS5mcm9tKHN2Z3MpLm1hcCgoc3ZnKSA9PiBzdmcuaW5uZXJIVE1MLnJlcGxhY2UoL29wYWNpdHk9IlteIl0qIi9nLCAnJykpCiAgICApOwogICAgZXhwZWN0KHN0cnVjdHVyZXMuc2l6ZSkudG9CZSg4KTsKICAgIHVubW91bnQoKTsKICB9KTsKCiAgaXQoJ2ZhbGxzIGJhY2sgZ3JhY2VmdWxseSBmb3IgdW5rbm93biBpZHMgYW5kIHN0YXlzIGFjY2Vzc2libGUnLCAoKSA9PiB7CiAgICByZW5kZXIoPFNpZ2lsIGlkPSJVTktOT1dOIiAvPik7CiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5Um9sZSgnaW1nJywgeyBuYW1lOiAvYXJjaGV0eXBlIHNpZ2lsIHVua25vd24vaSB9KSkudG9CZUluVGhlRG9jdW1lbnQoKTsKICB9KTsKfSk7CgpkZXNjcmliZSgnT3JhY2xlRHJhdycsICgpID0+IHsKICBpdCgncmV2ZWFscyBhbiBhcmNoZXR5cGUgY2FyZCBvbiBkcmF3IGFuZCBhbm5vdW5jZXMgaXQgdmlhIGFyaWEtbGl2ZScsICgpID0+IHsKICAgIHJlbmRlcigKICAgICAgPE1lbW9yeVJvdXRlcj4KICAgICAgICA8T3JhY2xlRHJhdyAvPgogICAgICA8L01lbW9yeVJvdXRlcj4KICAgICk7CiAgICAvLyBJbml0aWFsIHN0YXRlOiBpbnZpdGF0aW9uIGNvcHksIG5vIGNhcmQgZHJhd24uCiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgvZWlnaHQgYXJjaGV0eXBlcyBjaGFydCB0aGUgZmllbGQvaSkpLnRvQmVJblRoZURvY3VtZW50KCk7CgogICAgZmlyZUV2ZW50LmNsaWNrKHNjcmVlbi5nZXRCeVJvbGUoJ2J1dHRvbicsIHsgbmFtZTogL2NvbnN1bHQgdGhlIG9yYWNsZS9pIH0pKTsKCiAgICAvLyBBZnRlciBkcmF3OiBhIHNpZ2lsICsgbmFtZSArIHRhZ2xpbmUgYXBwZWFyIGluc2lkZSB0aGUgYXJpYS1saXZlIHJlZ2lvbi4KICAgIGNvbnN0IGxpdmUgPSBzY3JlZW4uZ2V0QnlSb2xlKCdidXR0b24nLCB7IG5hbWU6IC9kcmF3IGFnYWluL2kgfSkuY2xvc2VzdCgnZGl2Jyk7CiAgICBleHBlY3QobGl2ZSkudG9CZVRydXRoeSgpOwogICAgY29uc3QgcmVnaW9uID0gZG9jdW1lbnQucXVlcnlTZWxlY3RvcignW2FyaWEtbGl2ZT0icG9saXRlIl0nKTsKICAgIGV4cGVjdChyZWdpb24/LnRleHRDb250ZW50KS50b01hdGNoKC9UaGUgKFBsYXlldHRlfFNvY2lhbCBCdXR0ZXJmbHl8SG9wZWZ1bCBSb21hbnRpY3xDaW5kZXJlbGxhfFByaXZhdGUgRGFuY2VyfFNlZHVjdHJlc3N8Q29ubm9pc3NldXJ8TW9kZXJuIFdvbWFuKS8pOwogICAgLy8gRHJhdyBjb3VudGVyIGluY3JlbWVudHMuCiAgICBleHBlY3Qoc2NyZWVuLmdldEJ5VGV4dCgvMSByZWFkaW5nIGNhc3QvaSkpLnRvQmVJblRoZURvY3VtZW50KCk7CiAgfSk7CgogIGl0KCduZXZlciByZXBlYXRzIHRoZSBzYW1lIGNhcmQgdHdpY2UgaW4gYSByb3cgb3ZlciBtYW55IGRyYXdzJywgKCkgPT4gewogICAgcmVuZGVyKAogICAgICA8TWVtb3J5Um91dGVyPgogICAgICAgIDxPcmFjbGVEcmF3IC8+CiAgICAgIDwvTWVtb3J5Um91dGVyPgogICAgKTsKICAgIGNvbnN0IGJ0biA9ICgpID0+IHNjcmVlbi5nZXRCeVJvbGUoJ2J1dHRvbicsIHsgbmFtZTogL2NvbnN1bHQgdGhlIG9yYWNsZXxkcmF3IGFnYWluL2kgfSk7CiAgICBsZXQgcHJldiA9ICcnOwogICAgZm9yIChsZXQgaSA9IDA7IGkgPCAxMjsgaSsrKSB7CiAgICAgIGZpcmVFdmVudC5jbGljayhidG4oKSk7CiAgICAgIGNvbnN0IHJlZ2lvbiA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJ1thcmlhLWxpdmU9InBvbGl0ZSJdJyk7CiAgICAgIGNvbnN0IHRleHQgPSByZWdpb24/LnRleHRDb250ZW50ID8/ICcnOwogICAgICBleHBlY3QodGV4dCkubm90LnRvQmUocHJldik7CiAgICAgIHByZXYgPSB0ZXh0OwogICAgfQogIH0pOwp9KTsKCmRlc2NyaWJlKCdFbWJsZW1DYW52YXMnLCAoKSA9PiB7CiAgaXQoJ3JlbmRlcnMgYSBkaXN0aW5jdCBjYW52YXMgZW1ibGVtIGZvciBlYWNoIG9mIHRoZSA4IGFyY2hldHlwZSBpZHMnLCAoKSA9PiB7CiAgICBjb25zdCB7IGNvbnRhaW5lciwgdW5tb3VudCB9ID0gcmVuZGVyKAogICAgICA8PgogICAgICAgIHtTSUdJTF9JRFMubWFwKChpZCkgPT4gKAogICAgICAgICAgPEVtYmxlbUNhbnZhcyBrZXk9e2lkfSBpZD17aWR9IC8+CiAgICAgICAgKSl9CiAgICAgIDwvPgogICAgKTsKICAgIGNvbnN0IGNhbnZhc2VzID0gY29udGFpbmVyLnF1ZXJ5U2VsZWN0b3JBbGwoJ2NhbnZhcy5lbWJsZW0tY2FudmFzJyk7CiAgICBleHBlY3QoY2FudmFzZXMpLnRvSGF2ZUxlbmd0aCg4KTsKICAgIC8vIEVhY2ggY2FudmFzIG11c3QgY2FycnkgaXRzIGRpc3RpbmN0IHNpZ2lsIGlkICsgYWNjZXNzaWJsZSBsYWJlbC4KICAgIGNvbnN0IGlkcyA9IG5ldyBTZXQoCiAgICAgIEFycmF5LmZyb20oY2FudmFzZXMpLm1hcCgoYykgPT4gYy5nZXRBdHRyaWJ1dGUoJ2RhdGEtc2lnaWwtaWQnKSkKICAgICk7CiAgICBleHBlY3QoaWRzLnNpemUpLnRvQmUoOCk7CiAgICBleHBlY3QoU0lHSUxfSURTLmV2ZXJ5KChpZCkgPT4gaWRzLmhhcyhpZCkpKS50b0JlKHRydWUpOwogICAgdW5tb3VudCgpOwogIH0pOwoKICBpdCgnZmFsbHMgYmFjayBncmFjZWZ1bGx5IGZvciB1bmtub3duIGlkcyBhbmQgc3RheXMgYWNjZXNzaWJsZScsICgpID0+IHsKICAgIHJlbmRlcig8RW1ibGVtQ2FudmFzIGlkPSJVTktOT1dOIiAvPik7CiAgICBleHBlY3QoCiAgICAgIHNjcmVlbi5nZXRCeVJvbGUoJ2ltZycsIHsgbmFtZTogL2FyY2hldHlwZSBzaWdpbCB1bmtub3duL2kgfSkKICAgICkudG9CZUluVGhlRG9jdW1lbnQoKTsKICB9KTsKCiAgaXQoJ3Jlc3BlY3RzIHByZWZlcnMtcmVkdWNlZC1tb3Rpb24gd2l0aCBhIHN0YXRpYyBmcmFtZScsICgpID0+IHsKICAgIC8vIE1vY2sgbWF0Y2hNZWRpYSB0byByZXBvcnQgcmVkdWNlZC1tb3Rpb24uCiAgICBjb25zdCBvcmlnTWF0Y2hNZWRpYSA9IHdpbmRvdy5tYXRjaE1lZGlhOwogICAgd2luZG93Lm1hdGNoTWVkaWEgPSB2aS5mbigpLm1vY2tJbXBsZW1lbnRhdGlvbigocXVlcnk6IHN0cmluZykgPT4gKHsKICAgICAgbWF0Y2hlczogcXVlcnkgPT09ICcocHJlZmVycy1yZWR1Y2VkLW1vdGlvbjogcmVkdWNlKScsCiAgICAgIG1lZGlhOiBxdWVyeSwKICAgICAgb25jaGFuZ2U6IG51bGwsCiAgICAgIGFkZExpc3RlbmVyOiB2aS5mbigpLAogICAgICByZW1vdmVMaXN0ZW5lcjogdmkuZm4oKSwKICAgICAgYWRkRXZlbnRMaXN0ZW5lcjogdmkuZm4oKSwKICAgICAgcmVtb3ZlRXZlbnRMaXN0ZW5lcjogdmkuZm4oKSwKICAgICAgZGlzcGF0Y2hFdmVudDogdmkuZm4oKSwKICAgIH0pKTsKICAgIC8vIE1vY2sgMmQgY29udGV4dCBzbyB0aGUgZHJhdyBwYXRoIGFjdHVhbGx5IGV4ZWN1dGVzIGluIGpzZG9tLgogICAgY29uc3QgY3R4TW9jayA9IHsKICAgICAgY2xlYXJSZWN0OiB2aS5mbigpLAogICAgICBzYXZlOiB2aS5mbigpLAogICAgICByZXN0b3JlOiB2aS5mbigpLAogICAgICBzY2FsZTogdmkuZm4oKSwKICAgICAgdHJhbnNsYXRlOiB2aS5mbigpLAogICAgICBiZWdpblBhdGg6IHZpLmZuKCksCiAgICAgIGFyYzogdmkuZm4oKSwKICAgICAgbW92ZVRvOiB2aS5mbigpLAogICAgICBsaW5lVG86IHZpLmZuKCksCiAgICAgIHN0cm9rZTogdmkuZm4oKSwKICAgICAgZmlsbDogdmkuZm4oKSwKICAgICAgc2V0TGluZURhc2g6IHZpLmZuKCksCiAgICB9OwogICAgY29uc3Qgb3JpZ0dldENvbnRleHQgPSBIVE1MQ2FudmFzRWxlbWVudC5wcm90b3R5cGUuZ2V0Q29udGV4dDsKICAgIEhUTUxDYW52YXNFbGVtZW50LnByb3RvdHlwZS5nZXRDb250ZXh0ID0gdmkuZm4oKS5tb2NrUmV0dXJuVmFsdWUoY3R4TW9jaykgYXMgYW55OwogICAgY29uc3QgcmFmU3B5ID0gdmkuc3B5T24od2luZG93LCAncmVxdWVzdEFuaW1hdGlvbkZyYW1lJyk7CiAgICBjb25zdCB7IHVubW91bnQgfSA9IHJlbmRlcig8RW1ibGVtQ2FudmFzIGlkPSJUREkiIC8+KTsKICAgIC8vIFN0YXRpYyBmcmFtZSBkcmF3biBvbmNl4oCmCiAgICBleHBlY3QoY3R4TW9jay5hcmMpLnRvSGF2ZUJlZW5DYWxsZWQoKTsKICAgIC8vIOKApmJ1dCBubyByQUYgcm90YXRpb24gbG9vcCBzY2hlZHVsZWQuCiAgICBleHBlY3QocmFmU3B5KS5ub3QudG9IYXZlQmVlbkNhbGxlZCgpOwogICAgdW5tb3VudCgpOwogICAgcmFmU3B5Lm1vY2tSZXN0b3JlKCk7CiAgICBIVE1MQ2FudmFzRWxlbWVudC5wcm90b3R5cGUuZ2V0Q29udGV4dCA9IG9yaWdHZXRDb250ZXh0OwogICAgd2luZG93Lm1hdGNoTWVkaWEgPSBvcmlnTWF0Y2hNZWRpYTsKICB9KTsKfSk7CgpkZXNjcmliZSgnQ29uc3RlbGxhdGlvbkZpZWxkJywgKCkgPT4gewogIGl0KCdyZW5kZXJzIGFuIGFyaWEtaGlkZGVuIGNhbnZhcyBhbmQgY2xlYW5zIHVwIG9uIHVubW91bnQnLCAoKSA9PiB7CiAgICBjb25zdCB7IGNvbnRhaW5lciwgdW5tb3VudCB9ID0gcmVuZGVyKDxDb25zdGVsbGF0aW9uRmllbGQgLz4pOwogICAgY29uc3QgY2FudmFzID0gY29udGFpbmVyLnF1ZXJ5U2VsZWN0b3IoJ2NhbnZhcy5jb25zdGVsbGF0aW9uLWZpZWxkJyk7CiAgICBleHBlY3QoY2FudmFzKS50b0JlSW5UaGVEb2N1bWVudCgpOwogICAgZXhwZWN0KGNhbnZhcykudG9IYXZlQXR0cmlidXRlKCdhcmlhLWhpZGRlbicsICd0cnVlJyk7CiAgICB1bm1vdW50KCk7IC8vIG11c3Qgbm90IHRocm93IChyQUYgKyBsaXN0ZW5lcnMgY2xlYW5lZCB1cCkKICB9KTsKfSk7Cg==
+/**
+ * Observatory redesign — component smoke tests (Oct 2026).
+ *
+ * Verifies the three new signature components render without crashing,
+ * expose the right accessible names, and keep the English-only,
+ * reduced-motion-safe contracts.
+ */
+import { describe, it, expect, vi } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
+import Sigil, { SIGIL_IDS } from '../components/Sigil';
+import EmblemCanvas from '../components/EmblemCanvas';
+import OracleDraw from '../components/OracleDraw';
+import ConstellationField from '../components/ConstellationField';
+
+// motion/react: bypass AnimatePresence exit gating in jsdom (exit
+// animations never complete there, which would leave stale content
+// mounted and break assertions). Behavior in a real browser is unchanged.
+vi.mock('motion/react', async () => {
+  const actual = await vi.importActual<any>('motion/react');
+  const React = await import('react');
+  const passthrough = ({ children, ...props }: any) => {
+    const { initial, animate, exit, transition, variants, ...rest } = props;
+    return React.createElement('div', rest, children);
+  };
+  return {
+    ...actual,
+    AnimatePresence: ({ children }: any) =>
+      React.createElement(React.Fragment, null, children),
+    motion: { ...actual.motion, div: passthrough },
+  };
+});
+
+describe('Sigil', () => {
+  it('renders a distinct sigil for each of the 8 archetype ids', () => {
+    expect(SIGIL_IDS).toHaveLength(8);
+    const { container, unmount } = render(
+      <>
+        {SIGIL_IDS.map((id) => (
+          <Sigil key={id} id={id} />
+        ))}
+      </>
+    );
+    const svgs = container.querySelectorAll('svg.sigil');
+    expect(svgs).toHaveLength(8);
+    // Each sigil must have a distinct line structure (no duplicates).
+    const structures = new Set(
+      Array.from(svgs).map((svg) => svg.innerHTML.replace(/opacity="[^"]*"/g, ''))
+    );
+    expect(structures.size).toBe(8);
+    unmount();
+  });
+
+  it('falls back gracefully for unknown ids and stays accessible', () => {
+    render(<Sigil id="UNKNOWN" />);
+    expect(screen.getByRole('img', { name: /archetype sigil unknown/i })).toBeInTheDocument();
+  });
+});
+
+describe('OracleDraw', () => {
+  it('reveals an archetype card on draw and announces it via aria-live', () => {
+    render(
+      <MemoryRouter>
+        <OracleDraw />
+      </MemoryRouter>
+    );
+    // Initial state: invitation copy, no card drawn.
+    expect(screen.getByText(/eight archetypes chart the field/i)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: /consult the oracle/i }));
+
+    // After draw: a sigil + name + tagline appear inside the aria-live region.
+    const live = screen.getByRole('button', { name: /draw again/i }).closest('div');
+    expect(live).toBeTruthy();
+    const region = document.querySelector('[aria-live="polite"]');
+    expect(region?.textContent).toMatch(/The (Playette|Social Butterfly|Hopeful Romantic|Cinderella|Private Dancer|Seductress|Connoisseur|Modern Woman)/);
+    // Draw counter increments.
+    expect(screen.getByText(/1 reading cast/i)).toBeInTheDocument();
+  });
+
+  it('never repeats the same card twice in a row over many draws', () => {
+    render(
+      <MemoryRouter>
+        <OracleDraw />
+      </MemoryRouter>
+    );
+    const btn = () => screen.getByRole('button', { name: /consult the oracle|draw again/i });
+    let prev = '';
+    for (let i = 0; i < 12; i++) {
+      fireEvent.click(btn());
+      const region = document.querySelector('[aria-live="polite"]');
+      const text = region?.textContent ?? '';
+      expect(text).not.toBe(prev);
+      prev = text;
+    }
+  });
+});
+
+describe('EmblemCanvas', () => {
+  it('renders a distinct canvas emblem for each of the 8 archetype ids', () => {
+    const { container, unmount } = render(
+      <>
+        {SIGIL_IDS.map((id) => (
+          <EmblemCanvas key={id} id={id} />
+        ))}
+      </>
+    );
+    const canvases = container.querySelectorAll('canvas.emblem-canvas');
+    expect(canvases).toHaveLength(8);
+    // Each canvas must carry its distinct sigil id + accessible label.
+    const ids = new Set(
+      Array.from(canvases).map((c) => c.getAttribute('data-sigil-id'))
+    );
+    expect(ids.size).toBe(8);
+    expect(SIGIL_IDS.every((id) => ids.has(id))).toBe(true);
+    unmount();
+  });
+
+  it('falls back gracefully for unknown ids and stays accessible', () => {
+    render(<EmblemCanvas id="UNKNOWN" />);
+    expect(
+      screen.getByRole('img', { name: /archetype sigil unknown/i })
+    ).toBeInTheDocument();
+  });
+
+  it('respects prefers-reduced-motion with a static frame', () => {
+    // Mock matchMedia to report reduced-motion.
+    const origMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    // Mock 2d context so the draw path actually executes in jsdom.
+    const ctxMock = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      scale: vi.fn(),
+      translate: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      fill: vi.fn(),
+      setLineDash: vi.fn(),
+    };
+    const origGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(ctxMock) as any;
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const { unmount } = render(<EmblemCanvas id="TDI" />);
+    // Static frame drawn once…
+    expect(ctxMock.arc).toHaveBeenCalled();
+    // …but no rAF rotation loop scheduled.
+    expect(rafSpy).not.toHaveBeenCalled();
+    unmount();
+    rafSpy.mockRestore();
+    HTMLCanvasElement.prototype.getContext = origGetContext;
+    window.matchMedia = origMatchMedia;
+  });
+});
+
+describe('ConstellationField', () => {
+  it('renders an aria-hidden canvas and cleans up on unmount', () => {
+    const { container, unmount } = render(<ConstellationField />);
+    const canvas = container.querySelector('canvas.constellation-field');
+    expect(canvas).toBeInTheDocument();
+    expect(canvas).toHaveAttribute('aria-hidden', 'true');
+    unmount(); // must not throw (rAF + listeners cleaned up)
+  });
+});
