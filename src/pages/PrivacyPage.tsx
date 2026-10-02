@@ -43,9 +43,9 @@ export default function PrivacyPage() {
         <Section title="1. Information We Collect">
           <p>We collect three categories of information:</p>
 
-          <h3 className="text-slate-200 font-medium mt-4">
+          <h2 className="text-slate-200 font-medium mt-4">
             (a) Information you provide
-          </h3>
+          </h2>
           <ul className="list-disc list-inside space-y-2">
             <li>
               <strong className="text-slate-200">Account info:</strong> email
