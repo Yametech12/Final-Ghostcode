@@ -1,7 +1,7 @@
 import { useCallback, useState } from 'react';
-import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAdvisorChat } from '../hooks/useAdvisorChat';
+import { InlineLoader } from '../components/LoadingComponents';
 import { AdvisorHeader } from '../components/advisor/AdvisorHeader';
 import { MessageList } from '../components/advisor/MessageList';
 import { Composer } from '../components/advisor/Composer';
@@ -94,12 +94,8 @@ export default function AdvisorPage() {
 
   if (isLoadingSession) {
     return (
-      <div className="flex items-center justify-center h-full min-h-64" aria-busy="true">
-        <div className="text-center space-y-4">
-          <Loader2 aria-hidden="true" className="w-10 h-10 animate-spin mx-auto text-accent-primary" />
-          <h2 className="text-lg font-semibold tracking-tight text-slate-100">Initializing Advisor</h2>
-          <p className="text-sm text-slate-400">Setting up your personalized AI session…</p>
-        </div>
+      <div className="flex items-center justify-center h-full min-h-64" role="status" aria-label="Loading">
+        <InlineLoader />
       </div>
     );
   }

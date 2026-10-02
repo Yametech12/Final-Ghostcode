@@ -17,7 +17,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
 
-import { Skeleton } from "../components/ui/Skeleton";
+import { InlineLoader } from "../components/LoadingComponents";
 
 interface UserData {
   id: string;
@@ -465,9 +465,9 @@ export default function AdminDashboard() {
         <div className="space-y-8">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {(usersLoading || reportsLoading || feedbacksLoading) ? (
-              Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-32 w-full" />
-              ))
+              <div className="col-span-full flex justify-center py-8" role="status" aria-label="Loading">
+                <InlineLoader />
+              </div>
             ) : (
               stats.map((stat, i) => (
                 <div
@@ -503,9 +503,9 @@ export default function AdminDashboard() {
               </h3>
               <div className="space-y-4">
                 {usersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))
+                  <div className="flex justify-center py-8" role="status" aria-label="Loading">
+                    <InlineLoader />
+                  </div>
                 ) : (
                   users.slice(0, 5).map((u) => (
                     <div
@@ -551,9 +551,9 @@ export default function AdminDashboard() {
               </h3>
               <div className="space-y-4">
                 {feedbacksLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <Skeleton key={i} className="h-16 w-full" />
-                  ))
+                  <div className="flex justify-center py-8" role="status" aria-label="Loading">
+                    <InlineLoader />
+                  </div>
                 ) : (
                   feedbacks.slice(0, 5).map((f) => (
                     <div
@@ -608,13 +608,13 @@ export default function AdminDashboard() {
               </thead>
               <tbody className="divide-y divide-white/5">
                 {usersLoading ? (
-                  Array.from({ length: 5 }).map((_, i) => (
-                    <tr key={i}>
-                      <td className="p-4" colSpan={6}>
-                        <Skeleton className="h-12 w-full" />
-                      </td>
-                    </tr>
-                  ))
+                  <tr>
+                    <td className="p-4" colSpan={6}>
+                      <div className="flex justify-center py-8" role="status" aria-label="Loading">
+                        <InlineLoader />
+                      </div>
+                    </td>
+                  </tr>
                 ) : (
                   filteredUsers.map((u) => (
                     <tr key={u.id} className="hover:bg-white/5 transition-colors">
@@ -716,9 +716,9 @@ export default function AdminDashboard() {
       ) : activeTab === "reports" ? (
         <div className="space-y-4">
           {reportsLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-64 w-full" />
-            ))
+            <div className="flex justify-center py-8" role="status" aria-label="Loading">
+              <InlineLoader />
+            </div>
           ) : (
             filteredReports.map((report) => (
               <div key={report.id} className="glass-card p-6 space-y-4">
@@ -811,9 +811,9 @@ export default function AdminDashboard() {
       ) : activeTab === "feedback" ? (
         <div className="space-y-4">
           {feedbacksLoading ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-48 w-full" />
-            ))
+            <div className="flex justify-center py-8" role="status" aria-label="Loading">
+              <InlineLoader />
+            </div>
           ) : (
             filteredFeedbacks.map((feedback) => (
               <div key={feedback.id} className="glass-card p-6 space-y-4">

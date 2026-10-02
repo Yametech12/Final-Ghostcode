@@ -1,6 +1,7 @@
 import React from 'react';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { isUUID } from '../utils/validation';
+import { InlineLoader } from './LoadingComponents';
 
 interface RequireValidUUIDProps {
   children: React.ReactNode;
@@ -13,10 +14,7 @@ export function RequireValidUUID({ children, fallback }: RequireValidUUIDProps) 
   if (loading) {
     return fallback || (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <div className="animate-spin w-8 h-8 border-2 border-accent-primary border-t-transparent rounded-full mx-auto"></div>
-          <p className="text-slate-400">Loading your profile...</p>
-        </div>
+        <InlineLoader />
       </div>
     );
   }

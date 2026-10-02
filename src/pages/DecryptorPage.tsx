@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { chatCompletion, stripThinking } from '../lib/ai';
 import { cn } from '../lib/utils';
+import { InlineLoader } from '../components/LoadingComponents';
 
 export default function DecryptorPage() {
   const [input, setInput] = useState('');
@@ -317,11 +318,8 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                     data-lenis-prevent
                   >
                     {isLoading && !analysis && (
-                      <div className="flex justify-center items-center h-full">
-                        <div className="text-center space-y-4">
-                          <Loader2 className="w-12 h-12 text-accent-primary animate-spin mx-auto" />
-                          <p className="text-sm text-slate-400">Decrypting signal...</p>
-                        </div>
+                      <div className="flex justify-center items-center h-full" role="status" aria-label="Loading">
+                        <InlineLoader />
                       </div>
                     )}
 

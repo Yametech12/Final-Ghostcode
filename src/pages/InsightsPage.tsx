@@ -8,7 +8,7 @@ import { supabase } from '../lib/supabase';
 import { personalityTypes } from '../data/personalityTypes';
 import { Activity, Target, TrendingUp, PieChart } from 'lucide-react';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
-import { Skeleton } from '../components/ui/Skeleton';
+import { InlineLoader } from '../components/LoadingComponents';
 
 /** Read a CSS custom property from :root, with a safe fallback for SSR / first paint. */
 function getCssVar(name: string, fallback: string): string {
@@ -123,21 +123,8 @@ export default function InsightsPage() {
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-12">
-        <div className="glass-card p-8 space-y-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-6 w-32" />
-          </div>
-          <Skeleton className="h-[300px]" />
-        </div>
-        <div className="glass-card p-8 space-y-6">
-          <div className="space-y-2">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-6 w-32" />
-          </div>
-          <Skeleton className="h-[300px]" />
-        </div>
+      <div className="flex items-center justify-center p-12" role="status" aria-label="Loading">
+        <InlineLoader />
       </div>
     );
   }

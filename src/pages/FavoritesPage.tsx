@@ -1,5 +1,6 @@
 import { useFavorites } from '../hooks/useFavorites';
-import { Star, BookOpen, Compass, Activity, ChevronRight, Trash2, Filter, Loader2 } from 'lucide-react';
+import { Star, BookOpen, Compass, Activity, ChevronRight, Trash2, Filter } from 'lucide-react';
+import { InlineLoader } from '../components/LoadingComponents';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { useState } from 'react';
@@ -40,8 +41,8 @@ export default function FavoritesPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-96">
-        <Loader2 aria-hidden="true" className="w-12 h-12 text-accent-primary animate-spin" />
+      <div className="flex justify-center items-center h-96" role="status" aria-label="Loading">
+        <InlineLoader />
       </div>
     );
   }

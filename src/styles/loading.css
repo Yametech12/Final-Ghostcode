@@ -1,13 +1,6 @@
-/* Loading Spinner Styles — luxury gold theme */
-.loading-spinner {
-  border: 2px solid rgba(232, 199, 126, 0.2);
-  border-top-color: #E8C77E;
-  border-radius: 50%;
-  animation: spin-loading 0.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
-}
-
-@keyframes spin-loading {
-  to {
-    transform: rotate(360deg);
-  }
-}
+/* Loading styles.
+ *
+ * All loading states across the site use the logo-only design (breathing
+ * logo via motion/react in LoadingComponents.tsx). No spinner rings,
+ * no progress bars — this file is kept for future loading-related styles.
+ */
