@@ -109,7 +109,6 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
 
     const fetchPromise = (async () => {
       try {
-        console.log('Loading user data for:', userId);
         const { data, error } = await supabase
           .from('users')
           .select('*')
