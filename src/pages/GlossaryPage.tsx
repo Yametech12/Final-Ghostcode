@@ -27,7 +27,8 @@ export default function GlossaryPage() {
         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
           <Search className="w-5 h-5 text-slate-500" />
         </div>
-        <input 
+        <input
+aria-label="Search terms" 
           type="text"
           placeholder="Search terms..."
           value={searchTerm}
@@ -42,7 +43,7 @@ export default function GlossaryPage() {
             key={item.term}
             className="glass-card p-6 space-y-3 hover:bg-white/5 transition-colors"
           >
-            <h3 className="text-xl font-bold text-accent-primary">{item.term}</h3>
+            <h2 className="text-xl font-bold text-accent-primary">{item.term}</h2>
             <p className="text-slate-300 leading-relaxed"><GlossaryText text={item.definition} /></p>
           </div>
         ))}

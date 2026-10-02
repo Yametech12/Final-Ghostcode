@@ -60,7 +60,7 @@ export default function GuidePage() {
           {guideSections.map((section) => {
             const isCompleted = completedSections.includes(section.id);
             return (
-              <button
+              <button type="button"
                 key={section.id}
                 onClick={() => setActiveTab(section.id)}
                 className={cn(
@@ -180,7 +180,7 @@ export default function GuidePage() {
             
             {!completedSections.includes(activeTab) && (
               <div className="pt-6 flex justify-end">
-                <button 
+                <button type="button" 
                   onClick={() => markSectionComplete(activeTab)}
                   className="px-6 py-3 rounded-xl bg-white/5 hover:bg-white/8 border border-slate-700/30 hover:border-accent-primary/20 text-slate-100 font-semibold tracking-wide flex items-center gap-2 transition-all hover:scale-[1.02] active:scale-[0.98]"
                 >

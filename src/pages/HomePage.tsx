@@ -119,7 +119,7 @@ export default function HomePage() {
                       <span className="text-xs font-mono font-semibold text-accent-primary tracking-widest">{profile.id}</span>
                       {locked ? (
                         <span
-                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[9px] font-mono tracking-[0.15em] uppercase text-accent-primary"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[10px] font-mono tracking-[0.15em] uppercase text-accent-primary"
                           title="Strategist plan required"
                         >
                           <Lock className="w-2.5 h-2.5" aria-hidden="true" />
