@@ -795,7 +795,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
       </nav>
 
       {/* Main Content — pt-24 reserves space for the fixed nav */}
-      <main className={cn("pt-24 flex flex-col", location.pathname === '/advisor' && !forceScrollable ? "h-[100dvh] overflow-hidden pb-16" : "min-h-screen pb-24 lg:pb-0")}>
+      <main id="main-content" className={cn("pt-24 flex flex-col", location.pathname === '/advisor' && !forceScrollable ? "h-[100dvh] overflow-hidden pb-16" : "min-h-screen pb-24 lg:pb-0")}>
         <div className={cn(
           "mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col w-full",
           location.pathname === '/advisor' && !forceScrollable ? "max-w-[100rem] pt-4 pb-4 h-full overflow-hidden" : "max-w-7xl pt-12 pb-12"
