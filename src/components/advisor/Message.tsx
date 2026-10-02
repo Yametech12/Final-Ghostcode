@@ -81,7 +81,7 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
         )}
         aria-hidden="true"
       >
-        {isUser ? <UserIcon className="w-3.5 h-3.5 text-mystic-950" /> : <Bot className="w-3.5 h-3.5 text-white" />}
+        {isUser ? <UserIcon className="w-3.5 h-3.5 text-mystic-950" /> : <Bot className="w-3.5 h-3.5 text-slate-200" />}
       </div>
 
       <div className={cn('flex-1 min-w-0 max-w-[85%] sm:max-w-2xl space-y-1.5', isUser && 'items-end')}>
@@ -188,7 +188,7 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
         >
           {message.failed && onRetry ? (
             <>
-              <span className="flex items-center gap-1 text-xs text-red-400">
+              <span className="flex items-center gap-1 text-xs text-status-error">
                 <AlertTriangle aria-hidden="true" className="w-3 h-3" />
                 Failed to send
               </span>
@@ -196,7 +196,7 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
                 type="button"
                 onClick={() => onRetry(message.id)}
                 aria-label="Retry message"
-                className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
               >
                 <RotateCcw aria-hidden="true" className="w-3.5 h-3.5" />
               </button>
@@ -207,10 +207,10 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
                 type="button"
                 onClick={handleCopy}
                 aria-label="Copy message"
-                className="p-1.5 rounded-md text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="p-1.5 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
               >
                 {copied ? (
-                  <Check aria-hidden="true" className="w-3.5 h-3.5 text-emerald-400" />
+                  <Check aria-hidden="true" className="w-3.5 h-3.5 text-status-success" />
                 ) : (
                   <Copy aria-hidden="true" className="w-3.5 h-3.5" />
                 )}
@@ -225,8 +225,8 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
                     className={cn(
                       'p-1.5 rounded-md transition-colors',
                       reaction === 'like'
-                        ? 'text-emerald-400 bg-emerald-400/10'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5',
+                        ? 'text-status-success bg-emerald-400/10'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-white/5',
                     )}
                   >
                     <ThumbsUp aria-hidden="true" className="w-3.5 h-3.5" />
@@ -239,8 +239,8 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
                     className={cn(
                       'p-1.5 rounded-md transition-colors',
                       reaction === 'dislike'
-                        ? 'text-red-400 bg-red-400/10'
-                        : 'text-slate-400 hover:text-white hover:bg-white/5',
+                        ? 'text-status-error bg-red-400/10'
+                        : 'text-slate-400 hover:text-slate-100 hover:bg-white/5',
                     )}
                   >
                     <ThumbsDown aria-hidden="true" className="w-3.5 h-3.5" />

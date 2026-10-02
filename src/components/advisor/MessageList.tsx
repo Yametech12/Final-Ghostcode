@@ -111,7 +111,7 @@ export function MessageList({
               type="button"
               onClick={onDismissError}
               aria-label="Dismiss error"
-              className="shrink-0 p-1 rounded-md text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+              className="shrink-0 p-1 rounded-md text-slate-400 hover:text-slate-100 hover:bg-white/10 transition-colors"
             >
               <X aria-hidden="true" className="w-3.5 h-3.5" />
             </button>

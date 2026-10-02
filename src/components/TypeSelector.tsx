@@ -50,7 +50,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
               {selectedType?.id}
             </div>
             <div>
-              <div className="text-sm font-bold text-white">{selectedType?.name}</div>
+              <div className="text-sm font-bold text-slate-100">{selectedType?.name}</div>
               <div className="text-[11px] text-slate-500 font-medium">{selectedType?.combination}</div>
             </div>
           </div>
@@ -70,7 +70,7 @@ aria-label="Search types"
                   aria-label="Search personality types"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent-primary/50"
+                  className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-slate-100 focus:outline-none focus:border-accent-primary/50"
                 />
               </div>
             </div>
@@ -93,7 +93,7 @@ aria-label="Search types"
                       {type.id}
                     </div>
                     <div className="text-left">
-                      <div className="text-sm font-bold text-white">{type.name}</div>
+                      <div className="text-sm font-bold text-slate-100">{type.name}</div>
                       <div className="text-[11px] text-slate-500 font-medium">{type.combination}</div>
                     </div>
                   </div>

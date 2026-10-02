@@ -70,7 +70,7 @@ export function TypingIndicator({
       className={cn('flex gap-3', className)}
     >
       <div className="w-7 h-7 rounded-full bg-slate-700 flex items-center justify-center shrink-0">
-        <Bot aria-hidden="true" className="w-3.5 h-3.5 text-white" />
+        <Bot aria-hidden="true" className="w-3.5 h-3.5 text-slate-200" />
       </div>
       <div className="bg-slate-800/80 rounded-2xl px-4 py-3 flex items-center gap-1.5">
         {dots}

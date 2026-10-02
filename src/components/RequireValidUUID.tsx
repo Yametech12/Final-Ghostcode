@@ -24,13 +24,13 @@ export function RequireValidUUID({ children, fallback }: RequireValidUUIDProps) 
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center space-y-4 p-8">
           <div className="text-red-400 text-6xl">⚠️</div>
-          <h2 className="text-xl font-semibold text-white">Session Error</h2>
+          <h2 className="text-xl font-semibold text-slate-50">Session Error</h2>
           <p className="text-slate-400 max-w-md">
             Your session appears to be invalid. Please refresh the page or sign in again.
           </p>
           <button type="button"
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/80 transition-colors"
+            className="px-6 py-3 bg-accent-primary text-mystic-950 rounded-lg hover:bg-accent-primary/80 transition-colors"
           >
             Refresh Page
           </button>
