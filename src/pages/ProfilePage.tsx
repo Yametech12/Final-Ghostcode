@@ -221,7 +221,7 @@ export default function ProfilePage() {
                           style={{ width: `${progress}%` }}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-600 text-center">
+                      <div className="text-[11px] text-slate-600 text-center">
                         {Math.ceil((nextRank.minXP - totalXP) / 100)} more calibrations to rank up
                       </div>
                     </div>
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                         <div className="w-12 h-12 rounded-xl bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-primary font-mono font-semibold text-lg tracking-widest">
                           {assessment.typeId}
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500 tabular-nums">
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 tabular-nums">
                           <Clock aria-hidden="true" className="w-3 h-3" strokeWidth={1.5} />
                           {new Date(assessment.date).toLocaleDateString()}
                         </div>

@@ -143,6 +143,7 @@ export default function LoginPage() {
               <input
                 id="login-email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => {
                   const sanitized = sanitizeInput(e.target.value);
@@ -156,7 +157,6 @@ export default function LoginPage() {
                   emailError ? 'border-red-500/50' : 'border-white/10'
                 }`}
                 placeholder="you@example.com"
-                autoComplete="email"
                 required
               />
             </div>

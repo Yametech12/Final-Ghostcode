@@ -271,7 +271,7 @@ export default function QuizPage() {
             <Brain className="w-12 h-12 text-accent-primary" />
           </div>
 
-          <h1 className="text-5xl font-semibold tracking-tight text-gradient">Knowledge Check</h1>
+          <h1 className="text-4xl sm:text-5xl font-semibold tracking-tight text-gradient">Knowledge Check</h1>
           <p className="text-slate-400 text-xl max-w-2xl mx-auto leading-relaxed">
             Master the EPIMETHEUS system. Test your understanding with 10 random questions designed to sharpen your intuition and tactical knowledge.
           </p>

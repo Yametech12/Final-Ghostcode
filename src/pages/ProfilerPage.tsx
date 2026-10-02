@@ -249,7 +249,7 @@ export default function ProfilerPage() {
                       </div>
                       <div>
                         <div className="text-sm font-bold text-white">{profile.name}</div>
-                        <div className="text-[10px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
+                        <div className="text-[11px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
                       </div>
                     </button>
                   );
