@@ -33,6 +33,7 @@ export default function FavoriteButton({ contentId, contentType, title, classNam
         className
       )}
       title={active ? "Remove from favorites" : "Add to favorites"}
+      aria-label={active ? `Remove ${title} from favorites` : `Add ${title} to favorites`}
     >
       <Star className={cn("w-5 h-5", active && "fill-current")} />
     </button>

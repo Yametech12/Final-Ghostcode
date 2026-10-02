@@ -41,6 +41,9 @@ export default function App() {
           <LanguageProvider>
             <ThemeProvider>
               <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
+                <a href="#main-content" className="skip-link">
+                  Skip to main content
+                </a>
                 <ScrollToTop />
                 <Suspense fallback={<LoadingScreen />}>
                   <AppContent />

@@ -123,6 +123,7 @@ export function CalibrationWizard({
                 max={current.max || 100}
                 step={current.step || 1}
                 value={answers[current.id] || 50}
+                aria-label={current.text}
                 onChange={(e) => updateAnswer(parseInt(e.target.value))}
                 className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer slider"
               />
@@ -138,7 +139,8 @@ export function CalibrationWizard({
 
           {/* Multiple Choice Question */}
           {current.type === 'multiple' && current.options && (
-            <div className="space-y-2">
+            <fieldset className="space-y-2">
+              <legend className="sr-only">{current.text}</legend>
               {current.options.map((option, index) => (
                 <label
                   key={index}
@@ -160,7 +162,7 @@ export function CalibrationWizard({
                   <span className="text-slate-200">{option}</span>
                 </label>
               ))}
-            </div>
+            </fieldset>
           )}
 
           {/* Text Question */}
@@ -169,6 +171,7 @@ export function CalibrationWizard({
               value={answers[current.id] || ''}
               onChange={(e) => updateAnswer(e.target.value)}
               placeholder="Type your answer here..."
+              aria-label={current.text}
               className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-accent-primary resize-none"
               rows={4}
             />
