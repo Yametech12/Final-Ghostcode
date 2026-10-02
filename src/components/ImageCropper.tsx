@@ -1,1 +1,295 @@
-aW1wb3J0IHsgdXNlU3RhdGUsIHVzZVJlZiwgdXNlQ2FsbGJhY2ssIHVzZUVmZmVjdCB9IGZyb20gJ3JlYWN0JzsKaW1wb3J0IHsgbW90aW9uIH0gZnJvbSAnbW90aW9uL3JlYWN0JzsKaW1wb3J0IHsgWCwgWm9vbUluLCBab29tT3V0LCBSb3RhdGVDY3csIENoZWNrIH0gZnJvbSAnbHVjaWRlLXJlYWN0JzsKCmludGVyZmFjZSBJbWFnZUNyb3BwZXJQcm9wcyB7CiAgaW1hZ2VVcmw6IHN0cmluZzsKICBvbkNyb3A6IChjcm9wcGVkQmxvYjogQmxvYikgPT4gdm9pZDsKICBvbkNhbmNlbDogKCkgPT4gdm9pZDsKICBhc3BlY3RSYXRpbz86IG51bWJlcjsKfQoKLyoqCiAqIFNpbXBsZSBkcmFnLXRvLXBhbiArIHNjcm9sbC9zbGlkZXItdG8tem9vbSBpbWFnZSBjcm9wcGVyLgogKiBPdXRwdXRzIGEgc3F1YXJlLWNyb3BwZWQgQmxvYiByZWFkeSBmb3IgdXBsb2FkLgogKiBVc2VzIG5hdGl2ZSBldmVudCBsaXN0ZW5lcnMgZm9yIHRvdWNoL3doZWVsIHRvIGF2b2lkIHBhc3NpdmUgbGlzdGVuZXIgaXNzdWVzLgogKi8KZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gSW1hZ2VDcm9wcGVyKHsgaW1hZ2VVcmwsIG9uQ3JvcCwgb25DYW5jZWwgfTogSW1hZ2VDcm9wcGVyUHJvcHMpIHsKICBjb25zdCBjb250YWluZXJSZWYgPSB1c2VSZWY8SFRNTERpdkVsZW1lbnQ+KG51bGwpOwogIGNvbnN0IGltZ1JlZiA9IHVzZVJlZjxIVE1MSW1hZ2VFbGVtZW50PihudWxsKTsKICBjb25zdCBbem9vbSwgc2V0Wm9vbV0gPSB1c2VTdGF0ZSgxKTsKICBjb25zdCBbcG9zaXRpb24sIHNldFBvc2l0aW9uXSA9IHVzZVN0YXRlKHsgeDogMCwgeTogMCB9KTsKICBjb25zdCBbaXNEcmFnZ2luZywgc2V0SXNEcmFnZ2luZ10gPSB1c2VTdGF0ZShmYWxzZSk7CiAgY29uc3QgZHJhZ1N0YXJ0UmVmID0gdXNlUmVmKHsgeDogMCwgeTogMCB9KTsKICBjb25zdCBwb3NpdGlvblJlZiA9IHVzZVJlZih7IHg6IDAsIHk6IDAgfSk7CiAgY29uc3QgW2ltZ0xvYWRlZCwgc2V0SW1nTG9hZGVkXSA9IHVzZVN0YXRlKGZhbHNlKTsKCiAgY29uc3QgQ1JPUF9TSVpFID0gMjYwOwogIGNvbnN0IE1JTl9aT09NID0gMC41OwogIGNvbnN0IE1BWF9aT09NID0gNDsKCiAgLy8gS2VlcCBwb3NpdGlvblJlZiBpbiBzeW5jCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIHBvc2l0aW9uUmVmLmN1cnJlbnQgPSBwb3NpdGlvbjsKICB9LCBbcG9zaXRpb25dKTsKCiAgLy8gQ2VudGVyIGltYWdlIHdoZW4gbG9hZGVkCiAgdXNlRWZmZWN0KCgpID0+IHsKICAgIGlmIChpbWdMb2FkZWQpIHsKICAgICAgc2V0UG9zaXRpb24oeyB4OiAwLCB5OiAwIH0pOwogICAgICBzZXRab29tKDEpOwogICAgfQogIH0sIFtpbWdMb2FkZWRdKTsKCiAgLy8gTmF0aXZlIHdoZWVsIGxpc3RlbmVyIChub24tcGFzc2l2ZSkgdG8gcHJldmVudCBwYWdlIHNjcm9sbAogIHVzZUVmZmVjdCgoKSA9PiB7CiAgICBjb25zdCBlbCA9IGNvbnRhaW5lclJlZi5jdXJyZW50OwogICAgaWYgKCFlbCkgcmV0dXJuOwoKICAgIGNvbnN0IGhhbmRsZVdoZWVsID0gKGU6IFdoZWVsRXZlbnQpID0+IHsKICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpOwogICAgICBlLnN0b3BQcm9wYWdhdGlvbigpOwogICAgICBjb25zdCBkZWx0YSA9IGUuZGVsdGFZID4gMCA/IC0wLjE1IDogMC4xNTsKICAgICAgc2V0Wm9vbShwcmV2ID0+IE1hdGgubWluKE1BWF9aT09NLCBNYXRoLm1heChNSU5fWk9PTSwgcHJldiArIGRlbHRhKSkpOwogICAgfTsKCiAgICBlbC5hZGRFdmVudExpc3RlbmVyKCd3aGVlbCcsIGhhbmRsZVdoZWVsLCB7IHBhc3NpdmU6IGZhbHNlIH0pOwogICAgcmV0dXJuICgpID0+IGVsLnJlbW92ZUV2ZW50TGlzdGVuZXIoJ3doZWVsJywgaGFuZGxlV2hlZWwpOwogIH0sIFtdKTsKCiAgLy8gTmF0aXZlIHRvdWNoIGxpc3RlbmVycyAobm9uLXBhc3NpdmUpIHRvIHByZXZlbnQgcGFnZSBzY3JvbGwgZHVyaW5nIGRyYWcKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY29uc3QgZWwgPSBjb250YWluZXJSZWYuY3VycmVudDsKICAgIGlmICghZWwpIHJldHVybjsKCiAgICBjb25zdCBoYW5kbGVUb3VjaFN0YXJ0ID0gKGU6IFRvdWNoRXZlbnQpID0+IHsKICAgICAgaWYgKGUudG91Y2hlcy5sZW5ndGggIT09IDEpIHJldHVybjsKICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpOwogICAgICBzZXRJc0RyYWdnaW5nKHRydWUpOwogICAgICBkcmFnU3RhcnRSZWYuY3VycmVudCA9IHsKICAgICAgICB4OiBlLnRvdWNoZXNbMF0uY2xpZW50WCAtIHBvc2l0aW9uUmVmLmN1cnJlbnQueCwKICAgICAgICB5OiBlLnRvdWNoZXNbMF0uY2xpZW50WSAtIHBvc2l0aW9uUmVmLmN1cnJlbnQueSwKICAgICAgfTsKICAgIH07CgogICAgY29uc3QgaGFuZGxlVG91Y2hNb3ZlID0gKGU6IFRvdWNoRXZlbnQpID0+IHsKICAgICAgaWYgKGUudG91Y2hlcy5sZW5ndGggIT09IDEpIHJldHVybjsKICAgICAgZS5wcmV2ZW50RGVmYXVsdCgpOwogICAgICBjb25zdCBuZXdQb3MgPSB7CiAgICAgICAgeDogZS50b3VjaGVzWzBdLmNsaWVudFggLSBkcmFnU3RhcnRSZWYuY3VycmVudC54LAogICAgICAgIHk6IGUudG91Y2hlc1swXS5jbGllbnRZIC0gZHJhZ1N0YXJ0UmVmLmN1cnJlbnQueSwKICAgICAgfTsKICAgICAgc2V0UG9zaXRpb24obmV3UG9zKTsKICAgIH07CgogICAgY29uc3QgaGFuZGxlVG91Y2hFbmQgPSAoKSA9PiB7CiAgICAgIHNldElzRHJhZ2dpbmcoZmFsc2UpOwogICAgfTsKCiAgICBlbC5hZGRFdmVudExpc3RlbmVyKCd0b3VjaHN0YXJ0JywgaGFuZGxlVG91Y2hTdGFydCwgeyBwYXNzaXZlOiBmYWxzZSB9KTsKICAgIGVsLmFkZEV2ZW50TGlzdGVuZXIoJ3RvdWNobW92ZScsIGhhbmRsZVRvdWNoTW92ZSwgeyBwYXNzaXZlOiBmYWxzZSB9KTsKICAgIGVsLmFkZEV2ZW50TGlzdGVuZXIoJ3RvdWNoZW5kJywgaGFuZGxlVG91Y2hFbmQpOwoKICAgIHJldHVybiAoKSA9PiB7CiAgICAgIGVsLnJlbW92ZUV2ZW50TGlzdGVuZXIoJ3RvdWNoc3RhcnQnLCBoYW5kbGVUb3VjaFN0YXJ0KTsKICAgICAgZWwucmVtb3ZlRXZlbnRMaXN0ZW5lcigndG91Y2htb3ZlJywgaGFuZGxlVG91Y2hNb3ZlKTsKICAgICAgZWwucmVtb3ZlRXZlbnRMaXN0ZW5lcigndG91Y2hlbmQnLCBoYW5kbGVUb3VjaEVuZCk7CiAgICB9OwogIH0sIFtdKTsKCiAgY29uc3QgaGFuZGxlTW91c2VEb3duID0gdXNlQ2FsbGJhY2soKGU6IFJlYWN0Lk1vdXNlRXZlbnQpID0+IHsKICAgIGUucHJldmVudERlZmF1bHQoKTsKICAgIHNldElzRHJhZ2dpbmcodHJ1ZSk7CiAgICBkcmFnU3RhcnRSZWYuY3VycmVudCA9IHsgeDogZS5jbGllbnRYIC0gcG9zaXRpb25SZWYuY3VycmVudC54LCB5OiBlLmNsaWVudFkgLSBwb3NpdGlvblJlZi5jdXJyZW50LnkgfTsKICB9LCBbXSk7CgogIGNvbnN0IGhhbmRsZU1vdXNlTW92ZSA9IHVzZUNhbGxiYWNrKChlOiBSZWFjdC5Nb3VzZUV2ZW50KSA9PiB7CiAgICBpZiAoIWlzRHJhZ2dpbmcpIHJldHVybjsKICAgIHNldFBvc2l0aW9uKHsKICAgICAgeDogZS5jbGllbnRYIC0gZHJhZ1N0YXJ0UmVmLmN1cnJlbnQueCwKICAgICAgeTogZS5jbGllbnRZIC0gZHJhZ1N0YXJ0UmVmLmN1cnJlbnQueSwKICAgIH0pOwogIH0sIFtpc0RyYWdnaW5nXSk7CgogIGNvbnN0IGhhbmRsZU1vdXNlVXAgPSB1c2VDYWxsYmFjaygoKSA9PiB7CiAgICBzZXRJc0RyYWdnaW5nKGZhbHNlKTsKICB9LCBbXSk7CgogIGNvbnN0IGhhbmRsZVpvb20gPSB1c2VDYWxsYmFjaygoZGVsdGE6IG51bWJlcikgPT4gewogICAgc2V0Wm9vbShwcmV2ID0+IE1hdGgubWluKE1BWF9aT09NLCBNYXRoLm1heChNSU5fWk9PTSwgcHJldiArIGRlbHRhKSkpOwogIH0sIFtdKTsKCiAgY29uc3QgaGFuZGxlQ3JvcCA9IHVzZUNhbGxiYWNrKCgpID0+IHsKICAgIGlmICghaW1nUmVmLmN1cnJlbnQgfHwgIWNvbnRhaW5lclJlZi5jdXJyZW50KSByZXR1cm47CgogICAgY29uc3QgY2FudmFzID0gZG9jdW1lbnQuY3JlYXRlRWxlbWVudCgnY2FudmFzJyk7CiAgICBjb25zdCBvdXRwdXRTaXplID0gNTEyOwogICAgY2FudmFzLndpZHRoID0gb3V0cHV0U2l6ZTsKICAgIGNhbnZhcy5oZWlnaHQgPSBvdXRwdXRTaXplOwogICAgY29uc3QgY3R4ID0gY2FudmFzLmdldENvbnRleHQoJzJkJyk7CiAgICBpZiAoIWN0eCkgcmV0dXJuOwoKICAgIGNvbnN0IGltZyA9IGltZ1JlZi5jdXJyZW50OwogICAgY29uc3QgY29udGFpbmVyUmVjdCA9IGNvbnRhaW5lclJlZi5jdXJyZW50LmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpOwoKICAgIGNvbnN0IGNyb3BDZW50ZXJYID0gY29udGFpbmVyUmVjdC53aWR0aCAvIDI7CiAgICBjb25zdCBjcm9wQ2VudGVyWSA9IGNvbnRhaW5lclJlY3QuaGVpZ2h0IC8gMjsKCiAgICBjb25zdCBkaXNwbGF5ZWRXaWR0aCA9IGltZy5uYXR1cmFsV2lkdGggKiB6b29tOwogICAgY29uc3QgZGlzcGxheWVkSGVpZ2h0ID0gaW1nLm5hdHVyYWxIZWlnaHQgKiB6b29tOwoKICAgIGNvbnN0IGltZ0xlZnQgPSBjcm9wQ2VudGVyWCAtIGRpc3BsYXllZFdpZHRoIC8gMiArIHBvc2l0aW9uLng7CiAgICBjb25zdCBpbWdUb3AgPSBjcm9wQ2VudGVyWSAtIGRpc3BsYXllZEhlaWdodCAvIDIgKyBwb3NpdGlvbi55OwoKICAgIGNvbnN0IGNyb3BMZWZ0ID0gKGNvbnRhaW5lclJlY3Qud2lkdGggLSBDUk9QX1NJWkUpIC8gMjsKICAgIGNvbnN0IGNyb3BUb3AgPSAoY29udGFpbmVyUmVjdC5oZWlnaHQgLSBDUk9QX1NJWkUpIC8gMjsKCiAgICBjb25zdCBzeCA9IChjcm9wTGVmdCAtIGltZ0xlZnQpIC8gem9vbTsKICAgIGNvbnN0IHN5ID0gKGNyb3BUb3AgLSBpbWdUb3ApIC8gem9vbTsKICAgIGNvbnN0IHNXaWR0aCA9IENST1BfU0laRSAvIHpvb207CiAgICBjb25zdCBzSGVpZ2h0ID0gQ1JPUF9TSVpFIC8gem9vbTsKCiAgICBjdHguZHJhd0ltYWdlKGltZywgc3gsIHN5LCBzV2lkdGgsIHNIZWlnaHQsIDAsIDAsIG91dHB1dFNpemUsIG91dHB1dFNpemUpOwoKICAgIGNhbnZhcy50b0Jsb2IoKGJsb2IpID0+IHsKICAgICAgaWYgKGJsb2IpIG9uQ3JvcChibG9iKTsKICAgIH0sICdpbWFnZS9qcGVnJywgMC45KTsKICB9LCBbem9vbSwgcG9zaXRpb24sIG9uQ3JvcF0pOwoKICBjb25zdCBoYW5kbGVSZXNldCA9ICgpID0+IHsKICAgIHNldFpvb20oMSk7CiAgICBzZXRQb3NpdGlvbih7IHg6IDAsIHk6IDAgfSk7CiAgfTsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJmaXhlZCBpbnNldC0wIHotWzMwMF0gZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcC00Ij4KICAgICAgPG1vdGlvbi5kaXYKICAgICAgICBpbml0aWFsPXt7IG9wYWNpdHk6IDAgfX0KICAgICAgICBhbmltYXRlPXt7IG9wYWNpdHk6IDEgfX0KICAgICAgICBjbGFzc05hbWU9ImFic29sdXRlIGluc2V0LTAgYmctbXlzdGljLTk1MC85MCBiYWNrZHJvcC1ibHVyLW1kIgogICAgICAgIG9uQ2xpY2s9e29uQ2FuY2VsfQogICAgICAvPgoKICAgICAgPG1vdGlvbi5kaXYKICAgICAgICBpbml0aWFsPXt7IG9wYWNpdHk6IDAsIHNjYWxlOiAwLjk2IH19CiAgICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiAxLCBzY2FsZTogMSB9fQogICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IDAuMjUsIGVhc2U6IFswLjMyLCAwLjcyLCAwLCAxXSB9fQogICAgICAgIGNsYXNzTmFtZT0icmVsYXRpdmUgdy1mdWxsIG1heC13LW1kIGJnLW15c3RpYy05MDAvOTUgYmFja2Ryb3AtYmx1ci14bCBib3JkZXIgYm9yZGVyLWFjY2VudC1wcmltYXJ5Lzggcm91bmRlZC0yeGwgc2hhZG93LVswXzI0cHhfODBweF8tMTZweF9yZ2JhKDAsMCwwLDAuNjUpXSBvdmVyZmxvdy1oaWRkZW4iCiAgICAgID4KICAgICAgICB7LyogSGVhZGVyICovfQogICAgICAgIDxkaXYgY2xhc3NOYW1lPSJwLTQgYm9yZGVyLWIgYm9yZGVyLXNsYXRlLTcwMC8zMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4iPgogICAgICAgICAgPGgzIGNsYXNzTmFtZT0idGV4dC1sZyBmb250LXNlbWlib2xkIHRyYWNraW5nLXRpZ2h0IHRleHQtc2xhdGUtMTAwIj5Dcm9wIFBob3RvPC9oMz4KICAgICAgICAgIDxidXR0b24gdHlwZT0iYnV0dG9uIgogICAgICAgICAgICBvbkNsaWNrPXtvbkNhbmNlbH0KICAgICAgICAgICAgYXJpYS1sYWJlbD0iQ2FuY2VsIgogICAgICAgICAgICBjbGFzc05hbWU9InAtMiByb3VuZGVkLXhsIGhvdmVyOmJnLXdoaXRlLzUgdGV4dC1zbGF0ZS00MDAgdHJhbnNpdGlvbi1jb2xvcnMiCiAgICAgICAgICA+CiAgICAgICAgICAgIDxYIGFyaWEtaGlkZGVuPSJ0cnVlIiBjbGFzc05hbWU9InctNSBoLTUiIHN0cm9rZVdpZHRoPXsxLjV9IC8+CiAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICA8L2Rpdj4KCiAgICAgICAgey8qIENyb3AgYXJlYSAqL30KICAgICAgICA8ZGl2CiAgICAgICAgICByZWY9e2NvbnRhaW5lclJlZn0KICAgICAgICAgIGNsYXNzTmFtZT0icmVsYXRpdmUgdy1mdWxsIGFzcGVjdC1zcXVhcmUgYmctbXlzdGljLTk1MCBvdmVyZmxvdy1oaWRkZW4gY3Vyc29yLW1vdmUgc2VsZWN0LW5vbmUgdG91Y2gtbm9uZSIKICAgICAgICAgIG9uTW91c2VEb3duPXtoYW5kbGVNb3VzZURvd259CiAgICAgICAgICBvbk1vdXNlTW92ZT17aGFuZGxlTW91c2VNb3ZlfQogICAgICAgICAgb25Nb3VzZVVwPXtoYW5kbGVNb3VzZVVwfQogICAgICAgICAgb25Nb3VzZUxlYXZlPXtoYW5kbGVNb3VzZVVwfQogICAgICAgID4KICAgICAgICAgIHsvKiBJbWFnZSAqL30KICAgICAgICAgIDxpbWcKICAgICAgICAgICAgcmVmPXtpbWdSZWZ9CiAgICAgICAgICAgIHNyYz17aW1hZ2VVcmx9CiAgICAgICAgICAgIGFsdD0iQ3JvcCBwcmV2aWV3IgogICAgICAgICAgICBkZWNvZGluZz0iYXN5bmMiCiAgICAgICAgICAgIG9uTG9hZD17KCkgPT4gc2V0SW1nTG9hZGVkKHRydWUpfQogICAgICAgICAgICBjbGFzc05hbWU9ImFic29sdXRlIHRvcC0xLzIgbGVmdC0xLzIgbWF4LXctbm9uZSBwb2ludGVyLWV2ZW50cy1ub25lIgogICAgICAgICAgICBzdHlsZT17ewogICAgICAgICAgICAgIHRyYW5zZm9ybTogYHRyYW5zbGF0ZSgtNTAlLCAtNTAlKSB0cmFuc2xhdGUoJHtwb3NpdGlvbi54fXB4LCAke3Bvc2l0aW9uLnl9cHgpIHNjYWxlKCR7em9vbX0pYCwKICAgICAgICAgICAgICB0cmFuc2l0aW9uOiBpc0RyYWdnaW5nID8gJ25vbmUnIDogJ3RyYW5zZm9ybSAwLjFzIGVhc2Utb3V0JywKICAgICAgICAgICAgfX0KICAgICAgICAgICAgZHJhZ2dhYmxlPXtmYWxzZX0KICAgICAgICAgIC8+CgogICAgICAgICAgey8qIENyb3Agb3ZlcmxheSAqL30KICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJhYnNvbHV0ZSBpbnNldC0wIHBvaW50ZXItZXZlbnRzLW5vbmUiPgogICAgICAgICAgICA8ZGl2CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJhYnNvbHV0ZSBpbnNldC0wIgogICAgICAgICAgICAgIHN0eWxlPXt7CiAgICAgICAgICAgICAgICBiYWNrZ3JvdW5kOiBgcmFkaWFsLWdyYWRpZW50KGNpcmNsZSAke0NST1BfU0laRSAvIDJ9cHggYXQgY2VudGVyLCB0cmFuc3BhcmVudCAke0NST1BfU0laRSAvIDIgLSAxfXB4LCByZ2JhKDE0LCAxMSwgMTgsIDAuNzUpICR7Q1JPUF9TSVpFIC8gMn1weClgLAogICAgICAgICAgICAgIH19CiAgICAgICAgICAgIC8+CiAgICAgICAgICAgIDxkaXYKICAgICAgICAgICAgICBjbGFzc05hbWU9ImFic29sdXRlIHRvcC0xLzIgbGVmdC0xLzIgLXRyYW5zbGF0ZS14LTEvMiAtdHJhbnNsYXRlLXktMS8yIHJvdW5kZWQtZnVsbCBib3JkZXItMiBib3JkZXItYWNjZW50LXByaW1hcnkvNjAiCiAgICAgICAgICAgICAgc3R5bGU9e3sgd2lkdGg6IENST1BfU0laRSwgaGVpZ2h0OiBDUk9QX1NJWkUgfX0KICAgICAgICAgICAgLz4KICAgICAgICAgIDwvZGl2PgoKICAgICAgICAgIHsvKiBJbnN0cnVjdGlvbnMgKi99CiAgICAgICAgICB7IWlzRHJhZ2dpbmcgJiYgKAogICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iYWJzb2x1dGUgYm90dG9tLTMgbGVmdC0wIHJpZ2h0LTAgdGV4dC1jZW50ZXIgcG9pbnRlci1ldmVudHMtbm9uZSI+CiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPSJ0ZXh0LVsxMHB4XSB0ZXh0LXNsYXRlLTQwMCBiZy1teXN0aWMtOTUwLzgwIHB4LTMgcHktMSByb3VuZGVkLWZ1bGwiPgogICAgICAgICAgICAgICAgRHJhZyB0byBtb3ZlIOKAoiBTY3JvbGwgdG8gem9vbQogICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICApfQogICAgICAgIDwvZGl2PgoKICAgICAgICB7LyogQ29udHJvbHMgKi99CiAgICAgICAgPGRpdiBjbGFzc05hbWU9InAtNCBib3JkZXItdCBib3JkZXItc2xhdGUtNzAwLzMwIHNwYWNlLXktNCI+CiAgICAgICAgICB7LyogWm9vbSBzbGlkZXIgKi99CiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0iZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMiPgogICAgICAgICAgICA8YnV0dG9uIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBoYW5kbGVab29tKC0wLjIpfQogICAgICAgICAgICAgIGFyaWEtbGFiZWw9Ilpvb20gb3V0IgogICAgICAgICAgICAgIGNsYXNzTmFtZT0icC0yIHJvdW5kZWQtbGcgYmctd2hpdGUvNSB0ZXh0LXNsYXRlLTQwMCBob3Zlcjp0ZXh0LXNsYXRlLTEwMCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxab29tT3V0IGNsYXNzTmFtZT0idy00IGgtNCIgc3Ryb2tlV2lkdGg9ezEuNX0gLz4KICAgICAgICAgICAgPC9idXR0b24+CiAgICAgICAgICAgIDxpbnB1dAogICAgICAgICAgICAgIHR5cGU9InJhbmdlIgogICAgICAgICAgICAgIG1pbj17TUlOX1pPT00gKiAxMDB9CiAgICAgICAgICAgICAgbWF4PXtNQVhfWk9PTSAqIDEwMH0KICAgICAgICAgICAgICB2YWx1ZT17em9vbSAqIDEwMH0KICAgICAgICAgICAgICBhcmlhLWxhYmVsPSJBZGp1c3QgaW1hZ2Ugem9vbSIKICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldFpvb20oTnVtYmVyKGUudGFyZ2V0LnZhbHVlKSAvIDEwMCl9CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4LTEgaC0xLjUgYmctbXlzdGljLTgwMCByb3VuZGVkLWZ1bGwgYXBwZWFyYW5jZS1ub25lIGN1cnNvci1wb2ludGVyIFsmOjotd2Via2l0LXNsaWRlci10aHVtYl06YXBwZWFyYW5jZS1ub25lIFsmOjotd2Via2l0LXNsaWRlci10aHVtYl06dy00IFsmOjotd2Via2l0LXNsaWRlci10aHVtYl06aC00IFsmOjotd2Via2l0LXNsaWRlci10aHVtYl06cm91bmRlZC1mdWxsIFsmOjotd2Via2l0LXNsaWRlci10aHVtYl06YmctYWNjZW50LXByaW1hcnkgWyY6Oi13ZWJraXQtc2xpZGVyLXRodW1iXTpzaGFkb3ctbGciCiAgICAgICAgICAgIC8+CiAgICAgICAgICAgIDxidXR0b24gdHlwZT0iYnV0dG9uIgogICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IGhhbmRsZVpvb20oMC4yKX0KICAgICAgICAgICAgICBhcmlhLWxhYmVsPSJab29tIGluIgogICAgICAgICAgICAgIGNsYXNzTmFtZT0icC0yIHJvdW5kZWQtbGcgYmctd2hpdGUvNSB0ZXh0LXNsYXRlLTQwMCBob3Zlcjp0ZXh0LXNsYXRlLTEwMCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxab29tSW4gY2xhc3NOYW1lPSJ3LTQgaC00IiBzdHJva2VXaWR0aD17MS41fSAvPgogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgPGJ1dHRvbiB0eXBlPSJidXR0b24iCiAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlUmVzZXR9CiAgICAgICAgICAgICAgYXJpYS1sYWJlbD0iUmVzZXQiCiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJwLTIgcm91bmRlZC1sZyBiZy13aGl0ZS81IHRleHQtc2xhdGUtNDAwIGhvdmVyOnRleHQtc2xhdGUtMTAwIHRyYW5zaXRpb24tY29sb3JzIgogICAgICAgICAgICA+CiAgICAgICAgICAgICAgPFJvdGF0ZUNjdyBjbGFzc05hbWU9InctNCBoLTQiIHN0cm9rZVdpZHRoPXsxLjV9IC8+CiAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgPC9kaXY+CgogICAgICAgICAgey8qIEFjdGlvbiBidXR0b25zICovfQogICAgICAgICAgPGRpdiBjbGFzc05hbWU9ImZsZXggZ2FwLTMiPgogICAgICAgICAgICA8YnV0dG9uIHR5cGU9ImJ1dHRvbiIKICAgICAgICAgICAgICBvbkNsaWNrPXtvbkNhbmNlbH0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXgtMSBweS0zIHJvdW5kZWQteGwgYmctd2hpdGUvNSBib3JkZXIgYm9yZGVyLXNsYXRlLTcwMC8zMCB0ZXh0LXNsYXRlLTEwMCBmb250LXNlbWlib2xkIHRyYWNraW5nLXdpZGUgaG92ZXI6Ymctd2hpdGUvOCB0cmFuc2l0aW9uLWNvbG9ycyIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIENhbmNlbAogICAgICAgICAgICA8L2J1dHRvbj4KICAgICAgICAgICAgPGJ1dHRvbiB0eXBlPSJidXR0b24iCiAgICAgICAgICAgICAgb25DbGljaz17aGFuZGxlQ3JvcH0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXgtMSBweS0zIHJvdW5kZWQteGwgYWNjZW50LWdyYWRpZW50IHRleHQtbXlzdGljLTk1MCBmb250LXNlbWlib2xkIHRyYWNraW5nLXdpZGUgc2hhZG93LWxnIHNoYWRvdy1hY2NlbnQtcHJpbWFyeS8xNSBob3ZlcjpzY2FsZS1bMS4wMl0gYWN0aXZlOnNjYWxlLVswLjk4XSB0cmFuc2l0aW9uLXRyYW5zZm9ybSBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiIKICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxDaGVjayBjbGFzc05hbWU9InctNCBoLTQiIHN0cm9rZVdpZHRoPXsyfSAvPgogICAgICAgICAgICAgIEFwcGx5CiAgICAgICAgICAgIDwvYnV0dG9uPgogICAgICAgICAgPC9kaXY+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvbW90aW9uLmRpdj4KICAgIDwvZGl2PgogICk7Cn0K
+import { useState, useRef, useCallback, useEffect } from 'react';
+import { motion } from 'motion/react';
+import { X, ZoomIn, ZoomOut, RotateCcw, Check } from 'lucide-react';
+
+interface ImageCropperProps {
+  imageUrl: string;
+  onCrop: (croppedBlob: Blob) => void;
+  onCancel: () => void;
+  aspectRatio?: number;
+}
+
+/**
+ * Simple drag-to-pan + scroll/slider-to-zoom image cropper.
+ * Outputs a square-cropped Blob ready for upload.
+ * Uses native event listeners for touch/wheel to avoid passive listener issues.
+ */
+export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCropperProps) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const imgRef = useRef<HTMLImageElement>(null);
+  const [zoom, setZoom] = useState(1);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const dragStartRef = useRef({ x: 0, y: 0 });
+  const positionRef = useRef({ x: 0, y: 0 });
+  const [imgLoaded, setImgLoaded] = useState(false);
+
+  const CROP_SIZE = 260;
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 4;
+
+  // Keep positionRef in sync
+  useEffect(() => {
+    positionRef.current = position;
+  }, [position]);
+
+  // Center image when loaded
+  useEffect(() => {
+    if (imgLoaded) {
+      setPosition({ x: 0, y: 0 });
+      setZoom(1);
+    }
+  }, [imgLoaded]);
+
+  // Native wheel listener (non-passive) to prevent page scroll
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      const delta = e.deltaY > 0 ? -0.15 : 0.15;
+      setZoom(prev => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)));
+    };
+
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // Native touch listeners (non-passive) to prevent page scroll during drag
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      setIsDragging(true);
+      dragStartRef.current = {
+        x: e.touches[0].clientX - positionRef.current.x,
+        y: e.touches[0].clientY - positionRef.current.y,
+      };
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+      const newPos = {
+        x: e.touches[0].clientX - dragStartRef.current.x,
+        y: e.touches[0].clientY - dragStartRef.current.y,
+      };
+      setPosition(newPos);
+    };
+
+    const handleTouchEnd = () => {
+      setIsDragging(false);
+    };
+
+    el.addEventListener('touchstart', handleTouchStart, { passive: false });
+    el.addEventListener('touchmove', handleTouchMove, { passive: false });
+    el.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      el.removeEventListener('touchstart', handleTouchStart);
+      el.removeEventListener('touchmove', handleTouchMove);
+      el.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+    dragStartRef.current = { x: e.clientX - positionRef.current.x, y: e.clientY - positionRef.current.y };
+  }, []);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!isDragging) return;
+    setPosition({
+      x: e.clientX - dragStartRef.current.x,
+      y: e.clientY - dragStartRef.current.y,
+    });
+  }, [isDragging]);
+
+  const handleMouseUp = useCallback(() => {
+    setIsDragging(false);
+  }, []);
+
+  const handleZoom = useCallback((delta: number) => {
+    setZoom(prev => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, prev + delta)));
+  }, []);
+
+  const handleCrop = useCallback(() => {
+    if (!imgRef.current || !containerRef.current) return;
+
+    const canvas = document.createElement('canvas');
+    const outputSize = 512;
+    canvas.width = outputSize;
+    canvas.height = outputSize;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const img = imgRef.current;
+    const containerRect = containerRef.current.getBoundingClientRect();
+
+    const cropCenterX = containerRect.width / 2;
+    const cropCenterY = containerRect.height / 2;
+
+    const displayedWidth = img.naturalWidth * zoom;
+    const displayedHeight = img.naturalHeight * zoom;
+
+    const imgLeft = cropCenterX - displayedWidth / 2 + position.x;
+    const imgTop = cropCenterY - displayedHeight / 2 + position.y;
+
+    const cropLeft = (containerRect.width - CROP_SIZE) / 2;
+    const cropTop = (containerRect.height - CROP_SIZE) / 2;
+
+    const sx = (cropLeft - imgLeft) / zoom;
+    const sy = (cropTop - imgTop) / zoom;
+    const sWidth = CROP_SIZE / zoom;
+    const sHeight = CROP_SIZE / zoom;
+
+    ctx.drawImage(img, sx, sy, sWidth, sHeight, 0, 0, outputSize, outputSize);
+
+    canvas.toBlob((blob) => {
+      if (blob) onCrop(blob);
+    }, 'image/jpeg', 0.9);
+  }, [zoom, position, onCrop]);
+
+  const handleReset = () => {
+    setZoom(1);
+    setPosition({ x: 0, y: 0 });
+  };
+
+  return (
+    <div className="fixed inset-0 z-[300] flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="absolute inset-0 bg-mystic-950/90 backdrop-blur-md"
+        onClick={onCancel}
+      />
+
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.25, ease: [0.32, 0.72, 0, 1] }}
+        className="relative w-full max-w-md bg-mystic-900/95 backdrop-blur-xl border border-accent-primary/8 rounded-2xl shadow-[0_24px_80px_-16px_rgba(0,0,0,0.65)] overflow-hidden"
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-slate-700/30 flex items-center justify-between">
+          <h3 className="text-lg font-semibold tracking-tight text-slate-100">Crop Photo</h3>
+          <button type="button"
+            onClick={onCancel}
+            aria-label="Cancel"
+            className="p-2 rounded-xl hover:bg-white/5 text-slate-400 transition-colors"
+          >
+            <X aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />
+          </button>
+        </div>
+
+        {/* Crop area */}
+        <div
+          ref={containerRef}
+          className="relative w-full aspect-square bg-mystic-950 overflow-hidden cursor-move select-none touch-none"
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+        >
+          {/* Image */}
+          <img
+            ref={imgRef}
+            src={imageUrl}
+            alt="Crop preview"
+            decoding="async"
+            onLoad={() => setImgLoaded(true)}
+            className="absolute top-1/2 left-1/2 max-w-none pointer-events-none"
+            style={{
+              transform: `translate(-50%, -50%) translate(${position.x}px, ${position.y}px) scale(${zoom})`,
+              transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+            }}
+            draggable={false}
+          />
+
+          {/* Crop overlay */}
+          <div className="absolute inset-0 pointer-events-none">
+            <div
+              className="absolute inset-0"
+              style={{
+                background: `radial-gradient(circle ${CROP_SIZE / 2}px at center, transparent ${CROP_SIZE / 2 - 1}px, rgba(14, 11, 18, 0.75) ${CROP_SIZE / 2}px)`,
+              }}
+            />
+            <div
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-accent-primary/60"
+              style={{ width: CROP_SIZE, height: CROP_SIZE }}
+            />
+          </div>
+
+          {/* Instructions */}
+          {!isDragging && (
+            <div className="absolute bottom-3 left-0 right-0 text-center pointer-events-none">
+              <span className="text-[10px] text-slate-400 bg-mystic-950/80 px-3 py-1 rounded-full">
+                Drag to move • Scroll to zoom
+              </span>
+            </div>
+          )}
+        </div>
+
+        {/* Controls */}
+        <div className="p-4 border-t border-slate-700/30 space-y-4">
+          {/* Zoom slider */}
+          <div className="flex items-center gap-3">
+            <button type="button"
+              onClick={() => handleZoom(-0.2)}
+              aria-label="Zoom out"
+              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <ZoomOut className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+            <input
+              type="range"
+              min={MIN_ZOOM * 100}
+              max={MAX_ZOOM * 100}
+              value={zoom * 100}
+              aria-label="Adjust image zoom"
+              onChange={(e) => setZoom(Number(e.target.value) / 100)}
+              className="flex-1 h-1.5 bg-mystic-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary [&::-webkit-slider-thumb]:shadow-lg"
+            />
+            <button type="button"
+              onClick={() => handleZoom(0.2)}
+              aria-label="Zoom in"
+              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <ZoomIn className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+            <button type="button"
+              onClick={handleReset}
+              aria-label="Reset"
+              className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" strokeWidth={1.5} />
+            </button>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex gap-3">
+            <button type="button"
+              onClick={onCancel}
+              className="flex-1 py-3 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 transition-colors"
+            >
+              Cancel
+            </button>
+            <button type="button"
+              onClick={handleCrop}
+              className="flex-1 py-3 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
+            >
+              <Check className="w-4 h-4" strokeWidth={2} />
+              Apply
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
