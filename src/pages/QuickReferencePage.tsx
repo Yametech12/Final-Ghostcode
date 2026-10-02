@@ -103,7 +103,7 @@ export default function QuickReferencePage() {
             <ul className="space-y-3">
               {/* Intrigue */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
-                <button 
+                <button type="button" 
                   onClick={() => toggleEts('I')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -133,7 +133,7 @@ export default function QuickReferencePage() {
 
               {/* Arousal */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
-                <button 
+                <button type="button" 
                   onClick={() => toggleEts('A')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -163,7 +163,7 @@ export default function QuickReferencePage() {
 
               {/* Comfort */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
-                <button 
+                <button type="button" 
                   onClick={() => toggleEts('C')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -193,7 +193,7 @@ export default function QuickReferencePage() {
 
               {/* Devotion */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
-                <button 
+                <button type="button" 
                   onClick={() => toggleEts('D')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
