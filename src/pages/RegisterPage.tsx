@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
-import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield, Sparkles } from 'lucide-react';
 import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 
@@ -19,7 +19,7 @@ const getAuthErrorMessage = (error: any) => {
     case 'auth/email-already-in-use':
       return 'An account with this email already exists. Please try signing in instead.';
     case 'auth/weak-password':
-      return 'Password should be at least 6 characters.';
+      return 'Password must be at least 8 characters with uppercase, lowercase, number, and special character.';
     case 'auth/invalid-email':
       return 'Invalid email address.';
     case 'auth/too-many-requests':
@@ -48,15 +48,17 @@ export default function RegisterPage() {
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [passwordFocused, setPasswordFocused] = useState(false);
 
   const [verificationSent, setVerificationSent] = useState(false);
-  const [acceptTerms, setAcceptTerms] = useState(false);
+
+  // Pricing intent preserved from /pricing?intent= — show contextual banner.
+  const planIntent = searchParams.get('intent');
+  const intentLabel = planIntent === 'strategist' ? 'Strategist' : planIntent === 'oracle' ? 'Oracle' : null;
 
   const navigate = useNavigate();
   const auth = useEnhancedAuth();
@@ -74,9 +76,9 @@ export default function RegisterPage() {
   if (!auth) return <div>Loading...</div>;
 
   const passwordErrors = password ? validatePassword(password) : [];
-  const passwordsMatch = password === confirmPassword && password.length > 0;
-  const isFormValid = email && password && confirmPassword && name &&
-                     passwordsMatch && passwordErrors.length === 0 && acceptTerms;
+  const passwordValid = password.length > 0 && passwordErrors.length === 0;
+  const showPasswordHints = passwordFocused || password.length > 0;
+  const isFormValid = email && passwordValid;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -86,7 +88,7 @@ export default function RegisterPage() {
     setError('');
 
     try {
-      const result = await signUp(email, password, name);
+      const result = await signUp(email, password, name.trim() || undefined);
 
       if (result.requiresVerification) {
         setVerificationSent(true);
@@ -137,13 +139,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex gap-3">
-              <button
+              <button type="button"
                 onClick={() => navigate('/login')}
                 className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all"
               >
                 Go to Sign In
               </button>
-              <button
+              <button type="button"
                 onClick={() => setVerificationSent(false)}
                 className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all"
               >
@@ -168,7 +170,56 @@ export default function RegisterPage() {
             <span className="codex-label">Join the observatory</span>
           </div>
           <h1 className="hero-headline text-3xl text-slate-50 mb-2">Create Account</h1>
-          <p className="text-slate-400">Join Epimetheus with email verification</p>
+          <p className="text-slate-400">Free forever · No credit card required</p>
+        </div>
+
+        {intentLabel && (
+          <div className="mb-6 p-4 rounded-xl bg-accent-primary/10 border border-accent-primary/25 flex items-start gap-3" role="status">
+            <Sparkles className="w-5 h-5 text-accent-primary shrink-0 mt-0.5" aria-hidden="true" />
+            <p className="text-sm text-slate-300 leading-relaxed">
+              You picked <strong className="text-slate-50">{intentLabel}</strong>. Create your free
+              account first — you can upgrade once paid checkout launches.
+            </p>
+          </div>
+        )}
+
+        {/* Social signup first — lowest friction path */}
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              setLoading(true);
+              setError('');
+              await signInWithGoogle();
+              navigate('/');
+            } catch (err: any) {
+              console.error('Registration error:', err);
+              setError(getAuthErrorMessage(err) || getSupabaseErrorMessage(err));
+            } finally {
+              setLoading(false);
+            }
+          }}
+          disabled={loading}
+          className="w-full flex items-center justify-center gap-2 bg-white text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
+        >
+          <svg className="w-5 h-5" viewBox="0 0 24 24" aria-hidden="true">
+            <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+            <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+            <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
+            <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+          </svg>
+          Sign up with Google
+        </button>
+
+        <div className="my-6">
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-mystic-900/50 text-slate-500">Or continue with email</span>
+            </div>
+          </div>
         </div>
 
          <form onSubmit={handleSubmit} className="space-y-6">
@@ -178,23 +229,6 @@ export default function RegisterPage() {
                {error}
              </div>
            )}
-
-           <div className="space-y-2">
-             <label htmlFor="name" className="text-sm font-medium text-slate-300">Full Name</label>
-             <div className="relative">
-               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
-               <input
-                 id="name"
-                 type="text"
-                 value={name}
-                 onChange={(e) => setName(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
-                 placeholder="John Doe"
-                 required
-                 aria-required="true"
-               />
-             </div>
-           </div>
 
            <div className="space-y-2">
              <label htmlFor="register-email" className="text-sm font-medium text-slate-300">Email</label>
@@ -215,7 +249,10 @@ export default function RegisterPage() {
            </div>
 
            <div className="space-y-2">
-             <label htmlFor="register-password" className="text-sm font-medium text-slate-300">Password</label>
+             <div className="flex items-baseline justify-between">
+               <label htmlFor="register-password" className="text-sm font-medium text-slate-300">Password</label>
+               <span className="text-xs text-slate-500">Min. 8 characters</span>
+             </div>
              <div className="relative">
                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
                <input
@@ -223,10 +260,11 @@ export default function RegisterPage() {
                  type={showPassword ? 'text' : 'password'}
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
+                 onFocus={() => setPasswordFocused(true)}
                  className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
                    password && passwordErrors.length > 0
                      ? 'border-red-500/50 focus:border-red-500/50'
-                     : password && passwordErrors.length === 0
+                     : passwordValid
                      ? 'border-green-500/50 focus:border-green-500/50'
                      : 'border-white/10 focus:border-accent-primary/50'
                  }`}
@@ -234,7 +272,7 @@ export default function RegisterPage() {
                  autoComplete="new-password"
                  required
                  aria-invalid={passwordErrors.length > 0}
-                 aria-describedby={passwordErrors.length > 0 ? 'register-password-errors' : undefined}
+                 aria-describedby="register-password-hints"
                />
                <button
                  type="button"
@@ -245,84 +283,47 @@ export default function RegisterPage() {
                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                </button>
              </div>
-             {password && passwordErrors.length > 0 && (
-               <div id="register-password-errors" className="space-y-1" role="alert">
-                 {passwordErrors.map((error, index) => (
-                   <div key={index} className="flex items-center gap-1 text-xs text-red-400">
-                     <div className="w-1 h-1 rounded-full bg-red-400" aria-hidden="true" />
-                     {error}
+             <div id="register-password-hints" className="space-y-1">
+               {[
+                 { ok: password.length >= 8, label: 'At least 8 characters' },
+                 { ok: /[A-Z]/.test(password), label: 'One uppercase letter' },
+                 { ok: /[a-z]/.test(password), label: 'One lowercase letter' },
+                 { ok: /\d/.test(password), label: 'One number' },
+                 { ok: /[!@#$%^&*]/.test(password), label: 'One special character (!@#$%^&*)' },
+               ].map((req, index) => {
+                 const show = showPasswordHints || req.ok;
+                 if (!show) return null;
+                 return (
+                   <div key={index} className={`flex items-center gap-1.5 text-xs ${req.ok ? 'text-green-400' : 'text-slate-500'}`}>
+                     {req.ok
+                       ? <CheckCircle className="w-3.5 h-3.5" aria-hidden="true" />
+                       : <div className="w-1 h-1 rounded-full bg-slate-500 ml-1 mr-0.5" aria-hidden="true" />}
+                     {req.label}
                    </div>
-                 ))}
-               </div>
-             )}
+                 );
+               })}
+             </div>
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Confirm Password</label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
-                  confirmPassword && !passwordsMatch
-                    ? 'border-red-500/50 focus:border-red-500/50'
-                    : confirmPassword && passwordsMatch
-                    ? 'border-green-500/50 focus:border-green-500/50'
-                    : 'border-white/10 focus:border-accent-primary/50'
-                }`}
-                placeholder="••••••••"
-                autoComplete="new-password"
-                required
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
-              >
-                {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-              </button>
-            </div>
-            {confirmPassword && !passwordsMatch && (
-              <div className="text-xs text-red-400">Passwords do not match</div>
-            )}
-          </div>
+             <label htmlFor="name" className="text-sm font-medium text-slate-300">
+               Full Name <span className="text-slate-500 font-normal">(optional)</span>
+             </label>
+             <div className="relative">
+               <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" aria-hidden="true" />
+               <input
+                 id="name"
+                 type="text"
+                 value={name}
+                 onChange={(e) => setName(e.target.value)}
+                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                 placeholder="John Doe"
+                 autoComplete="name"
+               />
+             </div>
 
-          <div className="flex items-start gap-3">
-            <input
-              type="checkbox"
-              id="terms"
-              checked={acceptTerms}
-              onChange={(e) => setAcceptTerms(e.target.checked)}
-              className="mt-1 rounded border-white/10 bg-white/5 text-accent-primary focus:ring-accent-primary"
-              required
-              aria-required="true"
-            />
-            <label htmlFor="terms" className="text-sm text-slate-400 leading-relaxed">
-              I agree to the{' '}
-              <a
-                href="/terms"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent-primary hover:underline"
-              >
-                Terms of Service
-              </a>
-              {' '}and{' '}
-              <a
-                href="/privacy"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-accent-primary hover:underline"
-              >
-                Privacy Policy
-              </a>
-              .
-            </label>
            </div>
 
-           
           <button
             type="submit"
             disabled={loading || !isFormValid}
@@ -331,52 +332,27 @@ export default function RegisterPage() {
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
             {!loading && <ArrowRight className="w-5 h-5" />}
           </button>
+
+          <p className="text-xs text-slate-500 text-center leading-relaxed">
+            By creating an account, you agree to our{' '}
+            <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">
+              Terms of Service
+            </a>
+            {' '}and{' '}
+            <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-accent-primary hover:underline">
+              Privacy Policy
+            </a>
+            .
+          </p>
         </form>
 
         <div className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{' '}
-          <button onClick={() => navigate('/login')} className="text-accent-primary font-bold hover:underline">
+          <button type="button" onClick={() => navigate('/login')} className="text-accent-primary font-bold hover:underline">
             Sign In
           </button>
         </div>
 
-        <div className="mt-6">
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
-            </div>
-            <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-mystic-900/50 text-slate-500">Or continue with</span>
-            </div>
-          </div>
-
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  setLoading(true);
-                  setError('');
-                  await signInWithGoogle();
-                  navigate('/');
-                } catch (err: any) {
-                  console.error('Registration error:', err);
-                  setError(getAuthErrorMessage(err) || getSupabaseErrorMessage(err));
-                } finally {
-                  setLoading(false);
-                }
-              }}
-              disabled={loading}
-              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
-            >
-            <svg className="w-5 h-5" viewBox="0 0 24 24">
-              <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
-              <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
-            </svg>
-            Sign up with Google
-          </button>
-        </div>
       </div>
     </div>
   );

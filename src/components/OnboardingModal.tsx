@@ -1,7 +1,13 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, ChevronRight, ChevronLeft, Target, Brain, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import {
+  trackOnboardingStep,
+  trackOnboardingComplete,
+  trackOnboardingDismissed,
+} from '../utils/analytics';
 
 interface OnboardingStep {
   title: string;
@@ -15,10 +21,10 @@ const steps: OnboardingStep[] = [
   {
     title: "Welcome to EPIMETHEUS",
     icon: <Sparkles className="w-12 h-12 text-accent-primary" />,
-    description: "Your AI-powered system for understanding personality dynamics. We'll show you how to get the most out of every feature.",
+    description: "Your system for reading personality dynamics. Here's how to get the most out of every feature.",
     tips: [
-      "Complete the Target Assessment first to establish a baseline",
-      "Use the AI Advisor for personalized guidance",
+      "Take the Target Assessment first to set your baseline",
+      "Ask the AI Advisor when you need guidance",
       "Everything syncs to your account automatically"
     ],
     color: "from-accent-primary to-accent-secondary"
@@ -26,40 +32,40 @@ const steps: OnboardingStep[] = [
   {
     title: "Target Assessment",
     icon: <Target className="w-12 h-12 text-blue-500" />,
-    description: "Answer 6 quick questions about her behavior across three axes: Time (Tester vs Investor), Sex (Denier vs Justifier), and Relationship (Idealist vs Realist).",
+    description: "Six quick questions about her behavior across three axes: Time (Tester vs Investor), Sex (Denier vs Justifier), and Relationship (Idealist vs Realist).",
     tips: [
-      "Each assessment uses randomized questions from a larger bank",
-      "Results are saved to your profile automatically",
-      "You can retake it anytime with fresh questions"
+      "Questions are drawn from a larger bank, so retakes stay fresh",
+      "Results save to your profile automatically",
+      "Retake anytime — your latest result is the one that counts"
     ],
     color: "from-blue-500 to-indigo-500"
   },
   {
     title: "The Calibration Oracle",
     icon: <Brain className="w-12 h-12 text-purple-500" />,
-    description: "Our most powerful tool. Describe a real scenario using structured inputs (eye contact, body language, clothing, venue) and the AI extracts a full personality profile with actionable strategy.",
+    description: "The deepest read in the toolkit. Describe a real scenario — eye contact, body language, venue — and get a full personality profile with a clear strategy.",
     tips: [
-      "Fill in as many fields as possible for better accuracy",
-      "Use Practice Mode to sharpen your observation skills",
-      "History saves all past analyses for review"
+      "More detail means a sharper read",
+      "Practice Mode trains your eye",
+      "Every analysis is saved to your history"
     ],
     color: "from-purple-500 to-pink-500"
   },
   {
     title: "AI Advisor Chat",
     icon: <MessageSquare className="w-12 h-12 text-emerald-500" />,
-    description: "A streaming AI chat that knows your calibration history and personality data. Ask it anything about interpersonal dynamics, strategy, or specific situations.",
+    description: "A live advisor that remembers your calibration history and your type. Ask anything — strategy, dynamics, specific situations.",
     tips: [
-      "The advisor references your past calibrations for context",
+      "It pulls context from your past calibrations",
       "Ask follow-up questions — it remembers the conversation",
-      "Use it for real-time guidance during interactions"
+      "Ask in the moment — it answers in real time"
     ],
     color: "from-emerald-500 to-teal-500"
   },
   {
     title: "Encyclopedia & Tools",
     icon: <BookOpen className="w-12 h-12 text-amber-500" />,
-    description: "Deep-dive into all 8 personality archetypes. Each profile includes strategy, dating advice, texting style, physicality guides, and red flags.",
+    description: "Explore all 8 personality archetypes in depth. Each profile covers strategy, dating advice, texting style, physicality, and red flags.",
     tips: [
       "Signal Decryptor — paste text messages to decode subtext",
       "Simulation Matrix — practice conversations with AI roleplay",
@@ -70,7 +76,7 @@ const steps: OnboardingStep[] = [
   {
     title: "You're Ready",
     icon: <Zap className="w-12 h-12 text-accent-primary" />,
-    description: "Start with the Target Assessment to identify her type, then use the Calibration Oracle for deeper analysis. The AI Advisor is always available for real-time guidance.",
+    description: "Start with the Target Assessment to identify her type, then go deeper with the Calibration Oracle. The AI Advisor is always one tap away.",
     tips: [
       "Tip: You can replay this tutorial anytime from the Command Palette (Ctrl+K)",
       "Favorite content to save it for quick access later",
@@ -83,6 +89,7 @@ const steps: OnboardingStep[] = [
 export default function OnboardingModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -105,13 +112,24 @@ export default function OnboardingModal() {
   const handleClose = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
     setIsOpen(false);
+    // Funnel: completed only if the user reached the final step.
+    if (step >= steps.length - 1) {
+      trackOnboardingComplete(steps.length);
+    } else {
+      trackOnboardingDismissed(step + 1, steps.length);
+    }
   };
 
   const handleNext = () => {
     if (step < steps.length - 1) {
-      setStep(step + 1);
+      const nextStep = step + 1;
+      setStep(nextStep);
+      trackOnboardingStep(nextStep + 1, steps.length);
     } else {
+      // Final step: close the tutorial AND take the user to the first
+      // value action (Target Assessment) instead of dropping them.
       handleClose();
+      navigate('/assessment');
     }
   };
 
@@ -145,7 +163,7 @@ export default function OnboardingModal() {
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
             className="relative w-full max-w-lg bg-mystic-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
           >
-            <button
+            <button type="button"
               onClick={handleClose}
               aria-label="Close tutorial"
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"
@@ -201,7 +219,7 @@ export default function OnboardingModal() {
                 {/* Progress dots */}
                 <div className="flex justify-center gap-2">
                   {steps.map((_, i) => (
-                    <button
+                    <button type="button"
                       key={i}
                       onClick={() => setStep(i)}
                       aria-label={`Go to step ${i + 1}`}
@@ -215,7 +233,7 @@ export default function OnboardingModal() {
                 {/* Navigation buttons */}
                 <div className="flex items-center gap-3">
                   {step > 0 && (
-                    <button
+                    <button type="button"
                       onClick={handlePrev}
                       className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                     >
@@ -223,7 +241,7 @@ export default function OnboardingModal() {
                       Back
                     </button>
                   )}
-                  <button
+                  <button type="button"
                     onClick={handleNext}
                     className={`${step > 0 ? 'flex-1' : 'w-full'} py-3 rounded-xl accent-gradient text-white font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
                   >
@@ -233,7 +251,7 @@ export default function OnboardingModal() {
                       </>
                     ) : (
                       <>
-                        Start Exploring <Sparkles className="w-5 h-5" />
+                        Start my assessment <Sparkles className="w-5 h-5" />
                       </>
                     )}
                   </button>
@@ -241,7 +259,7 @@ export default function OnboardingModal() {
 
                 {/* Skip link */}
                 {step < steps.length - 1 && (
-                  <button
+                  <button type="button"
                     onClick={handleClose}
                     className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
                   >
