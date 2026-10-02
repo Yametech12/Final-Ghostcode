@@ -271,8 +271,8 @@ export default function FieldGuidePage() {
   return (
     <div className="space-y-12">
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient shadow-lg shadow-accent-primary/20 mb-4 glow-accent">
-          <Map className="w-8 h-8 text-white" />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/20 mb-4 glow-accent">
+          <Map className="w-8 h-8" />
         </div>
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">The Field Guide</h1>
         <p className="text-slate-400 max-w-2xl mx-auto">
@@ -286,7 +286,7 @@ export default function FieldGuidePage() {
           onClick={() => setActiveTab('scenarios')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-            activeTab === 'scenarios' ? "bg-accent-primary text-white shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
+            activeTab === 'scenarios' ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
           )}
         >
           <BookOpen className="w-5 h-5" />
@@ -296,7 +296,7 @@ export default function FieldGuidePage() {
           onClick={() => setActiveTab('reports')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-            activeTab === 'reports' ? "bg-accent-primary text-white shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
+            activeTab === 'reports' ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
           )}
         >
           <Users className="w-5 h-5" />
@@ -325,7 +325,7 @@ export default function FieldGuidePage() {
                 onClick={() => setSelectedType(null)}
                 className={cn(
                   "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
-                  !selectedType ? "bg-accent-primary text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
+                  !selectedType ? "bg-accent-primary text-mystic-950" : "bg-white/5 text-slate-400 hover:bg-white/10"
                 )}
               >
                 All Types
@@ -336,7 +336,7 @@ export default function FieldGuidePage() {
                   onClick={() => setSelectedType(type.id)}
                   className={cn(
                     "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
-                    selectedType === type.id ? "bg-accent-primary text-white" : "bg-white/5 text-slate-400 hover:bg-white/10"
+                    selectedType === type.id ? "bg-accent-primary text-mystic-950" : "bg-white/5 text-slate-400 hover:bg-white/10"
                   )}
                 >
                   {type.id}
@@ -368,7 +368,7 @@ export default function FieldGuidePage() {
                       className={cn(
                         "p-1.5 rounded-lg transition-all",
                         copiedText === s.example 
-                          ? "bg-emerald-500/20 text-emerald-400" 
+                          ? "bg-emerald-500/20 text-status-success" 
                           : "bg-white/5 text-slate-500 hover:text-accent-primary hover:bg-white/10"
                       )}
                       title="Copy example line"
@@ -408,7 +408,7 @@ export default function FieldGuidePage() {
             </section>
 
             <section className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2 text-red-400">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-status-error">
                 <AlertCircle className="w-5 h-5" />
                 Critical Avoids
               </h3>
@@ -465,7 +465,7 @@ export default function FieldGuidePage() {
                             className={cn(
                               "p-1 rounded transition-all",
                               copiedText === item.line
-                                ? "bg-emerald-500/20 text-emerald-400 opacity-100"
+                                ? "bg-emerald-500/20 text-status-success opacity-100"
                                 : "opacity-0 group-hover/line:opacity-100 bg-white/5 text-slate-500 hover:text-accent-primary"
                             )}
                             title="Copy line"
@@ -499,7 +499,7 @@ export default function FieldGuidePage() {
                             className={cn(
                               "p-1 rounded transition-all",
                               copiedText === item.line
-                                ? "bg-emerald-500/20 text-emerald-400 opacity-100"
+                                ? "bg-emerald-500/20 text-status-success opacity-100"
                                 : "opacity-0 group-hover/line:opacity-100 bg-white/5 text-slate-500 hover:text-accent-primary"
                             )}
                             title="Copy line"
@@ -577,7 +577,7 @@ export default function FieldGuidePage() {
               </select>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors font-bold text-sm shadow-lg shadow-accent-primary/20"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary text-mystic-950 hover:bg-accent-primary/80 transition-colors font-bold text-sm shadow-lg shadow-accent-primary/20"
               >
                 <Plus className="w-4 h-4" />
                 Submit Report
@@ -621,7 +621,7 @@ export default function FieldGuidePage() {
                   <div className="flex justify-between items-start">
                     <div className="space-y-1">
                       <div className="flex items-center gap-2">
-                        <span className="font-bold text-white">{report.author}</span>
+                        <span className="font-bold text-slate-100">{report.author}</span>
                         <span className="text-xs text-slate-500">• {report.date}</span>
                       </div>
                       <div className="inline-block px-2 py-0.5 rounded bg-accent-primary/10 text-accent-primary text-[10px] font-bold uppercase tracking-widest">
@@ -722,7 +722,7 @@ export default function FieldGuidePage() {
                              });
                            }}
                            disabled={isSubmittingComment || !newComment.trim()}
-                           className="p-2 rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                           className="p-2 rounded-xl bg-accent-primary text-mystic-950 hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                          >
                            {isSubmittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                          </button>
@@ -745,7 +745,7 @@ export default function FieldGuidePage() {
               </div>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="px-8 py-4 rounded-xl bg-accent-primary text-white font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20"
+                className="px-8 py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20"
               >
                 Submit First Report
               </button>
@@ -844,7 +844,7 @@ export default function FieldGuidePage() {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl bg-accent-primary text-white font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isSubmitting ? (
                     <>

@@ -68,16 +68,16 @@ export default function GuidePage() {
                   activeTab === section.id
                     ? "bg-accent-primary/10 border-accent-primary/50 text-accent-primary shadow-[0_0_15px_rgba(139,92,246,0.15)]"
                     : isCompleted
-                      ? "bg-emerald-500/5 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/10"
+                      ? "bg-emerald-500/5 border-emerald-500/20 text-status-success hover:bg-emerald-500/10"
                       : "border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200"
                 )}
               >
                 <div className={cn(
                   "w-10 h-10 rounded-lg flex items-center justify-center transition-all shrink-0",
                   activeTab === section.id 
-                    ? "accent-gradient text-white" 
+                    ? "accent-gradient text-mystic-950" 
                     : isCompleted
-                      ? "bg-emerald-500/20 text-emerald-400"
+                      ? "bg-emerald-500/20 text-status-success"
                       : "bg-white/5 text-slate-500 group-hover:text-slate-300"
                 )}>
                   {isCompleted ? <CheckCircle2 className="w-5 h-5" /> : <Book className="w-5 h-5" />}

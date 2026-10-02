@@ -29,11 +29,14 @@ function useChartTheme() {
 
   useEffect(() => {
     const refresh = () => {
+      const light = document.documentElement.classList.contains('light-theme');
       setTheme({
         accentPrimary: getCssVar('--color-accent-primary', '#E8C77E'),
         accentSecondary: getCssVar('--color-accent-secondary', '#B87333'),
         tickColor: getCssVar('--color-slate-400', '#9A8F80'),
-        gridColor: 'rgba(196, 186, 171, 0.08)',
+        // Warm-gray grid at 8% is invisible on cream in light theme.
+        // (15x light/dark audit, Oct 2026.)
+        gridColor: light ? 'rgba(110, 99, 88, 0.18)' : 'rgba(196, 186, 171, 0.08)',
         surfaceBg: getCssVar('--color-mystic-900', '#161118'),
       });
     };
@@ -113,12 +116,15 @@ export default function InsightsPage() {
   }, [calibrations]);
 
   // Tooltip styling shared by both charts — glass-card treatment (Req 9.6).
+  // Built from the theme-aware surface token so it follows light/dark.
+  // (15x light/dark audit, Oct 2026.)
   const tooltipContentStyle: React.CSSProperties = {
-    backgroundColor: 'rgba(22, 17, 24, 0.95)',
+    backgroundColor: chartTheme.surfaceBg,
     border: '1px solid rgba(232, 199, 126, 0.15)',
     borderRadius: '12px',
     boxShadow: '0 12px 40px -12px rgba(0,0,0,0.5)',
     backdropFilter: 'blur(12px)',
+    color: chartTheme.tickColor,
   };
 
   if (loading) {
@@ -132,8 +138,8 @@ export default function InsightsPage() {
   return (
     <div className="space-y-12">
       <div className="text-center space-y-4">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient shadow-lg shadow-accent-primary/15 mb-4 glow-accent">
-          <Activity aria-hidden="true" className="w-8 h-8 text-mystic-950" strokeWidth={1.5} />
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/15 mb-4 glow-accent">
+          <Activity aria-hidden="true" className="w-8 h-8" strokeWidth={1.5} />
         </div>
         <span className="eyebrow">Analytics</span>
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">Your Insights</h1>
