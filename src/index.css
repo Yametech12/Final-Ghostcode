@@ -840,6 +840,23 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--color-iris-700);
 }
 
+/* Mobile: let the codex eyebrow wrap instead of forcing horizontal overflow.
+   nowrap + 0.32em tracking measures ~444px on the hero label, overflowing
+   390px viewports and (via grid min-width:auto) clipping the whole hero
+   column. Pair with min-w-0 on grid children. */
+@media (max-width: 639px) {
+  .codex-label {
+    white-space: normal;
+    letter-spacing: 0.22em;
+    line-height: 1.9;
+  }
+  .codex-label::before,
+  .codex-label::after {
+    width: 1.5rem;
+    flex-shrink: 0;
+  }
+}
+
 /* ── Oracle frame ────────────────────────────────────────────────────
    Gradient-border beam card: 1px border painted with a conic sweep of
    iris → gold → iris, so the edge itself feels like starlight hitting

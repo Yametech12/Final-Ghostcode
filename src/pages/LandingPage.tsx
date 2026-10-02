@@ -310,7 +310,7 @@ export default function LandingPage() {
       >
         <ConstellationField density={1} />
         <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 md:pt-28 pb-16 sm:pb-24 grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-8 items-center">
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-left min-w-0">
             <motion.div variants={iVar}>
               <span className="codex-label">
                 <Sparkles className="w-3.5 h-3.5 text-iris-300" aria-hidden="true" />

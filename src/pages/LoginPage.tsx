@@ -131,7 +131,7 @@ export default function LoginPage() {
         <div className="flex justify-center mb-4">
           <span className="codex-label">Return to the observatory</span>
         </div>
-        <h1 className="hero-headline auth-heading text-3xl text-slate-50 mb-2 text-center">Welcome Back</h1>
+        <h1 className="hero-headline text-3xl text-slate-50 mb-2 text-center">Welcome Back</h1>
         <p className="text-slate-400 mb-6 text-center">Sign in to continue to Epimetheus</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
