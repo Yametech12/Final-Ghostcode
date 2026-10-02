@@ -65,7 +65,7 @@ export default function AssessmentResultPage() {
         </Link>
         
         {user && !saved && (
-          <button
+          <button type="button"
             onClick={() => handleSaveToProfile().catch(err => console.error("Unhandled error in handleSaveToProfile:", err))}
             disabled={isSaving}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-sm font-bold hover:bg-accent-primary hover:text-mystic-950 transition-all disabled:opacity-50"

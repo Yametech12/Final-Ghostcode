@@ -476,7 +476,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                 )}
               </div>
 
-              <button
+              <button type="button"
                 onClick={toggleTheme}
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                 className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -567,7 +567,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   )}
                 </div>
               ) : (
-                <button
+                <button type="button"
                   onClick={() => {
                     navigate('/login');
                     setIsMenuOpen(false);
@@ -583,7 +583,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
 
             {/* Mobile menu button */}
             <div className="lg:hidden flex items-center gap-2">
-                <button
+                <button type="button"
                   onClick={() => setIsMenuOpen(!isMenuOpen)}
                   aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={isMenuOpen}
@@ -613,14 +613,14 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                 <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
               </div>
               <div className="flex items-center gap-2">
-                <button
+                <button type="button"
                   onClick={toggleTheme}
                   aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
                   className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
                 >
                   {isDark ? <Sun className="w-6 h-6" aria-hidden="true" /> : <Moon className="w-6 h-6" aria-hidden="true" />}
                 </button>
-                <button
+                <button type="button"
                   onClick={() => setIsMenuOpen(false)}
                   aria-label="Close menu"
                   className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
@@ -743,7 +743,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                       <div className="text-slate-100 font-semibold text-lg truncate">{user.displayName}</div>
                       <div className="text-slate-400 text-sm truncate">{user.email}</div>
                     </div>
-                    <button
+                    <button type="button"
                       onClick={handleLogout}
                       aria-label="Sign out"
                       className="tap-target rounded-xl text-slate-400 hover:text-status-error hover:bg-status-error/10 transition-colors"
@@ -771,7 +771,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   </Link>
                 </div>
               ) : (
-                <button
+                <button type="button"
                   onClick={() => {
                     navigate('/login');
                     setIsMenuOpen(false);
@@ -820,7 +820,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
               </p>
             </div>
             <div className="text-left md:text-right">
-              <button
+              <button type="button"
                 onClick={() => setIsFeedbackOpen(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-slate-200 text-sm font-bold hover:from-accent-primary/30 hover:to-accent-secondary/30 hover:border-accent-primary/50 hover:text-white transition-all hover:scale-105"
               >
