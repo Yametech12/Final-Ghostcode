@@ -18,6 +18,21 @@
   --color-accent-secondary: #B87333; /* antique copper — highlights, hover-deepens */
   --color-accent-glow: #D4AF37;      /* deeper gold — used in glow box-shadows only */
 
+  /* ── "The Observatory" duotone — starlight iris (cool violet) is the
+     mystique layer: constellation lines, sigils, oracle interactions, AI
+     glow. Warm ember gold stays the action layer (CTAs, active states).
+     The warm/cool interplay is the signature — neither color alone
+     carries the brand. Contrast-verified Oct 2026:
+       iris-300 #B7A6FF → 9.22:1 on mystic-950 (AAA)
+       iris-700 #5B3FBF → 6.76:1 on light cream (AA) */
+  --color-iris-200: #D3C8FF; /* starlight wash — constellation lines, hairlines */
+  --color-iris-300: #B7A6FF; /* primary iris on dark — icons, sigils, labels (AAA) */
+  --color-iris-400: #A78BFA; /* hover/emphasis on dark (AA) */
+  --color-iris-500: #8B7CF6; /* fills, glows on dark */
+  --color-iris-600: #7C5CD6; /* borders on dark */
+  --color-iris-700: #5B3FBF; /* primary iris on light cream (AA) */
+  --color-iris-800: #4530A0; /* deep iris — gradient stops */
+
   /* Status colors — muted, harmonized with gold (Req 4.6) */
   --color-status-success: #6FA083; /* sage green, desaturated */
   --color-status-warning: #C99B5B; /* amber, harmonizes with gold */
@@ -196,6 +211,15 @@
   --color-accent-primary:   #B8860B; /* deeper gold — 4.7:1 vs cream */
   --color-accent-secondary: #8B5A2B; /* deeper copper */
   --color-accent-glow:      #9C7421;
+
+  /* Iris flips deeper on cream — iris-700 #5B3FBF → 6.76:1 vs cream (AA) */
+  --color-iris-200: #4530A0;
+  --color-iris-300: #5B3FBF; /* primary iris text/icons on light (AA) */
+  --color-iris-400: #5B3FBF;
+  --color-iris-500: #6D4FD0;
+  --color-iris-600: #7C5CD6;
+  --color-iris-700: #5B3FBF;
+  --color-iris-800: #3A2683;
 
   /* Grayscale flips and warms — same names, inverted lightness */
   --color-slate-50:  #14110E;
@@ -759,4 +783,169 @@ h1, h2, h3, h4, h5, h6 {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border-width: 0;
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   "THE OBSERVATORY" — signature design layer (Oct 2026 redesign)
+   Epimetheus as a night observatory for human connection: you chart
+   people the way astronomers chart stars. Warm ember gold = the action
+   layer (CTAs, active states). Cool starlight iris = the mystique layer
+   (constellations, sigils, oracle interactions). The duotone interplay
+   is the unmistakable brand signature.
+   ══════════════════════════════════════════════════════════════════════ */
+
+/* ── Constellation canvas ────────────────────────────────────────────
+   Absolute-fill canvas behind hero/auth surfaces. The React component
+   (ConstellationField) paints drifting stars + constellation lines.
+   Purely decorative: aria-hidden, pointer-events none, sits at z-0. */
+.constellation-field {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  /* Fades the canvas edges into the page background so the starfield
+     never hits a hard rectangle edge. */
+  -webkit-mask-image: radial-gradient(ellipse 90% 85% at 50% 40%, black 55%, transparent 100%);
+  mask-image: radial-gradient(ellipse 90% 85% at 50% 40%, black 55%, transparent 100%);
+}
+
+/* ── Codex label ─────────────────────────────────────────────────────
+   The "field log" voice: JetBrains Mono, wide tracking, hairline rules
+   on both sides. Used for section eyebrows, stat labels, card metadata.
+   Replaces the plain .eyebrow where the observatory voice is wanted. */
+.codex-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--color-iris-300);
+  white-space: nowrap;
+}
+.codex-label::before,
+.codex-label::after {
+  content: '';
+  height: 1px;
+  width: 2.5rem;
+  background: linear-gradient(90deg, transparent, var(--color-iris-600));
+}
+.codex-label::after {
+  background: linear-gradient(90deg, var(--color-iris-600), transparent);
+}
+.light-theme .codex-label {
+  color: var(--color-iris-700);
+}
+
+/* ── Oracle frame ────────────────────────────────────────────────────
+   Gradient-border beam card: 1px border painted with a conic sweep of
+   iris → gold → iris, so the edge itself feels like starlight hitting
+   metal. For oracle draw cards, auth panels, featured pricing tiers. */
+.oracle-frame {
+  position: relative;
+  border-radius: var(--radius-xl);
+  background:
+    linear-gradient(var(--color-mystic-900), var(--color-mystic-900)) padding-box,
+    conic-gradient(from 210deg,
+      var(--color-iris-600),
+      var(--color-accent-primary),
+      var(--color-iris-500),
+      var(--color-accent-secondary),
+      var(--color-iris-600)) border-box;
+  border: 1px solid transparent;
+}
+.light-theme .oracle-frame {
+  background:
+    linear-gradient(var(--color-mystic-900), var(--color-mystic-900)) padding-box,
+    conic-gradient(from 210deg,
+      var(--color-iris-700),
+      var(--color-accent-primary),
+      var(--color-iris-500),
+      var(--color-accent-secondary),
+      var(--color-iris-700)) border-box;
+}
+
+/* ── Oracle button ───────────────────────────────────────────────────
+   Primary CTA with an animated beam: a slow conic sweep around the
+   border (paused for reduced-motion). Keeps the gold fill — the beam
+   is iris, so the duotone shows on every primary action. */
+.oracle-btn {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+.oracle-btn::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg,
+    transparent 0deg,
+    var(--color-iris-400) 40deg,
+    transparent 90deg,
+    transparent 180deg,
+    var(--color-iris-300) 220deg,
+    transparent 270deg);
+  filter: blur(6px);
+  opacity: 0.55;
+  animation: oracle-beam 6s linear infinite;
+}
+@keyframes oracle-beam {
+  to { transform: rotate(360deg); }
+}
+
+/* ── Sigil presentation ──────────────────────────────────────────────
+   Constellation sigils (archetype marks) get a soft iris halo and a
+   slow "breathing" glow so they feel alive, not printed. */
+.sigil {
+  filter: drop-shadow(0 0 6px rgba(139, 124, 246, 0.35));
+  animation: sigil-breathe 5s ease-in-out infinite;
+}
+@keyframes sigil-breathe {
+  0%, 100% { filter: drop-shadow(0 0 4px rgba(139, 124, 246, 0.25)); }
+  50%      { filter: drop-shadow(0 0 10px rgba(139, 124, 246, 0.5)); }
+}
+
+/* ── Iris text gradient ──────────────────────────────────────────────
+   For the "mystique" words in headlines — the cool counterpart to
+   .text-gradient (gold). Headlines pair them: gold for the human word,
+   iris for the cosmic word. */
+.text-gradient-iris {
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  background-image: linear-gradient(135deg, #D3C8FF 0%, #B7A6FF 40%, #8B7CF6 80%, #7C5CD6 100%);
+}
+.light-theme .text-gradient-iris {
+  background-image: linear-gradient(135deg, #5B3FBF 0%, #6D4FD0 60%, #4530A0 100%);
+}
+
+/* ── Starlight divider ───────────────────────────────────────────────
+   Hairline that fades gold → iris → transparent. Section separators
+   with the duotone signature baked in. */
+.starlight-divider {
+  height: 1px;
+  border: 0;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(232, 199, 126, 0.35) 30%,
+    rgba(139, 124, 246, 0.45) 50%,
+    rgba(232, 199, 126, 0.35) 70%,
+    transparent);
+}
+
+/* ── Grain ───────────────────────────────────────────────────────────
+   Subtle film grain over observatory surfaces — kills the flat
+   "CSS gradient" look. One tiny data-URI, no asset file. */
+.grain::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  opacity: 0.05;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
