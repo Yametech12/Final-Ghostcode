@@ -1,1 +1,124 @@
-aW1wb3J0IHJlYWN0IGZyb20gJ0B2aXRlanMvcGx1Z2luLXJlYWN0JzsKaW1wb3J0IHBhdGggZnJvbSAncGF0aCc7CmltcG9ydCB7IGZpbGVVUkxUb1BhdGggfSBmcm9tICd1cmwnOwppbXBvcnQgeyBkZWZpbmVDb25maWcsIGxvYWRFbnYgfSBmcm9tICd2aXRlJzsKCi8qKgogKiBCdWlsZC10aW1lIHNlY3JldC1sZWFrIGd1YXJkLgogKgogKiBWaXRlIGlubGluZXMgZXZlcnkgYFZJVEVfKmAtcHJlZml4ZWQgZW52IHZhciBpbnRvIHRoZSBjbGllbnQgYnVuZGxlLiBJZgogKiBhbnlvbmUgZXZlciByZS1hZGRzIGBWSVRFX1JFR09MT19BUElfS0VZYCwgYFZJVEVfT1BFTlJPVVRFUl9BUElfS0VZYCwKICogYFZJVEVfU1RSSVBFX1NFQ1JFVF8qYCwgYFZJVEVfU1VQQUJBU0VfU0VSVklDRV8qYCwgb3IgYFZJVEVfR01BSUxfKmAgdG8KICogYC5lbnZgLCB0aGUgcHJvZCBidWlsZCBzaWxlbnRseSBsZWFrcyB0aGUgc2VjcmV0IHRvIGV2ZXJ5IHZpc2l0b3IncwogKiBEZXZUb29scy4gVGhpcyBsb29wIGZhaWxzIHRoZSBidWlsZCBpbnN0ZWFkIOKAlCB2aXNpYmxlIENJIHNpZ25hbC4KICovCmZ1bmN0aW9uIGFzc2VydE5vTGVha2VkU2VjcmV0cyhlbnY6IFJlY29yZDxzdHJpbmcsIHN0cmluZz4pOiB2b2lkIHsKICBjb25zdCBiYW5uZWQgPSBbCiAgICAvXlZJVEVfUkVHT0xPX0FQSV9LRVkkLywKICAgIC9eVklURV9PUEVOUk9VVEVSX0FQSV9LRVkkLywKICAgIC9eVklURV9TVFJJUEVfU0VDUkVULywKICAgIC9eVklURV9TVVBBQkFTRV9TRVJWSUNFLywKICAgIC9eVklURV9HTUFJTF8vLAogICAgL15WSVRFX1NFTlRSWV9BVVRIX1RPS0VOJC8sCiAgXTsKICBjb25zdCBmb3VuZCA9IE9iamVjdC5rZXlzKGVudikuZmlsdGVyKChrKSA9PiBiYW5uZWQuc29tZSgocmUpID0+IHJlLnRlc3QoaykpKTsKICBpZiAoZm91bmQubGVuZ3RoID4gMCkgewogICAgdGhyb3cgbmV3IEVycm9yKAogICAgICBgUmVmdXNpbmcgdG8gYnVpbGQ6ICR7Zm91bmQuam9pbignLCAnKX0gd291bGQgYmUgaW5saW5lZCBpbnRvIHRoZSBgICsKICAgICAgICBgY2xpZW50IGJ1bmRsZS4gRHJvcCB0aGUgVklURV8gcHJlZml4IG9yIHJlbW92ZSB0aGUgdmFyaWFibGUuYCwKICAgICk7CiAgfQp9CgpleHBvcnQgZGVmYXVsdCBkZWZpbmVDb25maWcoKHsgbW9kZSB9KSA9PiB7CiAgLy8gUnVuIHRoZSBsZWFrIGd1YXJkIGFnYWluc3QgdGhlIG1lcmdlZCBlbnYgVml0ZSB3b3VsZCBhY3R1YWxseSBpbmxpbmUuCiAgYXNzZXJ0Tm9MZWFrZWRTZWNyZXRzKGxvYWRFbnYobW9kZSwgcHJvY2Vzcy5jd2QoKSwgJ1ZJVEVfJykpOwoKICByZXR1cm4gewogIC8vIFNFQy0xMzogYmFrZSB0aGUgZGVwbG95J3MgcmVsZWFzZSBpZGVudGlmaWVyIGF0IGJ1aWxkIHRpbWUgc28gYm90aCB0aGUKICAvLyBjbGllbnQgU2VudHJ5IFNESyBhbmQgdGhlIHVwbG9hZGVkIHNvdXJjZW1hcHMgcmVmZXJlbmNlIHRoZSBzYW1lCiAgLy8gdmVyc2lvbi4gVmVyY2VsIGJ1aWxkIGVudiBwcm92aWRlcyBWRVJDRUxfR0lUX0NPTU1JVF9TSEE7IENJIHByb3ZpZGVzCiAgLy8gR0lUSFVCX1NIQTsgU0VOVFJZX1JFTEVBU0UgaXMgdGhlIG1hbnVhbCBvdmVycmlkZS4KICBkZWZpbmU6IHsKICAgIF9fU0VOVFJZX1JFTEVBU0VfXzogSlNPTi5zdHJpbmdpZnkoCiAgICAgIHByb2Nlc3MuZW52LlNFTlRSWV9SRUxFQVNFIHx8CiAgICAgICAgcHJvY2Vzcy5lbnYuVkVSQ0VMX0dJVF9DT01NSVRfU0hBIHx8CiAgICAgICAgcHJvY2Vzcy5lbnYuR0lUSFVCX1NIQSB8fAogICAgICAgICcnLAogICAgKSwKICB9LAogIHBsdWdpbnM6IFtyZWFjdCgpXSwKICByZXNvbHZlOiB7CiAgICBhbGlhczogewogICAgICAnQCc6IHBhdGgucmVzb2x2ZShwYXRoLmRpcm5hbWUoZmlsZVVSTFRvUGF0aChpbXBvcnQubWV0YS51cmwpKSwgJy4vc3JjJykKICAgIH0KICB9LAogIC8vIEB0cy1leHBlY3QtZXJyb3Igdml0ZXN0IGNvbmZpZyBpcyByZWFkIGZyb20gdml0ZSBjb25maWcKICB0ZXN0OiB7CiAgICBnbG9iYWxzOiB0cnVlLAogICAgZW52aXJvbm1lbnQ6ICdqc2RvbScsCiAgICBzZXR1cEZpbGVzOiBbJy4vc3JjL3Rlc3Qvc2V0dXAudHMnXSwKICAgIGNzczogZmFsc2UsCiAgfSwKICBzZXJ2ZXI6IHsKICAgIHBvcnQ6IDUxNzMsCiAgICBob3N0OiB0cnVlLAogICAgcHJveHk6IHsKICAgICAgJy9hcGknOiB7CiAgICAgICAgdGFyZ2V0OiAnaHR0cDovL2xvY2FsaG9zdDozMDAwJywKICAgICAgICBjaGFuZ2VPcmlnaW46IHRydWUKICAgICAgfSwKICAgIH0sCiAgICBobXI6IHsKICAgICAgb3ZlcmxheTogZmFsc2UKICAgIH0KICB9LAogIGJ1aWxkOiB7CiAgICB0YXJnZXQ6ICdlc25leHQnLAogICAgcm9sbHVwT3B0aW9uczogewogICAgICBvdXRwdXQ6IHsKICAgICAgICBtYW51YWxDaHVua3M6IHsKICAgICAgICAgICdyZWFjdC12ZW5kb3InOiBbJ3JlYWN0JywgJ3JlYWN0LWRvbScsICdyZWFjdC1yb3V0ZXItZG9tJ10sCiAgICAgICAgICAvLyBQRVJGLTEwMHg6IHN1YnBhdGggZW50cmllcyBpbmNsdWRlZCDigJQgUm9sbHVwIGFycmF5LWZvcm0gbWFudWFsQ2h1bmtzCiAgICAgICAgICAvLyBtYXRjaGVzIGV4YWN0IG1vZHVsZSBJRHMgb25seS4gJ21vdGlvbicgIT09ICdtb3Rpb24vcmVhY3QnLCBzbyB0aGUKICAgICAgICAgIC8vIDYxIGZyYW1lci1tb3Rpb24gaW1wbGVtZW50YXRpb24gbW9kdWxlcyBmZWxsIHRocm91Z2ggdG8gdGhlIGVudHJ5CiAgICAgICAgICAvLyBjaHVuayAoNTM1S0IgLT4gMjgxS0IgYWZ0ZXIgZml4KS4gU2FtZSBmb3IgJ2xlbmlzJyB2cyAnbGVuaXMvcmVhY3QnLgogICAgICAgICAgJ2FuaW1hdGlvbi12ZW5kb3InOiBbJ21vdGlvbi9yZWFjdCcsICdtb3Rpb24nLCAnZnJhbWVyLW1vdGlvbicsICdtb3Rpb24tdXRpbHMnLCAnbW90aW9uLWRvbSddLAogICAgICAgICAgJ3VpLXZlbmRvcic6IFsnbHVjaWRlLXJlYWN0JywgJ0B0YW5zdGFjay9yZWFjdC1xdWVyeScsICdzb25uZXInLCAnY2xzeCcsICd0YWlsd2luZC1tZXJnZSddLAogICAgICAgICAgJ2NoYXJ0cy12ZW5kb3InOiBbJ3JlY2hhcnRzJ10sCiAgICAgICAgICAvLyBodG1sMmNhbnZhcyBhbmQgaHRtbC10by1pbWFnZSBhcmUgZHluYW1pY2FsbHkgaW1wb3J0ZWQgYXQgdGhlIGNhbGwgc2l0ZSwKICAgICAgICAgIC8vIHNvIHRoZXkgZ2V0IHRoZWlyIG93biBhdXRvLWdlbmVyYXRlZCBjaHVua3MuIERvbid0IGxpc3QgdGhlbSBoZXJlLgogICAgICAgICAgJ2ltYWdlLXZlbmRvcic6IFsnYnJvd3Nlci1pbWFnZS1jb21wcmVzc2lvbiddLAogICAgICAgICAgJ3V0aWxzLXZlbmRvcic6IFsnbGVuaXMvcmVhY3QnLCAnbGVuaXMnXSwKICAgICAgICAgIC8vIFBFUkYtMTAweDogc3VwYWJhc2Ugd2FzIGVudGlyZWx5IGluIHRoZSBlbnRyeSBjaHVuayAoMzcgbW9kdWxlcykuCiAgICAgICAgICAvLyBTZXBhcmF0ZSBjYWNoZWFibGUgdmVuZG9yIGNodW5rLCB6ZXJvIGJlaGF2aW9yIGNoYW5nZS4KICAgICAgICAgICdzdXBhYmFzZS12ZW5kb3InOiBbJ0BzdXBhYmFzZS9zdXBhYmFzZS1qcycsICdAc3VwYWJhc2UvYXV0aC1qcycsICdAc3VwYWJhc2UvcG9zdGdyZXN0LWpzJywgJ0BzdXBhYmFzZS9yZWFsdGltZS1qcycsICdAc3VwYWJhc2Uvc3RvcmFnZS1qcycsICdAc3VwYWJhc2UvZnVuY3Rpb25zLWpzJ10sCiAgICAgICAgfSwKICAgICAgICBjaHVua0ZpbGVOYW1lczogKGNodW5rSW5mbykgPT4gewogICAgICAgICAgY29uc3QgZmFjYWRlTW9kdWxlSWQgPSBjaHVua0luZm8uZmFjYWRlTW9kdWxlSWQKICAgICAgICAgICAgPyBjaHVua0luZm8uZmFjYWRlTW9kdWxlSWQuc3BsaXQoJy8nKS5wb3AoKT8ucmVwbGFjZSgnLnRzeCcsICcnKS5yZXBsYWNlKCcudHMnLCAnJykKICAgICAgICAgICAgOiAnY2h1bmsnOwogICAgICAgICAgcmV0dXJuIGBhc3NldHMvJHtmYWNhZGVNb2R1bGVJZH0tW2hhc2hdLmpzYDsKICAgICAgICB9LAogICAgICB9LAogICAgfSwKICAgIGNodW5rU2l6ZVdhcm5pbmdMaW1pdDogMTAwMCwKICAgIC8vIFNFQy0xMzogJ2hpZGRlbicgZ2VuZXJhdGVzIHNvdXJjZW1hcHMgZm9yIHVwbG9hZCB0byBTZW50cnkgd2l0aG91dAogICAgLy8gcmVmZXJlbmNpbmcgdGhlbSBmcm9tIHRoZSBzaGlwcGVkIGJ1bmRsZXMgKG5vIHNvdXJjZU1hcHBpbmdVUkwKICAgIC8vIGNvbW1lbnQsIG5vIHB1YmxpYyBtYXAgZXhwb3N1cmUpLiBzY3JpcHRzL3VwbG9hZC1zb3VyY2VtYXBzLm1qcwogICAgLy8gcHVzaGVzIHRoZW0gdG8gU2VudHJ5IHdoZW4gU0VOVFJZX0FVVEhfVE9LRU4gaXMgY29uZmlndXJlZC4KICAgIHNvdXJjZW1hcDogJ2hpZGRlbicsCiAgICBtaW5pZnk6ICdlc2J1aWxkJywKICAgIGNzc01pbmlmeTogdHJ1ZSwKICB9LAogIG9wdGltaXplRGVwczogewogICAgaW5jbHVkZTogWwogICAgICAncmVhY3QnLAogICAgICAncmVhY3QtZG9tJywKICAgICAgJ3JlYWN0LXJvdXRlci1kb20nLAogICAgICAnQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5JywKICAgIF0sCiAgICBleGNsdWRlOiBbJ0B2aXRlL2NsaWVudCcsICdAdml0ZS9lbnYnXQogIH0sCiAgfTsKfSk7Cg==
+import react from '@vitejs/plugin-react';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { defineConfig, loadEnv } from 'vite';
+
+/**
+ * Build-time secret-leak guard.
+ *
+ * Vite inlines every `VITE_*`-prefixed env var into the client bundle. If
+ * anyone ever re-adds `VITE_REGOLO_API_KEY`, `VITE_OPENROUTER_API_KEY`,
+ * `VITE_STRIPE_SECRET_*`, `VITE_SUPABASE_SERVICE_*`, or `VITE_GMAIL_*` to
+ * `.env`, the prod build silently leaks the secret to every visitor's
+ * DevTools. This loop fails the build instead — visible CI signal.
+ */
+function assertNoLeakedSecrets(env: Record<string, string>): void {
+  const banned = [
+    /^VITE_REGOLO_API_KEY$/,
+    /^VITE_OPENROUTER_API_KEY$/,
+    /^VITE_STRIPE_SECRET/,
+    /^VITE_SUPABASE_SERVICE/,
+    /^VITE_GMAIL_/,
+    /^VITE_SENTRY_AUTH_TOKEN$/,
+  ];
+  const found = Object.keys(env).filter((k) => banned.some((re) => re.test(k)));
+  if (found.length > 0) {
+    throw new Error(
+      `Refusing to build: ${found.join(', ')} would be inlined into the ` +
+        `client bundle. Drop the VITE_ prefix or remove the variable.`,
+    );
+  }
+}
+
+export default defineConfig(({ mode }) => {
+  // Run the leak guard against the merged env Vite would actually inline.
+  assertNoLeakedSecrets(loadEnv(mode, process.cwd(), 'VITE_'));
+
+  return {
+  // SEC-13: bake the deploy's release identifier at build time so both the
+  // client Sentry SDK and the uploaded sourcemaps reference the same
+  // version. Vercel build env provides VERCEL_GIT_COMMIT_SHA; CI provides
+  // GITHUB_SHA; SENTRY_RELEASE is the manual override.
+  define: {
+    __SENTRY_RELEASE__: JSON.stringify(
+      process.env.SENTRY_RELEASE ||
+        process.env.VERCEL_GIT_COMMIT_SHA ||
+        process.env.GITHUB_SHA ||
+        '',
+    ),
+  },
+  plugins: [react()],
+  resolve: {
+    alias: {
+      '@': path.resolve(path.dirname(fileURLToPath(import.meta.url)), './src')
+    }
+  },
+  // @ts-expect-error vitest config is read from vite config
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.ts'],
+    css: false,
+  },
+  server: {
+    port: 5173,
+    host: true,
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3000',
+        changeOrigin: true
+      },
+    },
+    hmr: {
+      overlay: false
+    }
+  },
+  build: {
+    target: 'esnext',
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          // PERF-100x: subpath entries included — Rollup array-form manualChunks
+          // matches exact module IDs only. 'motion' !== 'motion/react', so the
+          // 61 framer-motion implementation modules fell through to the entry
+          // chunk (535KB -> 281KB after fix). Same for 'lenis' vs 'lenis/react'.
+          'animation-vendor': ['motion/react', 'motion', 'framer-motion', 'motion-utils', 'motion-dom'],
+          'ui-vendor': ['lucide-react', '@tanstack/react-query', 'sonner', 'clsx', 'tailwind-merge'],
+          'charts-vendor': ['recharts'],
+          // html2canvas and html-to-image are dynamically imported at the call site,
+          // so they get their own auto-generated chunks. Don't list them here.
+          'image-vendor': ['browser-image-compression'],
+          'utils-vendor': ['lenis/react', 'lenis'],
+          // PERF-100x: supabase was entirely in the entry chunk (37 modules).
+          // Separate cacheable vendor chunk, zero behavior change.
+          'supabase-vendor': ['@supabase/supabase-js', '@supabase/auth-js', '@supabase/postgrest-js', '@supabase/realtime-js', '@supabase/storage-js', '@supabase/functions-js'],
+        },
+        chunkFileNames: (chunkInfo) => {
+          const facadeModuleId = chunkInfo.facadeModuleId
+            ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '')
+            : 'chunk';
+          return `assets/${facadeModuleId}-[hash].js`;
+        },
+      },
+    },
+    chunkSizeWarningLimit: 1000,
+    // SEC-13: 'hidden' generates sourcemaps for upload to Sentry without
+    // referencing them from the shipped bundles (no sourceMappingURL
+    // comment, no public map exposure). scripts/upload-sourcemaps.mjs
+    // pushes them to Sentry when SENTRY_AUTH_TOKEN is configured.
+    sourcemap: 'hidden',
+    minify: 'esbuild',
+    cssMinify: true,
+  },
+  optimizeDeps: {
+    include: [
+      'react',
+      'react-dom',
+      'react-router-dom',
+      '@tanstack/react-query',
+    ],
+    exclude: ['@vite/client', '@vite/env']
+  },
+  };
+});
