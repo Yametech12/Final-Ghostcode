@@ -303,7 +303,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                       "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 relative group leading-none shrink-0",
                       location.pathname === item.path
                         ? "text-accent-primary"
-                        : "text-slate-400 hover:text-white hover:bg-white/5"
+                        : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                     )}
                   >
                     <item.icon className={cn(
@@ -344,7 +344,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                           "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all duration-300 group leading-none relative whitespace-nowrap",
                           isGroupActive
                             ? "text-accent-primary"
-                            : "text-slate-400 hover:text-white hover:bg-white/5"
+                            : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                         )}
                       >
                         <span>{group.label}</span>
@@ -382,7 +382,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                                 "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all group",
                                 location.pathname === item.path
                                   ? "text-accent-primary bg-accent-primary/10"
-                                  : "text-slate-400 hover:text-white hover:bg-white/5"
+                                  : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
                               )}
                             >
                               <item.icon
@@ -418,10 +418,10 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     is the cleanest fix. Always visible at lg+ (not just
                     xl) so the visual grouping holds at every desktop
                     breakpoint. mx-3 gives 12px breathing room on either
-                    side; bg-white/20 is intentionally brighter than the
-                    nav border so the divider actually reads. */}
+                    side; bg-slate-500/30 reads on both the dark nav and the
+                    cream light-theme nav (was bg-white/20, invisible in light). */}
                 <div
-                  className="h-6 w-px bg-white/20 mx-3 shrink-0"
+                  className="h-6 w-px bg-slate-500/30 mx-3 shrink-0"
                   aria-hidden="true"
                 />
 
@@ -462,7 +462,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     type="button"
                     onClick={() => setSearchQuery('')}
                     aria-label="Clear search"
-                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-slate-500 hover:text-white transition-all"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-white/10 text-slate-500 hover:text-slate-100 transition-all"
                   >
                     <X aria-hidden="true" className="w-3 h-3" />
                   </button>
@@ -479,7 +479,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
               <button type="button"
                 onClick={toggleTheme}
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                className="tap-target rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
                 title={isDark ? "Switch to Light Mode" : "Switch to Dark Mode"}
               >
                 {isDark ? <Sun className="w-5 h-5" aria-hidden="true" /> : <Moon className="w-5 h-5" aria-hidden="true" />}
@@ -573,7 +573,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     navigate('/login');
                     setIsMenuOpen(false);
                   }}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl accent-gradient text-white text-sm font-bold shadow-lg shadow-accent-primary/20 hover:scale-105 active:scale-95 transition-all leading-none"
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl accent-gradient text-mystic-950 text-sm font-bold shadow-lg shadow-accent-primary/20 hover:scale-105 active:scale-95 transition-all leading-none"
                 >
                   <LogIn className="w-4 h-4" />
                   Sign In
@@ -589,7 +589,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                   aria-label={isMenuOpen ? 'Close menu' : 'Open menu'}
                   aria-expanded={isMenuOpen}
                   className={cn(
-                    "lg:hidden tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors",
+                    "lg:hidden tap-target rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors",
                   )}
                 >
                   {isMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
@@ -617,14 +617,14 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                 <button type="button"
                   onClick={toggleTheme}
                   aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                  className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  className="tap-target rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
                 >
                   {isDark ? <Sun className="w-6 h-6" aria-hidden="true" /> : <Moon className="w-6 h-6" aria-hidden="true" />}
                 </button>
                 <button type="button"
                   onClick={() => setIsMenuOpen(false)}
                   aria-label="Close menu"
-                  className="tap-target rounded-xl text-slate-400 hover:text-white hover:bg-white/5 transition-colors"
+                  className="tap-target rounded-xl text-slate-400 hover:text-slate-100 hover:bg-white/5 transition-colors"
                 >
                   <X className="w-6 h-6" aria-hidden="true" />
                 </button>
@@ -687,7 +687,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                               "relative flex items-center gap-4 px-4 py-4 rounded-2xl text-lg font-medium transition-all border group",
                               location.pathname === item.path
                                 ? "text-accent-primary bg-accent-primary/5 border-accent-primary/15"
-                                : "text-slate-300 hover:text-white hover:bg-white/5 border-transparent hover:border-slate-700/30"
+                                : "text-slate-300 hover:text-slate-100 hover:bg-white/5 border-transparent hover:border-slate-700/30"
                             )}
                           >
                             {location.pathname === item.path && (
@@ -700,7 +700,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                               "w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300",
                               location.pathname === item.path
                                 ? "bg-accent-primary/15 text-accent-primary border border-accent-primary/20"
-                                : "bg-white/5 text-slate-500 group-hover:bg-white/10 group-hover:text-white"
+                                : "bg-white/5 text-slate-500 group-hover:bg-white/10 group-hover:text-slate-100"
                             )}>
                               <item.icon className={cn(
                                 "w-5 h-5",
@@ -778,7 +778,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                     navigate('/login');
                     setIsMenuOpen(false);
                   }}
-                  className="w-full flex items-center justify-center gap-3 px-4 py-5 rounded-2xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20"
+                  className="w-full flex items-center justify-center gap-3 px-4 py-5 rounded-2xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/20"
                 >
                   <LogIn aria-hidden="true" className="w-6 h-6" />
                   Sign In
@@ -824,7 +824,7 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
             <div className="text-left md:text-right">
               <button type="button"
                 onClick={() => setIsFeedbackOpen(true)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-slate-200 text-sm font-bold hover:from-accent-primary/30 hover:to-accent-secondary/30 hover:border-accent-primary/50 hover:text-white transition-all hover:scale-105"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-accent-primary/20 to-accent-secondary/20 border border-accent-primary/30 text-slate-200 text-sm font-bold hover:from-accent-primary/30 hover:to-accent-secondary/30 hover:border-accent-primary/50 hover:text-slate-100 transition-all hover:scale-105"
               >
                 <MessageSquare aria-hidden="true" className="w-4 h-4" />
                 Send Feedback

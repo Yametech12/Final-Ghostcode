@@ -245,6 +245,32 @@
   color: #231a10;
 }
 
+/* Light theme: SOLID gold surfaces need the same pin. bg-accent-primary
+   flips to #B8860B in light; text-white is 3.25:1 and text-mystic-950
+   flips to #FAF7F2 (3.0:1) — both fail AA. #231a10 gives 5.26:1.
+   (15x light/dark audit, Oct 2026.) */
+.light-theme .bg-accent-primary {
+  color: #231a10;
+}
+
+/* Light theme: native form controls (checkbox, radio, date/time inputs,
+   select dropdowns) must render their light variants on cream surfaces.
+   (15x light/dark audit, Oct 2026.) */
+.light-theme {
+  color-scheme: light;
+}
+
+/* Light theme: status tokens deepen so text-status-* keeps AA contrast
+   on cream (#FAF7F2). Dark values kept for dark theme.
+   Verified: success 4.78:1 · warning 5.52:1 · error 5.95:1 · info 5.96:1
+   (15x light/dark audit, Oct 2026.) */
+.light-theme {
+  --color-status-success: #3E7A52;
+  --color-status-warning: #8A5A1D;
+  --color-status-error: #A83A2A;
+  --color-status-info: #3E6478;
+}
+
 :root {
   color-scheme: dark;
   background-color: #0E0B12;
@@ -322,6 +348,11 @@ html.lenis, html.lenis body {
 .light-theme ::-webkit-scrollbar-thumb {
   background: rgba(110, 99, 88, 0.25);
   background-clip: padding-box;
+}
+/* Firefox scrollbar must match the WebKit light override above.
+   (15x light/dark audit, Oct 2026.) */
+.light-theme * {
+  scrollbar-color: rgba(110, 99, 88, 0.25) transparent;
 }
 .light-theme::-webkit-scrollbar-thumb:hover,
 .light-theme ::-webkit-scrollbar-thumb:hover {
@@ -671,6 +702,61 @@ h1, h2, h3, h4, h5, h6 {
 
 .custom-select:focus {
   @apply border-accent-primary/50 bg-white/10;
+}
+
+/* Light theme: .custom-select pins text-white on bg-mystic-900, which flips
+   to cream (#F2EDE3) — white-on-cream is ~1.1:1. Unlayered author CSS beats
+   layered Tailwind utilities, so per-instance overrides are dead code; the
+   fix must live here. (15x light/dark audit, Oct 2026.) */
+.light-theme .custom-select {
+  color: #14110E;
+  background-color: rgba(20, 17, 14, 0.04);
+  border-color: rgba(110, 99, 88, 0.25);
+}
+.light-theme .custom-select:hover {
+  border-color: rgba(110, 99, 88, 0.4);
+  background-color: rgba(20, 17, 14, 0.06);
+}
+.light-theme .custom-select:focus {
+  background-color: rgba(20, 17, 14, 0.06);
+}
+.light-theme .custom-select option {
+  background-color: #F2EDE3;
+  color: #14110E;
+}
+
+/* Light theme: skeleton shimmer is tuned for near-black (warm-gray at
+   4–10% alpha + faint gold wash) — invisible on cream. Deepen the stops.
+   (15x light/dark audit, Oct 2026.) */
+.light-theme .skeleton {
+  background-image: linear-gradient(
+    to right,
+    rgba(110, 99, 88, 0.08),
+    rgba(110, 99, 88, 0.20),
+    rgba(110, 99, 88, 0.08)
+  );
+}
+
+/* Light theme: pre-React boot splash (index.html #boot-splash) is inlined
+   with dark styles so it paints before the bundle loads. Flip it to cream
+   for light-theme users; the inline dark styles remain the no-CSS fallback.
+   The production stylesheet is render-blocking, so this applies pre-paint.
+   (15x light/dark audit, Oct 2026.) */
+.light-theme #boot-splash {
+  background-color: #FAF7F2;
+}
+.light-theme #boot-splash .boot-splash-glow {
+  opacity: 0.35;
+}
+.light-theme #boot-splash .boot-splash-grid {
+  opacity: 0.5;
+}
+.light-theme #boot-splash .boot-splash-tile {
+  background-color: #F2EDE3;
+  border-color: rgba(184, 134, 11, 0.25);
+}
+.light-theme #boot-splash .boot-splash-bar {
+  background-color: rgba(20, 17, 14, 0.08);
 }
 
 @keyframes scanner {

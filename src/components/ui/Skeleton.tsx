@@ -18,7 +18,8 @@ export function Skeleton({ className, variant = 'default', shimmer = true, ...pr
       className={cn(
         // Warm-tinted base — pulls from the new slate-300 (#C4BAAB) at low alpha.
         // Gold shimmer pass comes from .shimmer-effect (defined in index.css).
-        "bg-gradient-to-r from-[rgba(196,186,171,0.04)] via-[rgba(196,186,171,0.10)] to-[rgba(196,186,171,0.04)]",
+        // The `skeleton` class lets .light-theme deepen the stops (index.css).
+        "skeleton bg-gradient-to-r from-[rgba(196,186,171,0.04)] via-[rgba(196,186,171,0.10)] to-[rgba(196,186,171,0.04)]",
         shimmer && "shimmer-effect",
         variantClasses[variant],
         className
