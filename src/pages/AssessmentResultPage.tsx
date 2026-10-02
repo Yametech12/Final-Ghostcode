@@ -58,7 +58,7 @@ export default function AssessmentResultPage() {
       <div className="flex items-center justify-between">
         <Link
           to="/assessment"
-          className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-white transition-colors"
+          className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-slate-100 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Retake Assessment
@@ -79,7 +79,7 @@ export default function AssessmentResultPage() {
           </button>
         )}
         {saved && (
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-green-400 text-sm font-bold">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-green-500/10 border border-green-500/20 text-status-success text-sm font-bold">
             Saved to Profile
           </div>
         )}

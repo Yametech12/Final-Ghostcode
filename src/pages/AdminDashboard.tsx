@@ -350,7 +350,7 @@ export default function AdminDashboard() {
       label: "Total Users",
       value: users.length,
       icon: Users,
-      color: "text-blue-400",
+      color: "text-status-info",
       bg: "bg-blue-400/10",
     },
     {
@@ -364,14 +364,14 @@ export default function AdminDashboard() {
       label: "User Feedback",
       value: feedbacks.length,
       icon: MessageSquare,
-      color: "text-emerald-400",
+      color: "text-status-success",
       bg: "bg-emerald-400/10",
     },
     {
       label: "Admins",
       value: users.filter((u) => u.role === "admin").length,
       icon: Shield,
-      color: "text-red-400",
+      color: "text-status-error",
       bg: "bg-red-400/10",
     },
   ];
@@ -379,8 +379,8 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-6xl mx-auto space-y-8">
       <div className="flex items-center gap-4 border-b border-white/10 pb-6">
-        <div className="w-12 h-12 rounded-xl accent-gradient flex items-center justify-center">
-          <Shield className="w-6 h-6 text-white" />
+        <div className="w-12 h-12 rounded-xl accent-gradient text-mystic-950 flex items-center justify-center">
+          <Shield className="w-6 h-6" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-white">Admin Dashboard</h1>
@@ -396,7 +396,7 @@ export default function AdminDashboard() {
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "dashboard"
               ? "bg-accent-primary/20 text-accent-primary border border-accent-primary/30"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+              : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "users"
               ? "bg-accent-primary/20 text-accent-primary border border-accent-primary/30"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+              : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -422,7 +422,7 @@ export default function AdminDashboard() {
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "reports"
               ? "bg-accent-primary/20 text-accent-primary border border-accent-primary/30"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+              : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -435,7 +435,7 @@ export default function AdminDashboard() {
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "feedback"
               ? "bg-accent-primary/20 text-accent-primary border border-accent-primary/30"
-              : "text-slate-400 hover:text-white hover:bg-white/5"
+              : "text-slate-400 hover:text-slate-100 hover:bg-white/5"
           }`}
         >
           <div className="flex items-center gap-2">
@@ -457,7 +457,7 @@ export default function AdminDashboard() {
             aria-label="Search admin panel"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-accent-primary/50 transition-colors"
+            className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-slate-100 focus:outline-none focus:border-accent-primary/50 transition-colors"
           />
         </div>
       )}
@@ -526,7 +526,7 @@ export default function AdminDashboard() {
                           )}
                         </div>
                           <div>
-                            <div className="text-sm font-medium text-white">
+                            <div className="text-sm font-medium text-slate-100">
                               {u.display_name || "Unknown"}
                             </div>
                           <div className="text-[10px] text-slate-500">
@@ -562,7 +562,7 @@ export default function AdminDashboard() {
                       className="p-3 rounded-xl bg-white/5 border border-white/5 space-y-1"
                     >
                       <div className="flex items-center justify-between">
-                         <span className="text-xs font-bold text-white">
+                         <span className="text-xs font-bold text-slate-100">
                            {f.user_name || "Anonymous"}
                          </span>
                         <span className="text-[10px] text-slate-500">
@@ -632,7 +632,7 @@ export default function AdminDashboard() {
                               <User className="w-4 h-4 text-slate-500" />
                             )}
                           </div>
-                          <span className="font-medium text-white">
+                          <span className="font-medium text-slate-100">
                             {u.display_name || "Unknown User"}
                           </span>
                         </div>
@@ -656,8 +656,8 @@ export default function AdminDashboard() {
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-bold ${
                             u.role === "admin"
-                              ? "bg-red-500/20 text-red-400 border border-red-500/30"
-                              : "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                              ? "bg-red-500/20 text-status-error border border-red-500/30"
+                              : "bg-blue-500/20 text-status-info border border-blue-500/30"
                           }`}
                         >
                           {u.role || "user"}
@@ -669,7 +669,7 @@ export default function AdminDashboard() {
                             value={u.role || "user"}
                             aria-label={`Change role for user ${u.email || u.id}`}
                             onChange={(e) => handleRoleChange(u.id, e.target.value).catch(err => console.error("Unhandled error in handleRoleChange:", err))}
-                            className="bg-mystic-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent-primary"
+                            className="bg-mystic-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-slate-100 focus:outline-none focus:border-accent-primary"
                           >
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
@@ -680,7 +680,7 @@ export default function AdminDashboard() {
                               "p-2 rounded-lg transition-all",
                               confirmingDelete?.id === u.id && confirmingDelete?.type === "user"
                                 ? "bg-red-500 text-white"
-                                : "text-slate-400 hover:text-red-400 hover:bg-red-400/10"
+                                : "text-slate-400 hover:text-status-error hover:bg-red-400/10"
                             )}
                             title="Delete User Account"
                           >
@@ -752,7 +752,7 @@ export default function AdminDashboard() {
                         console.error("Report deletion failed:", err);
                       });
                     }}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                    className="p-2 text-slate-400 hover:text-status-error hover:bg-red-400/10 rounded-lg transition-colors"
                     title="Delete Report"
                   >
                     <Trash2 className="w-5 h-5" />
@@ -832,11 +832,11 @@ export default function AdminDashboard() {
                         <span
                           className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
                             feedback.type === "bug"
-                              ? "bg-red-500/20 text-red-400 border border-red-500/30"
+                              ? "bg-red-500/20 text-status-error border border-red-500/30"
                               : feedback.type === "feature"
-                                ? "bg-blue-500/20 text-blue-400 border border-blue-500/30"
+                                ? "bg-blue-500/20 text-status-info border border-blue-500/30"
                                 : feedback.type === "praise"
-                                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                                  ? "bg-emerald-500/20 text-status-success border border-emerald-500/30"
                                   : "bg-slate-500/20 text-slate-400 border border-slate-500/30"
                           }`}
                         >
@@ -857,7 +857,7 @@ export default function AdminDashboard() {
                   </div>
                   <button type="button"
                     onClick={() => handleDeleteFeedback(feedback.id).catch(err => console.error("Unhandled error in handleDeleteFeedback:", err))}
-                    className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                    className="p-2 text-slate-400 hover:text-status-error hover:bg-red-400/10 rounded-lg transition-colors"
                     title="Delete Feedback"
                   >
                     <Trash2 className="w-5 h-5" />
