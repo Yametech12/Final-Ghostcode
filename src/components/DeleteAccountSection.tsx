@@ -261,7 +261,7 @@ export default function DeleteAccountSection() {
                   disabled={isDeleting}
                   aria-disabled={isDeleting || undefined}
                   aria-label={isDeleting ? 'Cannot close while deleting' : 'Close'}
-                  className="p-2 rounded-xl text-slate-400 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50"
+                  className="p-2 rounded-xl text-slate-400 hover:bg-white/10 hover:text-slate-100 transition-colors disabled:opacity-50"
                 >
                   <X aria-hidden="true" className="w-5 h-5" />
                 </button>

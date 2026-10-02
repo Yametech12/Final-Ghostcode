@@ -48,9 +48,9 @@ export function MessageBubble({
           : "bg-slate-700"
       )}>
         {isUser ? (
-          <User className="w-4 h-4 text-white" />
+          <User className="w-4 h-4 text-mystic-950" />
         ) : (
-          <Bot className="w-4 h-4 text-white" />
+          <Bot className="w-4 h-4 text-slate-200" />
         )}
       </div>
 
@@ -59,7 +59,7 @@ export function MessageBubble({
         <div className={cn(
           "rounded-2xl px-4 py-3 max-w-2xl inline-block",
           isUser
-            ? "bg-accent-primary text-white ml-auto"
+            ? "bg-accent-primary text-mystic-950 ml-auto"
             : "bg-slate-800/50 backdrop-blur-sm border border-white/10 text-slate-200"
         )}>
           <div className="prose prose-invert max-w-none prose-sm">
@@ -86,7 +86,7 @@ export function MessageBubble({
         )}>
           <button type="button"
             onClick={copyToClipboard}
-            className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+            className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-slate-100 transition-colors"
             title="Copy message"
             aria-label="Copy message"
           >
@@ -96,7 +96,7 @@ export function MessageBubble({
           {!isUser && onRegenerate && (
             <button type="button"
               onClick={onRegenerate}
-              className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+              className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-slate-100 transition-colors"
               title="Regenerate response"
               aria-label="Regenerate response"
             >
@@ -107,14 +107,14 @@ export function MessageBubble({
           {!isUser && (
             <>
               <button type="button"
-                className="p-2 rounded-lg bg-slate-700/50 hover:bg-green-600/50 text-slate-400 hover:text-green-400 transition-colors"
+                className="p-2 rounded-lg bg-slate-700/50 hover:bg-green-600/50 text-slate-400 hover:text-status-success transition-colors"
                 title="Good response"
                 aria-label="Mark as good response"
               >
                 <ThumbsUp className="w-4 h-4" />
               </button>
               <button type="button"
-                className="p-2 rounded-lg bg-slate-700/50 hover:bg-red-600/50 text-slate-400 hover:text-red-400 transition-colors"
+                className="p-2 rounded-lg bg-slate-700/50 hover:bg-red-600/50 text-slate-400 hover:text-status-error transition-colors"
                 title="Poor response"
                 aria-label="Mark as poor response"
               >

@@ -117,6 +117,16 @@ export default function ConstellationField({
       ctx.clearRect(0, 0, w, h);
       const time = t / 1000;
 
+      // Theme-aware starfield: the hero surfaces this canvas paints on flip
+      // to cream (#FAF7F2) in light theme, where the dark-theme star colors
+      // (warm-white, lavender) wash out. Deepen them for light.
+      // (15x light/dark audit, Oct 2026.) Read once per frame — classList
+      // lookup is cheap and picks up toggles without an observer.
+      const light = document.documentElement.classList.contains('light-theme');
+      const lineRGB = light ? '91, 63, 191' : '139, 124, 246';
+      const irisRGB = light ? '91, 63, 191' : '183, 166, 255';
+      const starRGB = light ? '110, 99, 88' : '240, 235, 227';
+
       // Ease parallax toward the mouse target for a slow observatory drift.
       parallaxX += (mouseX - 0.5 - parallaxX) * 0.02;
       parallaxY += (mouseY - 0.5 - parallaxY) * 0.02;
@@ -138,7 +148,7 @@ export default function ConstellationField({
           if (distSq < linkSq) {
             const dist = Math.sqrt(distSq);
             const alpha = (1 - dist / linkDistance) * 0.16;
-            ctx.strokeStyle = `rgba(139, 124, 246, ${alpha.toFixed(3)})`;
+            ctx.strokeStyle = `rgba(${lineRGB}, ${alpha.toFixed(3)})`;
             ctx.beginPath();
             ctx.moveTo(a.x * w + px * a.r, a.y * h + py * a.r);
             ctx.lineTo(b.x * w + px * b.r, b.y * h + py * b.r);
@@ -156,8 +166,8 @@ export default function ConstellationField({
         const sx = s.x * w + px * s.r;
         const sy = s.y * h + py * s.r;
         ctx.fillStyle = s.iris
-          ? `rgba(183, 166, 255, ${alpha.toFixed(3)})`
-          : `rgba(240, 235, 227, ${(alpha * 0.9).toFixed(3)})`;
+          ? `rgba(${irisRGB}, ${alpha.toFixed(3)})`
+          : `rgba(${starRGB}, ${(alpha * 0.9).toFixed(3)})`;
         ctx.beginPath();
         ctx.arc(sx, sy, s.r * (w / 1400 + 0.6), 0, Math.PI * 2);
         ctx.fill();

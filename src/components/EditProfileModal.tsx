@@ -362,7 +362,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                    type="button"
                    onClick={handleRemovePhoto}
                    disabled={removingPhoto}
-                   className={`disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors ${removingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
+                   className={`disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-status-error hover:bg-red-500/20 hover:text-slate-100 transition-colors ${removingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
                    aria-label="Remove profile photo"
                  >
                    <X className="w-4 h-4" aria-hidden="true" />
@@ -392,8 +392,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     decoding="async"
                   />
                   {uploadingPhoto && (
-                    <div className="absolute inset-0 bg-slate-900/50 flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 text-white animate-spin" />
+                    <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                      <Loader2 className="w-6 h-6 text-slate-100 animate-spin" />
                     </div>
                   )}
                 </div>
@@ -424,7 +424,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label htmlFor="profile-display-name" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
-                  <span className={`text-[10px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] ${formData.displayName.length > 50 ? 'text-status-error' : 'text-slate-500'}`}>
                     {formData.displayName.length}/50
                   </span>
                 </div>
@@ -432,7 +432,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => handleFieldChange('displayName', e.target.value)}
-                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none transition-colors ${
+                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-slate-100 focus:outline-none transition-colors ${
                     errors.displayName
                       ? 'border-red-500/50 focus:border-red-500'
                       : 'border-white/10 focus:border-accent-primary/50'
@@ -441,21 +441,21 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   maxLength={50}
                 />
                 {errors.displayName && (
-                  <p className="text-[10px] text-red-400">{errors.displayName}</p>
+                  <p className="text-[10px] text-status-error">{errors.displayName}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label htmlFor="profile-bio" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
-                  <span className={`text-[10px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] ${formData.bio.length > 500 ? 'text-status-error' : 'text-slate-500'}`}>
                     {formData.bio.length}/500
                   </span>
                 </div>
                 <textarea id="profile-bio"
                   value={formData.bio}
                   onChange={(e) => handleFieldChange('bio', e.target.value)}
-                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none min-h-[100px] resize-none transition-colors ${
+                  className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-slate-100 focus:outline-none min-h-[100px] resize-none transition-colors ${
                     errors.bio
                       ? 'border-red-500/50 focus:border-red-500'
                       : 'border-white/10 focus:border-accent-primary/50'
@@ -464,7 +464,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   maxLength={500}
                 />
                 {errors.bio && (
-                  <p className="text-[10px] text-red-400">{errors.bio}</p>
+                  <p className="text-[10px] text-status-error">{errors.bio}</p>
                 )}
               </div>
 
@@ -479,7 +479,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                       autoComplete="tel"
                       value={formData.phone}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
-                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
+                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-slate-100 focus:outline-none transition-colors ${
                         errors.phone
                           ? 'border-red-500/50 focus:border-red-500'
                           : 'border-white/10 focus:border-accent-primary/50'
@@ -488,7 +488,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     />
                   </div>
                   {errors.phone && (
-                    <p className="text-[10px] text-red-400">{errors.phone}</p>
+                    <p className="text-[10px] text-status-error">{errors.phone}</p>
                   )}
                 </div>
 
@@ -500,7 +500,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                       type="text"
                       value={formData.instagram}
                       onChange={(e) => handleFieldChange('instagram', e.target.value)}
-                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
+                      className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-slate-100 focus:outline-none transition-colors ${
                         errors.instagram
                           ? 'border-red-500/50 focus:border-red-500'
                           : 'border-white/10 focus:border-accent-primary/50'
@@ -509,7 +509,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     />
                   </div>
                   {errors.instagram && (
-                    <p className="text-[10px] text-red-400">{errors.instagram}</p>
+                    <p className="text-[10px] text-status-error">{errors.instagram}</p>
                   )}
                 </div>
               </div>
@@ -523,7 +523,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     type="text"
                     value={formData.twitter}
                     onChange={(e) => handleFieldChange('twitter', e.target.value)}
-                    className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${
+                    className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-slate-100 focus:outline-none transition-colors ${
                       errors.twitter
                         ? 'border-red-500/50 focus:border-red-500'
                         : 'border-white/10 focus:border-accent-primary/50'
@@ -532,7 +532,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   />
                 </div>
                 {errors.twitter && (
-                  <p className="text-[10px] text-red-400">{errors.twitter}</p>
+                  <p className="text-[10px] text-status-error">{errors.twitter}</p>
                 )}
               </div>
             </div>
@@ -542,14 +542,14 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
+              className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-4 rounded-xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
+              className="flex-1 py-4 rounded-xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               Save Changes

@@ -53,7 +53,7 @@ const steps: OnboardingStep[] = [
   },
   {
     title: "AI Advisor Chat",
-    icon: <MessageSquare className="w-12 h-12 text-emerald-500" />,
+    icon: <MessageSquare className="w-12 h-12 text-emerald-600" />,
     description: "A live advisor that remembers your calibration history and your type. Ask anything — strategy, dynamics, specific situations.",
     tips: [
       "It pulls context from your past calibrations",
@@ -64,7 +64,7 @@ const steps: OnboardingStep[] = [
   },
   {
     title: "Encyclopedia & Tools",
-    icon: <BookOpen className="w-12 h-12 text-amber-500" />,
+    icon: <BookOpen className="w-12 h-12 text-amber-700" />,
     description: "Explore all 8 personality archetypes in depth. Each profile covers strategy, dating advice, texting style, physicality, and red flags.",
     tips: [
       "Signal Decryptor — paste text messages to decode subtext",
@@ -166,7 +166,7 @@ export default function OnboardingModal() {
             <button type="button"
               onClick={handleClose}
               aria-label="Close tutorial"
-              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-colors z-10"
             >
               <X className="w-5 h-5" />
             </button>
@@ -193,7 +193,7 @@ export default function OnboardingModal() {
                   </div>
                   
                   <div className="space-y-3">
-                    <h2 className="text-2xl md:text-3xl font-black text-white tracking-tight">
+                    <h2 className="text-2xl md:text-3xl font-black text-slate-50 tracking-tight">
                       {currentStep.title}
                     </h2>
                     <p className="text-base text-slate-400 leading-relaxed">
@@ -243,7 +243,7 @@ export default function OnboardingModal() {
                   )}
                   <button type="button"
                     onClick={handleNext}
-                    className={`${step > 0 ? 'flex-1' : 'w-full'} py-3 rounded-xl accent-gradient text-white font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
+                    className={`${step > 0 ? 'flex-1' : 'w-full'} py-3 rounded-xl accent-gradient text-mystic-950 font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
                   >
                     {step < steps.length - 1 ? (
                       <>
