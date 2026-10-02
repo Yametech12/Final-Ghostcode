@@ -41,7 +41,7 @@ export function EnvironmentDebug() {
         onClick={() => setMinimized(!minimized)}
       >
         <span className="font-bold text-yellow-400">🔍 Env Debug</span>
-        <button className="text-gray-400 hover:text-white">
+        <button type="button" className="text-gray-400 hover:text-white">
           {minimized ? <Plus className="w-3 h-3" /> : <Minus className="w-3 h-3" />}
         </button>
       </div>

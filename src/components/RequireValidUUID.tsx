@@ -28,7 +28,7 @@ export function RequireValidUUID({ children, fallback }: RequireValidUUIDProps) 
           <p className="text-slate-400 max-w-md">
             Your session appears to be invalid. Please refresh the page or sign in again.
           </p>
-          <button
+          <button type="button"
             onClick={() => window.location.reload()}
             className="px-6 py-3 bg-accent-primary text-white rounded-lg hover:bg-accent-primary/80 transition-colors"
           >

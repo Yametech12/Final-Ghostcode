@@ -179,7 +179,7 @@ export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCroppe
         {/* Header */}
         <div className="p-4 border-b border-slate-700/30 flex items-center justify-between">
           <h3 className="text-lg font-semibold tracking-tight text-slate-100">Crop Photo</h3>
-          <button
+          <button type="button"
             onClick={onCancel}
             aria-label="Cancel"
             className="p-2 rounded-xl hover:bg-white/5 text-slate-400 transition-colors"
@@ -239,7 +239,7 @@ export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCroppe
         <div className="p-4 border-t border-slate-700/30 space-y-4">
           {/* Zoom slider */}
           <div className="flex items-center gap-3">
-            <button
+            <button type="button"
               onClick={() => handleZoom(-0.2)}
               aria-label="Zoom out"
               className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
@@ -248,6 +248,7 @@ export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCroppe
             </button>
             <input
               type="range"
+              aria-label="Zoom"
               min={MIN_ZOOM * 100}
               max={MAX_ZOOM * 100}
               value={zoom * 100}
@@ -255,14 +256,14 @@ export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCroppe
               onChange={(e) => setZoom(Number(e.target.value) / 100)}
               className="flex-1 h-1.5 bg-mystic-800 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-accent-primary [&::-webkit-slider-thumb]:shadow-lg"
             />
-            <button
+            <button type="button"
               onClick={() => handleZoom(0.2)}
               aria-label="Zoom in"
               className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
             >
               <ZoomIn className="w-4 h-4" strokeWidth={1.5} />
             </button>
-            <button
+            <button type="button"
               onClick={handleReset}
               aria-label="Reset"
               className="p-2 rounded-lg bg-white/5 text-slate-400 hover:text-slate-100 transition-colors"
@@ -273,13 +274,13 @@ export default function ImageCropper({ imageUrl, onCrop, onCancel }: ImageCroppe
 
           {/* Action buttons */}
           <div className="flex gap-3">
-            <button
+            <button type="button"
               onClick={onCancel}
               className="flex-1 py-3 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 transition-colors"
             >
               Cancel
             </button>
-            <button
+            <button type="button"
               onClick={handleCrop}
               className="flex-1 py-3 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform flex items-center justify-center gap-2"
             >

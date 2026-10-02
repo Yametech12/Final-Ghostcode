@@ -50,7 +50,7 @@ export default function LoadingScreen({
           <p className="text-sm text-slate-400">
             This is taking longer than expected.
           </p>
-          <button
+          <button type="button"
             onClick={handleRetry}
             className="text-sm text-slate-300 underline underline-offset-4 decoration-slate-600 hover:text-slate-100 hover:decoration-slate-400 transition-colors"
           >

@@ -32,7 +32,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
     try {
       const { toPng } = await import('html-to-image');
       const dataUrl = await toPng(cardRef.current, {
-        backgroundColor: '#0f0f1a',
+        backgroundColor: getComputedStyle(document.documentElement).getPropertyValue('--color-mystic-900').trim() || '#0f0f1a',
         pixelRatio: 2,
         cacheBust: true,
       });
@@ -69,7 +69,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
     >
       <div className="w-full max-w-md space-y-4">
         <div className="flex justify-end">
-          <button 
+          <button type="button" 
             onClick={onClose}
             aria-label="Close profile card"
             className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all"
@@ -116,7 +116,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-green-500/10 border border-green-500/20">
                     <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                    <span className="text-[9px] text-green-400 font-medium">Active</span>
+                    <span className="text-[10px] text-green-400 font-medium">Active</span>
                   </div>
                 </div>
               </div>
@@ -130,34 +130,34 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
             )}
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3 pt-4 border-t border-white/10">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 pt-4 border-t border-white/10">
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                 <FileText className="w-4 h-4 mx-auto text-accent-primary mb-1" />
                 <div className="text-lg font-black text-white">{assessmentsCount}</div>
-                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Calibrate</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Calibrate</div>
               </div>
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                 <Zap className="w-4 h-4 mx-auto text-accent-secondary mb-1" />
                 <div className="text-lg font-black text-white">{fieldReportsCount}</div>
-                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Reports</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Reports</div>
               </div>
               <div className="p-3 rounded-2xl bg-white/5 border border-white/10 text-center">
                 <Award className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
                 <div className="text-lg font-black text-white">{achievementsCount}</div>
-                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Badges</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider mt-0.5">Badges</div>
               </div>
             </div>
 
             {/* Footer */}
             <div className="text-center pt-2">
-              <p className="text-[9px] text-slate-600 font-mono tracking-widest">EPIMETHEUS SYSTEM • {new Date().getFullYear()}</p>
+              <p className="text-[10px] text-slate-600 font-mono tracking-widest">EPIMETHEUS SYSTEM • {new Date().getFullYear()}</p>
             </div>
           </div>
         </div>
 
         {/* Actions */}
         <div className="flex gap-3">
-          <button
+          <button type="button"
             onClick={handleDownload}
             disabled={isExporting}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50"
@@ -165,7 +165,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
             <Download className="w-4 h-4" />
             {isExporting ? 'Generating...' : 'Download Card'}
           </button>
-          <button
+          <button type="button"
             onClick={handleCopyLink}
             className="flex-1 flex items-center justify-center gap-2 py-3.5 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
           >

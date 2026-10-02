@@ -182,7 +182,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
 
         {/* Edit Button */}
         {onEditProfile && (
-          <button
+          <button type="button"
             onClick={onEditProfile}
             className="mt-4 w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-white/5 border border-slate-700/30 text-sm font-medium text-slate-200 hover:bg-white/8 hover:border-accent-primary/20 transition-all"
           >
