@@ -148,7 +148,7 @@ export default function InsightsPage() {
             <PieChart aria-hidden="true" className="w-10 h-10 text-slate-500" strokeWidth={1.5} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-2xl font-semibold tracking-tight text-slate-100">Not Enough Data</h3>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-100">Not Enough Data</h2>
             <p className="text-slate-400 max-w-md mx-auto text-lg">
               Complete more calibrations to unlock your personalized insights and radar charts.
             </p>
