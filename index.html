@@ -11,6 +11,12 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="apple-mobile-web-app-title" content="Epimetheus" />
     <link rel="apple-touch-icon" href="/icon-192.png" />
+    <!-- Warm the connection for the Google OAuth redirect chain (Supabase
+         /authorize 302s to accounts.google.com). Without this, the account
+         chooser waits on a cold DNS+TCP+TLS handshake — noticeable on
+         slow mobile networks. -->
+    <link rel="preconnect" href="https://accounts.google.com" />
+    <link rel="dns-prefetch" href="https://accounts.google.com" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Space+Grotesk:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400;1,500&display=swap">
 
     <title>EPIMETHEUS — Master the Art of Connection | Premium Dating & Relationship Coaching</title>
