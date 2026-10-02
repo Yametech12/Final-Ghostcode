@@ -385,9 +385,9 @@ export default function AssessmentPage() {
         <div className="w-24 h-24 rounded-full bg-accent-primary/20 flex items-center justify-center">
           <CheckCircle2 className="w-12 h-12 text-accent-primary" />
         </div>
-        <h2 className="text-3xl font-bold text-white">
+        <h1 className="text-3xl font-bold text-white">
           Analyzing Profile...
-        </h2>
+        </h1>
         <p className="text-slate-400">
           Cross-referencing behavioral markers with the 8 archetypes.
         </p>
@@ -434,7 +434,7 @@ export default function AssessmentPage() {
             {currentQuestion.options.map((option, index) => {
               const isSelected = answers[currentQuestion.id] === option.value;
               return (
-                <button
+                <button type="button"
                   key={index}
                   onClick={() => handleAnswer(currentQuestion.id, option.value)}
                   className={`w-full text-left p-6 rounded-2xl border transition-all duration-300 group ${
@@ -464,7 +464,7 @@ export default function AssessmentPage() {
 
         <div className="mt-8 pt-6 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-4">
-            <button
+            <button type="button"
               onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
               disabled={currentStep === 0}
               aria-label="Go to previous question"
@@ -475,7 +475,7 @@ export default function AssessmentPage() {
             </button>
             
             {currentStep > 0 && (
-              <button
+              <button type="button"
                 onClick={handleRestart}
                 aria-label="Restart assessment"
                 className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-red-400 transition-colors"
