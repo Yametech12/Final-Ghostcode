@@ -766,6 +766,30 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* ──────────────────────────────────────────────────────────────────────
+   Skip link — visible on keyboard focus, hidden otherwise.
+   ────────────────────────────────────────────────────────────────────── */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 16px;
+  z-index: 9999;
+  padding: 12px 20px;
+  background: var(--color-accent-primary);
+  color: #0E0B12;
+  font-weight: 700;
+  font-size: 14px;
+  border-radius: 8px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+
+.skip-link:focus {
+  top: 16px;
+  outline: 2px solid #0E0B12;
+  outline-offset: 2px;
+}
+
+/* ──────────────────────────────────────────────────────────────────────
    Reduced motion — respect user preference
    ────────────────────────────────────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
