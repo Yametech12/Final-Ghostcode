@@ -444,7 +444,7 @@ export default function AssessmentPage() {
                   }`}
                 >
                   <div className="flex justify-between items-center mb-2">
-                    <span className={`text-lg font-bold ${isSelected ? 'text-accent-primary' : 'text-white group-hover:text-accent-primary'}`}>
+                    <span className={`text-lg font-bold ${isSelected ? 'text-accent-primary' : 'text-slate-100 group-hover:text-accent-primary'}`}>
                       {option.text}
                     </span>
                     <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${
@@ -468,7 +468,7 @@ export default function AssessmentPage() {
               onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
               disabled={currentStep === 0}
               aria-label="Go to previous question"
-              className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-white disabled:opacity-50 disabled:hover:text-slate-500 transition-colors"
+              className="flex items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-100 disabled:opacity-50 disabled:hover:text-slate-500 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
               Previous
@@ -525,7 +525,7 @@ export default function AssessmentPage() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-sm font-bold text-white">{profile.name}</div>
+                    <div className="text-sm font-bold text-slate-100">{profile.name}</div>
                   </div>
                 </Link>
               );
