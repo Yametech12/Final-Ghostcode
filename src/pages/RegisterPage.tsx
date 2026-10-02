@@ -116,20 +116,20 @@ export default function RegisterPage() {
 
           <h1 className="text-3xl font-semibold tracking-tight text-slate-50 mb-4">Check Your Email</h1>
           <p className="text-slate-400 mb-6 leading-relaxed">
-            We've sent a verification link to <strong className="text-white">{email}</strong>.
+            We've sent a verification link to <strong className="text-slate-100">{email}</strong>.
             Please check your email and click the verification link to activate your account.
           </p>
 
           <div className="space-y-4">
             <div className="space-y-3">
               <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
-                <div className="flex items-center gap-2 text-blue-400 text-sm">
+                <div className="flex items-center gap-2 text-status-info text-sm">
                   <Mail className="w-4 h-4" />
                   <span>Check your spam/junk folder if you don't see the email</span>
                 </div>
               </div>
               <div className="p-4 rounded-xl bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex items-center gap-2 text-yellow-400 text-sm">
+                <div className="flex items-center gap-2 text-status-warning text-sm">
                   <Shield className="w-4 h-4" />
                   <span>Email verification helps keep your account secure</span>
                 </div>
@@ -139,13 +139,13 @@ export default function RegisterPage() {
             <div className="flex gap-3">
               <button type="button"
                 onClick={() => navigate('/login')}
-                className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all"
+                className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all"
               >
                 Go to Sign In
               </button>
               <button type="button"
                 onClick={() => setVerificationSent(false)}
-                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all"
+                className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-slate-100 transition-all"
               >
                 Back
               </button>
@@ -173,7 +173,7 @@ export default function RegisterPage() {
 
          <form onSubmit={handleSubmit} className="space-y-6">
            {error && (
-             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm" role="alert">
+             <div className="flex items-center gap-2 p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-status-error text-sm" role="alert">
                <AlertCircle className="w-4 h-4" aria-hidden="true" />
                {error}
              </div>
@@ -188,7 +188,7 @@ export default function RegisterPage() {
                  type="text"
                  value={name}
                  onChange={(e) => setName(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                 className="w-full bg-mystic-800/50 border border-mystic-700 rounded-xl py-3 pl-10 pr-4 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                  placeholder="John Doe"
                  required
                  aria-required="true"
@@ -205,7 +205,7 @@ export default function RegisterPage() {
                  type="email"
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
-                 className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                 className="w-full bg-mystic-800/50 border border-mystic-700 rounded-xl py-3 pl-10 pr-4 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                  placeholder="you@example.com"
                  autoComplete="email"
                  required
@@ -223,12 +223,12 @@ export default function RegisterPage() {
                  type={showPassword ? 'text' : 'password'}
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
-                 className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
+                 className={`w-full bg-mystic-800/50 border rounded-xl py-3 pl-10 pr-10 text-slate-100 placeholder:text-slate-500 focus:outline-none transition-all ${
                    password && passwordErrors.length > 0
                      ? 'border-red-500/50 focus:border-red-500/50'
                      : password && passwordErrors.length === 0
                      ? 'border-green-500/50 focus:border-green-500/50'
-                     : 'border-white/10 focus:border-accent-primary/50'
+                     : 'border-mystic-700 focus:border-accent-primary/50'
                  }`}
                  placeholder="••••••••"
                  autoComplete="new-password"
@@ -239,7 +239,7 @@ export default function RegisterPage() {
                <button
                  type="button"
                  onClick={() => setShowPassword(!showPassword)}
-                 className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 text-slate-500 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+                 className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 text-slate-500 hover:text-slate-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
                  aria-label={showPassword ? 'Hide password' : 'Show password'}
                >
                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -248,7 +248,7 @@ export default function RegisterPage() {
              {password && passwordErrors.length > 0 && (
                <div id="register-password-errors" className="space-y-1" role="alert">
                  {passwordErrors.map((error, index) => (
-                   <div key={index} className="flex items-center gap-1 text-xs text-red-400">
+                   <div key={index} className="flex items-center gap-1 text-xs text-status-error">
                      <div className="w-1 h-1 rounded-full bg-red-400" aria-hidden="true" />
                      {error}
                    </div>
@@ -267,12 +267,12 @@ export default function RegisterPage() {
                 id="register-confirm-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
+                className={`w-full bg-mystic-800/50 border rounded-xl py-3 pl-10 pr-10 text-slate-100 placeholder:text-slate-500 focus:outline-none transition-all ${
                   confirmPassword && !passwordsMatch
                     ? 'border-red-500/50 focus:border-red-500/50'
                     : confirmPassword && passwordsMatch
                     ? 'border-green-500/50 focus:border-green-500/50'
-                    : 'border-white/10 focus:border-accent-primary/50'
+                    : 'border-mystic-700 focus:border-accent-primary/50'
                 }`}
                 placeholder="••••••••"
                 autoComplete="new-password"
@@ -281,13 +281,13 @@ export default function RegisterPage() {
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-100"
               >
                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
             </div>
             {confirmPassword && !passwordsMatch && (
-              <div className="text-xs text-red-400">Passwords do not match</div>
+              <div className="text-xs text-status-error">Passwords do not match</div>
             )}
           </div>
 
@@ -328,7 +328,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all"
+            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-slate-500 disabled:cursor-not-allowed text-mystic-950 font-bold py-3 rounded-xl transition-all"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
             {!loading && <ArrowRight className="w-5 h-5" />}
@@ -345,7 +345,7 @@ export default function RegisterPage() {
         <div className="mt-6">
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-white/10"></div>
+              <div className="w-full border-t border-mystic-700"></div>
             </div>
             <div className="relative flex justify-center text-sm">
               <span className="px-2 bg-mystic-900/50 text-slate-500">Or continue with</span>
@@ -368,7 +368,7 @@ export default function RegisterPage() {
                 }
               }}
               disabled={loading}
-              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
+              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-[#0a0508] font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
             >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
