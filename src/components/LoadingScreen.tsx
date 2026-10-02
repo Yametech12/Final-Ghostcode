@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
-import Logo from './Logo';
+import LogoCanvas3D from './LogoCanvas3D';
 
 interface LoadingScreenProps {
   timeout?: number;
@@ -8,18 +7,18 @@ interface LoadingScreenProps {
 }
 
 /**
- * Full-screen loading state — logo only.
+ * Full-screen loading state — logo only, with a whisper of 3D and light.
  *
- * A single centered logo with a barely-there breathing animation.
- * No titles, no progress bars, no status messages. On timeout it shows
- * a quiet retry affordance.
+ * A single centered logo carrying the same subtle 2D-projected rotation
+ * and fixed-source lighting as the site's constellation emblems
+ * (12s coin-flip, never gimmicky). No titles, no progress bars,
+ * no status messages. On timeout it shows a quiet retry affordance.
  */
 export default function LoadingScreen({
   timeout = 15000,
   onTimeout,
 }: LoadingScreenProps) {
   const [isTimedOut, setIsTimedOut] = useState(false);
-  const reduceMotion = useReducedMotion();
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,7 +46,7 @@ export default function LoadingScreen({
     >
       {isTimedOut ? (
         <div className="flex flex-col items-center gap-4 px-6 text-center">
-          <Logo size="lg" aria-hidden="true" />
+          <LogoCanvas3D size={48} />
           <p className="text-sm text-slate-400">
             This is taking longer than expected.
           </p>
@@ -59,18 +58,9 @@ export default function LoadingScreen({
           </button>
         </div>
       ) : (
-        <motion.div
-          aria-hidden="true"
-          initial={reduceMotion ? false : { opacity: 0.45 }}
-          animate={reduceMotion ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
-          transition={
-            reduceMotion
-              ? { duration: 0 }
-              : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }
-          }
-        >
-          <Logo size="lg" />
-        </motion.div>
+        <div aria-hidden="true">
+          <LogoCanvas3D size={48} />
+        </div>
       )}
     </div>
   );
