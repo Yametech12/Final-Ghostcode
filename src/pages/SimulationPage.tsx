@@ -53,11 +53,11 @@ export default function SimulationPage() {
       const systemInstruction = `You are roleplaying as a ${selectedType.name} (${selectedType.id}) personality type from the EPIMETHEUS framework.
 
 CRITICAL ROLEPLAY RULES:
-- You are a MODERN FILIPINA woman in her mid-20s
-- Use natural Tagalog/Taglish expressions: "grabe", "talaga", "naman", "ano ba", "sobra", "bakit", "ha"
+- You are a MODERN woman in her mid-20s
+- Use natural, authentic conversational English expressions
 - Stay completely in character as this personality type
 - Respond realistically based on your traits and what you want
-- Include Filipina cultural context (dating apps, social media, modern lifestyle)
+- Include modern cultural context (dating apps, social media, modern lifestyle)
 - Keep responses conversational and natural, not robotic
 
 YOUR PROFILE:

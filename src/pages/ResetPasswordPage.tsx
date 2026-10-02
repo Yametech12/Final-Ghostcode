@@ -126,7 +126,7 @@ export default function ResetPasswordPage() {
 
         {mode === 'request' ? (
           <>
-            <h1 className="hero-headline text-3xl text-slate-50 mb-2 text-center">
+            <h1 className="hero-headline auth-heading text-3xl text-slate-50 mb-2 text-center">
               Reset Password
             </h1>
             <p className="text-slate-400 mb-6 text-center">
@@ -155,10 +155,11 @@ export default function ResetPasswordPage() {
             ) : (
               <form onSubmit={handleRequest} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">Email</label>
+                  <label htmlFor="reset-email" className="text-sm font-medium text-slate-300">Email</label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <input
+                      id="reset-email"
                       type="email"
                       value={email}
                       onChange={(e) => {
@@ -220,7 +221,7 @@ export default function ResetPasswordPage() {
           </>
         ) : (
           <>
-            <h1 className="hero-headline text-3xl text-slate-50 mb-2 text-center">
+            <h1 className="hero-headline auth-heading text-3xl text-slate-50 mb-2 text-center">
               Set new password
             </h1>
             <p className="text-slate-400 mb-6 text-center">
@@ -239,12 +240,13 @@ export default function ResetPasswordPage() {
             ) : (
               <form onSubmit={handleRecovery} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">
+                  <label htmlFor="reset-new-password" className="text-sm font-medium text-slate-300">
                     New password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <input
+                      id="reset-new-password"
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -286,12 +288,13 @@ export default function ResetPasswordPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-300">
+                  <label htmlFor="reset-confirm-password" className="text-sm font-medium text-slate-300">
                     Confirm new password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                     <input
+                      id="reset-confirm-password"
                       type={showPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
