@@ -66,6 +66,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
                   autoFocus
                   type="text"
                   placeholder="Search types..."
+                  aria-label="Search personality types"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent-primary/50"

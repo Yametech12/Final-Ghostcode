@@ -277,11 +277,11 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
             className="p-4 rounded-2xl bg-mystic-900/80 backdrop-blur-xl border border-white/10 shadow-2xl space-y-4"
           >
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="sim-target-type" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Target className="w-4 h-4 text-accent-primary" />
                 Target Type
               </label>
-              <select
+              <select id="sim-target-type"
                 value={typeId}
                 onChange={e => setTypeId(e.target.value as PersonalityType)}
                 disabled={isActive || isLoading}

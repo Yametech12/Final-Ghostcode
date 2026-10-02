@@ -449,8 +449,8 @@ export default function DossiersPage() {
 
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <label className="eyebrow ml-1">Subject Name</label>
-                  <input
+                  <label htmlFor="dossier-name" className="eyebrow ml-1">Subject Name</label>
+                  <input id="dossier-name"
                     type="text"
                     required
                     value={name}
@@ -462,8 +462,8 @@ export default function DossiersPage() {
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="eyebrow ml-1">Personality Type</label>
-                    <select
+                    <label htmlFor="dossier-type" className="eyebrow ml-1">Personality Type</label>
+                    <select id="dossier-type"
                       value={typeId}
                       onChange={(e) => setTypeId(e.target.value as any)}
                       className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
@@ -476,8 +476,8 @@ export default function DossiersPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="eyebrow ml-1">Current Phase</label>
-                    <select
+                    <label htmlFor="dossier-phase" className="eyebrow ml-1">Current Phase</label>
+                    <select id="dossier-phase"
                       value={phase}
                       onChange={(e) => setPhase(e.target.value as Dossier['phase'])}
                       className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
@@ -491,8 +491,8 @@ export default function DossiersPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="eyebrow ml-1">Last Interaction Date</label>
-                  <input
+                  <label htmlFor="dossier-last-interaction" className="eyebrow ml-1">Last Interaction Date</label>
+                  <input id="dossier-last-interaction"
                     type="date"
                     value={lastInteraction}
                     onChange={(e) => setLastInteraction(e.target.value)}

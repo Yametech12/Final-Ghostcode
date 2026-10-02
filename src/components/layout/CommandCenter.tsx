@@ -170,6 +170,7 @@ export default function CommandCenter() {
           onClick={toggle}
           className="w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary text-white shadow-2xl flex items-center justify-center group relative overflow-hidden"
           title="Command Center (Cmd+K) - Drag to move"
+          aria-label={isOpen ? "Close command center" : "Open command center"}
         >
           {/* Animated background */}
           <motion.div
@@ -252,6 +253,7 @@ export default function CommandCenter() {
                 autoFocus
                 type="text"
                 placeholder="Search types, tools, or navigation..."
+                aria-label="Search command center"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}

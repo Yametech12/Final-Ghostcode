@@ -32,6 +32,10 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
           key={item.id}
           className="group glass-card p-6 space-y-4 cursor-pointer hover:bg-white/5 transition-all duration-300 border-white/5 hover:border-accent-primary/30 relative overflow-hidden"
           onClick={() => onSelect(item)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(item); } }}
+          role="button"
+          tabIndex={0}
+          aria-label={`View analysis: ${item.scenarioSummary || 'calibration result'}`}
         >
           {/* Background Glow */}
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-3xl group-hover:bg-accent-primary/10 transition-all" />

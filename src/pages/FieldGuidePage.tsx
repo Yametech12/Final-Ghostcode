@@ -783,8 +783,8 @@ export default function FieldGuidePage() {
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Your Alias</label>
-                    <input 
+                    <label htmlFor="report-alias" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Your Alias</label>
+                    <input id="report-alias" 
                       type="text"
                       placeholder="Anonymous"
                       value={newReport.author}

@@ -99,7 +99,18 @@ export default function Tooltip({ children, term, definition, content }: Tooltip
           else handleShow();
           e.stopPropagation();
         }}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isVisible) handleHide();
+            else handleShow();
+          }
+          if (e.key === 'Escape') handleHide();
+        }}
         tabIndex={0}
+        role="button"
+        aria-label="Show more information"
       >
         {children}
       </span>

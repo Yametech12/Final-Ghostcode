@@ -981,11 +981,11 @@ export default function CalibrationPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="cal-eye-contact" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Info className="w-3 h-3" />
                   Eye Contact
                 </label>
-                <select
+                <select id="cal-eye-contact"
                   value={structuredInput.eyeContact}
                   onChange={(e) => setStructuredInput({...structuredInput, eyeContact: e.target.value})}
                   className="custom-select w-full"
@@ -1001,11 +1001,11 @@ export default function CalibrationPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="cal-conversation-topic" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <MessageSquare className="w-3 h-3" />
                   Conversation Topic
                 </label>
-                <select
+                <select id="cal-conversation-topic"
                   value={structuredInput.conversationTopic}
                   onChange={(e) => setStructuredInput({...structuredInput, conversationTopic: e.target.value})}
                   className="custom-select w-full"
@@ -1022,11 +1022,11 @@ export default function CalibrationPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="cal-body-language" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <UserCheck className="w-3 h-3" />
                   Body Language
                 </label>
-                <select
+                <select id="cal-body-language"
                   value={structuredInput.bodyLanguage}
                   onChange={(e) => setStructuredInput({...structuredInput, bodyLanguage: e.target.value})}
                   className="custom-select w-full"
@@ -1042,11 +1042,11 @@ export default function CalibrationPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="cal-clothing-style" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Zap className="w-3 h-3" />
                   Clothing Style
                 </label>
-                <select
+                <select id="cal-clothing-style"
                   value={structuredInput.clothingStyle}
                   onChange={(e) => setStructuredInput({...structuredInput, clothingStyle: e.target.value})}
                   className="custom-select w-full"
@@ -1062,11 +1062,11 @@ export default function CalibrationPage() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                <label htmlFor="cal-dating-venue" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest flex items-center gap-2">
                   <Filter className="w-3 h-3" />
                   Dating Venue
                 </label>
-                <select
+                <select id="cal-dating-venue"
                   value={structuredInput.datingVenue}
                   onChange={(e) => setStructuredInput({...structuredInput, datingVenue: e.target.value})}
                   className="custom-select w-full"
@@ -1084,8 +1084,8 @@ export default function CalibrationPage() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Additional Notes (Optional)</label>
-              <textarea
+              <label htmlFor="cal-notes" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Additional Notes (Optional)</label>
+              <textarea id="cal-notes"
                 value={structuredInput.additionalNotes}
                 onChange={(e) => setStructuredInput({...structuredInput, additionalNotes: e.target.value})}
                 placeholder="Any other specific behaviors, quotes, or context..."
