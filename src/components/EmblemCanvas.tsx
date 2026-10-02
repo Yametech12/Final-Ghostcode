@@ -1,1 +1,147 @@
-aW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VSZWYgfSBmcm9tICdyZWFjdCc7CmltcG9ydCB7IGdldFNpZ2lsRGVmIH0gZnJvbSAnLi9TaWdpbCc7CgovKioKICogRW1ibGVtQ2FudmFzIOKAlCBhIGNvbnN0ZWxsYXRpb24gc2lnaWwgd2l0aCBhIHdoaXNwZXIgb2YgM0QuCiAqCiAqIFJlbmRlcnMgYW55IGFyY2hldHlwZSBzaWdpbCBvbiAyRCBjYW52YXMgd2l0aCBhIHZlcnkgc2xvdywgdmVyeSBzdWJ0bGUKICogMkQtcHJvamVjdGVkIHJvdGF0aW9uIChjb2luLWZsaXAgaWxsdXNpb24gdmlhIGhvcml6b250YWwgc3F1ZWV6ZSkuCiAqIERlbGliZXJhdGVseSByZXN0cmFpbmVkOiAxMnMgcGVyaW9kLCBzY2FsZVggbmV2ZXIgZHJvcHMgYmVsb3cgMC43NiwKICogc28gaXQgcmVhZHMgYXMgImFsaXZlIiByYXRoZXIgdGhhbiBnaW1taWNreS4KICoKICogQWNjZXNzaWJpbGl0eTogaG9ub3JzIHByZWZlcnMtcmVkdWNlZC1tb3Rpb24gKHN0YXRpYyBmcmFtZSksCiAqIHJvbGU9ImltZyIgd2l0aCBhcmlhLWxhYmVsLCBkZWNvcmF0aXZlIGFuaW1hdGlvbiBvbmx5LgogKi8KCmludGVyZmFjZSBFbWJsZW1DYW52YXNQcm9wcyB7CiAgaWQ6IHN0cmluZzsKICBzaXplPzogbnVtYmVyOwogIGNsYXNzTmFtZT86IHN0cmluZzsKICB0aXRsZT86IHN0cmluZzsKICAvKiogRnVsbCByb3RhdGlvbiBwZXJpb2QgaW4gc2Vjb25kcyAoZGVmYXVsdCAxMiDigJQgc2xvdyBhbmQgY2FsbSkuICovCiAgcGVyaW9kPzogbnVtYmVyOwp9CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBFbWJsZW1DYW52YXMoewogIGlkLAogIHNpemUgPSA0OCwKICBjbGFzc05hbWUgPSAnJywKICB0aXRsZSwKICBwZXJpb2QgPSAxMiwKfTogRW1ibGVtQ2FudmFzUHJvcHMpIHsKICBjb25zdCBjYW52YXNSZWYgPSB1c2VSZWY8SFRNTENhbnZhc0VsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY29uc3QgY2FudmFzID0gY2FudmFzUmVmLmN1cnJlbnQ7CiAgICBpZiAoIWNhbnZhcykgcmV0dXJuOwogICAgY29uc3QgY3R4ID0gY2FudmFzLmdldENvbnRleHQoJzJkJyk7CiAgICBpZiAoIWN0eCkgcmV0dXJuOwoKICAgIGNvbnN0IGRlZiA9IGdldFNpZ2lsRGVmKGlkKTsKICAgIGNvbnN0IGxhYmVsID0gdGl0bGUgPz8gYEFyY2hldHlwZSBzaWdpbCAke2lkfWA7CgogICAgbGV0IHJhZiA9IDA7CiAgICBsZXQgcnVubmluZyA9IGZhbHNlOwogICAgY29uc3QgcmVkdWNlZE1vdGlvbiA9CiAgICAgIHR5cGVvZiB3aW5kb3cgIT09ICd1bmRlZmluZWQnICYmCiAgICAgIHdpbmRvdy5tYXRjaE1lZGlhKCcocHJlZmVycy1yZWR1Y2VkLW1vdGlvbjogcmVkdWNlKScpLm1hdGNoZXM7CgogICAgLy8gUmVzb2x2ZSB0aGUgc3Ryb2tlIGNvbG9yIGZyb20gdGhlIGVsZW1lbnQncyBDU1MgYGNvbG9yYAogICAgLy8gKHNvIGB0ZXh0LWlyaXMtMzAwYCBldGMuIGtlZXAgd29ya2luZyBleGFjdGx5IGxpa2UgdGhlIFNWRyB2ZXJzaW9uKS4KICAgIGNvbnN0IGRwciA9IE1hdGgubWluKHdpbmRvdy5kZXZpY2VQaXhlbFJhdGlvIHx8IDEsIDIpOwogICAgY2FudmFzLndpZHRoID0gc2l6ZSAqIGRwcjsKICAgIGNhbnZhcy5oZWlnaHQgPSBzaXplICogZHByOwogICAgY29uc3QgY3NzQ29sb3IgPSB3aW5kb3cuZ2V0Q29tcHV0ZWRTdHlsZShjYW52YXMpLmNvbG9yIHx8ICcjQjdBNkZGJzsKCiAgICBjb25zdCBkcmF3ID0gKGFuZ2xlOiBudW1iZXIpID0+IHsKICAgICAgY3R4LmNsZWFyUmVjdCgwLCAwLCBjYW52YXMud2lkdGgsIGNhbnZhcy5oZWlnaHQpOwogICAgICBjdHguc2F2ZSgpOwogICAgICBjdHguc2NhbGUoZHByLCBkcHIpOwoKICAgICAgLy8gMkQtcHJvamVjdGVkIHJvdGF0aW9uOiBob3Jpem9udGFsIHNxdWVlemUgc2ltdWxhdGVzIGEgY29pbi1mbGlwLgogICAgICAvLyBzY2FsZVggaW4gWzAuNzYsIDEuMF0g4oCUIHN1YnRsZSwgbmV2ZXIgZnVsbHkgZWRnZS1vbi4KICAgICAgY29uc3Qgc3F1ZWV6ZSA9IDAuODggKyAwLjEyICogTWF0aC5jb3MoYW5nbGUpOwogICAgICBjdHgudHJhbnNsYXRlKHNpemUgLyAyLCBzaXplIC8gMik7CiAgICAgIGN0eC5zY2FsZShzcXVlZXplLCAxKTsKICAgICAgY3R4LnRyYW5zbGF0ZSgtMzIsIC0zMik7IC8vIHNpZ2lscyBsaXZlIGluIDY0eDY0IHNwYWNlCgogICAgICBjb25zdCBrID0gc2l6ZSAvIDY0OyAvLyBzY2FsZSA2NC1zcGFjZSB0byBjc3MgcHgKICAgICAgY3R4LnNjYWxlKGssIGspOwoKICAgICAgY3R4LnN0cm9rZVN0eWxlID0gY3NzQ29sb3I7CiAgICAgIGN0eC5maWxsU3R5bGUgPSBjc3NDb2xvcjsKICAgICAgY3R4LmxpbmVDYXAgPSAncm91bmQnOwoKICAgICAgLy8gSGFsbyAoZGFzaGVkIGFjY2VudCBjaXJjbGUpLgogICAgICBpZiAoZGVmLmhhbG8pIHsKICAgICAgICBjdHguZ2xvYmFsQWxwaGEgPSAwLjI1OwogICAgICAgIGN0eC5saW5lV2lkdGggPSAxIC8gazsKICAgICAgICBjdHguc2V0TGluZURhc2goWzMgLyBrLCA0IC8ga10pOwogICAgICAgIGN0eC5iZWdpblBhdGgoKTsKICAgICAgICBjdHguYXJjKGRlZi5oYWxvWzBdLCBkZWYuaGFsb1sxXSwgZGVmLmhhbG9bMl0sIDAsIE1hdGguUEkgKiAyKTsKICAgICAgICBjdHguc3Ryb2tlKCk7CiAgICAgICAgY3R4LnNldExpbmVEYXNoKFtdKTsKICAgICAgICBjdHguZ2xvYmFsQWxwaGEgPSAxOwogICAgICB9CgogICAgICAvLyBDb25uZWN0aW5nIGxpbmVzLgogICAgICBjdHguZ2xvYmFsQWxwaGEgPSAwLjc1OwogICAgICBjdHgubGluZVdpZHRoID0gMS4yNSAvIGs7CiAgICAgIGZvciAoY29uc3QgW2EsIGJdIG9mIGRlZi5saW5lcykgewogICAgICAgIGNvbnN0IHAxID0gZGVmLnBvaW50c1thXTsKICAgICAgICBjb25zdCBwMiA9IGRlZi5wb2ludHNbYl07CiAgICAgICAgY3R4LmJlZ2luUGF0aCgpOwogICAgICAgIGN0eC5tb3ZlVG8ocDFbMF0sIHAxWzFdKTsKICAgICAgICBjdHgubGluZVRvKHAyWzBdLCBwMlsxXSk7CiAgICAgICAgY3R4LnN0cm9rZSgpOwogICAgICB9CiAgICAgIGN0eC5nbG9iYWxBbHBoYSA9IDE7CgogICAgICAvLyBTdGFyIHBvaW50cyAoYnJpZ2h0IGNvcmUgKyBzb2Z0IGdsb3cpLgogICAgICBkZWYucG9pbnRzLmZvckVhY2goKFt4LCB5XSwgaSkgPT4gewogICAgICAgIGNvbnN0IGNvcmUgPSAoaSA9PT0gMCA/IDMgOiAyLjIpIC8gazsKICAgICAgICBjb25zdCBnbG93ID0gKGkgPT09IDAgPyA1LjUgOiA0LjUpIC8gazsKICAgICAgICBjdHguZ2xvYmFsQWxwaGEgPSAwLjE4OwogICAgICAgIGN0eC5iZWdpblBhdGgoKTsKICAgICAgICBjdHguYXJjKHgsIHksIGdsb3csIDAsIE1hdGguUEkgKiAyKTsKICAgICAgICBjdHguZmlsbCgpOwogICAgICAgIGN0eC5nbG9iYWxBbHBoYSA9IDE7CiAgICAgICAgY3R4LmJlZ2luUGF0aCgpOwogICAgICAgIGN0eC5hcmMoeCwgeSwgY29yZSwgMCwgTWF0aC5QSSAqIDIpOwogICAgICAgIGN0eC5maWxsKCk7CiAgICAgIH0pOwoKICAgICAgY3R4LnJlc3RvcmUoKTsKICAgIH07CgogICAgY29uc3QgdGljayA9ICh0OiBudW1iZXIpID0+IHsKICAgICAgaWYgKCFydW5uaW5nKSByZXR1cm47CiAgICAgIGNvbnN0IGFuZ2xlID0gKCh0IC8gMTAwMCkgLyBwZXJpb2QpICogTWF0aC5QSSAqIDI7CiAgICAgIGRyYXcoYW5nbGUpOwogICAgICByYWYgPSByZXF1ZXN0QW5pbWF0aW9uRnJhbWUodGljayk7CiAgICB9OwoKICAgIGlmIChyZWR1Y2VkTW90aW9uKSB7CiAgICAgIGRyYXcoMC42KTsgLy8gc2luZ2xlIHN0YXRpYyBmcmFtZSwgc2xpZ2h0IGFuZ2xlIGZvciBkZXB0aCBoaW50CiAgICB9IGVsc2UgewogICAgICBydW5uaW5nID0gdHJ1ZTsKICAgICAgcmFmID0gcmVxdWVzdEFuaW1hdGlvbkZyYW1lKHRpY2spOwogICAgfQoKICAgIHJldHVybiAoKSA9PiB7CiAgICAgIHJ1bm5pbmcgPSBmYWxzZTsKICAgICAgY2FuY2VsQW5pbWF0aW9uRnJhbWUocmFmKTsKICAgIH07CiAgfSwgW2lkLCBzaXplLCB0aXRsZSwgcGVyaW9kXSk7CgogIHJldHVybiAoCiAgICA8Y2FudmFzCiAgICAgIHJlZj17Y2FudmFzUmVmfQogICAgICByb2xlPSJpbWciCiAgICAgIGFyaWEtbGFiZWw9e3RpdGxlID8/IGBBcmNoZXR5cGUgc2lnaWwgJHtpZH1gfQogICAgICBkYXRhLXNpZ2lsLWlkPXtpZH0KICAgICAgY2xhc3NOYW1lPXtgZW1ibGVtLWNhbnZhcyAke2NsYXNzTmFtZX1gfQogICAgICBzdHlsZT17eyB3aWR0aDogc2l6ZSwgaGVpZ2h0OiBzaXplIH19CiAgICAvPgogICk7Cn0K
+import { useEffect, useRef } from 'react';
+import { getSigilDef } from './Sigil';
+
+/**
+ * EmblemCanvas — a constellation sigil with a whisper of 3D.
+ *
+ * Renders any archetype sigil on 2D canvas with a very slow, very subtle
+ * 2D-projected rotation (coin-flip illusion via horizontal squeeze).
+ * Deliberately restrained: 12s period, scaleX never drops below 0.76,
+ * so it reads as "alive" rather than gimmicky.
+ *
+ * Accessibility: honors prefers-reduced-motion (static frame),
+ * role="img" with aria-label, decorative animation only.
+ */
+
+interface EmblemCanvasProps {
+  id: string;
+  size?: number;
+  className?: string;
+  title?: string;
+  /** Full rotation period in seconds (default 12 — slow and calm). */
+  period?: number;
+}
+
+export default function EmblemCanvas({
+  id,
+  size = 48,
+  className = '',
+  title,
+  period = 12,
+}: EmblemCanvasProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const def = getSigilDef(id);
+    const label = title ?? `Archetype sigil ${id}`;
+
+    let raf = 0;
+    let running = false;
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // Resolve the stroke color from the element's CSS `color`
+    // (so `text-iris-300` etc. keep working exactly like the SVG version).
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    const cssColor = window.getComputedStyle(canvas).color || '#B7A6FF';
+
+    const draw = (angle: number) => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.save();
+      ctx.scale(dpr, dpr);
+
+      // 2D-projected rotation: horizontal squeeze simulates a coin-flip.
+      // scaleX in [0.76, 1.0] — subtle, never fully edge-on.
+      const squeeze = 0.88 + 0.12 * Math.cos(angle);
+      ctx.translate(size / 2, size / 2);
+      ctx.scale(squeeze, 1);
+      ctx.translate(-32, -32); // sigils live in 64x64 space
+
+      const k = size / 64; // scale 64-space to css px
+      ctx.scale(k, k);
+
+      ctx.strokeStyle = cssColor;
+      ctx.fillStyle = cssColor;
+      ctx.lineCap = 'round';
+
+      // Halo (dashed accent circle).
+      if (def.halo) {
+        ctx.globalAlpha = 0.25;
+        ctx.lineWidth = 1 / k;
+        ctx.setLineDash([3 / k, 4 / k]);
+        ctx.beginPath();
+        ctx.arc(def.halo[0], def.halo[1], def.halo[2], 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+
+      // Connecting lines.
+      ctx.globalAlpha = 0.75;
+      ctx.lineWidth = 1.25 / k;
+      for (const [a, b] of def.lines) {
+        const p1 = def.points[a];
+        const p2 = def.points[b];
+        ctx.beginPath();
+        ctx.moveTo(p1[0], p1[1]);
+        ctx.lineTo(p2[0], p2[1]);
+        ctx.stroke();
+      }
+      ctx.globalAlpha = 1;
+
+      // Star points (bright core + soft glow).
+      def.points.forEach(([x, y], i) => {
+        const core = (i === 0 ? 3 : 2.2) / k;
+        const glow = (i === 0 ? 5.5 : 4.5) / k;
+        ctx.globalAlpha = 0.18;
+        ctx.beginPath();
+        ctx.arc(x, y, glow, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+        ctx.beginPath();
+        ctx.arc(x, y, core, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      ctx.restore();
+    };
+
+    const tick = (t: number) => {
+      if (!running) return;
+      const angle = ((t / 1000) / period) * Math.PI * 2;
+      draw(angle);
+      raf = requestAnimationFrame(tick);
+    };
+
+    if (reducedMotion) {
+      draw(0.6); // single static frame, slight angle for depth hint
+    } else {
+      running = true;
+      raf = requestAnimationFrame(tick);
+    }
+
+    return () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+  }, [id, size, title, period]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      role="img"
+      aria-label={title ?? `Archetype sigil ${id}`}
+      data-sigil-id={id}
+      className={`emblem-canvas ${className}`}
+      style={{ width: size, height: size }}
+    />
+  );
+}
