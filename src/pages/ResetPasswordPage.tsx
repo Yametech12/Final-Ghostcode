@@ -144,7 +144,7 @@ export default function ResetPasswordPage() {
                     password reset link is on its way.
                   </p>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => navigate('/login')}
                   className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all"
                 >
@@ -176,7 +176,6 @@ export default function ResetPasswordPage() {
                         emailError ? 'border-red-500/50' : 'border-white/10'
                       }`}
                       placeholder="you@example.com"
-                      autoComplete="email"
                       required
                     />
                   </div>

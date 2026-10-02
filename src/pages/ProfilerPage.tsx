@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
+import { trackProfilerComplete } from '../utils/analytics';
 
 export default function ProfilerPage() {
   const auth = useEnhancedAuth();
@@ -107,6 +108,7 @@ export default function ProfilerPage() {
       // guard, toggling traits to explore matches would write a new row per
       // click — the page wrote 1-3 rows for every "explore matches" session.
       lastSavedTypeIdRef.current = matchedType.id;
+      trackProfilerComplete();
       saveResult().catch(err => {
         console.error("Unhandled error in ProfilerPage saveResult:", err);
       });
@@ -144,22 +146,22 @@ export default function ProfilerPage() {
           {/* Time Line */}
           <div className="glass-card p-6 space-y-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2">
                 <Shield className="w-5 h-5 text-blue-400" />
                 Time Line
-              </h3>
+              </h2>
               {traits.time && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
             </div>
             <p className="text-sm text-slate-400">How does she view the progression of a relationship?</p>
             <div className="grid grid-cols-2 gap-4">
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, time: 'Tester' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Tester' ? 'bg-blue-500/20 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Tester</div>
                 <div className="text-xs opacity-80">Harder to get, easier to keep. Tests you upfront.</div>
               </button>
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, time: 'Investor' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Investor' ? 'bg-blue-500/20 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
@@ -180,14 +182,14 @@ export default function ProfilerPage() {
             </div>
             <p className="text-sm text-slate-400">How does she view sex and intimacy?</p>
             <div className="grid grid-cols-2 gap-4">
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, sex: 'Denier' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Denier' ? 'bg-red-500/20 border-red-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Denier</div>
                 <div className="text-xs opacity-80">Needs a reason TO have sex (connection, trust).</div>
               </button>
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, sex: 'Justifier' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Justifier' ? 'bg-red-500/20 border-red-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
@@ -208,14 +210,14 @@ export default function ProfilerPage() {
             </div>
             <p className="text-sm text-slate-400">How does she view the world and relationships?</p>
             <div className="grid grid-cols-2 gap-4">
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, relationship: 'Realist' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Realist' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Realist</div>
                 <div className="text-xs opacity-80">Practical, logical, focuses on what is.</div>
               </button>
-              <button
+              <button type="button"
                 onClick={() => setTraits({ ...traits, relationship: 'Idealist' })}
                 className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Idealist' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
@@ -237,7 +239,7 @@ export default function ProfilerPage() {
                   const profile = personalityTypes.find(p => p.id === result.typeId);
                   if (!profile) return null;
                   return (
-                    <button
+                    <button type="button"
                       key={idx}
                       onClick={() => loadPastResult(result.typeId)}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5 border border-white/10 hover:bg-white/10 hover:border-accent-primary/50 transition-all text-left"
@@ -247,7 +249,7 @@ export default function ProfilerPage() {
                       </div>
                       <div>
                         <div className="text-sm font-bold text-white">{profile.name}</div>
-                        <div className="text-[10px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
+                        <div className="text-[11px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
                       </div>
                     </button>
                   );
@@ -286,7 +288,7 @@ export default function ProfilerPage() {
               
               <div className="space-y-6">
                 <div>
-                  <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Core Strategy</h4>
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Core Strategy</h3>
                   <p className="text-slate-300 text-sm leading-relaxed">{matchedType.howSheGetsWhatSheWants}</p>
                 </div>
                 

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { HelpCircle, CheckCircle2, XCircle, RefreshCcw, Trophy, Timer, ChevronRight, Brain, Star, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { trackQuizComplete } from '../utils/analytics';
 import { toast } from 'sonner';
 
 interface Question {
@@ -253,6 +254,7 @@ export default function QuizPage() {
     } else {
       setEndTime(Date.now());
       setShowResult(true);
+      trackQuizComplete();
     }
   };
 
@@ -277,7 +279,7 @@ export default function QuizPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
             <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
               <Target className="w-6 h-6 text-accent-primary mx-auto mb-3" strokeWidth={1.5} />
-              <h3 className="eyebrow">10 Questions</h3>
+              <h2 className="eyebrow">10 Questions</h2>
             </div>
             <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
               <Timer className="w-6 h-6 text-accent-secondary mx-auto mb-3" strokeWidth={1.5} />
@@ -289,7 +291,7 @@ export default function QuizPage() {
             </div>
           </div>
 
-          <button
+          <button type="button"
             onClick={startQuiz}
             className="px-12 py-5 rounded-2xl accent-gradient text-mystic-950 font-semibold tracking-wide text-lg shadow-2xl shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
@@ -334,14 +336,14 @@ export default function QuizPage() {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-            <button
+            <button type="button"
               onClick={startQuiz}
               className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-accent-primary text-white font-bold hover:bg-accent-primary/90 transition-all"
             >
               <RefreshCcw className="w-5 h-5" />
               Try Again
             </button>
-            <button
+            <button type="button"
               onClick={() => setQuizStarted(false)}
               className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
             >
@@ -385,7 +387,7 @@ export default function QuizPage() {
 
         <div className="grid gap-4">
           {currentQuestion.options.map((option, index) => (
-            <button
+            <button type="button"
               key={index}
               onClick={() => handleOptionClick(index)}
               disabled={isAnswered}
@@ -412,7 +414,7 @@ export default function QuizPage() {
             </div>
             <p className="text-slate-400">{currentQuestion.explanation}</p>
             
-            <button
+            <button type="button"
               onClick={nextQuestion}
               className="w-full mt-4 py-4 rounded-xl bg-accent-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-accent-primary/90 transition-all"
             >

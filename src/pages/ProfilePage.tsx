@@ -194,10 +194,10 @@ export default function ProfilePage() {
                 <>
                   {/* Rank Badge */}
                   <div className={cn('relative p-5 rounded-xl border text-center', currentRank.bg)}>
-                    <div className="absolute top-2 left-3 text-[9px] font-mono text-slate-500 tabular-nums uppercase tracking-wider">
+                    <div className="absolute top-2 left-3 text-[10px] font-mono text-slate-500 tabular-nums uppercase tracking-wider">
                       Hunter Rank
                     </div>
-                    <div className="absolute top-2 right-3 text-[9px] font-mono text-slate-500 tabular-nums">
+                    <div className="absolute top-2 right-3 text-[10px] font-mono text-slate-500 tabular-nums">
                       LV.{level}
                     </div>
                     <div className={cn('text-5xl sm:text-6xl font-bold tracking-tighter mt-2', currentRank.color, currentRank.glow)}>
@@ -221,7 +221,7 @@ export default function ProfilePage() {
                           style={{ width: `${progress}%` }}
                         />
                       </div>
-                      <div className="text-[10px] text-slate-600 text-center">
+                      <div className="text-[11px] text-slate-600 text-center">
                         {Math.ceil((nextRank.minXP - totalXP) / 100)} more calibrations to rank up
                       </div>
                     </div>
@@ -235,15 +235,15 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-accent-primary tabular-nums">{assessments.length}</div>
-                      <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Gates Cleared</div>
+                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Gates Cleared</div>
                     </div>
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-accent-secondary tabular-nums">{fieldReports.length}</div>
-                      <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Reports Filed</div>
+                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Reports Filed</div>
                     </div>
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-slate-100 tabular-nums">{achievements.length}</div>
-                      <div className="text-[9px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Titles</div>
+                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Titles</div>
                     </div>
                   </div>
                 </>
@@ -251,7 +251,7 @@ export default function ProfilePage() {
             })()}
 
             <div className="flex flex-col sm:flex-row gap-3">
-              <button
+              <button type="button"
                 onClick={() => setIsEditModalOpen(true)}
                 className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl bg-white/5 border border-slate-700/30 text-sm font-semibold tracking-wide text-slate-100 hover:bg-white/8 hover:border-accent-primary/20 transition-all"
               >
@@ -276,7 +276,7 @@ export default function ProfilePage() {
       {/* Tab Navigation */}
       <div className="flex gap-2 border-b border-slate-700/30 overflow-x-auto scrollbar-hide">
         {(['assessments', 'reports', 'achievements'] as const).map((tab) => (
-          <button
+          <button type="button"
             key={tab}
             onClick={() => setActiveTab(tab)}
             className={cn(
@@ -339,7 +339,7 @@ export default function ProfilePage() {
                         <div className="w-12 h-12 rounded-xl bg-accent-primary/15 border border-accent-primary/25 flex items-center justify-center text-accent-primary font-mono font-semibold text-lg tracking-widest">
                           {assessment.typeId}
                         </div>
-                        <div className="flex items-center gap-1 text-[10px] text-slate-500 tabular-nums">
+                        <div className="flex items-center gap-1 text-[11px] text-slate-500 tabular-nums">
                           <Clock aria-hidden="true" className="w-3 h-3" strokeWidth={1.5} />
                           {new Date(assessment.date).toLocaleDateString()}
                         </div>
