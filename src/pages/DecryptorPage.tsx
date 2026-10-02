@@ -192,7 +192,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                   "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all",
                   isLoading || !input.trim()
                     ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
-                    : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
+                    : "accent-gradient text-mystic-950 hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
                 )}
               >
                 {isLoading ? (
@@ -211,7 +211,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
               {(analysis || error) && (
                 <button type="button"
                   onClick={clearAnalysis}
-                  className="px-4 py-4 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all"
+                  className="px-4 py-4 rounded-xl bg-mystic-800 text-slate-400 hover:text-slate-100 hover:bg-mystic-700 transition-all"
                   title="Clear analysis"
                   aria-label="Clear analysis"
                 >
@@ -268,7 +268,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                   </div>
                   <button type="button"
                     onClick={copyAnalysis}
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-slate-100 hover:bg-mystic-700 transition-all text-sm"
                   >
                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     {copied ? 'Copied!' : 'Copy'}
@@ -302,11 +302,11 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                     className="flex-1 flex flex-col items-center justify-center text-center p-6"
                   >
                     <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
-                    <h3 className="text-lg font-bold text-red-400 mb-2">Analysis Failed</h3>
+                    <h3 className="text-lg font-bold text-status-error mb-2">Analysis Failed</h3>
                     <p className="text-sm text-slate-400 mb-4">{error}</p>
                     <button type="button"
                       onClick={clearAnalysis}
-                      className="px-4 py-2 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all"
+                      className="px-4 py-2 rounded-lg bg-mystic-800 text-slate-400 hover:text-slate-100 hover:bg-mystic-700 transition-all"
                     >
                       Try Again
                     </button>

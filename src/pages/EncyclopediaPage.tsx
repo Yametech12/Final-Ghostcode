@@ -182,8 +182,8 @@ export default function EncyclopediaPage() {
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab.id
-                    ? "bg-accent-primary text-white shadow-lg shadow-accent-primary/20"
-                    : "text-slate-400 hover:text-white hover:bg-white/5",
+                    ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20"
+                    : "text-slate-400 hover:text-slate-100 hover:bg-white/5",
                 )}
               >
                 <tab.icon className="w-4 h-4" />
@@ -247,7 +247,7 @@ export default function EncyclopediaPage() {
                     </div>
                   </section>
                   <section className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 space-y-4">
-                    <h3 className="text-xl font-bold flex items-center gap-3 text-red-400">
+                    <h3 className="text-xl font-bold flex items-center gap-3 text-status-error">
                       <AlertCircle className="w-6 h-6" />
                       What to Avoid
                     </h3>
@@ -331,7 +331,7 @@ export default function EncyclopediaPage() {
                   </div>
                   <div className="p-6 rounded-2xl bg-white/5 border border-white/10 space-y-4">
                     <h4 className="font-bold text-lg flex items-center gap-2">
-                      <MessageSquare className="w-5 h-5 text-blue-400" />
+                      <MessageSquare className="w-5 h-5 text-status-info" />
                       Texting Style
                     </h4>
                     <div className="text-slate-400 text-sm leading-relaxed">
@@ -495,7 +495,7 @@ export default function EncyclopediaPage() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-emerald-400">
+                    <h4 className="font-bold text-lg flex items-center gap-2 text-status-success">
                       <Trophy className="w-5 h-5" />
                       Quick Wins
                     </h4>
@@ -529,7 +529,7 @@ export default function EncyclopediaPage() {
                     </ul>
                   </div>
                   <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-red-400">
+                    <h4 className="font-bold text-lg flex items-center gap-2 text-status-error">
                       <Flag className="w-5 h-5" />
                       Red Flags
                     </h4>
@@ -637,7 +637,7 @@ export default function EncyclopediaPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-4">
-                      <div className="flex items-center gap-3 text-emerald-400">
+                      <div className="flex items-center gap-3 text-status-success">
                         <Brain className="w-5 h-5" />
                         <h4 className="font-bold uppercase tracking-widest text-xs">
                           The Vision
@@ -743,7 +743,7 @@ export default function EncyclopediaPage() {
             {activeTab === "darkmind" && (
               <div className="space-y-8">
                 <section className="p-8 rounded-2xl bg-white/5 border border-white/10 space-y-8">
-                  <h3 className="text-2xl font-bold flex items-center gap-3 text-red-400">
+                  <h3 className="text-2xl font-bold flex items-center gap-3 text-status-error">
                     <Brain className="w-6 h-6" />
                     Dark Mind Breakdown
                   </h3>
@@ -804,7 +804,7 @@ export default function EncyclopediaPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {profile.selfSabotagePattern && (
                     <section className="p-8 rounded-2xl bg-red-500/5 border border-red-500/20 space-y-4">
-                      <h3 className="text-xl font-bold flex items-center gap-3 text-red-400">
+                      <h3 className="text-xl font-bold flex items-center gap-3 text-status-error">
                         <AlertCircle className="w-6 h-6" />
                         Self-Sabotage Pattern
                       </h3>
@@ -829,7 +829,7 @@ export default function EncyclopediaPage() {
 
                 {profile.conversationExamples && profile.conversationExamples.length > 0 && (
                   <section className="p-8 rounded-2xl bg-white/5 border border-white/10 space-y-6">
-                    <h3 className="text-2xl font-bold flex items-center gap-3 text-blue-400">
+                    <h3 className="text-2xl font-bold flex items-center gap-3 text-status-info">
                       <MessageSquare className="w-6 h-6" />
                       Conversation Examples
                     </h3>

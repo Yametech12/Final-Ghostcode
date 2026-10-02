@@ -153,11 +153,11 @@ export default function ComparePage() {
                   <div className="space-y-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p1.name}</div>
-                      <div className="text-sm text-white">{p1.combination.includes('Tester') ? 'Tester (T): Shorter attention span, unaffected by compliments, changes topics rapidly.' : 'Investor (N): Takes compliments seriously, needs focused attention, deep eye contact.'}</div>
+                      <div className="text-sm text-slate-200">{p1.combination.includes('Tester') ? 'Tester (T): Shorter attention span, unaffected by compliments, changes topics rapidly.' : 'Investor (N): Takes compliments seriously, needs focused attention, deep eye contact.'}</div>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p2.name}</div>
-                      <div className="text-sm text-white">{p2.combination.includes('Tester') ? 'Tester (T): Shorter attention span, unaffected by compliments, changes topics rapidly.' : 'Investor (N): Takes compliments seriously, needs focused attention, deep eye contact.'}</div>
+                      <div className="text-sm text-slate-200">{p2.combination.includes('Tester') ? 'Tester (T): Shorter attention span, unaffected by compliments, changes topics rapidly.' : 'Investor (N): Takes compliments seriously, needs focused attention, deep eye contact.'}</div>
                     </div>
                   </div>
                 </div>
@@ -169,11 +169,11 @@ export default function ComparePage() {
                   <div className="space-y-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p1.name}</div>
-                      <div className="text-sm text-white">{p1.combination.includes('Denier') ? 'Denier (D): Careful with safety, shy about sex talk, consistent with upbringing.' : 'Justifier (J): Takes risks, talks about sex openly, rebels against upbringing.'}</div>
+                      <div className="text-sm text-slate-200">{p1.combination.includes('Denier') ? 'Denier (D): Careful with safety, shy about sex talk, consistent with upbringing.' : 'Justifier (J): Takes risks, talks about sex openly, rebels against upbringing.'}</div>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p2.name}</div>
-                      <div className="text-sm text-white">{p2.combination.includes('Denier') ? 'Denier (D): Careful with safety, shy about sex talk, consistent with upbringing.' : 'Justifier (J): Takes risks, talks about sex openly, rebels against upbringing.'}</div>
+                      <div className="text-sm text-slate-200">{p2.combination.includes('Denier') ? 'Denier (D): Careful with safety, shy about sex talk, consistent with upbringing.' : 'Justifier (J): Takes risks, talks about sex openly, rebels against upbringing.'}</div>
                     </div>
                   </div>
                 </div>
@@ -185,11 +185,11 @@ export default function ComparePage() {
                   <div className="space-y-4">
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p1.name}</div>
-                      <div className="text-sm text-white">{p1.combination.includes('Realist') ? 'Realist (R): Career priority, believes in equality, takes care of others.' : 'Idealist (I): Spoiled upbringing, expects to be pampered, vivid imagination.'}</div>
+                      <div className="text-sm text-slate-200">{p1.combination.includes('Realist') ? 'Realist (R): Career priority, believes in equality, takes care of others.' : 'Idealist (I): Spoiled upbringing, expects to be pampered, vivid imagination.'}</div>
                     </div>
                     <div className="p-4 rounded-xl bg-white/5 border border-white/10">
                       <div className="text-xs font-bold text-slate-500 mb-1">{p2.name}</div>
-                      <div className="text-sm text-white">{p2.combination.includes('Realist') ? 'Realist (R): Career priority, believes in equality, takes care of others.' : 'Idealist (I): Spoiled upbringing, expects to be pampered, vivid imagination.'}</div>
+                      <div className="text-sm text-slate-200">{p2.combination.includes('Realist') ? 'Realist (R): Career priority, believes in equality, takes care of others.' : 'Idealist (I): Spoiled upbringing, expects to be pampered, vivid imagination.'}</div>
                     </div>
                   </div>
                 </div>
