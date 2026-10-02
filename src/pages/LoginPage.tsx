@@ -10,6 +10,12 @@ import Logo from '../components/Logo';
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
+// NOTE: This client-side lockout is cosmetic/UX-only — it lives in
+// localStorage and is trivially bypassed (clear storage, switch browser,
+// or call the API directly). Real brute-force protection relies on
+// Supabase's server-side rate limiting on the auth endpoints. Do not
+// treat this client lockout as a security control.
+
 export default function LoginPage() {
   const navigate = useNavigate();
   const { signInWithEmail, signInWithGoogle } = useEnhancedAuth();
@@ -120,16 +126,17 @@ export default function LoginPage() {
         <div className="flex justify-center mb-6">
           <Logo size="xl" />
         </div>
-        <h1 className="hero-headline text-3xl text-slate-50 mb-2 text-center">Welcome Back</h1>
+        <h1 className="hero-headline auth-heading text-3xl text-slate-50 mb-2 text-center">Welcome Back</h1>
         <p className="text-slate-400 mb-6 text-center">Sign in to continue to Epimetheus</p>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email field */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Email</label>
+            <label htmlFor="login-email" className="text-sm font-medium text-slate-300">Email</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
+                id="login-email"
                 type="email"
                 value={email}
                 onChange={(e) => {
@@ -153,10 +160,11 @@ export default function LoginPage() {
 
           {/* Password field */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Password</label>
+            <label htmlFor="login-password" className="text-sm font-medium text-slate-300">Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
+                id="login-password"
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -168,6 +176,7 @@ export default function LoginPage() {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}

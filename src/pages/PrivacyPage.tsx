@@ -4,13 +4,6 @@ import Logo from '../components/Logo';
 
 /**
  * Privacy Policy — public route, no auth required.
- *
- * IMPORTANT: This is a plain-English template that describes how the Epimetheus
- * codebase actually handles data today (Supabase Auth + Postgres + Storage,
- * Regolo AI for LLM calls, optional Sentry, server-derived userId, RLS, etc.).
- * It is not legal advice. Replace placeholders and have a lawyer review for
- * your jurisdiction (GDPR, CCPA, Philippines DPA 10173, etc.) before shipping
- * to production.
  */
 export default function PrivacyPage() {
   const EFFECTIVE_DATE = 'May 25, 2026';
@@ -368,13 +361,6 @@ export default function PrivacyPage() {
             ).
           </p>
         </Section>
-
-        <p className="text-xs text-slate-600 pt-8 border-t border-white/5">
-          This document is provided as a starting template and does not
-          constitute legal advice. Please consult a qualified attorney in your
-          jurisdiction (e.g., GDPR for the EEA / UK, CCPA for California, the
-          Data Privacy Act of 2012 for the Philippines) before relying on it.
-        </p>
 
         <div className="pt-4">
           <Link
