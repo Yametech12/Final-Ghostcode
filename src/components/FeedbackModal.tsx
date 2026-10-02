@@ -129,6 +129,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
           </div>
           <button
             onClick={onClose}
+            aria-label="Close feedback dialog"
             className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all"
           >
             <X className="w-5 h-5" />

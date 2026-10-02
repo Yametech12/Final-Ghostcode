@@ -25,8 +25,11 @@ const getAuthErrorMessage = (error: any) => {
       return 'Too many requests. Please try again later.';
     case 'auth/operation-not-allowed':
       return 'Email/password accounts are not enabled.';
+    // Return an empty string for unmapped codes so callers can fall through
+    // to getSupabaseErrorMessage (e.g. failed Google sign-ins). A non-empty
+    // default here would mask the more accurate Supabase-mapped message.
     default:
-      return 'An unknown authentication error occurred.';
+      return '';
   }
 };
 

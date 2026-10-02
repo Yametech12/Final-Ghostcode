@@ -405,6 +405,15 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 400;
 }
 
+/* Auth pages (Login / Reset Password) render a hardcoded dark gradient
+   backdrop in BOTH themes, so the theme-flipping `text-slate-50` utility
+   flips to near-black (#14110E, ~1:1 contrast, invisible) under .light-theme.
+   Pin the auth hero headings to near-white so they keep ≥4.5:1 contrast in
+   light theme without touching dark-theme rendering (still AAA, ~17.5–19:1). */
+.light-theme .auth-heading {
+  color: #FAF7F2;
+}
+
 /* Editorial uppercase eyebrow label (Req 5.6) */
 .eyebrow {
   font-family: var(--font-sans);

@@ -477,7 +477,7 @@ export default function PricingPage() {
                     : 'bg-status-success/15 text-status-success border border-status-success/30'
                 }`}
               >
-                Save {maxSavings}%
+                Save up to {maxSavings}%
               </span>
             )}
           </button>

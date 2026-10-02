@@ -578,7 +578,7 @@ export default function CalibrationPage() {
     try {
       const messages = [
         { role: "system", content: "You must respond with ONLY valid JSON. No markdown, no backticks." },
-        { role: "user", content: "Generate a realistic social scenario for a modern Filipina woman that fits one of the 8 EPIMETHEUS types (TDI, TJI, TDR, TJR, NDI, NJI, NDR, NJR). CRITICAL: You MUST use occasional Tagalog/Taglish words naturally in the scenario text (e.g., 'grabe', 'talaga', 'naman', 'ano ba', 'sobra'). Provide the scenario text, the correct type, and a brief explanation of why it fits that type based on the 3 axes (Time, Sex, Relationship). Use this JSON schema: { \"text\": \"string\", \"correctType\": \"string\", \"explanation\": \"string\" }" }
+        { role: "user", content: "Generate a realistic social scenario for a modern woman that fits one of the 8 EPIMETHEUS types (TDI, TJI, TDR, TJR, NDI, NJI, NDR, NJR). Use natural, conversational English in the scenario text. Provide the scenario text, the correct type, and a brief explanation of why it fits that type based on the 3 axes (Time, Sex, Relationship). Use this JSON schema: { \"text\": \"string\", \"correctType\": \"string\", \"explanation\": \"string\" }" }
       ];
 
       const completion = await chatCompletion(messages, undefined, {
@@ -728,7 +728,7 @@ export default function CalibrationPage() {
           (e.g., "1. ... 2. ... 3. ... 4. ..."). Do NOT return an array.
       14. "interactionStrategy": Single paragraph string. Concise next-step strategy.
 
-      CULTURAL CONTEXT: This system is calibrated for Filipino/Filipina women in the Philippines. Factor in cultural nuances: strong family values, Catholic/religious influence (increases Denier traits), social media influence on style, hiya (shame culture affecting emotional expression), and the blend of traditional and modern values common in urban Filipinas.
+      CULTURAL CONTEXT: This system is designed for an international audience. Factor in broadly applicable cultural nuances: family values, religious or traditional influence (increases Denier traits), social media influence on style, and the blend of traditional and modern values common in urban dating culture.
 
       TONE: Mysterious, authoritative, clinical yet evocative. Respond ONLY with valid JSON.`;
 

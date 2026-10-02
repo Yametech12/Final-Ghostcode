@@ -4,11 +4,6 @@ import Logo from '../components/Logo';
 
 /**
  * Terms of Service — public route, no auth required.
- *
- * IMPORTANT: This is a plain-English template, not legal advice. Replace the
- * placeholders ([Effective Date], [Jurisdiction], [Contact Email],
- * [Company Legal Name]) with real values and have the document reviewed by
- * a lawyer for your jurisdiction before shipping to production.
  */
 export default function TermsPage() {
   const EFFECTIVE_DATE = 'May 25, 2026';
@@ -237,10 +232,11 @@ export default function TermsPage() {
 
         <Section title="13. Governing Law">
           <p>
-            These Terms are governed by the laws of [Jurisdiction], without
+            These Terms are governed by the laws of the State of Delaware, USA,
+            without
             regard to its conflict-of-laws principles. Any dispute arising out
             of or relating to these Terms or the Service will be resolved in
-            the courts located in [Jurisdiction], and you consent to the
+            the courts located in the State of Delaware, USA, and you consent to the
             personal jurisdiction of those courts.
           </p>
         </Section>
@@ -266,12 +262,6 @@ export default function TermsPage() {
             ).
           </p>
         </Section>
-
-        <p className="text-xs text-slate-600 pt-8 border-t border-white/5">
-          This document is provided as a starting template and does not
-          constitute legal advice. Please consult a qualified attorney in your
-          jurisdiction before relying on it.
-        </p>
 
         <div className="pt-4">
           <Link

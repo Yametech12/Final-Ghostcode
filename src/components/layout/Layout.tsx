@@ -12,7 +12,6 @@ import { isAppError } from '../../lib/errors';
 import { BottomNav } from './BottomNav';
 
 import Logo from '../Logo';
-import LanguageToggle from '../LanguageToggle';
 
 // Lazy load non-critical components to reduce initial bundle size and main thread work
 const FeedbackModal = lazy(() => import('../FeedbackModal'));
@@ -477,8 +476,6 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                 )}
               </div>
 
-              <LanguageToggle />
-
               <button
                 onClick={toggleTheme}
                 aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
@@ -616,7 +613,6 @@ export default function Layout({ children, forceScrollable = false }: LayoutProp
                 <span className="text-xl font-bold tracking-tight text-gradient leading-none">EPIMETHEUS</span>
               </div>
               <div className="flex items-center gap-2">
-                <LanguageToggle />
                 <button
                   onClick={toggleTheme}
                   aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
