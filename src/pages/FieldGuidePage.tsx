@@ -282,7 +282,7 @@ export default function FieldGuidePage() {
 
       {/* Tabs */}
       <div className="flex justify-center gap-4 border-b border-white/5 pb-4">
-        <button type="button"
+        <button
           onClick={() => setActiveTab('scenarios')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
@@ -292,7 +292,7 @@ export default function FieldGuidePage() {
           <BookOpen className="w-5 h-5" />
           Scenario Library
         </button>
-        <button type="button"
+        <button
           onClick={() => setActiveTab('reports')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
@@ -313,7 +313,6 @@ export default function FieldGuidePage() {
                 <Search className="w-5 h-5 text-slate-500" />
               </div>
               <input
-aria-label="Search scenarios, stages, or types"
                 type="text"
                 placeholder="Search scenarios, stages, or types..."
                 value={searchTerm}
@@ -322,7 +321,7 @@ aria-label="Search scenarios, stages, or types"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-              <button type="button"
+              <button
                 onClick={() => setSelectedType(null)}
                 className={cn(
                   "px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all",
@@ -332,7 +331,7 @@ aria-label="Search scenarios, stages, or types"
                 All Types
               </button>
               {personalityTypes.map(type => (
-                <button type="button"
+                <button
                   key={type.id}
                   onClick={() => setSelectedType(type.id)}
                   className={cn(
@@ -364,7 +363,7 @@ aria-label="Search scenarios, stages, or types"
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-600 font-medium">{s.typeName}</span>
-                    <button type="button" 
+                    <button 
                       onClick={() => copyToClipboard(s.example)}
                       className={cn(
                         "p-1.5 rounded-lg transition-all",
@@ -394,10 +393,10 @@ aria-label="Search scenarios, stages, or types"
           {/* Quick Tips Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-white/5">
             <section className="space-y-4">
-              <h2 className="text-xl font-bold flex items-center gap-2 text-accent-primary">
+              <h3 className="text-xl font-bold flex items-center gap-2 text-accent-primary">
                 <Zap className="w-5 h-5" />
                 Quick Wins
-              </h2>
+              </h3>
               <div className="space-y-2">
                 {personalityTypes.slice(0, 4).map(type => (
                   <div key={type.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -461,7 +460,7 @@ aria-label="Search scenarios, stages, or types"
                         <span className="text-[10px] font-bold text-accent-primary uppercase">{item.label}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-500 italic">{item.note}</span>
-                          <button type="button" 
+                          <button 
                             onClick={() => copyToClipboard(item.line)}
                             className={cn(
                               "p-1 rounded transition-all",
@@ -495,7 +494,7 @@ aria-label="Search scenarios, stages, or types"
                         <span className="text-[10px] font-bold text-accent-primary uppercase">{item.label}</span>
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] text-slate-500 italic">{item.note}</span>
-                          <button type="button" 
+                          <button 
                             onClick={() => copyToClipboard(item.line)}
                             className={cn(
                               "p-1 rounded transition-all",
@@ -539,7 +538,7 @@ aria-label="Search scenarios, stages, or types"
                 { term: "Plausible Deniability", def: "Providing a non-sexual reason for a sexual escalation to bypass her Slut Defense." }
               ].map((item, i) => (
                 <div key={i} className="space-y-1">
-                  <h3 className="font-bold text-accent-primary text-sm uppercase tracking-widest">{item.term}</h3>
+                  <h4 className="font-bold text-accent-primary text-sm uppercase tracking-widest">{item.term}</h4>
                   <p className="text-xs text-slate-400 leading-relaxed">{item.def}</p>
                 </div>
               ))}
@@ -560,8 +559,7 @@ aria-label="Search scenarios, stages, or types"
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Search className="w-4 h-4 text-slate-500" />
                 </div>
-                <input
-aria-label="Search reports" 
+                <input 
                   type="text"
                   placeholder="Search reports..."
                   value={reportSearch}
@@ -577,7 +575,7 @@ aria-label="Search reports"
                 <option value="newest" className="bg-mystic-950">Newest</option>
                 <option value="popular" className="bg-mystic-950">Most Liked</option>
               </select>
-              <button type="button" 
+              <button 
                 onClick={() => setIsModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary text-white hover:bg-accent-primary/80 transition-colors font-bold text-sm shadow-lg shadow-accent-primary/20"
               >
@@ -589,7 +587,7 @@ aria-label="Search reports"
 
           {/* Report Filters */}
           <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-            <button type="button"
+            <button
               onClick={() => setReportFilter(null)}
               className={cn(
                 "px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap transition-all uppercase tracking-widest",
@@ -599,7 +597,7 @@ aria-label="Search reports"
               All Types
             </button>
             {personalityTypes.map(type => (
-              <button type="button"
+              <button
                 key={type.id}
                 onClick={() => setReportFilter(type.name)}
                 className={cn(
@@ -631,7 +629,7 @@ aria-label="Search reports"
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <button type="button" 
+                      <button 
                         onClick={() => {
                           handleLike(report.id).catch(err => {
                             console.error("Like failed:", err);
@@ -650,7 +648,7 @@ aria-label="Search reports"
                         )} />
                         {report.likes}
                       </button>
-                      <button type="button"
+                      <button
                         onClick={() => toggleComments(report.id)}
                         className={cn(
                           "flex items-center gap-1 px-3 py-1 rounded-full text-sm transition-all",
@@ -667,7 +665,7 @@ aria-label="Search reports"
 
                   <div className="space-y-4 pt-4 border-t border-white/5">
                     <div className="space-y-1">
-                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Scenario</h3>
+                      <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Scenario</h4>
                       <p className="text-slate-300 text-sm leading-relaxed">{report.scenario}</p>
                     </div>
                     <div className="space-y-1">
@@ -703,7 +701,6 @@ aria-label="Search reports"
 
                        <div className="flex gap-2">
                          <input
-                           aria-label="Add a comment"
                            type="text"
                            value={newComment}
                            onChange={(e) => setNewComment(e.target.value)}
@@ -718,7 +715,7 @@ aria-label="Search reports"
                              }
                            }}
                          />
-                         <button type="button"
+                         <button
                            onClick={() => {
                              handleSubmitComment(report.id).catch(err => {
                                console.error("Comment submission failed:", err);
@@ -746,7 +743,7 @@ aria-label="Search reports"
                   The community is still gathering intel. Be the first to share your field experience and help others calibrate.
                 </p>
               </div>
-              <button type="button" 
+              <button 
                 onClick={() => setIsModalOpen(true)}
                 className="px-8 py-4 rounded-xl bg-accent-primary text-white font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20"
               >
@@ -763,7 +760,7 @@ aria-label="Search reports"
           <div 
             className="glass-card w-full max-w-2xl max-h-[90vh] overflow-y-auto p-8 relative" data-lenis-prevent
           >
-            <button type="button" 
+            <button 
               onClick={() => setIsModalOpen(false)}
               className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
             >
@@ -786,9 +783,8 @@ aria-label="Search reports"
             >
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Your Alias</label>
-                    <input
-aria-label="Anonymous" 
+                    <label htmlFor="report-alias" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Your Alias</label>
+                    <input id="report-alias" 
                       type="text"
                       placeholder="Anonymous"
                       value={newReport.author}

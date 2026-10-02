@@ -419,13 +419,12 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label htmlFor="profile-displayName" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
+                  <label htmlFor="profile-display-name" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
                   <span className={`text-[10px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
                     {formData.displayName.length}/50
                   </span>
                 </div>
-                <input
-                  id="profile-displayName"
+                <input id="profile-display-name"
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => handleFieldChange('displayName', e.target.value)}
@@ -444,12 +443,12 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
+                  <label htmlFor="profile-bio" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
                   <span className={`text-[10px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
                     {formData.bio.length}/500
                   </span>
                 </div>
-                <textarea
+                <textarea id="profile-bio"
                   value={formData.bio}
                   onChange={(e) => handleFieldChange('bio', e.target.value)}
                   className={`w-full bg-white/5 border rounded-xl px-4 py-3 text-white focus:outline-none min-h-[100px] resize-none transition-colors ${
@@ -470,8 +469,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   <label htmlFor="profile-phone" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Phone</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                  id="profile-phone"
+                    <input id="profile-phone"
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
@@ -492,8 +490,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   <label htmlFor="profile-instagram" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
                   <div className="relative">
                     <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-                    <input
-                  id="profile-instagram"
+                    <input id="profile-instagram"
                       type="text"
                       value={formData.instagram}
                       onChange={(e) => handleFieldChange('instagram', e.target.value)}
@@ -516,7 +513,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                 <div className="relative">
                   <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
-                  id="profile-twitter"
+                    id="profile-twitter"
                     type="text"
                     value={formData.twitter}
                     onChange={(e) => handleFieldChange('twitter', e.target.value)}

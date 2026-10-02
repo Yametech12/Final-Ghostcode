@@ -307,7 +307,7 @@ export default function DossiersPage() {
                 Upgrade to Oracle for unlimited
               </Link>
             )}
-          <button type="button"
+          <button
             onClick={() => setIsModalOpen(true)}
             className="w-full md:w-auto mt-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl accent-gradient text-mystic-950 text-sm font-semibold tracking-wide shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform"
           >
@@ -322,7 +322,6 @@ export default function DossiersPage() {
           <Search aria-hidden="true" className="w-5 h-5 text-slate-500 group-focus-within:text-accent-primary transition-colors" strokeWidth={1.5} />
         </div>
         <input
-aria-label="Search dossiers by name or type"
           type="text"
           placeholder="Search dossiers by name or type..."
           value={searchQuery}
@@ -342,7 +341,7 @@ aria-label="Search dossiers by name or type"
       ) : filteredDossiers.length === 0 ? (
         <div className="text-center py-20 glass-card">
           <FileText aria-hidden="true" className="w-12 h-12 text-slate-600 mx-auto mb-4" strokeWidth={1.5} />
-          <h2 className="text-xl font-semibold text-slate-100 mb-2">No Dossiers Found</h2>
+          <h3 className="text-xl font-semibold text-slate-100 mb-2">No Dossiers Found</h3>
           <p className="text-slate-500">Create a new dossier to start tracking a subject.</p>
         </div>
       ) : (
@@ -355,14 +354,14 @@ aria-label="Search dossiers by name or type"
                 className="glass-card p-6 relative group hover:border-accent-primary/25 transition-colors"
               >
                 <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button type="button"
+                  <button
                     onClick={() => handleEdit(dossier)}
                     aria-label={`Edit ${dossier.name}`}
                     className="p-2 rounded-lg bg-white/5 border border-slate-700/30 text-slate-400 hover:text-slate-100 hover:border-accent-primary/20 transition-colors"
                   >
                     <Edit3 aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
                   </button>
-                  <button type="button"
+                  <button
                     onClick={() => {
                       handleDelete(dossier.id).catch((err) => {
                         console.error('Dossier deletion failed:', err);
@@ -439,7 +438,7 @@ aria-label="Search dossiers by name or type"
             >
               <div className="p-6 border-b border-slate-700/30 flex justify-between items-center">
                 <h2 className="text-xl font-semibold tracking-tight text-slate-100">{editingId ? 'Edit Dossier' : 'New Dossier'}</h2>
-                <button type="button"
+                <button
                   onClick={closeModal}
                   aria-label="Close"
                   className="p-2 rounded-xl hover:bg-white/5 text-slate-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -450,11 +449,10 @@ aria-label="Search dossiers by name or type"
 
               <form onSubmit={handleSubmit} className="p-6 space-y-6">
                 <div className="space-y-2">
-                  <label htmlFor="dossier-subject" className="eyebrow ml-1">Subject Name</label>
-                  <input
+                  <label htmlFor="dossier-name" className="eyebrow ml-1">Subject Name</label>
+                  <input id="dossier-name"
                     type="text"
                     required
-                    id="dossier-subject"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)] transition-[border-color,box-shadow] duration-200"
@@ -464,8 +462,8 @@ aria-label="Search dossiers by name or type"
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="eyebrow ml-1">Personality Type</label>
-                    <select
+                    <label htmlFor="dossier-type" className="eyebrow ml-1">Personality Type</label>
+                    <select id="dossier-type"
                       value={typeId}
                       onChange={(e) => setTypeId(e.target.value as any)}
                       className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
@@ -478,8 +476,8 @@ aria-label="Search dossiers by name or type"
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <label className="eyebrow ml-1">Current Phase</label>
-                    <select
+                    <label htmlFor="dossier-phase" className="eyebrow ml-1">Current Phase</label>
+                    <select id="dossier-phase"
                       value={phase}
                       onChange={(e) => setPhase(e.target.value as Dossier['phase'])}
                       className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
@@ -494,9 +492,8 @@ aria-label="Search dossiers by name or type"
 
                 <div className="space-y-2">
                   <label htmlFor="dossier-last-interaction" className="eyebrow ml-1">Last Interaction Date</label>
-                  <input
+                  <input id="dossier-last-interaction"
                     type="date"
-                    id="dossier-last-interaction"
                     value={lastInteraction}
                     onChange={(e) => setLastInteraction(e.target.value)}
                     className="w-full bg-mystic-950/50 border border-slate-700/30 rounded-xl py-3 px-4 text-slate-100 tabular-nums focus:outline-none focus:border-accent-primary/60 focus:shadow-[0_0_0_3px_rgba(232,199,126,0.12)] transition-[border-color,box-shadow] duration-200"
