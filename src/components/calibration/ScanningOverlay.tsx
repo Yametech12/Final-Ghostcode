@@ -2,6 +2,7 @@ import React from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
 import { LogoIcon } from '../Logo';
+import Logo from '../Logo';
 
 /**
  * Phase model for the calibration loading screen.
@@ -222,55 +223,30 @@ export function ScanningOverlay({ visible, onCancel }: ScanningOverlayProps) {
 }
 
 /**
- * Faded outline of what the analysis card will look like. The shimmer keeps
- * it feeling alive without distracting from the real status above.
+ * Logo-only placeholder shown while the calibration result is being computed.
+ * Matches the site-wide loading visual: centered logo, subtle breathing.
  */
 function ResultSkeleton({ reduceMotion }: { reduceMotion: boolean }) {
-  const bar = (w: string, h = 'h-3') =>
-    `${h} ${w} rounded-full bg-gradient-to-r from-white/5 via-white/10 to-white/5`;
-
-  const shimmer = reduceMotion
-    ? undefined
-    : { backgroundPosition: ['200% 0', '-200% 0'] as [string, string] };
-
   return (
     <motion.div
       aria-hidden="true"
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3, duration: 0.5 }}
-      className="w-full rounded-xl border border-white/8 bg-white/[0.02] p-4 space-y-3"
-      style={{
-        backgroundSize: '200% 100%',
-        backgroundImage:
-          'linear-gradient(90deg, transparent 0%, rgba(232,199,126,0.04) 50%, transparent 100%)',
-      }}
+      className="w-full flex items-center justify-center py-8"
     >
       <motion.div
-        animate={shimmer}
-        transition={{ duration: 2.4, repeat: Infinity, ease: 'linear' }}
-        className="w-full"
+        aria-hidden="true"
+        initial={reduceMotion ? false : { opacity: 0.45 }}
+        animate={reduceMotion ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }
+        }
       >
-        <div className="flex items-center gap-3">
-          <div className={bar('w-12', 'h-6')} />
-          <div className="flex-1 space-y-1.5">
-            <div className={bar('w-1/2')} />
-            <div className={bar('w-1/3')} />
-          </div>
-        </div>
+        <Logo size="md" />
       </motion.div>
-
-      <div className="space-y-1.5 pt-1">
-        <div className={bar('w-full')} />
-        <div className={bar('w-5/6')} />
-        <div className={bar('w-2/3')} />
-      </div>
-
-      <div className="flex flex-wrap gap-2 pt-1">
-        <div className="h-5 w-16 rounded-full bg-white/5" />
-        <div className="h-5 w-20 rounded-full bg-white/5" />
-        <div className="h-5 w-14 rounded-full bg-white/5" />
-      </div>
     </motion.div>
   );
 }
