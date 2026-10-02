@@ -110,7 +110,7 @@ export default function QuickReferencePage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-accent-secondary/20 flex items-center justify-center text-accent-secondary font-bold text-sm shrink-0">I</div>
                     <div>
-                      <span className="font-bold text-white block">Intrigue</span>
+                      <span className="font-bold text-slate-100 block">Intrigue</span>
                       <span className="text-xs text-slate-400">Curiosity and interest.</span>
                     </div>
                   </div>
@@ -140,7 +140,7 @@ export default function QuickReferencePage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-accent-primary/20 flex items-center justify-center text-accent-primary font-bold text-sm shrink-0">A</div>
                     <div>
-                      <span className="font-bold text-white block">Arousal</span>
+                      <span className="font-bold text-slate-100 block">Arousal</span>
                       <span className="text-xs text-slate-400">Sexual tension and physical attraction.</span>
                     </div>
                   </div>
@@ -170,7 +170,7 @@ export default function QuickReferencePage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-accent-secondary/20 flex items-center justify-center text-accent-secondary font-bold text-sm shrink-0">C</div>
                     <div>
-                      <span className="font-bold text-white block">Comfort</span>
+                      <span className="font-bold text-slate-100 block">Comfort</span>
                       <span className="text-xs text-slate-400">Emotional safety and trust.</span>
                     </div>
                   </div>
@@ -200,7 +200,7 @@ export default function QuickReferencePage() {
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-accent-primary/20 flex items-center justify-center text-accent-primary font-bold text-sm shrink-0">D</div>
                     <div>
-                      <span className="font-bold text-white block">Devotion</span>
+                      <span className="font-bold text-slate-100 block">Devotion</span>
                       <span className="text-xs text-slate-400">Deep loyalty and commitment.</span>
                     </div>
                   </div>

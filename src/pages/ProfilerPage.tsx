@@ -147,7 +147,7 @@ export default function ProfilerPage() {
           <div className="glass-card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                <Shield className="w-5 h-5 text-blue-400" />
+                <Shield className="w-5 h-5 text-status-info" />
                 Time Line
               </h2>
               {traits.time && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
@@ -156,14 +156,14 @@ export default function ProfilerPage() {
             <div className="grid grid-cols-2 gap-4">
               <button type="button"
                 onClick={() => setTraits({ ...traits, time: 'Tester' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Tester' ? 'bg-blue-500/20 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Tester' ? 'bg-blue-500/20 border-blue-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Tester</div>
                 <div className="text-xs opacity-80">Harder to get, easier to keep. Tests you upfront.</div>
               </button>
               <button type="button"
                 onClick={() => setTraits({ ...traits, time: 'Investor' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Investor' ? 'bg-blue-500/20 border-blue-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.time === 'Investor' ? 'bg-blue-500/20 border-blue-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Investor</div>
                 <div className="text-xs opacity-80">Easier to get, harder to keep. Invests early.</div>
@@ -175,7 +175,7 @@ export default function ProfilerPage() {
           <div className="glass-card p-6 space-y-4">
             <div className="flex items-center justify-between">
               <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                <Flame className="w-5 h-5 text-red-400" />
+                <Flame className="w-5 h-5 text-status-error" />
                 Sex Line
               </h3>
               {traits.sex && <CheckCircle2 className="w-5 h-5 text-emerald-500" />}
@@ -184,14 +184,14 @@ export default function ProfilerPage() {
             <div className="grid grid-cols-2 gap-4">
               <button type="button"
                 onClick={() => setTraits({ ...traits, sex: 'Denier' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Denier' ? 'bg-red-500/20 border-red-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Denier' ? 'bg-red-500/20 border-red-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Denier</div>
                 <div className="text-xs opacity-80">Needs a reason TO have sex (connection, trust).</div>
               </button>
               <button type="button"
                 onClick={() => setTraits({ ...traits, sex: 'Justifier' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Justifier' ? 'bg-red-500/20 border-red-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.sex === 'Justifier' ? 'bg-red-500/20 border-red-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Justifier</div>
                 <div className="text-xs opacity-80">Needs a reason NOT to have sex (red flags).</div>
@@ -212,14 +212,14 @@ export default function ProfilerPage() {
             <div className="grid grid-cols-2 gap-4">
               <button type="button"
                 onClick={() => setTraits({ ...traits, relationship: 'Realist' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Realist' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Realist' ? 'bg-purple-500/20 border-purple-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Realist</div>
                 <div className="text-xs opacity-80">Practical, logical, focuses on what is.</div>
               </button>
               <button type="button"
                 onClick={() => setTraits({ ...traits, relationship: 'Idealist' })}
-                className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Idealist' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
+                className={`p-4 rounded-xl border text-left transition-all ${traits.relationship === 'Idealist' ? 'bg-purple-500/20 border-purple-500 text-slate-100' : 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10'}`}
               >
                 <div className="font-bold mb-1">Idealist</div>
                 <div className="text-xs opacity-80">Romantic, imaginative, focuses on what could be.</div>
@@ -248,8 +248,7 @@ export default function ProfilerPage() {
                         {result.typeId}
                       </div>
                       <div>
-                        <div className="text-sm font-bold text-white">{profile.name}</div>
-                        <div className="text-[11px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
+                        <div className="text-sm font-bold text-[11px] text-slate-500">{new Date(result.date).toLocaleDateString()}</div>
                       </div>
                     </button>
                   );
@@ -305,7 +304,7 @@ export default function ProfilerPage() {
                 
                 <Link 
                   to={`/encyclopedia?type=${matchedType.id}`}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] transition-transform mt-8"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] transition-transform mt-8"
                 >
                   View Full Encyclopedia Entry <ArrowRight className="w-4 h-4" />
                 </Link>

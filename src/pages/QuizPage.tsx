@@ -338,14 +338,14 @@ export default function QuizPage() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
             <button type="button"
               onClick={startQuiz}
-              className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-accent-primary text-white font-bold hover:bg-accent-primary/90 transition-all"
+              className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold hover:bg-accent-primary/90 transition-all"
             >
               <RefreshCcw className="w-5 h-5" />
               Try Again
             </button>
             <button type="button"
               onClick={() => setQuizStarted(false)}
-              className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
+              className="flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all"
             >
               Back to Menu
             </button>
@@ -368,7 +368,7 @@ export default function QuizPage() {
           </div>
         </div>
         <div className="text-right">
-          <div className="text-xl font-bold text-white">{score}</div>
+          <div className="text-xl font-bold text-slate-100">{score}</div>
           <div className="text-[10px] font-bold text-slate-600 uppercase tracking-widest">Current Score</div>
         </div>
       </div>
@@ -394,8 +394,8 @@ export default function QuizPage() {
               className={cn(
                 "w-full p-6 rounded-2xl text-left border transition-all flex items-center justify-between group",
                 !isAnswered && "bg-white/5 border-white/10 hover:border-accent-primary/50 hover:bg-white/10",
-                isAnswered && index === currentQuestion.correctAnswer && "bg-emerald-500/10 border-emerald-500/50 text-emerald-400",
-                isAnswered && selectedOption === index && index !== currentQuestion.correctAnswer && "bg-red-500/10 border-red-500/50 text-red-400",
+                isAnswered && index === currentQuestion.correctAnswer && "bg-emerald-500/10 border-emerald-500/50 text-status-success",
+                isAnswered && selectedOption === index && index !== currentQuestion.correctAnswer && "bg-red-500/10 border-red-500/50 text-status-error",
                 isAnswered && selectedOption !== index && index !== currentQuestion.correctAnswer && "opacity-50 border-white/5"
               )}
             >
@@ -416,7 +416,7 @@ export default function QuizPage() {
             
             <button type="button"
               onClick={nextQuestion}
-              className="w-full mt-4 py-4 rounded-xl bg-accent-primary text-white font-bold flex items-center justify-center gap-2 hover:bg-accent-primary/90 transition-all"
+              className="w-full mt-4 py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold flex items-center justify-center gap-2 hover:bg-accent-primary/90 transition-all"
             >
               {currentQuestionIndex === questions.length - 1 ? 'View Results' : 'Next Question'}
               <ChevronRight className="w-5 h-5" />
