@@ -42,11 +42,16 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
   // so we read them once after mount and re-read when theme toggles.
   const [accent, setAccent] = useState<string>('#E8C77E');
   const [tickColor, setTickColor] = useState<string>('#C4BAAB');
+  const [gridColor, setGridColor] = useState<string>('rgba(255,255,255,0.08)');
 
   useEffect(() => {
     const refreshColors = () => {
       setAccent(getCssVar('--color-accent-primary', '#E8C77E'));
       setTickColor(getCssVar('--color-slate-300', '#C4BAAB'));
+      // Fixed white grid was invisible on cream in light theme.
+      // (15x light/dark audit, Oct 2026.)
+      const light = document.documentElement.classList.contains('light-theme');
+      setGridColor(light ? 'rgba(110, 99, 88, 0.18)' : 'rgba(255,255,255,0.08)');
     };
     refreshColors();
     // Re-read when the theme class on <html> flips (light/dark toggle).
@@ -111,7 +116,7 @@ export default function ProfileRadarChart({ profile }: ProfileRadarChartProps) {
               <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
-          <PolarGrid stroke="rgba(255,255,255,0.08)" />
+          <PolarGrid stroke={gridColor} />
           <PolarAngleAxis 
             dataKey="subject" 
             tick={{ fill: tickColor, fontSize: 11, fontWeight: 600, letterSpacing: '0.05em' }} 

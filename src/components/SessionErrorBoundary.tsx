@@ -117,7 +117,7 @@ export default class SessionErrorBoundary extends Component<Props, State> {
 
             <button type="button"
               onClick={this.handleReset}
-              className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-medium py-3 rounded-xl transition-all"
+              className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-medium py-3 rounded-xl transition-all"
             >
               <RefreshCw className="w-5 h-5" />
               Refresh & Retry

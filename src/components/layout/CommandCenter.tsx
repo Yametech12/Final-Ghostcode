@@ -168,7 +168,7 @@ export default function CommandCenter() {
       >
         <button type="button"
           onClick={toggle}
-          className="w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary text-white shadow-2xl flex items-center justify-center group relative overflow-hidden"
+          className="w-14 h-14 rounded-full accent-gradient text-mystic-950 shadow-2xl flex items-center justify-center group relative overflow-hidden"
           title="Command Center (Cmd+K) - Drag to move"
           aria-label={isOpen ? "Close command center" : "Open command center"}
         >
@@ -195,7 +195,7 @@ export default function CommandCenter() {
               animate={{ opacity: isHovered ? 1 : 0 }}
               className="absolute -top-1 -left-1 w-3 h-3 bg-white/20 rounded-full flex items-center justify-center"
             >
-              <GripVertical className="w-2 h-2 text-white/60" />
+              <GripVertical className="w-2 h-2 text-slate-100/60" />
             </motion.div>
           )}
 
@@ -258,7 +258,7 @@ aria-label="Search types, tools, or navigation"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none text-lg"
+                className="flex-1 bg-transparent border-none text-slate-100 placeholder:text-slate-600 focus:outline-none text-lg"
               />
               <motion.div
                 animate={{ opacity: query ? 1 : 0.5 }}
@@ -316,7 +316,7 @@ aria-label="Search types, tools, or navigation"
                       <motion.div
                         className={cn(
                           "w-10 h-10 rounded-lg flex items-center justify-center shrink-0 relative z-10",
-                          selectedIndex === index ? "bg-accent-primary text-white" : "bg-white/5 text-slate-500"
+                          selectedIndex === index ? "bg-accent-primary text-mystic-950" : "bg-white/5 text-slate-500"
                         )}
                         whileHover={{ scale: 1.1 }}
                         transition={{ duration: 0.15 }}
@@ -329,7 +329,7 @@ aria-label="Search types, tools, or navigation"
                           <motion.span
                             className={cn(
                               "font-bold transition-colors",
-                              selectedIndex === index ? "text-white" : "text-slate-300"
+                              selectedIndex === index ? "text-slate-100" : "text-slate-300"
                             )}
                             animate={{ fontWeight: selectedIndex === index ? 600 : 500 }}
                           >
@@ -379,7 +379,7 @@ aria-label="Search types, tools, or navigation"
                     transition={{ delay: 0.1 }}
                     className="space-y-1"
                   >
-                    <p className="text-white font-bold">No results found</p>
+                    <p className="text-slate-100 font-bold">No results found</p>
                     <p className="text-sm text-slate-500">Try searching for "TDI", "Advisor", or "ETS"</p>
                   </motion.div>
                 </motion.div>
@@ -388,8 +388,8 @@ aria-label="Search types, tools, or navigation"
 
             <div className="p-4 border-t border-white/10 bg-white/5 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase tracking-widest">
               <div className="flex gap-4">
-                <span className="flex items-center gap-1"><span className="bg-white/10 px-1 rounded text-white">↑↓</span> to navigate</span>
-                <span className="flex items-center gap-1"><span className="bg-white/10 px-1 rounded text-white">ENTER</span> to select</span>
+                <span className="flex items-center gap-1"><span className="bg-mystic-800 px-1 rounded text-slate-200">↑↓</span> to navigate</span>
+                <span className="flex items-center gap-1"><span className="bg-mystic-800 px-1 rounded text-slate-200">ENTER</span> to select</span>
               </div>
               <div className="flex items-center gap-2">
                 <Sparkles className="w-3 h-3 text-accent-primary" />
