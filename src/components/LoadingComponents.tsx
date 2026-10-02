@@ -1,5 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { motion } from 'motion/react';
+import { motion, useReducedMotion } from 'motion/react';
 import Logo from './Logo';
 import { Skeleton } from './ui/Skeleton';
 import LoadingScreen from './LoadingScreen';
@@ -51,32 +51,30 @@ export function LoadingSpinner({ size = "md", message, className }: { size?: "sm
 
 export { LoadingScreen };
 
-export function InlineLoader({ message }: { message?: string }) {
+/**
+ * Minimal inline loading indicator — logo mark only.
+ */
+export function InlineLoader() {
+  const reduceMotion = useReducedMotion();
+
   return (
-    <div className="flex flex-col items-center justify-center py-16 gap-5">
-      <div className="relative">
-        {/* Outer pulsing ring */}
-        <motion.div
-          className="absolute -inset-3 rounded-2xl border border-accent-primary/20"
-          animate={{ opacity: [0.3, 0.7, 0.3], scale: [1, 1.05, 1] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-        />
-        <div className="inline-loader-container">
-          <div className="inline-loader-glow" />
-          <div className="inline-loader-ring" />
-          <div className="inline-loader-logo">
-            <Logo size="md" />
-          </div>
-        </div>
-      </div>
-      <motion.p
-        className="text-xs text-slate-400 font-mono tracking-wider"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.3 }}
+    <div
+      className="flex items-center justify-center py-12"
+      role="status"
+      aria-label="Loading"
+    >
+      <motion.div
+        aria-hidden="true"
+        initial={reduceMotion ? false : { opacity: 0.45 }}
+        animate={reduceMotion ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
+        transition={
+          reduceMotion
+            ? { duration: 0 }
+            : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }
+        }
       >
-        {message || 'Loading...'}
-      </motion.p>
+        <Logo size="md" />
+      </motion.div>
     </div>
   );
 }
