@@ -256,11 +256,13 @@ export default function AnimatedRoutes() {
             PublicRoute so signed-in users following a footer or shared link
             can still visit them without being bounced home.
           */}
-          <Route path="/welcome" element={
-            <Suspense fallback={FallbackSkeleton}>
-              <LandingPage />
-            </Suspense>
-          } />
+          {/*
+            /welcome is a legacy alias — it now redirects to "/" (which renders
+            LandingPage for signed-out visitors via RootRoute), so there is a
+            single canonical marketing URL. No loop risk: "/" never redirects
+            back to /welcome.
+          */}
+          <Route path="/welcome" element={<Navigate to="/" replace />} />
           <Route path="/pricing" element={
             <Suspense fallback={FallbackSkeleton}>
               <PricingPage />

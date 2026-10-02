@@ -71,6 +71,7 @@ export default function ProfileCardModal({ isOpen, onClose, assessmentsCount, ac
         <div className="flex justify-end">
           <button 
             onClick={onClose}
+            aria-label="Close profile card"
             className="p-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-all"
           >
             <X className="w-5 h-5" />
