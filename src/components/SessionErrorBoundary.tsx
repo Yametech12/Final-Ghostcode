@@ -1,5 +1,6 @@
 import { Component, ReactNode, ErrorInfo } from 'react';
 import { AlertCircle, RefreshCw } from 'lucide-react';
+import { trackErrorEvent } from '../utils/analytics';
 
 interface Props {
   children: ReactNode;
@@ -59,6 +60,8 @@ export default class SessionErrorBoundary extends Component<Props, State> {
       return;
     }
     console.error('SessionErrorBoundary caught an error:', error, errorInfo);
+    // Analytics: fatal crash (error message only — no stack, no PII).
+    trackErrorEvent(error?.message || 'Unknown error', true);
   }
 
   handleReset = () => {

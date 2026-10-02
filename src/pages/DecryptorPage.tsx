@@ -6,6 +6,7 @@ import { PersonalityType } from '../types';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { chatCompletion, stripThinking } from '../lib/ai';
+import { trackDecryptorRun } from '../utils/analytics';
 import { cn } from '../lib/utils';
 import { InlineLoader } from '../components/LoadingComponents';
 
@@ -71,6 +72,7 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
       }
 
       setAnalysis(content);
+      trackDecryptorRun();
       toast.success('Signal decrypted successfully!');
 
     } catch (error: any) {

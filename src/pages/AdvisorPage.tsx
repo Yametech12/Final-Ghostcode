@@ -1,6 +1,7 @@
 import { useCallback, useState } from 'react';
 import { toast } from 'sonner';
 import { useAdvisorChat } from '../hooks/useAdvisorChat';
+import { trackAdvisorMessage } from '../utils/analytics';
 import { InlineLoader } from '../components/LoadingComponents';
 import { AdvisorHeader } from '../components/advisor/AdvisorHeader';
 import { MessageList } from '../components/advisor/MessageList';
@@ -36,6 +37,7 @@ export default function AdvisorPage() {
     setIsSending(true);
     try {
       await sendMessage(trimmed);
+      trackAdvisorMessage();
     } finally {
       setIsSending(false);
     }

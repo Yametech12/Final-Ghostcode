@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence, motion } from 'motion/react';
 import Layout from './Layout';
+import PageTracker from '../PageTracker';
 import { DelayedFallback, PageSkeleton, LoadingScreen } from '../LoadingComponents';
 import { useEnhancedAuth } from '../../contexts/EnhancedAuthContext';
 
@@ -220,6 +221,7 @@ export default function AnimatedRoutes() {
 
   return (
     <Suspense fallback={<LoadingScreen />}>
+      <PageTracker />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />

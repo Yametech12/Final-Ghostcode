@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { HelpCircle, CheckCircle2, XCircle, RefreshCcw, Trophy, Timer, ChevronRight, Brain, Star, Target } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { trackQuizComplete } from '../utils/analytics';
 import { toast } from 'sonner';
 
 interface Question {
@@ -253,6 +254,7 @@ export default function QuizPage() {
     } else {
       setEndTime(Date.now());
       setShowResult(true);
+      trackQuizComplete();
     }
   };
 

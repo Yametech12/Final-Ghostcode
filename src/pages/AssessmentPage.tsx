@@ -5,6 +5,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { personalityTypes } from '../data/personalityTypes';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
+import { trackAssessmentComplete } from '../utils/analytics';
 import { toast } from 'sonner';
 
 type Question = {
@@ -363,6 +364,7 @@ export default function AssessmentPage() {
     }
 
     setTimeout(() => {
+      trackAssessmentComplete(resultType);
       navigate(`/assessment-result?type=${resultType}`);
     }, 1500);
   };

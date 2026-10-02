@@ -8,9 +8,13 @@ import './index.css';
 import { Toaster } from 'sonner';
 import { validateEnvironment } from './utils/env';
 import { initSentry } from './lib/sentry';
+import { initAnalytics } from './utils/analytics';
 
 // Initialize Sentry early (no-op in dev or without DSN)
 initSentry();
+
+// Initialize product analytics early (no-op without VITE_GA_TRACKING_ID)
+initAnalytics();
 
 // Global unhandled promise rejection handler. We deliberately do NOT call
 // preventDefault() unconditionally — Sentry's beforeSend already filters

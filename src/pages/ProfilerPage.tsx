@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
+import { trackProfilerComplete } from '../utils/analytics';
 
 export default function ProfilerPage() {
   const auth = useEnhancedAuth();
@@ -107,6 +108,7 @@ export default function ProfilerPage() {
       // guard, toggling traits to explore matches would write a new row per
       // click — the page wrote 1-3 rows for every "explore matches" session.
       lastSavedTypeIdRef.current = matchedType.id;
+      trackProfilerComplete();
       saveResult().catch(err => {
         console.error("Unhandled error in ProfilerPage saveResult:", err);
       });
