@@ -166,7 +166,7 @@ export default function CommandCenter() {
         onHoverEnd={() => setIsHovered(false)}
         className="fixed bottom-8 right-8 z-[100] cursor-move"
       >
-        <button
+        <button type="button"
           onClick={toggle}
           className="w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary text-white shadow-2xl flex items-center justify-center group relative overflow-hidden"
           title="Command Center (Cmd+K) - Drag to move"
@@ -250,6 +250,7 @@ export default function CommandCenter() {
             <div className="p-4 border-b border-white/10 flex items-center gap-4">
               <Search className="w-5 h-5 text-slate-500" />
               <input
+aria-label="Search types, tools, or navigation"
                 autoFocus
                 type="text"
                 placeholder="Search types, tools, or navigation..."

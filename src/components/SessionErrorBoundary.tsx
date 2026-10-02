@@ -115,7 +115,7 @@ export default class SessionErrorBoundary extends Component<Props, State> {
               <p className="text-slate-500 text-sm mb-6">{this.state.errorDetails}</p>
             )}
 
-            <button
+            <button type="button"
               onClick={this.handleReset}
               className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-medium py-3 rounded-xl transition-all"
             >

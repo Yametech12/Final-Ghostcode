@@ -52,23 +52,23 @@ export function TraitRadarChart({
     <div className={className}>
       <ResponsiveContainer width="100%" height={height}>
         <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
-          <PolarGrid stroke="#374151" strokeWidth={1} />
+          <PolarGrid stroke="var(--color-slate-700, #374151)" strokeWidth={1} />
           <PolarAngleAxis
             dataKey="name"
-            tick={{ fill: '#9ca3af', fontSize: 12 }}
+            tick={{ fill: 'var(--color-slate-400, #9ca3af)', fontSize: 12 }}
             className="text-slate-400"
           />
           <PolarRadiusAxis
             domain={[0, 100]}
-            tick={{ fill: '#6b7280', fontSize: 10 }}
+            tick={{ fill: 'var(--color-slate-500, #6b7280)', fontSize: 10 }}
             tickCount={6}
             axisLine={false}
           />
           <Radar
             name="Your Traits"
             dataKey="score"
-            stroke="#8b5cf6"
-            fill="#8b5cf6"
+            stroke="var(--color-accent-primary, #8b5cf6)"
+            fill="var(--color-accent-primary, #8b5cf6)"
             fillOpacity={0.3}
             strokeWidth={2}
           />

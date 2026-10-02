@@ -51,7 +51,7 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
                 {item.scenarioSummary}
               </h4>
             </div>
-            <button
+            <button type="button"
               onClick={(e) => onDelete(e, item.id)}
               aria-label="Delete analysis"
               className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
@@ -64,12 +64,12 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
           <div className="flex items-center justify-between pt-4 border-t border-white/5 relative z-10">
             <div className="flex items-center gap-4">
               <div className="space-y-0.5">
-                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Confidence</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Confidence</div>
                 <div className="text-sm font-bold text-white">{item.confidence}%</div>
               </div>
               {item.secondaryType && (
                 <div className="space-y-0.5">
-                  <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Secondary</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Secondary</div>
                   <div className="text-sm font-bold text-slate-400">{item.secondaryType}</div>
                 </div>
               )}

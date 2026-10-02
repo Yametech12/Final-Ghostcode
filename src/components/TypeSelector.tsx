@@ -38,7 +38,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
         {label}
       </label>
       <div className="relative">
-        <button
+        <button type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left transition-all",
@@ -63,6 +63,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
+aria-label="Search types"
                   autoFocus
                   type="text"
                   placeholder="Search types..."
@@ -75,7 +76,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
             </div>
             <div className="max-h-64 overflow-y-auto custom-scrollbar" data-lenis-prevent>
               {filteredTypes.map((type) => (
-                <button
+                <button type="button"
                   key={type.id}
                   onClick={() => {
                     onChange(type.id);
