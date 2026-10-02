@@ -275,11 +275,11 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
             className="p-4 rounded-2xl bg-mystic-900/80 backdrop-blur-xl border border-white/10 shadow-2xl space-y-4"
           >
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="sim-target-type" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Target className="w-4 h-4 text-accent-primary" />
                 Target Type
               </label>
-              <select
+              <select id="sim-target-type"
                 value={typeId}
                 onChange={e => setTypeId(e.target.value as PersonalityType)}
                 disabled={isActive || isLoading}
@@ -295,11 +295,11 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
 
             <div className="space-y-3">
               {!isActive && !feedback && (
-                <button
+                <button type="button"
                   onClick={startSimulation}
                   disabled={isLoading}
                   className={cn(
-                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold shadow-lg transition-all",
+                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
                     isLoading
                       ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
                       : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
@@ -320,11 +320,11 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
               )}
 
               {isActive && (
-                <button
+                <button type="button"
                   onClick={endSimulation}
                   disabled={isLoading}
                   className={cn(
-                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all",
+                    "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed",
                     isLoading
                       ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
                       : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white"
@@ -345,10 +345,10 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
               )}
 
               {(messages.length > 0 || feedback) && (
-                <button
+                <button type="button"
                   onClick={resetSimulation}
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
+                  className="disabled:opacity-50 disabled:cursor-not-allowed w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Reset
@@ -357,9 +357,9 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
             </div>
 
             <div className="pt-4 border-t border-white/10">
-              <h3 className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-2">
+              <h2 className="text-xs font-mono text-slate-400 uppercase tracking-widest mb-2">
                 Simulation Status
-              </h3>
+              </h2>
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Active:</span>
@@ -422,7 +422,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
               </div>
 
               {feedback && (
-                <button
+                <button type="button"
                   onClick={copyFeedback}
                   className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
                 >
@@ -563,6 +563,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                     <textarea
                       ref={textareaRef}
                       value={input}
+                      aria-label="Type your message to the simulation"
                       onChange={(e) => setInput(e.target.value)}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {

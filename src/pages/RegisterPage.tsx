@@ -137,13 +137,13 @@ export default function RegisterPage() {
             </div>
 
             <div className="flex gap-3">
-              <button
+              <button type="button"
                 onClick={() => navigate('/login')}
                 className="flex-1 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all"
               >
                 Go to Sign In
               </button>
-              <button
+              <button type="button"
                 onClick={() => setVerificationSent(false)}
                 className="px-4 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-400 hover:text-white transition-all"
               >
@@ -258,11 +258,12 @@ export default function RegisterPage() {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-300">Confirm Password</label>
+            <label htmlFor="register-confirm-password" className="text-sm font-medium text-slate-300">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
               <input
                 type={showConfirmPassword ? 'text' : 'password'}
+                id="register-confirm-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none transition-all ${
@@ -335,7 +336,7 @@ export default function RegisterPage() {
 
         <div className="mt-6 text-center text-sm text-slate-400">
           Already have an account?{' '}
-          <button onClick={() => navigate('/login')} className="text-accent-primary font-bold hover:underline">
+          <button type="button" onClick={() => navigate('/login')} className="text-accent-primary font-bold hover:underline">
             Sign In
           </button>
         </div>
