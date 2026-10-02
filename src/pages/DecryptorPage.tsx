@@ -142,11 +142,11 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
             className="p-6 rounded-2xl bg-mystic-900/80 backdrop-blur-xl border border-white/10 shadow-2xl space-y-6"
           >
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="dec-target-type" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Target className="w-4 h-4 text-accent-primary" />
                 Target Personality Type
               </label>
-              <select
+              <select id="dec-target-type"
                 value={typeId}
                 onChange={e => setTypeId(e.target.value as PersonalityType)}
                 className="w-full bg-mystic-800/50 border border-white/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:border-accent-primary/50 focus:bg-mystic-800 transition-all appearance-none"
@@ -163,11 +163,11 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="dec-message" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-accent-primary" />
                 Intercepted Message
               </label>
-              <textarea
+              <textarea id="dec-message"
                 ref={textareaRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -211,6 +211,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                   onClick={clearAnalysis}
                   className="px-4 py-4 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all"
                   title="Clear analysis"
+                  aria-label="Clear analysis"
                 >
                   <AlertTriangle className="w-5 h-5" />
                 </button>
