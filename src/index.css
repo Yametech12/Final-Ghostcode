@@ -238,6 +238,13 @@
   color: var(--color-slate-300);
 }
 
+/* Light theme: gold-gradient CTAs need dark text. text-mystic-950 flips to
+   near-white (#FAF7F2) in light theme, which on the gold accent-gradient
+   is ~1.5:1 (unreadable). Pin dark text on gradient surfaces (5+:1). */
+.light-theme .accent-gradient {
+  color: #231a10;
+}
+
 :root {
   color-scheme: dark;
   background-color: #0E0B12;
@@ -429,11 +436,13 @@ h1, h2, h3, h4, h5, h6 {
   font-weight: 400;
 }
 
-/* Auth pages (Login / Reset Password) render a hardcoded dark gradient
-   backdrop in BOTH themes, so the theme-flipping `text-slate-50` utility
-   flips to near-black (#14110E, ~1:1 contrast, invisible) under .light-theme.
-   Pin the auth hero headings to near-white so they keep ≥4.5:1 contrast in
-   light theme without touching dark-theme rendering (still AAA, ~17.5–19:1). */
+/* ResetPasswordPage renders a hardcoded dark gradient backdrop in BOTH themes,
+   so the theme-flipping `text-slate-50` utility flips to near-black (#14110E,
+   ~1:1 contrast, invisible) under .light-theme. Pin the auth hero headings to
+   near-white so they keep ≥4.5:1 contrast in light theme without touching
+   dark-theme rendering (still AAA, ~17.5–19:1).
+   NOTE: LoginPage no longer uses .auth-heading — its card is theme-flipped
+   (light cream in light theme), so the h1 uses plain text-slate-50. */
 .light-theme .auth-heading {
   color: #FAF7F2;
 }
