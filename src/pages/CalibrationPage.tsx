@@ -925,37 +925,37 @@ export default function CalibrationPage() {
       </div>
 
       <div className="flex flex-wrap justify-center gap-4">
-        <button
+        <button type="button"
           onClick={() => setMode('ai')}
           className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2",
+            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'ai' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <Brain className="w-4 h-4" /> AI Oracle
         </button>
-        <button
+        <button type="button"
           onClick={() => setMode('manual')}
           className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2",
+            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'manual' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <UserCheck className="w-4 h-4" /> Manual
         </button>
-        <button
+        <button type="button"
           onClick={() => setMode('practice')}
           className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2",
+            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'practice' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <PlayCircle className="w-4 h-4" /> Practice
         </button>
-        <button
+        <button type="button"
           onClick={() => setMode('history')}
           className={cn(
-            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2",
+            "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'history' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
@@ -967,11 +967,11 @@ export default function CalibrationPage() {
         <div className="space-y-6">
           <div className="glass-card p-6 space-y-6">
             <div className="flex items-center justify-between">
-              <h3 className="text-xl font-bold flex items-center gap-2">
+              <h2 className="text-xl font-bold flex items-center gap-2">
                 <Target className="w-5 h-5 text-accent-primary" />
                 Scenario Parameters
-              </h3>
-              <button
+              </h2>
+              <button type="button"
                 onClick={clearForm}
                 className="text-xs font-bold text-slate-500 hover:text-accent-primary transition-colors uppercase tracking-widest"
               >
@@ -1093,7 +1093,7 @@ export default function CalibrationPage() {
               />
             </div>
 
-            <button
+            <button type="button"
               onClick={handleAnalyze}
               disabled={isLoading}
               className="w-full py-4 rounded-xl accent-gradient text-white font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
@@ -1162,7 +1162,7 @@ export default function CalibrationPage() {
             >
               <div className="flex flex-wrap justify-between items-center gap-4">
                 <div className="flex items-center gap-4">
-                  <button
+                  <button type="button"
                     onClick={clearForm}
                     className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-400 text-xs font-bold hover:bg-white/10 transition-all flex items-center gap-2"
                   >
@@ -1176,10 +1176,10 @@ export default function CalibrationPage() {
                     className="bg-white/5 border border-white/10"
                   />
                 </div>
-                <button
+                <button type="button"
                   onClick={handleSaveImage}
                   disabled={isCapturing}
-                  className="px-4 py-2 rounded-xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-xs font-bold hover:bg-accent-primary/20 transition-all flex items-center gap-2"
+                  className="px-4 py-2 rounded-xl bg-accent-primary/10 border border-accent-primary/20 text-accent-primary text-xs font-bold hover:bg-accent-primary/20 transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <Sparkles className="w-4 h-4" />
                   {isCapturing ? 'Capturing...' : 'Save Analysis as Image'}
@@ -1194,7 +1194,7 @@ export default function CalibrationPage() {
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="glass-card p-8 text-center space-y-2">
-                    <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Primary Type</h4>
+                    <h3 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Primary Type</h3>
                     <div className="text-5xl font-black text-accent-primary italic">{analysis.primaryType}</div>
                   </div>
                   <div className="glass-card p-8 text-center space-y-2">
@@ -1233,7 +1233,7 @@ export default function CalibrationPage() {
                         <p className="text-lg text-slate-300 leading-relaxed italic border-l-2 border-accent-primary pl-4 pr-10">
                           "{analysis.coldReader}"
                         </p>
-                        <button
+                        <button type="button"
                           onClick={() => handleCopy(analysis.coldReader)}
                           className="absolute right-0 top-0 p-2 text-slate-500 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100"
                           title="Copy to clipboard"
@@ -1255,7 +1255,7 @@ export default function CalibrationPage() {
                                   <p className="text-sm text-slate-400 italic pr-8">
                                     "{read}"
                                   </p>
-                                  <button
+                                  <button type="button"
                                     onClick={() => handleCopy(read)}
                                     className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100"
                                     title="Copy to clipboard"
@@ -1319,6 +1319,7 @@ export default function CalibrationPage() {
                         <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-3 h-3 text-slate-500" />
                         <input
                           type="text"
+                          aria-label="Search tasks"
                           value={taskSearch}
                           onChange={(e) => setTaskSearch(e.target.value)}
                           placeholder="Search tasks..."
@@ -1348,7 +1349,7 @@ export default function CalibrationPage() {
                         <option value="psychology" className="bg-slate-900">Psychology</option>
                       </select>
 
-                      <button
+                      <button type="button"
                         onClick={() => setTaskSort(taskSort === 'priority' ? 'dueDate' : taskSort === 'dueDate' ? 'category' : 'priority')}
                         className="bg-white/5 border border-white/10 rounded-lg px-3 py-1.5 text-xs text-slate-300 flex items-center gap-2 hover:bg-white/10 transition-colors"
                       >
@@ -1357,13 +1358,13 @@ export default function CalibrationPage() {
                       </button>
 
                       <div className="flex items-center gap-2 ml-auto">
-                        <button
+                        <button type="button"
                           onClick={() => toggleAllTasks(true)}
                           className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all uppercase tracking-widest"
                         >
                           Mark All Complete
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => toggleAllTasks(false)}
                           className="px-3 py-1.5 rounded-lg bg-white/5 border border-white/10 text-[10px] font-bold text-slate-400 hover:text-accent-primary hover:bg-white/10 transition-all uppercase tracking-widest"
                         >
@@ -1390,7 +1391,9 @@ export default function CalibrationPage() {
                               : "bg-white/5 border-white/10 hover:bg-white/10"
                           )}
                         >
-                          <button
+                          <button type="button"
+                            tabIndex={-1}
+                            aria-hidden="true"
                             className="mt-0.5 shrink-0 transition-transform active:scale-90"
                           >
                             {task.completed ? (
@@ -1754,6 +1757,7 @@ export default function CalibrationPage() {
             <div className="relative flex-1 w-full">
               <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
               <input
+aria-label="Search history"
                 type="text"
                 placeholder="Search history..."
                 value={historySearch}
@@ -1827,7 +1831,7 @@ export default function CalibrationPage() {
       {mode === 'practice' && (
         <div className="space-y-8">
           <div className="flex justify-center gap-4">
-            <button
+            <button type="button"
               onClick={() => {
                 setDynamicScenario(null);
                 setCurrentScenarioIdx(0);
@@ -1841,11 +1845,11 @@ export default function CalibrationPage() {
             >
               Static Scenarios
             </button>
-            <button
+            <button type="button"
               onClick={generateDynamicScenario}
               disabled={isGeneratingScenario}
               className={cn(
-                "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2",
+                "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
                 dynamicScenario ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
               )}
             >
@@ -1876,7 +1880,7 @@ export default function CalibrationPage() {
                 <h4 className="font-bold text-slate-400 uppercase tracking-widest text-sm">Select her type:</h4>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {personalityTypes.map(pt => (
-                    <button
+                    <button type="button"
                       key={pt.id}
                       onClick={() => setSelectedType(pt.id)}
                       className={cn(
@@ -1890,7 +1894,7 @@ export default function CalibrationPage() {
                     </button>
                   ))}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setShowPracticeResult(true)}
                   disabled={!selectedType}
                   className="w-full py-4 rounded-xl accent-gradient text-white font-bold disabled:opacity-50 transition-all"
@@ -1932,7 +1936,7 @@ export default function CalibrationPage() {
 
                       <div className="flex gap-4">
                         {dynamicScenario ? (
-                          <button
+                          <button type="button"
                             onClick={generateDynamicScenario}
                             className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                           >
@@ -1940,7 +1944,7 @@ export default function CalibrationPage() {
                             New AI Scenario
                           </button>
                         ) : (
-                          <button
+                          <button type="button"
                             onClick={() => {
                               if (currentScenarioIdx < practiceScenarios.length - 1) {
                                 setCurrentScenarioIdx(prev => prev + 1);
