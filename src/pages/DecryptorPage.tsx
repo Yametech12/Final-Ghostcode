@@ -55,7 +55,8 @@ RESPONSE FORMAT (follow exactly):
 **2. The Pull (Comfort Building):** [Response that provides value/connection]
 **3. The Pivot (Direction Change):** [Response that shifts dynamics]
 
-Keep responses concise, professional, and highly strategic. Use EPIMETHEUS terminology.`;
+Keep responses concise, professional, and highly strategic. Use EPIMETHEUS terminology.
+Write like a sharp human analyst: no sycophantic openers ("Great question!"), no "As an AI" disclaimers, no filler — be direct and specific in every section.`;
 
       const response = await chatCompletion([
         { role: "system", content: systemInstruction },

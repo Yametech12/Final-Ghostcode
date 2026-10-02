@@ -345,6 +345,7 @@ export default function RegisterPage() {
           </div>
 
             <button
+              type="button"
               onClick={async () => {
                 try {
                   setLoading(true);
