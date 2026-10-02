@@ -145,7 +145,7 @@ export default function OnboardingModal() {
             transition={{ type: "spring", duration: 0.5, bounce: 0.3 }}
             className="relative w-full max-w-lg bg-mystic-900 border border-white/10 rounded-3xl shadow-2xl overflow-hidden"
           >
-            <button
+            <button type="button"
               onClick={handleClose}
               aria-label="Close tutorial"
               className="absolute top-4 right-4 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white transition-colors z-10"
@@ -201,7 +201,7 @@ export default function OnboardingModal() {
                 {/* Progress dots */}
                 <div className="flex justify-center gap-2">
                   {steps.map((_, i) => (
-                    <button
+                    <button type="button"
                       key={i}
                       onClick={() => setStep(i)}
                       aria-label={`Go to step ${i + 1}`}
@@ -215,7 +215,7 @@ export default function OnboardingModal() {
                 {/* Navigation buttons */}
                 <div className="flex items-center gap-3">
                   {step > 0 && (
-                    <button
+                    <button type="button"
                       onClick={handlePrev}
                       className="flex-1 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-300 font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                     >
@@ -223,7 +223,7 @@ export default function OnboardingModal() {
                       Back
                     </button>
                   )}
-                  <button
+                  <button type="button"
                     onClick={handleNext}
                     className={`${step > 0 ? 'flex-1' : 'w-full'} py-3 rounded-xl accent-gradient text-white font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2`}
                   >
@@ -241,7 +241,7 @@ export default function OnboardingModal() {
 
                 {/* Skip link */}
                 {step < steps.length - 1 && (
-                  <button
+                  <button type="button"
                     onClick={handleClose}
                     className="text-xs text-slate-600 hover:text-slate-400 transition-colors"
                   >

@@ -14,7 +14,7 @@ import Sigil from './Sigil';
  * - No draw is ever "wrong": every card is a real archetype from the
  *   framework, with accurate name + tagline copy.
  * - Reduced motion: instant swap, no flip animation.
- * - Keyboard accessible: real <button>s, aria-live announces the draw.
+ * - Keyboard accessible: real <button type="button">s, aria-live announces the draw.
  */
 
 interface Card {
