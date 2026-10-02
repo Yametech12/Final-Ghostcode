@@ -48,11 +48,16 @@ try {
   console.error('Environment validation failed:', err);
   // Show error to user in development
   if (import.meta.env.DEV) {
+    // Escape the error message to prevent HTML injection (defense in depth,
+    // even though this path is dev-only and err.message is developer-controlled).
+    const safeMsg = String(err instanceof Error ? err.message : 'Missing environment variables')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
     document.body.innerHTML = `
       <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: #ef4444; padding: 2rem; text-align: center;">
         <div>
           <h1>Configuration Error</h1>
-          <p>${err instanceof Error ? err.message : 'Missing environment variables'}</p>
+          <p>${safeMsg}</p>
           <p>Please check your .env file and restart the development server.</p>
         </div>
       </div>
