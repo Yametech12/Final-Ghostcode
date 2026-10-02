@@ -248,7 +248,10 @@ export default function PricingPage() {
   const ctaFor = (plan: Plan): { label: string; disabled: boolean; isCurrent: boolean } => {
     if (!isSignedIn) {
       if (plan.tier === 'free') return { label: 'Start free', disabled: false, isCurrent: false };
-      return { label: 'Join waitlist', disabled: false, isCurrent: false };
+      // Paid checkout isn't live yet — the CTA takes them through free
+      // registration first (intent preserved via ?intent=), so the label
+      // must say that instead of promising a waitlist that doesn't exist.
+      return { label: 'Create account', disabled: false, isCurrent: false };
     }
     if (sub.isAdmin) {
       return { label: 'Admin · full access', disabled: true, isCurrent: false };
