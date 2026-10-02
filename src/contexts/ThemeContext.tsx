@@ -18,12 +18,21 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const [isDark, setIsDark] = useState<boolean>(getInitialTheme);
 
   useEffect(() => {
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    try {
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    } catch {
+      /* storage unavailable (exotic private-mode contexts) — theme still applies */
+    }
     if (isDark) {
       document.documentElement.classList.remove('light-theme');
     } else {
       document.documentElement.classList.add('light-theme');
     }
+    // Keep the mobile browser chrome / PWA splash in sync with the theme.
+    // (15x light/dark audit, Oct 2026.)
+    document
+      .querySelector('meta[name="theme-color"]')
+      ?.setAttribute('content', isDark ? '#0a0508' : '#FAF7F2');
   }, [isDark]);
 
   const toggleTheme = () => setIsDark(prev => !prev);
