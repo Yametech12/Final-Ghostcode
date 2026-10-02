@@ -38,7 +38,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
         {label}
       </label>
       <div className="relative">
-        <button
+        <button type="button"
           onClick={() => setIsOpen(!isOpen)}
           className={cn(
             "w-full flex items-center justify-between px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-left transition-all",
@@ -51,7 +51,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
             </div>
             <div>
               <div className="text-sm font-bold text-white">{selectedType?.name}</div>
-              <div className="text-[10px] text-slate-500 font-medium">{selectedType?.combination}</div>
+              <div className="text-[11px] text-slate-500 font-medium">{selectedType?.combination}</div>
             </div>
           </div>
           <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform", isOpen && "rotate-180")} />
@@ -63,9 +63,11 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
+aria-label="Search types"
                   autoFocus
                   type="text"
                   placeholder="Search types..."
+                  aria-label="Search personality types"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full bg-white/5 border border-white/10 rounded-lg py-2 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-accent-primary/50"
@@ -74,7 +76,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
             </div>
             <div className="max-h-64 overflow-y-auto custom-scrollbar" data-lenis-prevent>
               {filteredTypes.map((type) => (
-                <button
+                <button type="button"
                   key={type.id}
                   onClick={() => {
                     onChange(type.id);
@@ -92,7 +94,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
                     </div>
                     <div className="text-left">
                       <div className="text-sm font-bold text-white">{type.name}</div>
-                      <div className="text-[10px] text-slate-500 font-medium">{type.combination}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{type.combination}</div>
                     </div>
                   </div>
                   {value === type.id && <Check className="w-4 h-4 text-accent-primary" />}

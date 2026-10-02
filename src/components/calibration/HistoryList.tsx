@@ -32,6 +32,10 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
           key={item.id}
           className="group glass-card p-6 space-y-4 cursor-pointer hover:bg-white/5 transition-all duration-300 border-white/5 hover:border-accent-primary/30 relative overflow-hidden"
           onClick={() => onSelect(item)}
+          onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onSelect(item); } }}
+          role="button"
+          tabIndex={0}
+          aria-label={`View analysis: ${item.scenarioSummary || 'calibration result'}`}
         >
           {/* Background Glow */}
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-accent-primary/5 rounded-full blur-3xl group-hover:bg-accent-primary/10 transition-all" />
@@ -47,10 +51,10 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
                 {item.scenarioSummary}
               </h4>
             </div>
-            <button
+            <button type="button"
               onClick={(e) => onDelete(e, item.id)}
               aria-label="Delete analysis"
-              className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+              className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
               title="Delete analysis"
             >
               <RotateCcw className="w-4 h-4 rotate-45" />
@@ -60,12 +64,12 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
           <div className="flex items-center justify-between pt-4 border-t border-white/5 relative z-10">
             <div className="flex items-center gap-4">
               <div className="space-y-0.5">
-                <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Confidence</div>
+                <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Confidence</div>
                 <div className="text-sm font-bold text-white">{item.confidence}%</div>
               </div>
               {item.secondaryType && (
                 <div className="space-y-0.5">
-                  <div className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Secondary</div>
+                  <div className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Secondary</div>
                   <div className="text-sm font-bold text-slate-400">{item.secondaryType}</div>
                 </div>
               )}

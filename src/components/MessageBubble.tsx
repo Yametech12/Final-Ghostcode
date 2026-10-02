@@ -79,12 +79,12 @@ export function MessageBubble({
           </div>
         </div>
 
-        {/* Message Actions */}
+        {/* Message Actions - always visible on touch, hover-reveal on desktop */}
         <div className={cn(
-          "flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
+          "flex items-center gap-2 mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity",
           isUser ? "justify-end" : "justify-start"
         )}>
-          <button
+          <button type="button"
             onClick={copyToClipboard}
             className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
             title="Copy message"
@@ -94,7 +94,7 @@ export function MessageBubble({
           </button>
 
           {!isUser && onRegenerate && (
-            <button
+            <button type="button"
               onClick={onRegenerate}
               className="p-2 rounded-lg bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
               title="Regenerate response"
@@ -106,14 +106,14 @@ export function MessageBubble({
 
           {!isUser && (
             <>
-              <button
+              <button type="button"
                 className="p-2 rounded-lg bg-slate-700/50 hover:bg-green-600/50 text-slate-400 hover:text-green-400 transition-colors"
                 title="Good response"
                 aria-label="Mark as good response"
               >
                 <ThumbsUp className="w-4 h-4" />
               </button>
-              <button
+              <button type="button"
                 className="p-2 rounded-lg bg-slate-700/50 hover:bg-red-600/50 text-slate-400 hover:text-red-400 transition-colors"
                 title="Poor response"
                 aria-label="Mark as poor response"

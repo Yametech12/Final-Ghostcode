@@ -164,8 +164,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             </div>
 
             <div className="space-y-3">
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Your Feedback</label>
-              <textarea
+              <label htmlFor="feedback-text" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Your Feedback</label>
+              <textarea id="feedback-text"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us what's on your mind, suggest a feature, or report an issue..."
@@ -176,8 +176,8 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
             {!user && (
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email (Optional)</label>
-                <input
+                <label htmlFor="feedback-email" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email (Optional)</label>
+                <input id="feedback-email"
                   type="email"
                   autoComplete="email"
                   value={email}

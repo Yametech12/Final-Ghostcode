@@ -38,7 +38,7 @@ const PAGES = [
   { title: 'Quiz', path: '/quiz', icon: Brain, desc: 'Knowledge quiz' },
   { title: 'Guide', path: '/guide', icon: Compass, desc: 'The Pandora\'s Box System' },
   { title: 'Field Guide', path: '/field-guide', icon: Map, desc: 'Scenarios & Reports' },
-  { title: 'Encyclopedia', path: '/encyclopedia', icon: BookOpen, desc: 'Deep-dive into types' },
+  { title: 'Encyclopedia', path: '/encyclopedia', icon: BookOpen, desc: 'Explore the types in depth' },
   { title: 'Glossary', path: '/glossary', icon: BookA, desc: 'System terminology' },
   { title: 'Quick Reference', path: '/quick-reference', icon: Zap, desc: 'Cheat sheets' },
 ];
@@ -166,10 +166,11 @@ export default function CommandCenter() {
         onHoverEnd={() => setIsHovered(false)}
         className="fixed bottom-8 right-8 z-[100] cursor-move"
       >
-        <button
+        <button type="button"
           onClick={toggle}
           className="w-14 h-14 rounded-full bg-gradient-to-br from-accent-primary via-accent-secondary to-accent-primary text-white shadow-2xl flex items-center justify-center group relative overflow-hidden"
           title="Command Center (Cmd+K) - Drag to move"
+          aria-label={isOpen ? "Close command center" : "Open command center"}
         >
           {/* Animated background */}
           <motion.div
@@ -249,13 +250,15 @@ export default function CommandCenter() {
             <div className="p-4 border-b border-white/10 flex items-center gap-4">
               <Search className="w-5 h-5 text-slate-500" />
               <input
+aria-label="Search types, tools, or navigation"
                 autoFocus
                 type="text"
                 placeholder="Search types, tools, or navigation..."
+                aria-label="Search command center"
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none text-lg"
+                className="flex-1 bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none text-lg py-3"
               />
               <motion.div
                 animate={{ opacity: query ? 1 : 0.5 }}
