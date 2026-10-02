@@ -280,7 +280,7 @@ export default function PricingPage() {
             <Link to="/welcome" className="hover:text-slate-100 transition-colors">
               Home
             </Link>
-            <Link to="/welcome#features" className="hover:text-slate-100 transition-colors">
+            <Link to="/#features" className="hover:text-slate-100 transition-colors">
               Features
             </Link>
             <span className="text-slate-100" aria-current="page">Pricing</span>
@@ -368,7 +368,7 @@ export default function PricingPage() {
               Home
             </Link>
             <Link
-              to="/welcome#features"
+              to="/#features"
               onClick={() => setMobileNavOpen(false)}
               className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
             >

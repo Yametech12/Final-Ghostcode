@@ -77,7 +77,7 @@ export default function EncyclopediaPage() {
           {personalityTypes.map((type) => {
             const locked = !canAccessArchetype(type.id);
             return (
-              <button
+              <button type="button"
                 key={type.id}
                 onClick={() => {
                   setSearchParams({ type: type.id });
@@ -176,7 +176,7 @@ export default function EncyclopediaPage() {
           {/* Tab Navigation */}
           <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4">
             {tabs.map((tab) => (
-              <button
+              <button type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
@@ -198,10 +198,10 @@ export default function EncyclopediaPage() {
               <div className="space-y-8">
                 <div className="space-y-8">
                   <section className="space-y-4">
-                    <h3 className="text-2xl font-bold flex items-center gap-3">
+                    <h2 className="text-2xl font-bold flex items-center gap-3">
                       <BookOpen className="w-6 h-6 text-accent-primary" />
                       Character Overview
-                    </h3>
+                    </h2>
                     <div className="text-lg text-slate-300 leading-relaxed">
                       <div className="markdown-body">
                         <ReactMarkdown>{profile.overview}</ReactMarkdown>
