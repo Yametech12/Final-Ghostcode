@@ -119,6 +119,7 @@ export function CalibrationWizard({
             <div className="space-y-4">
               <input
                 type="range"
+                aria-label={current.text}
                 min={current.min || 0}
                 max={current.max || 100}
                 step={current.step || 1}
@@ -153,6 +154,7 @@ export function CalibrationWizard({
                     type="radio"
                     name={current.id}
                     value={option}
+                    aria-label={`${current.text}: ${option}`}
                     checked={answers[current.id] === option}
                     onChange={() => updateAnswer(option)}
                     className="text-accent-primary focus:ring-accent-primary"
@@ -178,7 +180,7 @@ export function CalibrationWizard({
 
       {/* Navigation */}
       <div className="flex justify-between mt-8">
-        <button
+        <button type="button"
           onClick={handlePrevious}
           disabled={isFirst}
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -189,14 +191,14 @@ export function CalibrationWizard({
 
         <div className="flex gap-2">
           {onCancel && (
-            <button
+            <button type="button"
               onClick={onCancel}
               className="px-4 py-2 rounded-lg bg-slate-700 hover:bg-slate-600 transition-colors"
             >
               Cancel
             </button>
           )}
-          <button
+          <button type="button"
             onClick={handleNext}
             disabled={current.type !== 'text' && answers[current.id] === undefined}
             className="flex items-center gap-2 px-6 py-2 bg-accent-primary rounded-lg hover:bg-accent-primary/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"

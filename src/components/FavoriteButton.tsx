@@ -23,7 +23,7 @@ export default function FavoriteButton({ contentId, contentType, title, classNam
   };
 
   return (
-    <button
+    <button type="button"
       onClick={handleClick}
       className={cn(
         "p-2 rounded-full transition-all hover:scale-110 active:scale-90",

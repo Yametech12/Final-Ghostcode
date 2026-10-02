@@ -127,7 +127,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
               <p className="text-xs text-slate-500">Help us improve EPIMETHEUS</p>
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             aria-label="Close feedback dialog"
             className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -176,8 +176,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
 
             {!user && (
               <div className="space-y-3">
-                <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email (Optional)</label>
+                <label htmlFor="feedback-email" className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email (Optional)</label>
                 <input
+                  id="feedback-email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}

@@ -116,15 +116,15 @@ class ErrorBoundary extends Component<Props, State> {
               )}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <button
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <button type="button"
                 onClick={this.handleReset}
                 className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
               >
                 <RotateCcw className="w-4 h-4" />
                 Retry
               </button>
-              <button
+              <button type="button"
                 onClick={this.handleGoHome}
                 className="flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-white font-bold hover:scale-[1.02] transition-all"
               >

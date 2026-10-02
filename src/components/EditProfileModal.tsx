@@ -328,7 +328,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
               <User aria-hidden="true" className="w-5 h-5 text-accent-primary" />
               Edit Profile
             </h2>
-            <button
+            <button type="button"
               onClick={onClose}
               aria-label="Close"
               className="p-2 hover:bg-white/5 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
@@ -362,7 +362,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                    type="button"
                    onClick={handleRemovePhoto}
                    disabled={removingPhoto}
-                   className={`flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors ${removingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
+                   className={`disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 px-3 py-2 bg-white/5 border rounded-lg text-sm font-medium text-red-400 hover:bg-red-500/20 hover:text-white transition-colors ${removingPhoto ? 'opacity-50 cursor-not-allowed' : ''}`}
                    aria-label="Remove profile photo"
                  >
                    <X className="w-4 h-4" aria-hidden="true" />
@@ -376,6 +376,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                 type="file"
                 id="photo-input"
                 accept="image/*"
+                aria-label="Upload profile photo"
                 style={{ display: 'none' }}
                 onChange={handlePhotoChange}
               />
@@ -418,12 +419,13 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             <div className="space-y-4">
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
-                  <span className={`text-[9px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
+                  <label htmlFor="profile-displayName" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Display Name</label>
+                  <span className={`text-[10px] ${formData.displayName.length > 50 ? 'text-red-400' : 'text-slate-500'}`}>
                     {formData.displayName.length}/50
                   </span>
                 </div>
                 <input
+                  id="profile-displayName"
                   type="text"
                   value={formData.displayName}
                   onChange={(e) => handleFieldChange('displayName', e.target.value)}
@@ -436,14 +438,14 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   maxLength={50}
                 />
                 {errors.displayName && (
-                  <p className="text-[9px] text-red-400">{errors.displayName}</p>
+                  <p className="text-[10px] text-red-400">{errors.displayName}</p>
                 )}
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
                   <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Bio</label>
-                  <span className={`text-[9px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
+                  <span className={`text-[10px] ${formData.bio.length > 500 ? 'text-red-400' : 'text-slate-500'}`}>
                     {formData.bio.length}/500
                   </span>
                 </div>
@@ -459,16 +461,17 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   maxLength={500}
                 />
                 {errors.bio && (
-                  <p className="text-[9px] text-red-400">{errors.bio}</p>
+                  <p className="text-[10px] text-red-400">{errors.bio}</p>
                 )}
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Phone</label>
+                  <label htmlFor="profile-phone" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Phone</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
+                  id="profile-phone"
                       type="tel"
                       value={formData.phone}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
@@ -481,15 +484,16 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     />
                   </div>
                   {errors.phone && (
-                    <p className="text-[9px] text-red-400">{errors.phone}</p>
+                    <p className="text-[10px] text-red-400">{errors.phone}</p>
                   )}
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
+                  <label htmlFor="profile-instagram" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Instagram</label>
                   <div className="relative">
                     <Instagram className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
+                  id="profile-instagram"
                       type="text"
                       value={formData.instagram}
                       onChange={(e) => handleFieldChange('instagram', e.target.value)}
@@ -502,16 +506,17 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     />
                   </div>
                   {errors.instagram && (
-                    <p className="text-[9px] text-red-400">{errors.instagram}</p>
+                    <p className="text-[10px] text-red-400">{errors.instagram}</p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
-                <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Twitter / X</label>
+                <label htmlFor="profile-twitter" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Twitter / X</label>
                 <div className="relative">
                   <Twitter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                   <input
+                  id="profile-twitter"
                     type="text"
                     value={formData.twitter}
                     onChange={(e) => handleFieldChange('twitter', e.target.value)}
@@ -524,7 +529,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                   />
                 </div>
                 {errors.twitter && (
-                  <p className="text-[9px] text-red-400">{errors.twitter}</p>
+                  <p className="text-[10px] text-red-400">{errors.twitter}</p>
                 )}
               </div>
             </div>
@@ -541,7 +546,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 py-4 rounded-xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2"
+              className="flex-1 py-4 rounded-xl accent-gradient text-white font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
             >
               {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Save className="w-5 h-5" />}
               Save Changes

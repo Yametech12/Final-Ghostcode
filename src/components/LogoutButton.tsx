@@ -43,10 +43,10 @@ export default function LogoutButton({
   };
 
   return (
-    <button
+    <button type="button"
       onClick={handleLogout}
       disabled={loading}
-      className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${variantClasses[variant]} ${className}`}
+      className={`disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 px-4 py-2 rounded-lg transition-all ${variantClasses[variant]} ${className}`}
     >
       {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <LogOut className="w-4 h-4" />}
       {children || 'Sign Out'}
