@@ -132,16 +132,22 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
               <ReactMarkdown
                 components={{
                   // Open every link in a new tab safely (treat AI output as untrusted).
-                  a: ({ href, children }) => (
-                    <a
-                      href={href}
-                      target="_blank"
-                      rel="noopener noreferrer nofollow"
-                      className="break-all"
-                    >
-                      {children}
-                    </a>
-                  ),
+                  // Protocol allowlist: only http(s) and mailto links are clickable.
+                  // Anything else (e.g. javascript: from a prompt-injected URL) renders as plain text.
+                  a: ({ href, children }) => {
+                    const safe = typeof href === 'string' && /^(https?:|mailto:)/i.test(href.trim());
+                    if (!safe) return <span className="break-all">{children}</span>;
+                    return (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer nofollow"
+                        className="break-all"
+                      >
+                        {children}
+                      </a>
+                    );
+                  },
                 }}
               >
                 {/*

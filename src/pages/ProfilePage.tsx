@@ -147,6 +147,7 @@ export default function ProfilePage() {
   return (
     <div className="space-y-8 pb-24 max-w-5xl mx-auto">
       {/* Header */}
+      <h1 className="sr-only">Your Profile</h1>
       <div className="flex flex-col md:flex-row gap-8">
         <div className="w-full md:w-80 shrink-0">
           <ProfileCard onEditProfile={() => setIsEditModalOpen(true)} />

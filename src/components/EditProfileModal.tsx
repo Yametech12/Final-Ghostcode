@@ -331,7 +331,7 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
             <button
               onClick={onClose}
               aria-label="Close"
-              className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+              className="p-2 hover:bg-white/5 rounded-lg transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
               <X aria-hidden="true" className="w-5 h-5" />
             </button>

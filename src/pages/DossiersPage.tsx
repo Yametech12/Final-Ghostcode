@@ -440,7 +440,7 @@ export default function DossiersPage() {
                 <button
                   onClick={closeModal}
                   aria-label="Close"
-                  className="p-2 rounded-xl hover:bg-white/5 text-slate-400 transition-colors"
+                  className="p-2 rounded-xl hover:bg-white/5 text-slate-400 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >
                   <X aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />
                 </button>
