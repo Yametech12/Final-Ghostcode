@@ -929,7 +929,7 @@ export default function CalibrationPage() {
           onClick={() => setMode('ai')}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
-            mode === 'ai' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+            mode === 'ai' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <Brain className="w-4 h-4" /> AI Oracle
@@ -938,7 +938,7 @@ export default function CalibrationPage() {
           onClick={() => setMode('manual')}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
-            mode === 'manual' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+            mode === 'manual' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <UserCheck className="w-4 h-4" /> Manual
@@ -947,7 +947,7 @@ export default function CalibrationPage() {
           onClick={() => setMode('practice')}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
-            mode === 'practice' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+            mode === 'practice' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <PlayCircle className="w-4 h-4" /> Practice
@@ -956,7 +956,7 @@ export default function CalibrationPage() {
           onClick={() => setMode('history')}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
-            mode === 'history' ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+            mode === 'history' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
           )}
         >
           <History className="w-4 h-4" /> History
@@ -1089,14 +1089,14 @@ export default function CalibrationPage() {
                 value={structuredInput.additionalNotes}
                 onChange={(e) => setStructuredInput({...structuredInput, additionalNotes: e.target.value})}
                 placeholder="Any other specific behaviors, quotes, or context..."
-                className="w-full h-20 bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-white placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent-primary/50 transition-all resize-none"
+                className="w-full h-20 bg-white/5 border border-white/10 rounded-lg p-3 text-sm text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-1 focus:ring-accent-primary/50 transition-all resize-none"
               />
             </div>
 
             <button type="button"
               onClick={handleAnalyze}
               disabled={isLoading}
-              className="w-full py-4 rounded-xl accent-gradient text-white font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
+              className="w-full py-4 rounded-xl accent-gradient text-mystic-950 font-bold shadow-xl shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-3"
             >
               {isLoading ? (
                 <>
@@ -1114,7 +1114,7 @@ export default function CalibrationPage() {
 
           {error && (
             <div
-              className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-4"
+              className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-status-error flex items-center gap-4"
             >
               <AlertCircle className="w-6 h-6 shrink-0" />
               {error}
@@ -1199,9 +1199,9 @@ export default function CalibrationPage() {
                   </div>
                   <div className="glass-card p-8 text-center space-y-2">
                     <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">Confidence</h4>
-                    <div className="text-5xl font-black text-white italic">{analysis.confidence}%</div>
+                    <div className="text-5xl font-black text-slate-100 italic">{analysis.confidence}%</div>
                     {analysis.confidence <= 60 && (
-                      <p className="text-xs text-amber-400/90">Low-signal input — add more observations for a sharper read.</p>
+                      <p className="text-xs text-status-warning/90">Low-signal input — add more observations for a sharper read.</p>
                     )}
                   </div>
                   <div className="glass-card p-8 text-center space-y-2">
@@ -1273,7 +1273,7 @@ export default function CalibrationPage() {
                   </div>
                 </div>
                 <div className="glass-card p-8 space-y-6">
-                  <h3 className="text-2xl font-bold flex items-center gap-3 text-amber-400">
+                  <h3 className="text-2xl font-bold flex items-center gap-3 text-status-warning">
                     <Zap className="w-6 h-6" />
                     How She Gets What She Wants
                   </h3>
@@ -1360,7 +1360,7 @@ export default function CalibrationPage() {
                       <div className="flex items-center gap-2 ml-auto">
                         <button type="button"
                           onClick={() => toggleAllTasks(true)}
-                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 hover:bg-emerald-500/20 transition-all uppercase tracking-widest"
+                          className="px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-status-success hover:bg-emerald-500/20 transition-all uppercase tracking-widest"
                         >
                           Mark All Complete
                         </button>
@@ -1421,9 +1421,9 @@ export default function CalibrationPage() {
                             <div className="flex flex-wrap items-center gap-3 text-[10px] uppercase tracking-wider font-bold">
                               <span className={cn(
                                 "px-2 py-0.5 rounded-full border",
-                                task.priority === 'high' ? "bg-red-500/10 border-red-500/20 text-red-400" :
-                                task.priority === 'medium' ? "bg-amber-500/10 border-amber-500/20 text-amber-400" :
-                                "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                                task.priority === 'high' ? "bg-red-500/10 border-red-500/20 text-status-error" :
+                                task.priority === 'medium' ? "bg-amber-500/10 border-amber-500/20 text-status-warning" :
+                                "bg-blue-500/10 border-blue-500/20 text-status-info"
                               )}>
                                 {task.priority}
                               </span>
@@ -1442,7 +1442,7 @@ export default function CalibrationPage() {
                   </div>
                 </div>
                 <div className="glass-card p-8 space-y-4">
-                  <h4 className="text-xl font-bold flex items-center gap-3 text-red-400">
+                  <h4 className="text-xl font-bold flex items-center gap-3 text-status-error">
                     <AlertCircle className="w-5 h-5" />
                     What to Avoid
                   </h4>
@@ -1516,7 +1516,7 @@ export default function CalibrationPage() {
               </div>
 
               <div className="glass-card p-8 space-y-6">
-                <h3 className="text-2xl font-bold flex items-center gap-3 text-red-400">
+                <h3 className="text-2xl font-bold flex items-center gap-3 text-status-error">
                   <Brain className="w-6 h-6" />
                   Dark Mind Breakdown
                 </h3>
@@ -1599,7 +1599,7 @@ export default function CalibrationPage() {
                     {/* Key Traits */}
                     {typeData.keyTraits && typeData.keyTraits.length > 0 && (
                       <div className="glass-card p-8 space-y-4">
-                        <h3 className="text-2xl font-bold flex items-center gap-3 text-amber-400">
+                        <h3 className="text-2xl font-bold flex items-center gap-3 text-status-warning">
                           <UserCheck className="w-6 h-6" />
                           Key Traits of a {typeData.name}
                         </h3>
@@ -1617,14 +1617,14 @@ export default function CalibrationPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {typeData.devotionTriggers && typeData.devotionTriggers.length > 0 && (
                         <div className="glass-card p-8 space-y-4">
-                          <h4 className="text-xl font-bold flex items-center gap-3 text-emerald-400">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-status-success">
                             <CheckCircle2 className="w-5 h-5" />
                             Devotion Triggers
                           </h4>
                           <ul className="space-y-2">
                             {typeData.devotionTriggers.map((trigger, i) => (
                               <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                <span className="text-emerald-400 mt-0.5 shrink-0">→</span>
+                                <span className="text-status-success mt-0.5 shrink-0">→</span>
                                 {trigger}
                               </li>
                             ))}
@@ -1633,14 +1633,14 @@ export default function CalibrationPage() {
                       )}
                       {typeData.redFlags && typeData.redFlags.length > 0 && (
                         <div className="glass-card p-8 space-y-4">
-                          <h4 className="text-xl font-bold flex items-center gap-3 text-red-400">
+                          <h4 className="text-xl font-bold flex items-center gap-3 text-status-error">
                             <AlertCircle className="w-5 h-5" />
                             Red Flags (Avoid These)
                           </h4>
                           <ul className="space-y-2">
                             {typeData.redFlags.map((flag, i) => (
                               <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                <span className="text-red-400 mt-0.5 shrink-0">✗</span>
+                                <span className="text-status-error mt-0.5 shrink-0">✗</span>
                                 {flag}
                               </li>
                             ))}
@@ -1688,7 +1688,7 @@ export default function CalibrationPage() {
                     {/* Mistype Warning */}
                     {typeData.mistypeRedFlag && (
                       <div className="glass-card p-6 bg-amber-500/5 border-amber-500/20 space-y-3">
-                        <h4 className="text-sm font-bold flex items-center gap-2 text-amber-400 uppercase tracking-widest">
+                        <h4 className="text-sm font-bold flex items-center gap-2 text-status-warning uppercase tracking-widest">
                           <AlertCircle className="w-4 h-4" />
                           Mistype Warning
                         </h4>
@@ -1840,7 +1840,7 @@ aria-label="Search history"
               }}
               className={cn(
                 "px-6 py-2 rounded-full font-bold transition-all border",
-                !dynamicScenario ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+                !dynamicScenario ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
               )}
             >
               Static Scenarios
@@ -1850,7 +1850,7 @@ aria-label="Search history"
               disabled={isGeneratingScenario}
               className={cn(
                 "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
-                dynamicScenario ? "accent-gradient text-white border-transparent" : "bg-white/5 text-slate-400 border-white/10"
+                dynamicScenario ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
               )}
             >
               {isGeneratingScenario ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
@@ -1897,7 +1897,7 @@ aria-label="Search history"
                 <button type="button"
                   onClick={() => setShowPracticeResult(true)}
                   disabled={!selectedType}
-                  className="w-full py-4 rounded-xl accent-gradient text-white font-bold disabled:opacity-50 transition-all"
+                  className="w-full py-4 rounded-xl accent-gradient text-mystic-950 font-bold disabled:opacity-50 transition-all"
                 >
                   Submit Answer
                 </button>
@@ -1916,8 +1916,8 @@ aria-label="Search history"
                       <div className={cn(
                         "p-6 rounded-2xl border flex items-start gap-4",
                         isCorrect
-                          ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
-                          : "bg-red-500/10 border-red-500/20 text-red-400"
+                          ? "bg-emerald-500/10 border-emerald-500/20 text-status-success"
+                          : "bg-red-500/10 border-red-500/20 text-status-error"
                       )}>
                         {isCorrect ? (
                           <CheckCircle2 className="w-6 h-6 shrink-0" />
@@ -1938,7 +1938,7 @@ aria-label="Search history"
                         {dynamicScenario ? (
                           <button type="button"
                             onClick={generateDynamicScenario}
-                            className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                           >
                             <RotateCcw className="w-4 h-4" />
                             New AI Scenario
@@ -1956,7 +1956,7 @@ aria-label="Search history"
                                 setShowPracticeResult(false);
                               }
                             }}
-                            className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                            className="flex-1 py-4 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all flex items-center justify-center gap-2"
                           >
                             {currentScenarioIdx < practiceScenarios.length - 1 ? (
                               <>Next Scenario <ArrowRight className="w-4 h-4" /></>
