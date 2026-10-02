@@ -12,6 +12,7 @@ import {
   Menu,
 } from 'lucide-react';
 import Logo from '../components/Logo';
+import ConstellationField from '../components/ConstellationField';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
 import { toast } from 'sonner';
@@ -409,8 +410,10 @@ export default function PricingPage() {
       {/* ───────────────────────── Hero ───────────────────────── */}
       <section
         id="main-content"
-        className="max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 md:pt-24 pb-12 text-center"
+        className="relative overflow-hidden"
       >
+        <ConstellationField density={0.6} />
+        <div className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 md:pt-24 pb-12 text-center">
         <Link
           to="/welcome"
           className="inline-flex items-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors mb-6"
@@ -419,13 +422,13 @@ export default function PricingPage() {
           Back to home
         </Link>
 
-        <span className="eyebrow inline-flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-accent-primary" aria-hidden="true" />
-          Pricing
+        <span className="codex-label">
+          <Sparkles className="w-3.5 h-3.5 text-iris-300" aria-hidden="true" />
+          <span>Pricing</span>
         </span>
 
         <h1 className="hero-headline mt-6 text-4xl xs:text-5xl sm:text-6xl md:text-7xl text-slate-50 leading-[1.05]">
-          Choose your <span className="text-gradient">depth.</span>
+          Choose your <span className="text-gradient-iris">depth.</span>
         </h1>
 
         <p className="mt-5 sm:mt-6 mx-auto max-w-2xl text-base sm:text-lg text-slate-400 leading-relaxed">
@@ -482,6 +485,7 @@ export default function PricingPage() {
             )}
           </button>
         </div>
+        </div>
       </section>
 
       {/* ───────────────────────── Pricing tiers ───────────────────────── */}
@@ -503,9 +507,9 @@ export default function PricingPage() {
                 whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: reduceMotion ? 0 : idx * 0.06 }}
-                className={`relative glass-card p-7 sm:p-8 flex flex-col ${
+                className={`relative ${isHighlight ? 'oracle-frame grain' : 'glass-card'} p-7 sm:p-8 flex flex-col ${
                   isHighlight
-                    ? 'border-accent-primary/40 shadow-[0_0_48px_-12px_rgba(232,199,126,0.25)] md:scale-[1.02] md:z-10'
+                    ? 'shadow-[0_0_48px_-12px_rgba(139,124,246,0.25)] md:scale-[1.02] md:z-10'
                     : ''
                 } ${cta.isCurrent ? 'border-status-success/40' : ''}`}
               >
