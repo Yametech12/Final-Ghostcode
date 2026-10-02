@@ -391,7 +391,7 @@ export default function AdminDashboard() {
       </div>
 
       <div className="flex gap-2 sm:gap-4 border-b border-white/10 pb-4 overflow-x-auto">
-        <button
+        <button type="button"
           onClick={() => setActiveTab("dashboard")}
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "dashboard"
@@ -404,7 +404,7 @@ export default function AdminDashboard() {
             Overview
           </div>
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab("users")}
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "users"
@@ -417,7 +417,7 @@ export default function AdminDashboard() {
             User Management
           </div>
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab("reports")}
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "reports"
@@ -430,7 +430,7 @@ export default function AdminDashboard() {
             Content Moderation
           </div>
         </button>
-        <button
+        <button type="button"
           onClick={() => setActiveTab("feedback")}
           className={`whitespace-nowrap shrink-0 px-4 sm:px-6 py-2 rounded-lg font-medium transition-all ${
             activeTab === "feedback"
@@ -454,6 +454,7 @@ export default function AdminDashboard() {
           <input
             type="text"
             placeholder={`Search ${activeTab === "users" ? "users" : activeTab === "reports" ? "reports" : "feedback"}...`}
+            aria-label="Search admin panel"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white focus:outline-none focus:border-accent-primary/50 transition-colors"
@@ -497,10 +498,10 @@ export default function AdminDashboard() {
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass-card p-6">
-              <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <h2 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
                 <Users className="w-5 h-5 text-accent-primary" />
                 Recent Users
-              </h3>
+              </h2>
               <div className="space-y-4">
                 {usersLoading ? (
                   <div className="flex justify-center py-8" role="status" aria-label="Loading">
@@ -528,7 +529,7 @@ export default function AdminDashboard() {
                             <div className="text-sm font-medium text-white">
                               {u.display_name || "Unknown"}
                             </div>
-                          <div className="text-[10px] text-slate-500">
+                          <div className="text-[11px] text-slate-500">
                             {u.email}
                           </div>
                         </div>
@@ -564,7 +565,7 @@ export default function AdminDashboard() {
                          <span className="text-xs font-bold text-white">
                            {f.user_name || "Anonymous"}
                          </span>
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[11px] text-slate-500">
                           {f.created_at
                             ? new Date(f.created_at).toLocaleDateString()
                             : "Unknown"}
@@ -666,13 +667,14 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-2">
                           <select
                             value={u.role || "user"}
+                            aria-label={`Change role for user ${u.email || u.id}`}
                             onChange={(e) => handleRoleChange(u.id, e.target.value).catch(err => console.error("Unhandled error in handleRoleChange:", err))}
                             className="bg-mystic-900 border border-white/10 rounded-lg px-3 py-1.5 text-sm text-white focus:outline-none focus:border-accent-primary"
                           >
                             <option value="user">User</option>
                             <option value="admin">Admin</option>
                           </select>
-                          <button
+                          <button type="button"
                             onClick={() => handleDeleteUser(u.id).catch(err => console.error("Unhandled error in handleDeleteUser:", err))}
                             className={cn(
                               "p-2 rounded-lg transition-all",
@@ -703,7 +705,7 @@ export default function AdminDashboard() {
               the filter runs locally and "more" results may not match it. */}
           {usersHasMore && !searchQuery && (
             <div className="flex justify-center pt-4">
-              <button
+              <button type="button"
                 onClick={() => loadUsers(true)}
                 disabled={usersLoading}
                 className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
@@ -744,7 +746,7 @@ export default function AdminDashboard() {
                        </p>
                     </div>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => {
                       handleDeleteReport(report.id).catch(err => {
                         console.error("Report deletion failed:", err);
@@ -798,7 +800,7 @@ export default function AdminDashboard() {
           )}
           {reportsHasMore && !searchQuery && (
             <div className="flex justify-center pt-2">
-              <button
+              <button type="button"
                 onClick={() => loadReports(true)}
                 disabled={reportsLoading}
                 className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
@@ -853,7 +855,7 @@ export default function AdminDashboard() {
                        </p>
                     </div>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => handleDeleteFeedback(feedback.id).catch(err => console.error("Unhandled error in handleDeleteFeedback:", err))}
                     className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
                     title="Delete Feedback"
@@ -889,7 +891,7 @@ export default function AdminDashboard() {
           )}
           {feedbacksHasMore && !searchQuery && (
             <div className="flex justify-center pt-2">
-              <button
+              <button type="button"
                 onClick={() => loadFeedback(true)}
                 disabled={feedbacksLoading}
                 className="px-6 py-2 rounded-xl bg-white/5 border border-white/10 text-sm text-slate-200 hover:bg-white/10 disabled:opacity-50 transition-colors"
