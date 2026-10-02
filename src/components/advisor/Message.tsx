@@ -249,7 +249,7 @@ export function Message({ message, onReaction, onRetry }: MessageProps) {
               )}
             </>
           )}
-          <span className="text-[10px] text-slate-500 ml-1">{formatTime(message.timestamp)}</span>
+          <span className="text-[11px] text-slate-500 ml-1">{formatTime(message.timestamp)}</span>
         </div>
         )}
       </div>

@@ -54,7 +54,7 @@ export default function HistoryList({ items, onSelect, onDelete }: HistoryListPr
             <button type="button"
               onClick={(e) => onDelete(e, item.id)}
               aria-label="Delete analysis"
-              className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-0 group-hover:opacity-100"
+              className="p-2 rounded-lg bg-red-500/0 hover:bg-red-500/10 text-slate-600 hover:text-red-400 transition-all opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100"
               title="Delete analysis"
             >
               <RotateCcw className="w-4 h-4 rotate-45" />

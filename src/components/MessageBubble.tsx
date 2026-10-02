@@ -79,9 +79,9 @@ export function MessageBubble({
           </div>
         </div>
 
-        {/* Message Actions */}
+        {/* Message Actions - always visible on touch, hover-reveal on desktop */}
         <div className={cn(
-          "flex items-center gap-2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity",
+          "flex items-center gap-2 mt-2 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 transition-opacity",
           isUser ? "justify-end" : "justify-start"
         )}>
           <button type="button"

@@ -51,7 +51,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
             </div>
             <div>
               <div className="text-sm font-bold text-white">{selectedType?.name}</div>
-              <div className="text-[10px] text-slate-500 font-medium">{selectedType?.combination}</div>
+              <div className="text-[11px] text-slate-500 font-medium">{selectedType?.combination}</div>
             </div>
           </div>
           <ChevronDown className={cn("w-4 h-4 text-slate-500 transition-transform", isOpen && "rotate-180")} />
@@ -63,6 +63,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
+aria-label="Search types"
                   autoFocus
                   type="text"
                   placeholder="Search types..."
@@ -93,7 +94,7 @@ export default function TypeSelector({ value, onChange, label }: TypeSelectorPro
                     </div>
                     <div className="text-left">
                       <div className="text-sm font-bold text-white">{type.name}</div>
-                      <div className="text-[10px] text-slate-500 font-medium">{type.combination}</div>
+                      <div className="text-[11px] text-slate-500 font-medium">{type.combination}</div>
                     </div>
                   </div>
                   {value === type.id && <Check className="w-4 h-4 text-accent-primary" />}

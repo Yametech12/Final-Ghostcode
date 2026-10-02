@@ -250,6 +250,7 @@ export default function CommandCenter() {
             <div className="p-4 border-b border-white/10 flex items-center gap-4">
               <Search className="w-5 h-5 text-slate-500" />
               <input
+aria-label="Search types, tools, or navigation"
                 autoFocus
                 type="text"
                 placeholder="Search types, tools, or navigation..."
@@ -257,7 +258,7 @@ export default function CommandCenter() {
                 value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="flex-1 bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none text-lg"
+                className="flex-1 bg-transparent border-none text-white placeholder:text-slate-600 focus:outline-none text-lg py-3"
               />
               <motion.div
                 animate={{ opacity: query ? 1 : 0.5 }}
