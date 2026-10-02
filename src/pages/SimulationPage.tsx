@@ -304,7 +304,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                     "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed",
                     isLoading
                       ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
-                      : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
+                      : "accent-gradient text-mystic-950 hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
                   )}
                 >
                   {isLoading ? (
@@ -329,7 +329,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                     "w-full flex items-center justify-center gap-2 py-3 rounded-xl font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed",
                     isLoading
                       ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
-                      : "bg-red-500/20 text-red-400 border border-red-500/30 hover:bg-red-500 hover:text-white"
+                      : "bg-red-500/20 text-status-error border border-red-500/30 hover:bg-red-500 hover:text-white"
                   )}
                 >
                   {isLoading ? (
@@ -350,7 +350,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                 <button type="button"
                   onClick={resetSimulation}
                   disabled={isLoading}
-                  className="disabled:opacity-50 disabled:cursor-not-allowed w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mystic-700 transition-all text-sm"hover:text-slate-100 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 
                 >
                   <RefreshCw className="w-4 h-4" />
                   Reset
@@ -365,7 +365,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
               <div className="space-y-2 text-xs">
                 <div className="flex justify-between">
                   <span className="text-slate-500">Active:</span>
-                  <span className={isActive ? "text-green-400" : "text-slate-600"}>
+                  <span className={isActive ? "text-status-success" : "text-slate-600"}>
                     {isActive ? "Yes" : "No"}
                   </span>
                 </div>
@@ -426,7 +426,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
               {feedback && (
                 <button type="button"
                   onClick={copyFeedback}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-slate-100 hover:bg-mystic-700 transition-all text-sm"
                 >
                   {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                   {copied ? 'Copied!' : 'Copy Feedback'}
@@ -442,7 +442,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
-                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm"
+                    className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-status-error text-sm"
                   >
                     <div className="flex items-center gap-2 mb-1">
                       <AlertTriangle className="w-4 h-4" />
@@ -589,7 +589,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                       "px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2",
                       isLoading || !input.trim()
                         ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
-                        : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent-primary/15"
+                        : "accent-gradient text-mystic-950 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent-primary/15"
                     )}
                   >
                     {isLoading ? (

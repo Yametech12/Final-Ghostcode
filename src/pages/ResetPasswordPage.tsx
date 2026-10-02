@@ -146,7 +146,7 @@ export default function ResetPasswordPage() {
                 </div>
                 <button type="button"
                   onClick={() => navigate('/login')}
-                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all"
+                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back to sign in
@@ -194,7 +194,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading || !email || !!emailError}
-                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
@@ -327,7 +327,7 @@ export default function ResetPasswordPage() {
                 <button
                   type="submit"
                   disabled={loading || !recoveryFormValid}
-                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {loading ? (
                     <>
