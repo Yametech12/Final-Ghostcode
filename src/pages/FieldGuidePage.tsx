@@ -12,6 +12,7 @@ import { supabase } from '../lib/supabase';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { cn } from '../lib/utils';
+import { InlineLoader } from '../components/LoadingComponents';
 
 interface FieldReport {
   id: string;
@@ -610,9 +611,8 @@ export default function FieldGuidePage() {
           </div>
 
           {loadingReports ? (
-            <div className="flex flex-col items-center justify-center py-20 space-y-4">
-              <Loader2 className="w-12 h-12 text-accent-primary animate-spin" />
-              <p className="text-slate-400 font-medium">Loading field reports...</p>
+            <div className="flex flex-col items-center justify-center py-20" role="status" aria-label="Loading">
+              <InlineLoader />
             </div>
           ) : filteredReports.length > 0 ? (
             <div className="grid grid-cols-1 gap-6">

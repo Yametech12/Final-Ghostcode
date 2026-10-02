@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Loader2, Crown } from 'lucide-react';
+import { FileText, Plus, Search, User, Calendar, Trash2, Edit3, X, Crown } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { personalityTypes } from '../data/personalityTypes';
 import { toast } from 'sonner';
@@ -9,6 +9,7 @@ import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 import { handleSupabaseError, OperationType } from '../utils/errorHandling';
 import { cn } from '../lib/utils';
+import { InlineLoader } from '../components/LoadingComponents';
 
 /**
  * Tier-based dossier caps. Strategist has a soft ceiling at 25 — past that
@@ -334,8 +335,8 @@ export default function DossiersPage() {
       </div>
 
       {loading ? (
-        <div className="flex justify-center items-center p-12">
-          <Loader2 aria-hidden="true" className="w-8 h-8 text-accent-primary animate-spin" />
+        <div className="flex justify-center items-center p-12" role="status" aria-label="Loading">
+          <InlineLoader />
         </div>
       ) : filteredDossiers.length === 0 ? (
         <div className="text-center py-20 glass-card">
