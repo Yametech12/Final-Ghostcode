@@ -1,1 +1,171 @@
-aW1wb3J0IFJlYWN0IGZyb20gJ3JlYWN0JzsKaW1wb3J0IFJlYWN0RE9NIGZyb20gJ3JlYWN0LWRvbS9jbGllbnQnOwppbXBvcnQgeyBCcm93c2VyUm91dGVyIH0gZnJvbSAncmVhY3Qtcm91dGVyLWRvbSc7CmltcG9ydCB7IEVuaGFuY2VkQXV0aFByb3ZpZGVyIH0gZnJvbSAnLi9jb250ZXh0cy9FbmhhbmNlZEF1dGhDb250ZXh0JzsKaW1wb3J0IFNlc3Npb25FcnJvckJvdW5kYXJ5IGZyb20gJy4vY29tcG9uZW50cy9TZXNzaW9uRXJyb3JCb3VuZGFyeSc7CmltcG9ydCBBcHAgZnJvbSAnLi9BcHAnOwppbXBvcnQgJy4vaW5kZXguY3NzJzsKaW1wb3J0IHsgVG9hc3RlciB9IGZyb20gJ3Nvbm5lcic7CmltcG9ydCB7IHZhbGlkYXRlRW52aXJvbm1lbnQgfSBmcm9tICcuL3V0aWxzL2Vudic7CmltcG9ydCB7IGluaXRTZW50cnkgfSBmcm9tICcuL2xpYi9zZW50cnknOwoKLy8gSW5pdGlhbGl6ZSBTZW50cnkgZWFybHkgKG5vLW9wIGluIGRldiBvciB3aXRob3V0IERTTikKaW5pdFNlbnRyeSgpOwoKLy8gR2xvYmFsIHVuaGFuZGxlZCBwcm9taXNlIHJlamVjdGlvbiBoYW5kbGVyLiBXZSBkZWxpYmVyYXRlbHkgZG8gTk9UIGNhbGwKLy8gcHJldmVudERlZmF1bHQoKSB1bmNvbmRpdGlvbmFsbHkg4oCUIFNlbnRyeSdzIGJlZm9yZVNlbmQgYWxyZWFkeSBmaWx0ZXJzCi8vIEFib3J0RXJyb3Igbm9pc2UsIGFuZCBzaWxlbmNpbmcgZXZlcnkgcmVqZWN0aW9uIGhpZGVzIHJlYWwgY3Jhc2hlcy4KLy8gT25seSBzdXBwcmVzcyB0aGUgd2VsbC1rbm93biAidHJhbnNpZW50IG5vaXNlIiBwYXR0ZXJuczsgbGV0IGV2ZXJ5dGhpbmcKLy8gZWxzZSBzdXJmYWNlIHNvIHdlIGNhbiBmaXggaXQuCndpbmRvdy5hZGRFdmVudExpc3RlbmVyKCd1bmhhbmRsZWRyZWplY3Rpb24nLCAoZXZlbnQpID0+IHsKICBjb25zdCByZWFzb246IGFueSA9IGV2ZW50LnJlYXNvbjsKICBjb25zdCBtc2c6IHN0cmluZyA9CiAgICAocmVhc29uICYmIChyZWFzb24ubWVzc2FnZSB8fCByZWFzb24ubmFtZSkpIHx8IFN0cmluZyhyZWFzb24gfHwgJycpOwoKICBjb25zdCBpc05vaXNlID0KICAgIG1zZy5pbmNsdWRlcygnQWJvcnRFcnJvcicpIHx8CiAgICBtc2cuaW5jbHVkZXMoJ1RoZSB1c2VyIGFib3J0ZWQnKSB8fAogICAgbXNnLmluY2x1ZGVzKCdzaWduYWwgaXMgYWJvcnRlZCcpIHx8CiAgICAvLyBSZXNpemVPYnNlcnZlciBsb29wIGxpbWl0IGlzIGEga25vd24gYnJvd3NlciBub24taXNzdWUKICAgIG1zZy5pbmNsdWRlcygnUmVzaXplT2JzZXJ2ZXIgbG9vcCcpOwoKICBpZiAoaXNOb2lzZSkgewogICAgZXZlbnQucHJldmVudERlZmF1bHQoKTsKICAgIHJldHVybjsKICB9CgogIGNvbnNvbGUuZXJyb3IoJ1VuaGFuZGxlZCBQcm9taXNlIFJlamVjdGlvbjonLCByZWFzb24pOwp9KTsKCi8vIFZhbGlkYXRlIGVudmlyb25tZW50IG9uIHN0YXJ0dXAKdHJ5IHsKICB2YWxpZGF0ZUVudmlyb25tZW50KCk7Cn0gY2F0Y2ggKGVycikgewogIGNvbnNvbGUuZXJyb3IoJ0Vudmlyb25tZW50IHZhbGlkYXRpb24gZmFpbGVkOicsIGVycik7CiAgLy8gU2hvdyBlcnJvciB0byB1c2VyIGluIGRldmVsb3BtZW50CiAgaWYgKGltcG9ydC5tZXRhLmVudi5ERVYpIHsKICAgIC8vIEVzY2FwZSB0aGUgZXJyb3IgbWVzc2FnZSB0byBwcmV2ZW50IEhUTUwgaW5qZWN0aW9uIChkZWZlbnNlIGluIGRlcHRoLAogICAgLy8gZXZlbiB0aG91Z2ggdGhpcyBwYXRoIGlzIGRldi1vbmx5IGFuZCBlcnIubWVzc2FnZSBpcyBkZXZlbG9wZXItY29udHJvbGxlZCkuCiAgICBjb25zdCBzYWZlTXNnID0gU3RyaW5nKGVyciBpbnN0YW5jZW9mIEVycm9yID8gZXJyLm1lc3NhZ2UgOiAnTWlzc2luZyBlbnZpcm9ubWVudCB2YXJpYWJsZXMnKQogICAgICAucmVwbGFjZSgvJi9nLCAnJmFtcDsnKS5yZXBsYWNlKC88L2csICcmbHQ7JykucmVwbGFjZSgvPi9nLCAnJmd0OycpCiAgICAgIC5yZXBsYWNlKC8iL2csICcmcXVvdDsnKS5yZXBsYWNlKC8nL2csICcmIzM5OycpOwogICAgZG9jdW1lbnQuYm9keS5pbm5lckhUTUwgPSBgCiAgICAgIDxkaXYgc3R5bGU9ImRpc3BsYXk6IGZsZXg7IGFsaWduLWl0ZW1zOiBjZW50ZXI7IGp1c3RpZnktY29udGVudDogY2VudGVyOyBoZWlnaHQ6IDEwMHZoOyBmb250LWZhbWlseTogc3lzdGVtLXVpOyBjb2xvcjogI2VmNDQ0NDsgcGFkZGluZzogMnJlbTsgdGV4dC1hbGlnbjogY2VudGVyOyI+CiAgICAgICAgPGRpdj4KICAgICAgICAgIDxoMT5Db25maWd1cmF0aW9uIEVycm9yPC9oMT4KICAgICAgICAgIDxwPiR7c2FmZU1zZ308L3A+CiAgICAgICAgICA8cD5QbGVhc2UgY2hlY2sgeW91ciAuZW52IGZpbGUgYW5kIHJlc3RhcnQgdGhlIGRldmVsb3BtZW50IHNlcnZlci48L3A+CiAgICAgICAgPC9kaXY+CiAgICAgIDwvZGl2PgogICAgYDsKICAgIHRocm93IGVycjsKICB9Cn0KClJlYWN0RE9NLmNyZWF0ZVJvb3QoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3Jvb3QnKSEpLnJlbmRlcigKICA8UmVhY3QuU3RyaWN0TW9kZT4KICAgIDxCcm93c2VyUm91dGVyPgogICAgICA8U2Vzc2lvbkVycm9yQm91bmRhcnk+CiAgICAgICAgPEVuaGFuY2VkQXV0aFByb3ZpZGVyPgogICAgICAgICAgPEFwcCAvPgogICAgICAgICAgey8qIFBoYXNlIDIg4oCUIHNvbm5lciBUb2FzdGVyIHRoZW1lZCBhZ2FpbnN0IGx1eHVyeSBwYWxldHRlIChSZXEgOS43KS4KICAgICAgICAgICAgICBTb25uZXIgcmVhZHMgQ1NTIHZhcmlhYmxlcyBmcm9tIHRoZSB0b2FzdGVyIGVsZW1lbnQgZm9yIGl0cyBjb2xvcnMuICovfQogICAgICAgICAgPFRvYXN0ZXIKICAgICAgICAgICAgcG9zaXRpb249InRvcC1yaWdodCIKICAgICAgICAgICAgdGhlbWU9ImRhcmsiCiAgICAgICAgICAgIHJpY2hDb2xvcnM9e2ZhbHNlfQogICAgICAgICAgICBjbG9zZUJ1dHRvbgogICAgICAgICAgICBkdXJhdGlvbj17NDAwMH0KICAgICAgICAgICAgc3R5bGU9e3sKICAgICAgICAgICAgICAvLyBNYXAgc29ubmVyJ3MgQ1NTIHZhcmlhYmxlcyB0byB0aGUgbHV4dXJ5IHBhbGV0dGUgdG9rZW5zLgogICAgICAgICAgICAgIFsnLS1ub3JtYWwtYmcnIGFzIHN0cmluZ106ICdyZ2JhKDIyLCAxNywgMjQsIDAuOTUpJywKICAgICAgICAgICAgICBbJy0tbm9ybWFsLXRleHQnIGFzIHN0cmluZ106ICcjRjBFQkUzJywKICAgICAgICAgICAgICBbJy0tbm9ybWFsLWJvcmRlcicgYXMgc3RyaW5nXTogJ3JnYmEoMjMyLCAxOTksIDEyNiwgMC4xMiknLAogICAgICAgICAgICAgIFsnLS1zdWNjZXNzLWJnJyBhcyBzdHJpbmddOiAncmdiYSgyMiwgMTcsIDI0LCAwLjk1KScsCiAgICAgICAgICAgICAgWyctLXN1Y2Nlc3MtdGV4dCcgYXMgc3RyaW5nXTogJyM2RkEwODMnLAogICAgICAgICAgICAgIFsnLS1zdWNjZXNzLWJvcmRlcicgYXMgc3RyaW5nXTogJ3JnYmEoMTExLCAxNjAsIDEzMSwgMC4zMCknLAogICAgICAgICAgICAgIFsnLS1lcnJvci1iZycgYXMgc3RyaW5nXTogJ3JnYmEoMjIsIDE3LCAyNCwgMC45NSknLAogICAgICAgICAgICAgIFsnLS1lcnJvci10ZXh0JyBhcyBzdHJpbmddOiAnI0M3N0E2RicsCiAgICAgICAgICAgICAgWyctLWVycm9yLWJvcmRlcicgYXMgc3RyaW5nXTogJ3JnYmEoMTk5LCAxMjIsIDExMSwgMC40MCknLAogICAgICAgICAgICAgIFsnLS13YXJuaW5nLWJnJyBhcyBzdHJpbmddOiAncmdiYSgyMiwgMTcsIDI0LCAwLjk1KScsCiAgICAgICAgICAgICAgWyctLXdhcm5pbmctdGV4dCcgYXMgc3RyaW5nXTogJyNDOTlCNUInLAogICAgICAgICAgICAgIFsnLS13YXJuaW5nLWJvcmRlcicgYXMgc3RyaW5nXTogJ3JnYmEoMjAxLCAxNTUsIDkxLCAwLjMwKScsCiAgICAgICAgICAgICAgWyctLWluZm8tYmcnIGFzIHN0cmluZ106ICdyZ2JhKDIyLCAxNywgMjQsIDAuOTUpJywKICAgICAgICAgICAgICBbJy0taW5mby10ZXh0JyBhcyBzdHJpbmddOiAnIzdBOTNBOCcsCiAgICAgICAgICAgICAgWyctLWluZm8tYm9yZGVyJyBhcyBzdHJpbmddOiAncmdiYSgxMjIsIDE0NywgMTY4LCAwLjMwKScsCiAgICAgICAgICAgIH19CiAgICAgICAgICAgIHRvYXN0T3B0aW9ucz17ewogICAgICAgICAgICAgIGNsYXNzTmFtZToKICAgICAgICAgICAgICAgICdiYWNrZHJvcC1ibHVyLXhsIHNoYWRvdy1bMF8xMnB4XzQwcHhfLTEycHhfcmdiYSgwLDAsMCwwLjUpXSByb3VuZGVkLXhsJywKICAgICAgICAgICAgfX0KICAgICAgICAgIC8+CiAgICAgICAgPC9FbmhhbmNlZEF1dGhQcm92aWRlcj4KICAgICAgPC9TZXNzaW9uRXJyb3JCb3VuZGFyeT4KICAgIDwvQnJvd3NlclJvdXRlcj4KICA8L1JlYWN0LlN0cmljdE1vZGU+Cik7CgovLyBSZWdpc3RlciBzZXJ2aWNlIHdvcmtlciBmb3IgUFdBIGluc3RhbGxhYmlsaXR5LgovLyBPbiBldmVyeSBsb2FkIHdlIGNoZWNrIGZvciBhIG5ldyBTVzsgaWYgb25lIGlzIHdhaXRpbmcsIHByb21wdCB0aGUgdXNlcgovLyB0byByZWZyZXNoIHNvIHRoZXkgZG9uJ3Qgc3RheSBzdHVjayBvbiBzdGFsZSBjb2RlIGFmdGVyIGEgZGVwbG95LgppZiAoJ3NlcnZpY2VXb3JrZXInIGluIG5hdmlnYXRvciAmJiBpbXBvcnQubWV0YS5lbnYuUFJPRCkgewogIHdpbmRvdy5hZGRFdmVudExpc3RlbmVyKCdsb2FkJywgKCkgPT4gewogICAgbmF2aWdhdG9yLnNlcnZpY2VXb3JrZXIKICAgICAgLnJlZ2lzdGVyKCcvc3cuanMnKQogICAgICAudGhlbigocmVnaXN0cmF0aW9uKSA9PiB7CiAgICAgICAgY29uc29sZS5sb2coJ1tTV10gUmVnaXN0ZXJlZDonLCByZWdpc3RyYXRpb24uc2NvcGUpOwoKICAgICAgICAvLyBGb3JjZSBhbiB1cGRhdGUgY2hlY2sgb24gZXZlcnkgbG9hZCBzbyBuZXdseSBkZXBsb3llZCBTV3MgYXJlCiAgICAgICAgLy8gZGlzY292ZXJlZCB3aXRob3V0IGEgY29sZCByZWxvYWQuCiAgICAgICAgcmVnaXN0cmF0aW9uLnVwZGF0ZSgpLmNhdGNoKCgpID0+IHVuZGVmaW5lZCk7CgogICAgICAgIGNvbnN0IHByb21wdFVwZGF0ZSA9ICh3b3JrZXI6IFNlcnZpY2VXb3JrZXIpID0+IHsKICAgICAgICAgIC8vIExhenkgaW1wb3J0IHNvbm5lciB0byBhdm9pZCBwdWxsaW5nIGl0IGludG8gdGhlIFNXIHJlZ2lzdHJhdGlvbiBwYXRoCiAgICAgICAgICAvLyBiZWZvcmUgdGhlIG1haW4gYnVuZGxlIGhhcyBsb2FkZWQgaXQuCiAgICAgICAgICBpbXBvcnQoJ3Nvbm5lcicpCiAgICAgICAgICAgIC50aGVuKCh7IHRvYXN0IH0pID0+IHsKICAgICAgICAgICAgICB0b2FzdCgnQSBuZXcgdmVyc2lvbiBpcyBhdmFpbGFibGUnLCB7CiAgICAgICAgICAgICAgICBkZXNjcmlwdGlvbjogJ1JlZnJlc2ggdG8gbG9hZCB0aGUgbGF0ZXN0IHVwZGF0ZS4nLAogICAgICAgICAgICAgICAgYWN0aW9uOiB7CiAgICAgICAgICAgICAgICAgIGxhYmVsOiAnUmVmcmVzaCcsCiAgICAgICAgICAgICAgICAgIG9uQ2xpY2s6ICgpID0+IHsKICAgICAgICAgICAgICAgICAgICB3b3JrZXIucG9zdE1lc3NhZ2UoeyB0eXBlOiAnU0tJUF9XQUlUSU5HJyB9KTsKICAgICAgICAgICAgICAgICAgICAvLyBUaGUgbmV3IFNXIHdpbGwgdGFrZSBjb250cm9sOyByZWxvYWQgb25jZSBpdCBkb2VzLgogICAgICAgICAgICAgICAgICAgIG5hdmlnYXRvci5zZXJ2aWNlV29ya2VyLmFkZEV2ZW50TGlzdGVuZXIoCiAgICAgICAgICAgICAgICAgICAgICAnY29udHJvbGxlcmNoYW5nZScsCiAgICAgICAgICAgICAgICAgICAgICAoKSA9PiB3aW5kb3cubG9jYXRpb24ucmVsb2FkKCksCiAgICAgICAgICAgICAgICAgICAgICB7IG9uY2U6IHRydWUgfSwKICAgICAgICAgICAgICAgICAgICApOwogICAgICAgICAgICAgICAgICB9LAogICAgICAgICAgICAgICAgfSwKICAgICAgICAgICAgICAgIGR1cmF0aW9uOiBJbmZpbml0eSwKICAgICAgICAgICAgICB9KTsKICAgICAgICAgICAgfSkKICAgICAgICAgICAgLmNhdGNoKCgpID0+IHsKICAgICAgICAgICAgICAvLyBUb2FzdCB1bmF2YWlsYWJsZSDigJQgZmFsbCBiYWNrIHRvIGEgY29uc29sZSBoaW50LgogICAgICAgICAgICAgIGNvbnNvbGUuaW5mbygnW1NXXSBOZXcgdmVyc2lvbiBhdmFpbGFibGUuIFJlbG9hZCB0byB1cGRhdGUuJyk7CiAgICAgICAgICAgIH0pOwogICAgICAgIH07CgogICAgICAgIC8vIEEgd2FpdGluZyB3b3JrZXIgZXhpc3RzIGF0IHJlZ2lzdHJhdGlvbiB0aW1lIHdoZW4gdGhlIHVzZXIgd2FzCiAgICAgICAgLy8gYWxyZWFkeSBvbiBhIHBhZ2Ugd2hlbiB0aGUgU1cgdXBkYXRlZC4KICAgICAgICBpZiAocmVnaXN0cmF0aW9uLndhaXRpbmcpIHByb21wdFVwZGF0ZShyZWdpc3RyYXRpb24ud2FpdGluZyk7CgogICAgICAgIHJlZ2lzdHJhdGlvbi5hZGRFdmVudExpc3RlbmVyKCd1cGRhdGVmb3VuZCcsICgpID0+IHsKICAgICAgICAgIGNvbnN0IGluc3RhbGxpbmcgPSByZWdpc3RyYXRpb24uaW5zdGFsbGluZzsKICAgICAgICAgIGlmICghaW5zdGFsbGluZykgcmV0dXJuOwogICAgICAgICAgaW5zdGFsbGluZy5hZGRFdmVudExpc3RlbmVyKCdzdGF0ZWNoYW5nZScsICgpID0+IHsKICAgICAgICAgICAgaWYgKAogICAgICAgICAgICAgIGluc3RhbGxpbmcuc3RhdGUgPT09ICdpbnN0YWxsZWQnICYmCiAgICAgICAgICAgICAgbmF2aWdhdG9yLnNlcnZpY2VXb3JrZXIuY29udHJvbGxlcgogICAgICAgICAgICApIHsKICAgICAgICAgICAgICBwcm9tcHRVcGRhdGUoaW5zdGFsbGluZyk7CiAgICAgICAgICAgIH0KICAgICAgICAgIH0pOwogICAgICAgIH0pOwogICAgICB9KQogICAgICAuY2F0Y2goKGVycikgPT4gewogICAgICAgIGNvbnNvbGUud2FybignW1NXXSBSZWdpc3RyYXRpb24gZmFpbGVkOicsIGVycik7CiAgICAgIH0pOwogIH0pOwp9Cg==
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { EnhancedAuthProvider } from './contexts/EnhancedAuthContext';
+import SessionErrorBoundary from './components/SessionErrorBoundary';
+import App from './App';
+import './index.css';
+import { Toaster } from 'sonner';
+import { validateEnvironment } from './utils/env';
+import { initSentry } from './lib/sentry';
+
+// Initialize Sentry early (no-op in dev or without DSN)
+initSentry();
+
+// Global unhandled promise rejection handler. We deliberately do NOT call
+// preventDefault() unconditionally — Sentry's beforeSend already filters
+// AbortError noise, and silencing every rejection hides real crashes.
+// Only suppress the well-known "transient noise" patterns; let everything
+// else surface so we can fix it.
+window.addEventListener('unhandledrejection', (event) => {
+  const reason: any = event.reason;
+  const msg: string =
+    (reason && (reason.message || reason.name)) || String(reason || '');
+
+  const isNoise =
+    msg.includes('AbortError') ||
+    msg.includes('The user aborted') ||
+    msg.includes('signal is aborted') ||
+    // ResizeObserver loop limit is a known browser non-issue
+    msg.includes('ResizeObserver loop');
+
+  if (isNoise) {
+    event.preventDefault();
+    return;
+  }
+
+  console.error('Unhandled Promise Rejection:', reason);
+});
+
+// Validate environment on startup
+try {
+  validateEnvironment();
+} catch (err) {
+  console.error('Environment validation failed:', err);
+  // Show error to user in development
+  if (import.meta.env.DEV) {
+    // Escape the error message to prevent HTML injection (defense in depth,
+    // even though this path is dev-only and err.message is developer-controlled).
+    const safeMsg = String(err instanceof Error ? err.message : 'Missing environment variables')
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+    document.body.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: system-ui; color: #ef4444; padding: 2rem; text-align: center;">
+        <div>
+          <h1>Configuration Error</h1>
+          <p>${safeMsg}</p>
+          <p>Please check your .env file and restart the development server.</p>
+        </div>
+      </div>
+    `;
+    throw err;
+  }
+}
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <BrowserRouter>
+      <SessionErrorBoundary>
+        <EnhancedAuthProvider>
+          <App />
+          {/* Phase 2 — sonner Toaster themed against luxury palette (Req 9.7).
+              Sonner reads CSS variables from the toaster element for its colors. */}
+          <Toaster
+            position="top-right"
+            theme="dark"
+            richColors={false}
+            closeButton
+            duration={4000}
+            style={{
+              // Map sonner's CSS variables to the luxury palette tokens.
+              ['--normal-bg' as string]: 'rgba(22, 17, 24, 0.95)',
+              ['--normal-text' as string]: '#F0EBE3',
+              ['--normal-border' as string]: 'rgba(232, 199, 126, 0.12)',
+              ['--success-bg' as string]: 'rgba(22, 17, 24, 0.95)',
+              ['--success-text' as string]: '#6FA083',
+              ['--success-border' as string]: 'rgba(111, 160, 131, 0.30)',
+              ['--error-bg' as string]: 'rgba(22, 17, 24, 0.95)',
+              ['--error-text' as string]: '#C77A6F',
+              ['--error-border' as string]: 'rgba(199, 122, 111, 0.40)',
+              ['--warning-bg' as string]: 'rgba(22, 17, 24, 0.95)',
+              ['--warning-text' as string]: '#C99B5B',
+              ['--warning-border' as string]: 'rgba(201, 155, 91, 0.30)',
+              ['--info-bg' as string]: 'rgba(22, 17, 24, 0.95)',
+              ['--info-text' as string]: '#7A93A8',
+              ['--info-border' as string]: 'rgba(122, 147, 168, 0.30)',
+            }}
+            toastOptions={{
+              className:
+                'backdrop-blur-xl shadow-[0_12px_40px_-12px_rgba(0,0,0,0.5)] rounded-xl',
+            }}
+          />
+        </EnhancedAuthProvider>
+      </SessionErrorBoundary>
+    </BrowserRouter>
+  </React.StrictMode>
+);
+
+// Register service worker for PWA installability.
+// On every load we check for a new SW; if one is waiting, prompt the user
+// to refresh so they don't stay stuck on stale code after a deploy.
+if ('serviceWorker' in navigator && import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker
+      .register('/sw.js')
+      .then((registration) => {
+        console.log('[SW] Registered:', registration.scope);
+
+        // Force an update check on every load so newly deployed SWs are
+        // discovered without a cold reload.
+        registration.update().catch(() => undefined);
+
+        const promptUpdate = (worker: ServiceWorker) => {
+          // Lazy import sonner to avoid pulling it into the SW registration path
+          // before the main bundle has loaded it.
+          import('sonner')
+            .then(({ toast }) => {
+              toast('A new version is available', {
+                description: 'Refresh to load the latest update.',
+                action: {
+                  label: 'Refresh',
+                  onClick: () => {
+                    worker.postMessage({ type: 'SKIP_WAITING' });
+                    // The new SW will take control; reload once it does.
+                    navigator.serviceWorker.addEventListener(
+                      'controllerchange',
+                      () => window.location.reload(),
+                      { once: true },
+                    );
+                  },
+                },
+                duration: Infinity,
+              });
+            })
+            .catch(() => {
+              // Toast unavailable — fall back to a console hint.
+              console.info('[SW] New version available. Reload to update.');
+            });
+        };
+
+        // A waiting worker exists at registration time when the user was
+        // already on a page when the SW updated.
+        if (registration.waiting) promptUpdate(registration.waiting);
+
+        registration.addEventListener('updatefound', () => {
+          const installing = registration.installing;
+          if (!installing) return;
+          installing.addEventListener('statechange', () => {
+            if (
+              installing.state === 'installed' &&
+              navigator.serviceWorker.controller
+            ) {
+              promptUpdate(installing);
+            }
+          });
+        });
+      })
+      .catch((err) => {
+        console.warn('[SW] Registration failed:', err);
+      });
+  });
+}
