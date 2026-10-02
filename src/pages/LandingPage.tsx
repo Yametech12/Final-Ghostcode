@@ -8,7 +8,6 @@ import {
   User,
   Map,
   Target,
-  ShieldCheck,
   Sparkles,
   ArrowRight,
   Lock,
@@ -20,6 +19,9 @@ import {
   X,
 } from 'lucide-react';
 import Logo from '../components/Logo';
+import ConstellationField from '../components/ConstellationField';
+import OracleDraw from '../components/OracleDraw';
+import Sigil from '../components/Sigil';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
@@ -297,88 +299,101 @@ export default function LandingPage() {
       )}
 
       {/* ───────────────────────── Hero ───────────────────────── */}
+      {/* The Observatory: a living constellation field behind the hero,
+          with the oracle draw as the signature first interaction. */}
       <motion.section
         id="main-content"
         variants={cVar}
         initial="hidden"
         animate="show"
-        className="max-w-5xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 md:pt-28 pb-16 sm:pb-24 text-center"
+        className="relative overflow-hidden"
       >
-        <motion.div variants={iVar}>
-          <span className="eyebrow inline-flex items-center gap-2">
-            <Sparkles className="w-3.5 h-3.5 text-accent-primary" aria-hidden="true" />
-            Yame Coaching · The EPIMETHEUS System
-          </span>
-        </motion.div>
+        <ConstellationField density={1} />
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 md:pt-28 pb-16 sm:pb-24 grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-8 items-center">
+          <div className="text-center lg:text-left">
+            <motion.div variants={iVar}>
+              <span className="codex-label">
+                <Sparkles className="w-3.5 h-3.5 text-iris-300" aria-hidden="true" />
+                <span>The Observatory · Yame Coaching</span>
+              </span>
+            </motion.div>
 
-        <motion.h1
-          variants={iVar}
-          className="hero-headline mt-6 text-4xl xs:text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-slate-50 leading-[1.05]"
-        >
-          Open the box.
-          <br />
-          <span className="text-gradient">Find the hope.</span>
-        </motion.h1>
+            <motion.h1
+              variants={iVar}
+              className="hero-headline mt-6 text-4xl xs:text-5xl sm:text-6xl md:text-7xl text-slate-50 leading-[1.05]"
+            >
+              Open the box.
+              <br />
+              <span className="text-gradient-iris">Read the stars.</span>
+            </motion.h1>
 
-        <motion.p
-          variants={iVar}
-          className="mt-6 sm:mt-8 mx-auto max-w-2xl text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed"
-        >
-          A behavioral intelligence platform for modern dating. Decode female archetypes,
-          read the signals beneath the words, and navigate the test with precision.
-        </motion.p>
+            <motion.p
+              variants={iVar}
+              className="mt-6 sm:mt-8 mx-auto lg:mx-0 max-w-2xl text-base sm:text-lg md:text-xl text-slate-400 leading-relaxed"
+            >
+              A behavioral observatory for modern dating. Eight archetypes charted like
+              constellations — learn to read the signals beneath the words, and navigate
+              every test with precision.
+            </motion.p>
 
-        <motion.div
-          variants={iVar}
-          className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center gap-3 sm:gap-4 max-w-md sm:max-w-none mx-auto"
-        >
-          {isSignedIn ? (
-            <>
-              <Link
-                to="/"
-                className="group w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
-              >
-                Go to dashboard
-                <ArrowRight
-                  aria-hidden="true"
-                  className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
-                />
-              </Link>
-              <Link
-                to="/pricing"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-accent-primary/20 transition-all inline-flex items-center justify-center"
-              >
-                See pricing
-              </Link>
-            </>
-          ) : (
-            <>
-              <Link
-                to="/register"
-                className="group w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
-              >
-                Create free account
-                <ArrowRight
-                  aria-hidden="true"
-                  className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
-                />
-              </Link>
-              <Link
-                to="/pricing"
-                className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-accent-primary/20 transition-all inline-flex items-center justify-center"
-              >
-                See pricing
-              </Link>
-            </>
-          )}
-        </motion.div>
+            <motion.div
+              variants={iVar}
+              className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-stretch sm:items-center justify-center lg:justify-start gap-3 sm:gap-4 max-w-md sm:max-w-none mx-auto lg:mx-0"
+            >
+              {isSignedIn ? (
+                <>
+                  <Link
+                    to="/"
+                    className="oracle-btn group w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                  >
+                    Go to dashboard
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                    />
+                  </Link>
+                  <Link
+                    to="/pricing"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-iris-500/30 transition-all inline-flex items-center justify-center"
+                  >
+                    See pricing
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <Link
+                    to="/register"
+                    className="oracle-btn group w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                  >
+                    Create free account
+                    <ArrowRight
+                      aria-hidden="true"
+                      className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                    />
+                  </Link>
+                  <Link
+                    to="/pricing"
+                    className="w-full sm:w-auto px-6 sm:px-8 py-3.5 sm:py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-iris-500/30 transition-all inline-flex items-center justify-center"
+                  >
+                    See pricing
+                  </Link>
+                </>
+              )}
+            </motion.div>
 
-        <motion.p
-          variants={iVar}
-          className="mt-6 font-mono text-[10px] sm:text-[11px] tracking-[0.2em] sm:tracking-[0.25em] uppercase text-slate-500"
-        >
-          Free forever · Upgrade anytime · No credit card to start
-        </motion.p>
+            <motion.p
+              variants={iVar}
+              className="mt-6 font-mono text-[10px] sm:text-[11px] tracking-[0.2em] sm:tracking-[0.25em] uppercase text-slate-500 text-center lg:text-left"
+            >
+              Free forever · Upgrade anytime · No credit card to start
+            </motion.p>
+          </div>
+
+          {/* The oracle draw — the hero's signature interaction. */}
+          <motion.div variants={iVar} className="flex justify-center lg:justify-end">
+            <OracleDraw />
+          </motion.div>
+        </div>
       </motion.section>
 
       {/* ───────────────────────── Stats strip ───────────────────────── */}
@@ -397,7 +412,7 @@ export default function LandingPage() {
               >
                 <span aria-hidden={s.a ? 'true' : undefined}>{s.v}</span>
               </div>
-              <div className="text-xs text-slate-500 tracking-wider uppercase">{s.l}</div>
+              <div className="font-mono text-[10px] text-iris-300 tracking-[0.22em] uppercase">{s.l}</div>
             </div>
           ))}
         </div>
@@ -406,7 +421,7 @@ export default function LandingPage() {
       {/* ───────────────────────── Features ───────────────────────── */}
       <section id="features" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
-          <span className="eyebrow">The toolkit</span>
+          <span className="codex-label">The instruments</span>
           <h2 className="hero-headline text-4xl sm:text-5xl text-slate-50">
             Eight instruments. <span className="text-gradient">One framework.</span>
           </h2>
@@ -444,8 +459,9 @@ export default function LandingPage() {
                 )}
               </div>
 
-              <div className="w-12 h-12 rounded-xl bg-accent-primary/10 border border-accent-primary/15 flex items-center justify-center text-accent-primary mb-5 group-hover:bg-accent-primary/15 transition-colors">
-                <f.icon className="w-6 h-6" strokeWidth={1.5} aria-hidden="true" />
+              {/* Observatory instrument dial — iris ring, the mystique layer */}
+              <div className="w-12 h-12 rounded-full bg-iris-500/10 border border-iris-500/25 flex items-center justify-center text-iris-300 mb-5 group-hover:bg-iris-500/20 group-hover:shadow-[0_0_16px_-4px_rgba(139,124,246,0.5)] transition-all">
+                <f.icon className="w-5 h-5" strokeWidth={1.5} aria-hidden="true" />
               </div>
               <h3 className="text-lg font-semibold tracking-tight text-slate-100 group-hover:text-accent-primary transition-colors mb-2 pr-16">
                 {f.title}
@@ -467,15 +483,16 @@ export default function LandingPage() {
       </section>
 
       {/* ───────────────────────── Archetypes preview ───────────────────────── */}
+      {/* Constellation chart: each archetype rendered as its own sigil. */}
       <section id="archetypes" className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
-          <span className="eyebrow">The 8 archetypes</span>
+          <span className="codex-label">The constellation chart</span>
           <h2 className="hero-headline text-4xl sm:text-5xl text-slate-50">
-            Two free. <span className="text-gradient">Six unlocked with Strategist.</span>
+            Two free. <span className="text-gradient-iris">Six written in the stars.</span>
           </h2>
           <p className="text-slate-400">
-            Each archetype maps her tells, triggers, and tests. Start with the two free profiles,
-            unlock the rest when you're ready to go deeper.
+            Each archetype is a constellation with its own sigil — learn to read her tells,
+            triggers, and tests the way astronomers read the sky.
           </p>
         </div>
 
@@ -488,14 +505,14 @@ export default function LandingPage() {
         >
           {ARCHETYPES.map((a) => (
             <motion.div key={a.id} variants={iVar}>
-              <div className={`glass-card p-6 h-full transition-colors ${a.locked ? 'opacity-70' : 'hover:border-accent-primary/25'}`}>
-                <div className="flex justify-between items-start mb-4">
-                  <span className="text-xs font-mono font-semibold text-accent-primary tracking-widest">
+              <div className={`glass-card p-6 h-full transition-colors ${a.locked ? 'opacity-70' : 'hover:border-iris-500/30'}`}>
+                <div className="flex justify-between items-start mb-2">
+                  <span className="text-xs font-mono font-semibold text-iris-300 tracking-widest">
                     {a.id}
                   </span>
                   {a.locked ? (
                     <span
-                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent-primary/10 border border-accent-primary/20 text-[9px] font-mono tracking-[0.15em] uppercase text-accent-primary"
+                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-iris-500/10 border border-iris-500/25 text-[9px] font-mono tracking-[0.15em] uppercase text-iris-300"
                       title="Strategist plan required"
                     >
                       <Lock className="w-2.5 h-2.5" aria-hidden="true" />
@@ -506,6 +523,9 @@ export default function LandingPage() {
                       Free
                     </span>
                   )}
+                </div>
+                <div className="text-iris-300 my-3">
+                  <Sigil id={a.id} size={56} title={`${a.name} constellation sigil`} />
                 </div>
                 <h3 className="font-semibold text-lg mb-1 text-slate-100">{a.name}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{a.tagline}</p>
@@ -518,7 +538,7 @@ export default function LandingPage() {
       {/* ───────────────────────── How it works ───────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
-          <span className="eyebrow">How it works</span>
+          <span className="codex-label">Field procedure</span>
           <h2 className="hero-headline text-4xl sm:text-5xl text-slate-50">
             From signal to strategy.
           </h2>
@@ -571,7 +591,7 @@ export default function LandingPage() {
       {/* ───────────────────────── Testimonials ───────────────────────── */}
       <section className="max-w-6xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-14">
-          <span className="eyebrow">Sample scenarios</span>
+          <span className="codex-label">Field reports</span>
           <h2 className="hero-headline text-4xl sm:text-5xl text-slate-50">
             What it looks like in practice.
           </h2>
@@ -637,7 +657,7 @@ export default function LandingPage() {
       {/* ───────────────────────── Comparison strip ───────────────────────── */}
       <section className="max-w-5xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
         <div className="text-center max-w-2xl mx-auto space-y-4 mb-12">
-          <span className="eyebrow">The difference</span>
+          <span className="codex-label">Before / after</span>
           <h2 className="hero-headline text-3xl sm:text-4xl text-slate-50">
             Without vs. with EPIMETHEUS.
           </h2>
@@ -694,57 +714,60 @@ export default function LandingPage() {
 
       {/* ───────────────────────── Final CTA ───────────────────────── */}
       <section className="max-w-4xl mx-auto px-4 sm:px-6 py-16 sm:py-24">
-        <div className="glass-card p-8 sm:p-14 text-center relative overflow-hidden shimmer-effect">
-          <div className="relative z-10 space-y-6">
-            <ShieldCheck className="w-12 h-12 text-accent-primary mx-auto" aria-hidden="true" />
-            <h2 className="hero-headline text-3xl sm:text-5xl text-slate-50">
-              Stop guessing. <span className="text-gradient">Start reading.</span>
-            </h2>
-            <p className="text-slate-400 max-w-xl mx-auto">
-              {isSignedIn
-                ? 'Open the dashboard and pick up where you left off.'
-                : 'Create your account in under a minute. The first assessment is free, forever.'}
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
-              {isSignedIn ? (
-                <>
-                  <Link
-                    to="/"
-                    className="group w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
-                  >
-                    Go to dashboard
-                    <ArrowRight
-                      className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-accent-primary/20 transition-all"
-                  >
-                    Compare plans
-                  </Link>
-                </>
-              ) : (
-                <>
-                  <Link
-                    to="/register"
-                    className="group w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
-                  >
-                    Create free account
-                    <ArrowRight
-                      className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
-                      aria-hidden="true"
-                    />
-                  </Link>
-                  <Link
-                    to="/pricing"
-                    className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-accent-primary/20 transition-all"
-                  >
-                    Compare plans
-                  </Link>
-                </>
-              )}
+        <div className="relative">
+          <ConstellationField density={0.6} />
+          <div className="oracle-frame grain p-8 sm:p-14 text-center relative overflow-hidden">
+            <div className="relative z-10 space-y-6">
+              <span className="codex-label">The reading is cast</span>
+              <h2 className="hero-headline text-3xl sm:text-5xl text-slate-50">
+                Stop guessing. <span className="text-gradient-iris">Start reading.</span>
+              </h2>
+              <p className="text-slate-400 max-w-xl mx-auto">
+                {isSignedIn
+                  ? 'Open the dashboard and pick up where you left off.'
+                  : 'Create your account in under a minute. The first assessment is free, forever.'}
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+                {isSignedIn ? (
+                  <>
+                    <Link
+                      to="/"
+                      className="oracle-btn group w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                    >
+                      Go to dashboard
+                      <ArrowRight
+                        className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </Link>
+                    <Link
+                      to="/pricing"
+                      className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-iris-500/30 transition-all"
+                    >
+                      Compare plans
+                    </Link>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/register"
+                      className="oracle-btn group w-full sm:w-auto px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-semibold tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.02] active:scale-[0.98] inline-flex items-center justify-center gap-2"
+                    >
+                      Create free account
+                      <ArrowRight
+                        className="w-5 h-5 transition-transform group-hover:translate-x-0.5"
+                        aria-hidden="true"
+                      />
+                    </Link>
+                    <Link
+                      to="/pricing"
+                      className="w-full sm:w-auto px-8 py-4 rounded-xl bg-white/5 border border-slate-700/30 text-slate-100 font-semibold tracking-wide hover:bg-white/8 hover:border-iris-500/30 transition-all"
+                    >
+                      Compare plans
+                    </Link>
+                  </>
+                )}
+              </div>
             </div>
           </div>
         </div>
