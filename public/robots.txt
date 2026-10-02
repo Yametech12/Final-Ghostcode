@@ -1,4 +1,25 @@
 User-agent: *
 Allow: /
 
+# Authenticated app routes — no indexable content, save crawl budget.
+Disallow: /admin
+Disallow: /profile
+Disallow: /calibration
+Disallow: /encyclopedia
+Disallow: /guide
+Disallow: /field-guide
+Disallow: /advisor
+Disallow: /compare
+Disallow: /glossary
+Disallow: /quick-reference
+Disallow: /assessment
+Disallow: /assessment-result
+Disallow: /profiler
+Disallow: /quiz
+Disallow: /favorites
+Disallow: /dossiers
+Disallow: /decryptor
+Disallow: /simulation
+Disallow: /insights
+
 Sitemap: https://epimetheusproject.vercel.app/sitemap.xml

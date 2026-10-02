@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import AnimatedRoutes from './components/layout/AnimatedRoutes';
+import SEO from './components/SEO';
 import { Suspense, lazy } from 'react';
 import { queryClient } from './lib/queryClient';
 import { useRoutePreloading } from './hooks/useRoutePreloading';
@@ -22,6 +23,7 @@ function AppContent() {
 
   return (
     <>
+      <SEO />
       <AnimatedRoutes />
       {import.meta.env.DEV && (
         <Suspense fallback={null}>
