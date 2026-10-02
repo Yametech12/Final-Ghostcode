@@ -22,6 +22,7 @@ import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import OracleDraw from '../components/OracleDraw';
 import EmblemCanvas from '../components/EmblemCanvas';
+import ExitIntentModal from '../components/ExitIntentModal';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
@@ -793,9 +794,19 @@ export default function LandingPage() {
             <Link to="/login" className="hover:text-slate-200 transition-colors">
               Sign in
             </Link>
+            <a
+              href="mailto:epimetheus.support@gmail.com?subject=Question%20about%20Epimetheus"
+              className="hover:text-slate-200 transition-colors"
+            >
+              Contact
+            </a>
           </div>
         </div>
       </footer>
+
+      {/* Exit-intent recovery — desktop visitors only, once per session,
+          never for signed-in users (handled inside the component). */}
+      <ExitIntentModal />
     </div>
   );
 }

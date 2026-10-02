@@ -162,6 +162,9 @@ export default function PaywallScreen({
               Maybe later
             </Link>
           </div>
+          <p className="text-xs text-slate-500 pt-1">
+            14-day money-back guarantee · Cancel anytime
+          </p>
         </div>
       </div>
 

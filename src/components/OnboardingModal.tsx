@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, ChevronRight, ChevronLeft, Target, Brain, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
@@ -88,6 +89,7 @@ const steps: OnboardingStep[] = [
 export default function OnboardingModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const hasSeenOnboarding = localStorage.getItem('hasSeenOnboarding');
@@ -124,7 +126,10 @@ export default function OnboardingModal() {
       setStep(nextStep);
       trackOnboardingStep(nextStep + 1, steps.length);
     } else {
+      // Final step: close the tutorial AND take the user to the first
+      // value action (Target Assessment) instead of dropping them.
       handleClose();
+      navigate('/assessment');
     }
   };
 
@@ -246,7 +251,7 @@ export default function OnboardingModal() {
                       </>
                     ) : (
                       <>
-                        Start Exploring <Sparkles className="w-5 h-5" />
+                        Start my assessment <Sparkles className="w-5 h-5" />
                       </>
                     )}
                   </button>
