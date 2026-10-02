@@ -125,3 +125,8 @@ export default function Sigil({ id, size = 48, className = '', title }: SigilPro
 
 /** All known archetype ids, for iteration. */
 export const SIGIL_IDS = Object.keys(SIGILS);
+
+/** Raw sigil geometry, for canvas renderers (e.g. EmblemCanvas). */
+export function getSigilDef(id: string): SigilDef {
+  return SIGILS[id] ?? FALLBACK;
+}

@@ -21,7 +21,7 @@ import {
 import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import OracleDraw from '../components/OracleDraw';
-import Sigil from '../components/Sigil';
+import EmblemCanvas from '../components/EmblemCanvas';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
@@ -525,7 +525,7 @@ export default function LandingPage() {
                   )}
                 </div>
                 <div className="text-iris-300 my-3">
-                  <Sigil id={a.id} size={56} title={`${a.name} constellation sigil`} />
+                  <EmblemCanvas id={a.id} size={56} title={`${a.name} constellation sigil`} />
                 </div>
                 <h3 className="font-semibold text-lg mb-1 text-slate-100">{a.name}</h3>
                 <p className="text-xs text-slate-500 leading-relaxed">{a.tagline}</p>

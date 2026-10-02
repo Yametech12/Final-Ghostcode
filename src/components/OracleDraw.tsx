@@ -1,7 +1,7 @@
 import { useCallback, useRef, useState } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
 import { Sparkles, RotateCcw } from 'lucide-react';
-import Sigil from './Sigil';
+import EmblemCanvas from './EmblemCanvas';
 
 /**
  * OracleDraw — the landing hero's signature interaction.
@@ -71,7 +71,7 @@ export default function OracleDraw() {
               style={{ perspective: 800 }}
             >
               <div className="text-iris-300 mb-4">
-                <Sigil id={card.id} size={88} title={`${card.name} sigil`} />
+                <EmblemCanvas id={card.id} size={88} title={`${card.name} sigil`} />
               </div>
               <div className="font-mono text-[10px] tracking-[0.3em] text-iris-300 mb-2">
                 {card.id}
@@ -100,7 +100,7 @@ export default function OracleDraw() {
               className="flex flex-col items-center text-center px-4"
             >
               <div className="text-iris-300/60 mb-4">
-                <Sigil id="TDI" size={72} title="Unrevealed sigil" className="opacity-40" />
+                <EmblemCanvas id="TDI" size={72} title="Unrevealed sigil" className="opacity-40" />
               </div>
               <p className="text-sm text-slate-400 leading-relaxed max-w-[30ch]">
                 Eight archetypes chart the field. Draw a card and meet the first one the

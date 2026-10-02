@@ -9,6 +9,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import Sigil, { SIGIL_IDS } from '../components/Sigil';
+import EmblemCanvas from '../components/EmblemCanvas';
 import OracleDraw from '../components/OracleDraw';
 import ConstellationField from '../components/ConstellationField';
 
@@ -92,6 +93,76 @@ describe('OracleDraw', () => {
       expect(text).not.toBe(prev);
       prev = text;
     }
+  });
+});
+
+describe('EmblemCanvas', () => {
+  it('renders a distinct canvas emblem for each of the 8 archetype ids', () => {
+    const { container, unmount } = render(
+      <>
+        {SIGIL_IDS.map((id) => (
+          <EmblemCanvas key={id} id={id} />
+        ))}
+      </>
+    );
+    const canvases = container.querySelectorAll('canvas.emblem-canvas');
+    expect(canvases).toHaveLength(8);
+    // Each canvas must carry its distinct sigil id + accessible label.
+    const ids = new Set(
+      Array.from(canvases).map((c) => c.getAttribute('data-sigil-id'))
+    );
+    expect(ids.size).toBe(8);
+    expect(SIGIL_IDS.every((id) => ids.has(id))).toBe(true);
+    unmount();
+  });
+
+  it('falls back gracefully for unknown ids and stays accessible', () => {
+    render(<EmblemCanvas id="UNKNOWN" />);
+    expect(
+      screen.getByRole('img', { name: /archetype sigil unknown/i })
+    ).toBeInTheDocument();
+  });
+
+  it('respects prefers-reduced-motion with a static frame', () => {
+    // Mock matchMedia to report reduced-motion.
+    const origMatchMedia = window.matchMedia;
+    window.matchMedia = vi.fn().mockImplementation((query: string) => ({
+      matches: query === '(prefers-reduced-motion: reduce)',
+      media: query,
+      onchange: null,
+      addListener: vi.fn(),
+      removeListener: vi.fn(),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      dispatchEvent: vi.fn(),
+    }));
+    // Mock 2d context so the draw path actually executes in jsdom.
+    const ctxMock = {
+      clearRect: vi.fn(),
+      save: vi.fn(),
+      restore: vi.fn(),
+      scale: vi.fn(),
+      translate: vi.fn(),
+      beginPath: vi.fn(),
+      arc: vi.fn(),
+      moveTo: vi.fn(),
+      lineTo: vi.fn(),
+      stroke: vi.fn(),
+      fill: vi.fn(),
+      setLineDash: vi.fn(),
+    };
+    const origGetContext = HTMLCanvasElement.prototype.getContext;
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue(ctxMock) as any;
+    const rafSpy = vi.spyOn(window, 'requestAnimationFrame');
+    const { unmount } = render(<EmblemCanvas id="TDI" />);
+    // Static frame drawn once…
+    expect(ctxMock.arc).toHaveBeenCalled();
+    // …but no rAF rotation loop scheduled.
+    expect(rafSpy).not.toHaveBeenCalled();
+    unmount();
+    rafSpy.mockRestore();
+    HTMLCanvasElement.prototype.getContext = origGetContext;
+    window.matchMedia = origMatchMedia;
   });
 });
 
