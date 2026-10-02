@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'motion/react';
-import Logo from './Logo';
+import LogoCanvas3D from './LogoCanvas3D';
 import LoadingScreen from './LoadingScreen';
 import '../styles/loading.css';
 
@@ -33,25 +32,17 @@ export function DelayedFallback({ children, delay = FALLBACK_DELAY_MS }: { child
 
 /**
  * Logo-only loading indicator — the single consistent loading visual
- * across the entire site. A centered logo with a subtle breathing animation.
- * No rings, no titles, no progress bars.
+ * across the entire site. The brand eye mark with a whisper of 3D
+ * and premium fixed-source lighting (subtle coin-flip rotation,
+ * 12s period). No rings, no titles, no progress bars.
  */
 function BreathingLogo({ size = "md" }: { size?: "sm" | "md" | "lg" }) {
-  const reduceMotion = useReducedMotion();
+  const sizePx = { sm: 20, md: 32, lg: 48 }[size];
 
   return (
-    <motion.div
-      aria-hidden="true"
-      initial={reduceMotion ? false : { opacity: 0.45 }}
-      animate={reduceMotion ? { opacity: 1 } : { opacity: [0.45, 1, 0.45] }}
-      transition={
-        reduceMotion
-          ? { duration: 0 }
-          : { duration: 2.4, repeat: Infinity, ease: 'easeInOut' }
-      }
-    >
-      <Logo size={size} />
-    </motion.div>
+    <div aria-hidden="true">
+      <LogoCanvas3D size={sizePx} />
+    </div>
   );
 }
 
