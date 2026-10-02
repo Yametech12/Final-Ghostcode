@@ -6,6 +6,7 @@ import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { getSupabaseErrorMessage, isValidEmail } from '../utils/errorHandling';
 import { sanitizeInput } from '../utils/validation';
 import Logo from '../components/Logo';
+import ConstellationField from '../components/ConstellationField';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
@@ -121,10 +122,14 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4">
-      <div className="w-full max-w-md bg-white/5 backdrop-blur-xl rounded-2xl p-8 border border-white/10 shadow-2xl">
-        <div className="flex justify-center mb-6">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4 overflow-hidden">
+      <ConstellationField density={0.7} />
+      <div className="relative z-10 w-full max-w-md oracle-frame grain backdrop-blur-xl p-8 shadow-2xl">
+        <div className="flex justify-center mb-4">
           <Logo size="xl" />
+        </div>
+        <div className="flex justify-center mb-4">
+          <span className="codex-label">Return to the observatory</span>
         </div>
         <h1 className="hero-headline auth-heading text-3xl text-slate-50 mb-2 text-center">Welcome Back</h1>
         <p className="text-slate-400 mb-6 text-center">Sign in to continue to Epimetheus</p>
@@ -223,7 +228,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid || isLocked}
-            className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -249,6 +254,7 @@ export default function LoginPage() {
             </div>
 
             <button
+              type="button"
               onClick={async () => {
                 setLoading(true);
                 setError('');

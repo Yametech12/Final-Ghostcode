@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield } from 'lucide-react';
 import Logo from '../components/Logo';
+import ConstellationField from '../components/ConstellationField';
 
 import { toast } from 'sonner';
 import { getSupabaseErrorMessage } from '../utils/errorHandling';
@@ -106,8 +107,9 @@ export default function RegisterPage() {
 
   if (verificationSent) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-mystic-950">
-        <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl text-center">
+      <div className="relative min-h-screen flex items-center justify-center p-4 bg-mystic-950 overflow-hidden">
+        <ConstellationField density={0.7} />
+        <div className="relative z-10 w-full max-w-md oracle-frame grain backdrop-blur-xl p-8 shadow-2xl text-center">
           <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-green-500/20 flex items-center justify-center">
             <CheckCircle className="w-10 h-10 text-green-500" />
           </div>
@@ -155,11 +157,15 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-mystic-950">
-      <div className="w-full max-w-md bg-mystic-900/50 backdrop-blur-xl border border-white/10 p-8 rounded-3xl shadow-2xl">
+    <div className="relative min-h-screen flex items-center justify-center p-4 bg-mystic-950 overflow-hidden">
+      <ConstellationField density={0.7} />
+      <div className="relative z-10 w-full max-w-md oracle-frame grain backdrop-blur-xl p-8 shadow-2xl">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <Logo size="xl" />
+          </div>
+          <div className="flex justify-center mb-4">
+            <span className="codex-label">Join the observatory</span>
           </div>
           <h1 className="hero-headline text-3xl text-slate-50 mb-2">Create Account</h1>
           <p className="text-slate-400">Join Epimetheus with email verification</p>
@@ -320,7 +326,7 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid}
-            className="w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all"
+            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-slate-600 disabled:cursor-not-allowed text-white font-bold py-3 rounded-xl transition-all"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
             {!loading && <ArrowRight className="w-5 h-5" />}
@@ -345,6 +351,7 @@ export default function RegisterPage() {
           </div>
 
             <button
+              type="button"
               onClick={async () => {
                 try {
                   setLoading(true);
