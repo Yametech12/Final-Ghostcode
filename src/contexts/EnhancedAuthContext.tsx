@@ -3,6 +3,7 @@ import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { serializeError } from '../utils/errorHandling';
 import { setUser as setSentryUser, clearUser as clearSentryUser } from '../lib/sentry';
+import { trackLogin, trackSignUp } from '../utils/analytics';
 import { toast } from 'sonner';
 
 // Extended User type with metadata properties
@@ -259,6 +260,18 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         setError(null);
         // Always clear loading on auth state change too
         setLoading(false);
+        // Attribute OAuth logins: the flag is set just before the Google
+        // redirect; on return SIGNED_IN fires and we log the login once.
+        if (event === 'SIGNED_IN') {
+          try {
+            if (sessionStorage.getItem('epimetheus_pending_oauth') === 'google') {
+              sessionStorage.removeItem('epimetheus_pending_oauth');
+              trackLogin('google');
+            }
+          } catch {
+            /* storage unavailable — skip, harmless */
+          }
+        }
         if (newSession?.user?.id) {
           // Set Sentry user context for error tracking
           setSentryUser({ id: newSession.user.id, email: newSession.user.email });
@@ -355,6 +368,7 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
     if (error) throw error;
     setSession(data.session);
     setUser(wrapUser(data.session.user));
+    trackLogin('email');
     if (data.session.user?.id) {
       await loadUserData(data.session.user.id);
     }
@@ -371,6 +385,8 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (error) throw error;
+
+      trackSignUp('email');
 
       // NOTE: no public.users .insert() here. Row provisioning happens in
       // the database via the on_auth_user_created trigger (20240101001100),
@@ -587,6 +603,13 @@ export function EnhancedAuthProvider({ children }: { children: ReactNode }) {
         }
       });
       if (error) throw error;
+      // Mark the pending OAuth login so the SIGNED_IN handler can attribute
+      // the login event to Google when the redirect returns.
+      try {
+        sessionStorage.setItem('epimetheus_pending_oauth', 'google');
+      } catch {
+        /* storage unavailable — login event will be skipped, harmless */
+      }
     } catch (error: any) {
       console.error('Google sign in error:', error);
 

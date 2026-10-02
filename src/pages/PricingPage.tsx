@@ -15,6 +15,7 @@ import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
+import { trackPlanCtaClick, trackWaitlistJoin } from '../utils/analytics';
 import { toast } from 'sonner';
 
 /**
@@ -204,6 +205,11 @@ export default function PricingPage() {
    * silently routing them somewhere meaningless.
    */
   const handleCTA = (plan: Plan) => {
+    // Funnel: pricing CTA clicked (anonymous params only).
+    trackPlanCtaClick(plan.tier, {
+      signedIn: isSignedIn,
+      intent: !isSignedIn && plan.tier !== 'free' ? plan.tier : undefined,
+    });
     // Logged-out users always go through registration first.
     if (!isSignedIn) {
       if (plan.tier === 'free') {
@@ -234,6 +240,7 @@ export default function PricingPage() {
     }
 
     // Upgrade path — Stripe checkout not yet live.
+    trackWaitlistJoin(plan.tier);
     toast.info('Paid checkout is launching soon. We will email you when it goes live.');
   };
 

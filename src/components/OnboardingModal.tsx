@@ -2,6 +2,11 @@ import { useState, useEffect } from 'react';
 import { X, ChevronRight, ChevronLeft, Target, Brain, Sparkles, MessageSquare, BookOpen, Zap } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
+import {
+  trackOnboardingStep,
+  trackOnboardingComplete,
+  trackOnboardingDismissed,
+} from '../utils/analytics';
 
 interface OnboardingStep {
   title: string;
@@ -105,11 +110,19 @@ export default function OnboardingModal() {
   const handleClose = () => {
     localStorage.setItem('hasSeenOnboarding', 'true');
     setIsOpen(false);
+    // Funnel: completed only if the user reached the final step.
+    if (step >= steps.length - 1) {
+      trackOnboardingComplete(steps.length);
+    } else {
+      trackOnboardingDismissed(step + 1, steps.length);
+    }
   };
 
   const handleNext = () => {
     if (step < steps.length - 1) {
-      setStep(step + 1);
+      const nextStep = step + 1;
+      setStep(nextStep);
+      trackOnboardingStep(nextStep + 1, steps.length);
     } else {
       handleClose();
     }
