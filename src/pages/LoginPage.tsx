@@ -283,7 +283,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center text-sm text-slate-400">
           Don't have an account?{' '}
-          <button onClick={() => navigate('/register')} className="text-accent-primary hover:underline">
+          <button type="button" onClick={() => navigate('/register')} className="text-accent-primary hover:underline">
             Create one
           </button>
         </div>

@@ -142,11 +142,11 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
             className="p-6 rounded-2xl bg-mystic-900/80 backdrop-blur-xl border border-white/10 shadow-2xl space-y-6"
           >
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="dec-target-type" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <Target className="w-4 h-4 text-accent-primary" />
                 Target Personality Type
               </label>
-              <select
+              <select id="dec-target-type"
                 value={typeId}
                 onChange={e => setTypeId(e.target.value as PersonalityType)}
                 className="w-full bg-mystic-800/50 border border-white/10 rounded-xl py-3 px-4 text-slate-200 focus:outline-none focus:border-accent-primary/50 focus:bg-mystic-800 transition-all appearance-none"
@@ -163,11 +163,11 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
             </div>
 
             <div className="space-y-2">
-              <label className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <label htmlFor="dec-message" className="text-xs font-mono text-slate-400 uppercase tracking-widest flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-accent-primary" />
                 Intercepted Message
               </label>
-              <textarea
+              <textarea id="dec-message"
                 ref={textareaRef}
                 value={input}
                 onChange={e => setInput(e.target.value)}
@@ -183,11 +183,11 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
             </div>
 
             <div className="flex gap-3">
-              <button
+              <button type="button"
                 onClick={handleAnalyze}
                 disabled={isLoading || !input.trim()}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold shadow-lg transition-all",
+                  "flex-1 flex items-center justify-center gap-2 py-4 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed shadow-lg transition-all",
                   isLoading || !input.trim()
                     ? "bg-mystic-800 text-slate-500 cursor-not-allowed"
                     : "accent-gradient text-white hover:scale-[1.02] active:scale-[0.98] shadow-accent-primary/20"
@@ -207,7 +207,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
               </button>
 
               {(analysis || error) && (
-                <button
+                <button type="button"
                   onClick={clearAnalysis}
                   className="px-4 py-4 rounded-xl bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all"
                   title="Clear analysis"
@@ -224,10 +224,10 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
             transition={{ delay: 0.1 }}
             className="p-6 rounded-2xl bg-accent-primary/5 border border-accent-primary/10"
           >
-            <h3 className="text-sm font-bold text-accent-primary flex items-center gap-2 mb-3">
+            <h2 className="text-sm font-bold text-accent-primary flex items-center gap-2 mb-3">
               <Shield className="w-4 h-4" />
               Strategic Intelligence
-            </h3>
+            </h2>
             <div className="space-y-2 text-xs text-slate-400">
               <p>• <strong>ETS Stages:</strong> Always identify Intrigue/Arousal/Comfort/Devotion positioning</p>
               <p>• <strong>Subtext:</strong> Look beyond words to underlying emotional needs</p>
@@ -263,7 +263,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                       Analysis Complete
                     </span>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={copyAnalysis}
                     className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all text-sm"
                   >
@@ -301,7 +301,7 @@ Example: 'Hey, I'm busy this week but maybe we can meet up sometime?'"
                     <AlertTriangle className="w-12 h-12 text-red-500 mb-4" />
                     <h3 className="text-lg font-bold text-red-400 mb-2">Analysis Failed</h3>
                     <p className="text-sm text-slate-400 mb-4">{error}</p>
-                    <button
+                    <button type="button"
                       onClick={clearAnalysis}
                       className="px-4 py-2 rounded-lg bg-mystic-800 text-slate-400 hover:text-white hover:bg-mystic-700 transition-all"
                     >

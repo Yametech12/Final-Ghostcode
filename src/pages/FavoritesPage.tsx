@@ -69,7 +69,7 @@ export default function FavoritesPage() {
           {categories.map((cat) => {
             const isActive = selectedCategory === cat;
             return (
-              <button
+              <button type="button"
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
                 className={cn(
@@ -115,7 +115,7 @@ export default function FavoritesPage() {
           <p className="text-slate-500 mb-6">
             Try selecting a different category or view all favorites.
           </p>
-          <button
+          <button type="button"
             onClick={() => setSelectedCategory('All')}
             className="px-6 py-3 bg-white/5 border border-slate-700/30 hover:bg-white/8 hover:border-accent-primary/20 text-slate-100 rounded-xl transition-all"
           >
@@ -158,7 +158,7 @@ export default function FavoritesPage() {
                   </Link>
 
                   <div className="flex items-center gap-1 shrink-0">
-                    <button
+                    <button type="button"
                       onClick={() =>
                         toggleFavorite(fav.contentId, fav.contentType, fav.title).catch((err) =>
                           console.error('Unhandled error in toggleFavorite:', err)
