@@ -470,6 +470,8 @@ export default function EditProfileModal({ isOpen, onClose }: EditProfileModalPr
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                     <input
                       type="tel"
+                      inputMode="tel"
+                      autoComplete="tel"
                       value={formData.phone}
                       onChange={(e) => handleFieldChange('phone', e.target.value)}
                       className={`w-full bg-white/5 border rounded-xl pl-11 pr-4 py-3 text-white focus:outline-none transition-colors ${

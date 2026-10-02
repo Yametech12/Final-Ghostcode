@@ -85,13 +85,16 @@ export default function ConstellationField({
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
       cachedRect = rect;
-      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      // Mobile (<=640px): cap DPR at 1.5 and reduce star count for battery/GPU.
+      const isMobile = typeof window !== 'undefined' && window.innerWidth <= 640;
+      const dpr = Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2);
       w = Math.max(1, Math.floor(rect.width * dpr));
       h = Math.max(1, Math.floor(rect.height * dpr));
       canvas.width = w;
       canvas.height = h;
       const area = rect.width * rect.height;
-      const count = Math.round(Math.min(220, Math.max(40, (area / 9000) * density)));
+      const maxStars = isMobile ? 120 : 220;
+      const count = Math.round(Math.min(maxStars, Math.max(40, (area / 9000) * density)));
       stars = buildStars(count);
     };
 

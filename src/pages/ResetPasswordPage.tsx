@@ -161,6 +161,7 @@ export default function ResetPasswordPage() {
                     <input
                       id="reset-email"
                       type="email"
+                      autoComplete="email"
                       value={email}
                       onChange={(e) => {
                         const sanitized = sanitizeInput(e.target.value);

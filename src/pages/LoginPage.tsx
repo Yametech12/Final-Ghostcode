@@ -143,6 +143,7 @@ export default function LoginPage() {
               <input
                 id="login-email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => {
                   const sanitized = sanitizeInput(e.target.value);

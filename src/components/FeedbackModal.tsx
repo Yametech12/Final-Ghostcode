@@ -179,6 +179,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 <label className="text-xs font-bold text-slate-500 uppercase tracking-widest">Email (Optional)</label>
                 <input
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
