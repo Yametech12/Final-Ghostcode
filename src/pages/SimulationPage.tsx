@@ -7,6 +7,7 @@ import { cn } from '../lib/utils';
 import ReactMarkdown from 'react-markdown';
 import { toast } from 'sonner';
 import { chatCompletion, stripThinking } from '../lib/ai';
+import { trackSimulationStarted } from '../utils/analytics';
 
 interface Message {
   id: string;
@@ -94,6 +95,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
       ]);
 
       toast.success(`Simulation started with ${selectedType.name}!`);
+      trackSimulationStarted(selectedType.id);
 
     } catch (error: any) {
       console.error("Simulation Error:", error);
