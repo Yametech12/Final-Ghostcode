@@ -1,5 +1,6 @@
 
 import { ReactLenis } from 'lenis/react';
+import { MotionConfig } from 'motion/react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import ScrollToTop from './components/layout/ScrollToTop';
 import ErrorBoundary from './components/ErrorBoundary';
@@ -34,18 +35,21 @@ function AppContent() {
 export default function App() {
   return (
     <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <LanguageProvider>
-          <ThemeProvider>
-            <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
-              <ScrollToTop />
-              <Suspense fallback={<LoadingScreen />}>
-                <AppContent />
-              </Suspense>
-            </ReactLenis>
-          </ThemeProvider>
-        </LanguageProvider>
-      </QueryClientProvider>
+      {/* Honor OS reduced-motion for ALL framer-motion JS animations site-wide */}
+      <MotionConfig reducedMotion="user">
+        <QueryClientProvider client={queryClient}>
+          <LanguageProvider>
+            <ThemeProvider>
+              <ReactLenis root options={{ lerp: 0.1, duration: 1.5, smoothWheel: true }}>
+                <ScrollToTop />
+                <Suspense fallback={<LoadingScreen />}>
+                  <AppContent />
+                </Suspense>
+              </ReactLenis>
+            </ThemeProvider>
+          </LanguageProvider>
+        </QueryClientProvider>
+      </MotionConfig>
     </ErrorBoundary>
   );
 }

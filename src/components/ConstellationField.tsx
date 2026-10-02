@@ -84,6 +84,7 @@ export default function ConstellationField({
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
+      cachedRect = rect;
       const dpr = Math.min(window.devicePixelRatio || 1, 2);
       w = Math.max(1, Math.floor(rect.width * dpr));
       h = Math.max(1, Math.floor(rect.height * dpr));
@@ -93,6 +94,21 @@ export default function ConstellationField({
       const count = Math.round(Math.min(220, Math.max(40, (area / 9000) * density)));
       stars = buildStars(count);
     };
+
+    // Debounce resize: rebuilding the star field + reallocating the canvas
+    // backing store on every raw resize event causes visible re-scatter pops
+    // (mobile URL-bar show/hide fires resize repeatedly).
+    let resizeTimer: ReturnType<typeof setTimeout> | null = null;
+    const onResize = () => {
+      if (resizeTimer) clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        resizeTimer = null;
+        resize();
+      }, 180);
+    };
+
+    // Cached layout rect (avoids a forced layout read on every mousemove).
+    let cachedRect: DOMRect | null = null;
 
     const draw = (t: number) => {
       ctx.clearRect(0, 0, w, h);
@@ -105,15 +121,19 @@ export default function ConstellationField({
       const py = parallaxY * 10;
 
       // Constellation lines — join near neighbors with faint iris strokes.
+      // Squared-distance culling: skip Math.hypot for the ~99% of pairs
+      // that are too far apart (24k pairs/frame at max density otherwise).
       ctx.lineWidth = Math.max(0.5, w / 1600);
+      const linkSq = linkDistance * linkDistance;
       for (let i = 0; i < stars.length; i++) {
         const a = stars[i];
         for (let j = i + 1; j < stars.length; j++) {
           const b = stars[j];
           const dx = a.x - b.x;
           const dy = a.y - b.y;
-          const dist = Math.hypot(dx, dy);
-          if (dist < linkDistance) {
+          const distSq = dx * dx + dy * dy;
+          if (distSq < linkSq) {
+            const dist = Math.sqrt(distSq);
             const alpha = (1 - dist / linkDistance) * 0.16;
             ctx.strokeStyle = `rgba(139, 124, 246, ${alpha.toFixed(3)})`;
             ctx.beginPath();
@@ -169,7 +189,7 @@ export default function ConstellationField({
     };
 
     const onMouse = (e: MouseEvent) => {
-      const rect = canvas.getBoundingClientRect();
+      const rect = cachedRect ?? canvas.getBoundingClientRect();
       if (rect.width === 0) return;
       mouseX = (e.clientX - rect.left) / rect.width;
       mouseY = (e.clientY - rect.top) / rect.height;
@@ -189,7 +209,7 @@ export default function ConstellationField({
     );
 
     resize();
-    window.addEventListener('resize', resize);
+    window.addEventListener('resize', onResize);
     window.addEventListener('mousemove', onMouse, { passive: true });
     document.addEventListener('visibilitychange', onVis);
     io.observe(canvas);
@@ -198,7 +218,8 @@ export default function ConstellationField({
     return () => {
       stop();
       io.disconnect();
-      window.removeEventListener('resize', resize);
+      if (resizeTimer) clearTimeout(resizeTimer);
+      window.removeEventListener('resize', onResize);
       window.removeEventListener('mousemove', onMouse);
       document.removeEventListener('visibilitychange', onVis);
     };

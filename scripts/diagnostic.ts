@@ -54,7 +54,8 @@ async function runDiagnostics() {
   if (!supabaseServiceKey) {
     log('warning', 'SUPABASE_SERVICE_ROLE_KEY is not set (required for backend operations)');
   } else {
-    log('success', `SUPABASE_SERVICE_ROLE_KEY: ${supabaseServiceKey.substring(0, 20)}...`);
+    // Never print key material — set/unset status only (CI logs must not leak prefixes).
+    log('success', 'SUPABASE_SERVICE_ROLE_KEY is set');
   }
 
   // Check 2: Client Initialization

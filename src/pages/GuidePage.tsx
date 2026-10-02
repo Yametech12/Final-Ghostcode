@@ -114,7 +114,9 @@ export default function GuidePage() {
             <div className="prose prose-invert prose-accent max-w-none">
               {activeSection.content.split('\n').map((line, i) => {
                 if (line.startsWith('# ')) {
-                  return <h1 key={i} className="text-3xl font-bold text-white mt-8 mb-4"><GlossaryText text={line.substring(2)} /></h1>;
+                  // Markdown top-level headings render as h2 — the page already
+                  // has its own h1 ("The Strategy Guide").
+                  return <h2 key={i} className="text-3xl font-bold text-white mt-8 mb-4"><GlossaryText text={line.substring(2)} /></h2>;
                 }
                 if (line.startsWith('## ')) {
                   return <h2 key={i} className="text-2xl font-bold text-accent-primary mt-8 mb-4"><GlossaryText text={line.substring(3)} /></h2>;
