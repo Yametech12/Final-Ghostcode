@@ -110,7 +110,7 @@ export function CalibrationWizard({
           }}
           className="space-y-6 min-h-[300px]"
         >
-          <h3 className="text-xl font-medium text-white leading-relaxed">
+          <h3 className="text-xl font-medium text-slate-50 leading-relaxed">
             {current.text}
           </h3>
 
@@ -174,7 +174,7 @@ export function CalibrationWizard({
               onChange={(e) => updateAnswer(e.target.value)}
               placeholder="Type your answer here..."
               aria-label={current.text}
-              className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-400 focus:outline-none focus:border-accent-primary resize-none"
+              className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-3 text-slate-100 placeholder-slate-400 focus:outline-none focus:border-accent-primary resize-none"
               rows={4}
             />
           )}

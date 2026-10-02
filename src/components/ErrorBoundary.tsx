@@ -97,7 +97,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
             
             <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-white">System Malfunction</h2>
+              <h2 className="text-2xl font-bold text-slate-50">System Malfunction</h2>
               <p className="text-slate-400">
                 {isFirestoreError 
                   ? "We encountered an issue communicating with the secure database."
@@ -106,7 +106,7 @@ class ErrorBoundary extends Component<Props, State> {
             </div>
 
             <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left overflow-hidden">
-              <p className="text-xs font-mono text-red-400 break-words">
+              <p className="text-xs font-mono text-status-error break-words">
                 {errorMessage}
               </p>
               {isFirestoreError && firestoreDetails && (
@@ -119,14 +119,14 @@ class ErrorBoundary extends Component<Props, State> {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <button type="button"
                 onClick={this.handleReset}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-white font-bold hover:bg-white/10 transition-all"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all"
               >
                 <RotateCcw className="w-4 h-4" />
                 Retry
               </button>
               <button type="button"
                 onClick={this.handleGoHome}
-                className="flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-white font-bold hover:scale-[1.02] transition-all"
+                className="flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-mystic-950 font-bold hover:scale-[1.02] transition-all"
               >
                 <Home className="w-4 h-4" />
                 Home

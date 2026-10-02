@@ -78,13 +78,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
   const getTypeColor = (type: string, isActive: boolean) => {
     if (!isActive) return 'bg-white/5 border-white/10 text-slate-400 hover:bg-white/10 hover:border-white/20';
     const colors: Record<string, string> = {
-      bug: 'bg-red-500/20 border-red-500/50 text-red-400',
-      feature: 'bg-purple-500/20 border-purple-500/50 text-purple-400',
-      praise: 'bg-pink-500/20 border-pink-500/50 text-pink-400',
-      suggestion: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-400',
-      content: 'bg-blue-500/20 border-blue-500/50 text-blue-400',
-      ui: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-400',
-      performance: 'bg-orange-500/20 border-orange-500/50 text-orange-400',
+      bug: 'bg-red-500/20 border-red-500/50 text-red-600',
+      feature: 'bg-purple-500/20 border-purple-500/50 text-purple-600',
+      praise: 'bg-pink-500/20 border-pink-500/50 text-pink-600',
+      suggestion: 'bg-yellow-500/20 border-yellow-500/50 text-yellow-600',
+      content: 'bg-blue-500/20 border-blue-500/50 text-blue-700',
+      ui: 'bg-cyan-500/20 border-cyan-500/50 text-cyan-700',
+      performance: 'bg-orange-500/20 border-orange-500/50 text-orange-600',
     };
     return colors[type] || 'bg-accent-primary/20 border-accent-primary/50 text-accent-primary';
   };
@@ -119,18 +119,18 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-accent-primary to-accent-secondary flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-white" />
+            <div className="w-10 h-10 rounded-xl accent-gradient text-mystic-950 flex items-center justify-center">
+              <MessageSquare className="w-5 h-5" />
             </div>
             <div>
-              <h2 id="feedback-modal-title" className="text-xl font-bold text-white">Send Feedback</h2>
+              <h2 id="feedback-modal-title" className="text-xl font-bold text-slate-50">Send Feedback</h2>
               <p className="text-xs text-slate-500">Help us improve EPIMETHEUS</p>
             </div>
           </div>
           <button
             onClick={onClose}
             aria-label="Close feedback dialog"
-            className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-white transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2 rounded-xl hover:bg-white/10 text-slate-400 hover:text-slate-100 transition-all min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <X className="w-5 h-5" />
           </button>
@@ -139,9 +139,9 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
         {isSuccess ? (
           <div className="p-10 text-center space-y-5">
             <div className="w-20 h-20 rounded-full bg-green-500/20 flex items-center justify-center mx-auto animate-pulse">
-              <CheckCircle2 className="w-10 h-10 text-green-500" />
+              <CheckCircle2 className="w-10 h-10 text-emerald-600" />
             </div>
-            <h3 className="text-2xl font-bold text-white">Thank You!</h3>
+            <h3 className="text-2xl font-bold text-slate-50">Thank You!</h3>
             <p className="text-slate-400 max-w-xs mx-auto">Your feedback has been received and will help make EPIMETHEUS better.</p>
           </div>
         ) : (
@@ -169,7 +169,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Tell us what's on your mind, suggest a feature, or report an issue..."
-                className="w-full h-36 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50 transition-all resize-none"
+                className="w-full h-36 bg-white/5 border border-white/10 rounded-xl p-4 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50 transition-all resize-none"
                 required
               />
             </div>
@@ -182,13 +182,13 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50 transition-all"
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-accent-primary/50 focus:border-accent-primary/50 transition-all"
                 />
               </div>
             )}
 
             {error && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 text-sm">
                 {error}
               </div>
             )}
@@ -196,7 +196,7 @@ export default function FeedbackModal({ isOpen, onClose }: FeedbackModalProps) {
             <button
               type="submit"
               disabled={isSubmitting || !message.trim()}
-              className="w-full py-4 rounded-xl bg-gradient-to-r from-accent-primary to-accent-secondary text-white font-bold shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
+              className="w-full py-4 rounded-xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/25 hover:shadow-accent-primary/40 hover:scale-[1.01] active:scale-[0.99] transition-all disabled:opacity-50 disabled:hover:scale-100 flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <Loader2 className="w-5 h-5 animate-spin" />

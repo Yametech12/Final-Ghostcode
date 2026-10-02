@@ -38,7 +38,7 @@ export default function LogoutButton({
 
   const variantClasses = {
     default: 'bg-white/10 hover:bg-white/20 text-white',
-    destructive: 'bg-red-500/20 hover:bg-red-500/30 text-red-400 border border-red-500/20',
+    destructive: 'bg-red-500/20 hover:bg-red-500/30 text-status-error border border-red-500/20',
     ghost: 'hover:bg-white/5 text-slate-300'
   };
 
