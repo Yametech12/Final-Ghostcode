@@ -1,1 +1,141 @@
-aW1wb3J0IHsgdXNlQ2FsbGJhY2ssIHVzZVJlZiwgdXNlU3RhdGUgfSBmcm9tICdyZWFjdCc7CmltcG9ydCB7IG1vdGlvbiwgQW5pbWF0ZVByZXNlbmNlLCB1c2VSZWR1Y2VkTW90aW9uIH0gZnJvbSAnbW90aW9uL3JlYWN0JzsKaW1wb3J0IHsgU3BhcmtsZXMsIFJvdGF0ZUNjdyB9IGZyb20gJ2x1Y2lkZS1yZWFjdCc7CmltcG9ydCBTaWdpbCBmcm9tICcuL1NpZ2lsJzsKCi8qKgogKiBPcmFjbGVEcmF3IOKAlCB0aGUgbGFuZGluZyBoZXJvJ3Mgc2lnbmF0dXJlIGludGVyYWN0aW9uLgogKgogKiAiQ29uc3VsdCB0aGUgb3JhY2xlIjogdGhlIHZpc2l0b3IgZHJhd3Mgb25lIG9mIHRoZSA4IGFyY2hldHlwZSBjYXJkcwogKiBhbmQgc2VlcyBpdHMgY29uc3RlbGxhdGlvbiBzaWdpbCwgbmFtZSwgYW5kIHRhZ2xpbmUuIEl0IHR1cm5zIHRoZQogKiBhYnN0cmFjdCBwcm9taXNlICgicmVhZCBwZW9wbGUgbGlrZSBjb25zdGVsbGF0aW9ucyIpIGludG8gc29tZXRoaW5nCiAqIHRoZSB2aXNpdG9yIHRvdWNoZXMgaW4gdGhlIGZpcnN0IDEwIHNlY29uZHMuCiAqCiAqIC0gTm8gZHJhdyBpcyBldmVyICJ3cm9uZyI6IGV2ZXJ5IGNhcmQgaXMgYSByZWFsIGFyY2hldHlwZSBmcm9tIHRoZQogKiAgIGZyYW1ld29yaywgd2l0aCBhY2N1cmF0ZSBuYW1lICsgdGFnbGluZSBjb3B5LgogKiAtIFJlZHVjZWQgbW90aW9uOiBpbnN0YW50IHN3YXAsIG5vIGZsaXAgYW5pbWF0aW9uLgogKiAtIEtleWJvYXJkIGFjY2Vzc2libGU6IHJlYWwgPGJ1dHRvbj5zLCBhcmlhLWxpdmUgYW5ub3VuY2VzIHRoZSBkcmF3LgogKi8KCmludGVyZmFjZSBDYXJkIHsKICBpZDogc3RyaW5nOwogIG5hbWU6IHN0cmluZzsKICB0YWdsaW5lOiBzdHJpbmc7CiAgZnJlZTogYm9vbGVhbjsKfQoKY29uc3QgQ0FSRFM6IENhcmRbXSA9IFsKICB7IGlkOiAnVERJJywgbmFtZTogJ1RoZSBQbGF5ZXR0ZScsIHRhZ2xpbmU6ICdNeXN0ZXJpb3VzLCBzZW5zaXRpdmUgYmVuZWF0aCBhIGNvb2wgZXh0ZXJpb3IuJywgZnJlZTogdHJ1ZSB9LAogIHsgaWQ6ICdUSkknLCBuYW1lOiAnVGhlIFNvY2lhbCBCdXR0ZXJmbHknLCB0YWdsaW5lOiAnRW5lcmdldGljLCBlbnRpY2luZywgYWx3YXlzIGNlbnRlciBvZiBhdHRlbnRpb24uJywgZnJlZTogdHJ1ZSB9LAogIHsgaWQ6ICdOREknLCBuYW1lOiAnVGhlIEhvcGVmdWwgUm9tYW50aWMnLCB0YWdsaW5lOiAnT2xkLWZhc2hpb25lZCwgc2VudGltZW50YWwsIGxvb2tpbmcgZm9yIFRoZSBPbmUuJywgZnJlZTogZmFsc2UgfSwKICB7IGlkOiAnTkpJJywgbmFtZTogJ1RoZSBDaW5kZXJlbGxhJywgdGFnbGluZTogJ0NsYXNzeSwgcmVmaW5lZCwgd2FpdGluZyB0byBiZSBzd2VwdCBhd2F5LicsIGZyZWU6IGZhbHNlIH0sCiAgeyBpZDogJ1REUicsIG5hbWU6ICdUaGUgUHJpdmF0ZSBEYW5jZXInLCB0YWdsaW5lOiAnTXlzdGVyaW91cyBzaGVsbCwgcGFzc2lvbmF0ZSBnaXZlciBpbnNpZGUuJywgZnJlZTogZmFsc2UgfSwKICB7IGlkOiAnVEpSJywgbmFtZTogJ1RoZSBTZWR1Y3RyZXNzJywgdGFnbGluZTogJ0NvbmZpZGVudCwgc2V4dWFsLCBpbnRpbWlkYXRpbmdseSBzdHJvbmcuJywgZnJlZTogZmFsc2UgfSwKICB7IGlkOiAnTkRSJywgbmFtZTogJ1RoZSBDb25ub2lzc2V1cicsIHRhZ2xpbmU6ICdTZWxlY3RpdmUsIHByYWN0aWNhbCwgY2F1dGlvdXMgZ2l2ZXIuJywgZnJlZTogZmFsc2UgfSwKICB7IGlkOiAnTkpSJywgbmFtZTogJ1RoZSBNb2Rlcm4gV29tYW4nLCB0YWdsaW5lOiAnSW5kZXBlbmRlbnQsIGxldmVsLWhlYWRlZCwgaGVhbHRoeSBpbiBsb3ZlLicsIGZyZWU6IGZhbHNlIH0sCl07CgpleHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBPcmFjbGVEcmF3KCkgewogIGNvbnN0IHJlZHVjZU1vdGlvbiA9IHVzZVJlZHVjZWRNb3Rpb24oKTsKICBjb25zdCBbY2FyZCwgc2V0Q2FyZF0gPSB1c2VTdGF0ZTxDYXJkIHwgbnVsbD4obnVsbCk7CiAgY29uc3QgW2RyYXdzLCBzZXREcmF3c10gPSB1c2VTdGF0ZSgwKTsKICBjb25zdCBsYXN0SW5kZXggPSB1c2VSZWYoLTEpOwoKICBjb25zdCBkcmF3ID0gdXNlQ2FsbGJhY2soKCkgPT4gewogICAgLy8gQXZvaWQgcmVwZWF0aW5nIHRoZSBzYW1lIGNhcmQgdHdpY2UgaW4gYSByb3cuCiAgICBsZXQgaSA9IE1hdGguZmxvb3IoTWF0aC5yYW5kb20oKSAqIENBUkRTLmxlbmd0aCk7CiAgICBpZiAoQ0FSRFMubGVuZ3RoID4gMSkgewogICAgICB3aGlsZSAoaSA9PT0gbGFzdEluZGV4LmN1cnJlbnQpIGkgPSBNYXRoLmZsb29yKE1hdGgucmFuZG9tKCkgKiBDQVJEUy5sZW5ndGgpOwogICAgfQogICAgbGFzdEluZGV4LmN1cnJlbnQgPSBpOwogICAgc2V0Q2FyZChDQVJEU1tpXSk7CiAgICBzZXREcmF3cygoZCkgPT4gZCArIDEpOwogIH0sIFtdKTsKCiAgcmV0dXJuICgKICAgIDxkaXYgY2xhc3NOYW1lPSJvcmFjbGUtZnJhbWUgZ3JhaW4gcmVsYXRpdmUgb3ZlcmZsb3ctaGlkZGVuIHAtNiBzbTpwLTggdGV4dC1sZWZ0IHctZnVsbCBtYXgtdy1zbSBteC1hdXRvIj4KICAgICAgPGRpdiBjbGFzc05hbWU9ImNvZGV4LWxhYmVsIG1iLTUganVzdGlmeS1jZW50ZXIgdy1mdWxsIiBhcmlhLWhpZGRlbj0idHJ1ZSI+CiAgICAgICAgVGhlIE9yYWNsZQogICAgICA8L2Rpdj4KCiAgICAgIDxkaXYgY2xhc3NOYW1lPSJtaW4taC1bMjQwcHhdIGZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIiBhcmlhLWxpdmU9InBvbGl0ZSI+CiAgICAgICAgPEFuaW1hdGVQcmVzZW5jZSBtb2RlPSJ3YWl0Ij4KICAgICAgICAgIHtjYXJkID8gKAogICAgICAgICAgICA8bW90aW9uLmRpdgogICAgICAgICAgICAgIGtleT17YCR7Y2FyZC5pZH0tJHtkcmF3c31gfQogICAgICAgICAgICAgIGluaXRpYWw9e3JlZHVjZU1vdGlvbiA/IHsgb3BhY2l0eTogMCB9IDogeyBvcGFjaXR5OiAwLCByb3RhdGVZOiA3MCwgc2NhbGU6IDAuOTQgfX0KICAgICAgICAgICAgICBhbmltYXRlPXtyZWR1Y2VNb3Rpb24gPyB7IG9wYWNpdHk6IDEgfSA6IHsgb3BhY2l0eTogMSwgcm90YXRlWTogMCwgc2NhbGU6IDEgfX0KICAgICAgICAgICAgICBleGl0PXtyZWR1Y2VNb3Rpb24gPyB7IG9wYWNpdHk6IDAgfSA6IHsgb3BhY2l0eTogMCwgcm90YXRlWTogLTcwLCBzY2FsZTogMC45NCB9fQogICAgICAgICAgICAgIHRyYW5zaXRpb249e3sgZHVyYXRpb246IHJlZHVjZU1vdGlvbiA/IDAuMTUgOiAwLjQ1LCBlYXNlOiAnZWFzZU91dCcgfX0KICAgICAgICAgICAgICBjbGFzc05hbWU9ImZsZXggZmxleC1jb2wgaXRlbXMtY2VudGVyIHRleHQtY2VudGVyIgogICAgICAgICAgICAgIHN0eWxlPXt7IHBlcnNwZWN0aXZlOiA4MDAgfX0KICAgICAgICAgICAgPgogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJ0ZXh0LWlyaXMtMzAwIG1iLTQiPgogICAgICAgICAgICAgICAgPFNpZ2lsIGlkPXtjYXJkLmlkfSBzaXplPXs4OH0gdGl0bGU9e2Ake2NhcmQubmFtZX0gc2lnaWxgfSAvPgogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPSJmb250LW1vbm8gdGV4dC1bMTBweF0gdHJhY2tpbmctWzAuM2VtXSB0ZXh0LWlyaXMtMzAwIG1iLTIiPgogICAgICAgICAgICAgICAge2NhcmQuaWR9CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9Imhlcm8taGVhZGxpbmUgdGV4dC0yeGwgdGV4dC1zbGF0ZS01MCBtYi0yIj57Y2FyZC5uYW1lfTwvZGl2PgogICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT0idGV4dC1zbSB0ZXh0LXNsYXRlLTQwMCBsZWFkaW5nLXJlbGF4ZWQgbWF4LXctWzI2Y2hdIj57Y2FyZC50YWdsaW5lfTwvcD4KICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT0ibXQtNCI+CiAgICAgICAgICAgICAgICB7Y2FyZC5mcmVlID8gKAogICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9ImlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBweC0yLjUgcHktMSByb3VuZGVkLWZ1bGwgYmctc3RhdHVzLXN1Y2Nlc3MvMTAgYm9yZGVyIGJvcmRlci1zdGF0dXMtc3VjY2Vzcy8yMCB0ZXh0LVsxMHB4XSBmb250LW1vbm8gdHJhY2tpbmctWzAuMmVtXSB1cHBlcmNhc2UgdGV4dC1zdGF0dXMtc3VjY2VzcyI+CiAgICAgICAgICAgICAgICAgICAgRnJlZSBwcm9maWxlCiAgICAgICAgICAgICAgICAgIDwvc3Bhbj4KICAgICAgICAgICAgICAgICkgOiAoCiAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT0iaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIHB4LTIuNSBweS0xIHJvdW5kZWQtZnVsbCBiZy1pcmlzLTUwMC8xMCBib3JkZXIgYm9yZGVyLWlyaXMtNTAwLzI1IHRleHQtWzEwcHhdIGZvbnQtbW9ubyB0cmFja2luZy1bMC4yZW1dIHVwcGVyY2FzZSB0ZXh0LWlyaXMtMzAwIj4KICAgICAgICAgICAgICAgICAgICBTdHJhdGVnaXN0IHVubG9jawogICAgICAgICAgICAgICAgICA8L3NwYW4+CiAgICAgICAgICAgICAgICApfQogICAgICAgICAgICAgIDwvZGl2PgogICAgICAgICAgICA8L21vdGlvbi5kaXY+CiAgICAgICAgICApIDogKAogICAgICAgICAgICA8bW90aW9uLmRpdgogICAgICAgICAgICAgIGtleT0iZW1wdHkiCiAgICAgICAgICAgICAgaW5pdGlhbD17eyBvcGFjaXR5OiAwIH19CiAgICAgICAgICAgICAgYW5pbWF0ZT17eyBvcGFjaXR5OiAxIH19CiAgICAgICAgICAgICAgZXhpdD17eyBvcGFjaXR5OiAwIH19CiAgICAgICAgICAgICAgdHJhbnNpdGlvbj17eyBkdXJhdGlvbjogMC4zIH19CiAgICAgICAgICAgICAgY2xhc3NOYW1lPSJmbGV4IGZsZXgtY29sIGl0ZW1zLWNlbnRlciB0ZXh0LWNlbnRlciBweC00IgogICAgICAgICAgICA+CiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9InRleHQtaXJpcy0zMDAvNjAgbWItNCI+CiAgICAgICAgICAgICAgICA8U2lnaWwgaWQ9IlRESSIgc2l6ZT17NzJ9IHRpdGxlPSJVbnJldmVhbGVkIHNpZ2lsIiBjbGFzc05hbWU9Im9wYWNpdHktNDAiIC8+CiAgICAgICAgICAgICAgPC9kaXY+CiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPSJ0ZXh0LXNtIHRleHQtc2xhdGUtNDAwIGxlYWRpbmctcmVsYXhlZCBtYXgtdy1bMzBjaF0iPgogICAgICAgICAgICAgICAgRWlnaHQgYXJjaGV0eXBlcyBjaGFydCB0aGUgZmllbGQuIERyYXcgYSBjYXJkIGFuZCBtZWV0IHRoZSBmaXJzdCBvbmUgdGhlCiAgICAgICAgICAgICAgICBzdGFycyBkZWFsIHlvdS4KICAgICAgICAgICAgICA8L3A+CiAgICAgICAgICAgIDwvbW90aW9uLmRpdj4KICAgICAgICAgICl9CiAgICAgICAgPC9BbmltYXRlUHJlc2VuY2U+CiAgICAgIDwvZGl2PgoKICAgICAgPGRpdiBjbGFzc05hbWU9Im10LTYgZmxleCBqdXN0aWZ5LWNlbnRlciI+CiAgICAgICAgPGJ1dHRvbgogICAgICAgICAgdHlwZT0iYnV0dG9uIgogICAgICAgICAgb25DbGljaz17ZHJhd30KICAgICAgICAgIGNsYXNzTmFtZT0ib3JhY2xlLWJ0biBpbmxpbmUtZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcHgtNiBweS0zIHJvdW5kZWQteGwgYWNjZW50LWdyYWRpZW50IHRleHQtbXlzdGljLTk1MCBmb250LXNlbWlib2xkIHRleHQtc20gdHJhY2tpbmctd2lkZSBzaGFkb3cteGwgc2hhZG93LWFjY2VudC1wcmltYXJ5LzE1IHRyYW5zaXRpb24tdHJhbnNmb3JtIGhvdmVyOnNjYWxlLVsxLjAzXSBhY3RpdmU6c2NhbGUtWzAuOThdIgogICAgICAgID4KICAgICAgICAgIHtjYXJkID8gKAogICAgICAgICAgICA8PgogICAgICAgICAgICAgIDxSb3RhdGVDY3cgY2xhc3NOYW1lPSJ3LTQgaC00IiBhcmlhLWhpZGRlbj0idHJ1ZSIgLz4KICAgICAgICAgICAgICBEcmF3IGFnYWluCiAgICAgICAgICAgIDwvPgogICAgICAgICAgKSA6ICgKICAgICAgICAgICAgPD4KICAgICAgICAgICAgICA8U3BhcmtsZXMgY2xhc3NOYW1lPSJ3LTQgaC00IiBhcmlhLWhpZGRlbj0idHJ1ZSIgLz4KICAgICAgICAgICAgICBDb25zdWx0IHRoZSBvcmFjbGUKICAgICAgICAgICAgPC8+CiAgICAgICAgICApfQogICAgICAgIDwvYnV0dG9uPgogICAgICA8L2Rpdj4KCiAgICAgIHtkcmF3cyA+IDAgJiYgKAogICAgICAgIDxwIGNsYXNzTmFtZT0ibXQtNCB0ZXh0LWNlbnRlciBmb250LW1vbm8gdGV4dC1bMTBweF0gdHJhY2tpbmctWzAuMjVlbV0gdXBwZXJjYXNlIHRleHQtc2xhdGUtNTAwIj4KICAgICAgICAgIHtkcmF3c30ge2RyYXdzID09PSAxID8gJ3JlYWRpbmcnIDogJ3JlYWRpbmdzJ30gY2FzdAogICAgICAgIDwvcD4KICAgICAgKX0KICAgIDwvZGl2PgogICk7Cn0K
+import { useCallback, useRef, useState } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'motion/react';
+import { Sparkles, RotateCcw } from 'lucide-react';
+import Sigil from './Sigil';
+
+/**
+ * OracleDraw — the landing hero's signature interaction.
+ *
+ * "Consult the oracle": the visitor draws one of the 8 archetype cards
+ * and sees its constellation sigil, name, and tagline. It turns the
+ * abstract promise ("read people like constellations") into something
+ * the visitor touches in the first 10 seconds.
+ *
+ * - No draw is ever "wrong": every card is a real archetype from the
+ *   framework, with accurate name + tagline copy.
+ * - Reduced motion: instant swap, no flip animation.
+ * - Keyboard accessible: real <button>s, aria-live announces the draw.
+ */
+
+interface Card {
+  id: string;
+  name: string;
+  tagline: string;
+  free: boolean;
+}
+
+const CARDS: Card[] = [
+  { id: 'TDI', name: 'The Playette', tagline: 'Mysterious, sensitive beneath a cool exterior.', free: true },
+  { id: 'TJI', name: 'The Social Butterfly', tagline: 'Energetic, enticing, always center of attention.', free: true },
+  { id: 'NDI', name: 'The Hopeful Romantic', tagline: 'Old-fashioned, sentimental, looking for The One.', free: false },
+  { id: 'NJI', name: 'The Cinderella', tagline: 'Classy, refined, waiting to be swept away.', free: false },
+  { id: 'TDR', name: 'The Private Dancer', tagline: 'Mysterious shell, passionate giver inside.', free: false },
+  { id: 'TJR', name: 'The Seductress', tagline: 'Confident, sexual, intimidatingly strong.', free: false },
+  { id: 'NDR', name: 'The Connoisseur', tagline: 'Selective, practical, cautious giver.', free: false },
+  { id: 'NJR', name: 'The Modern Woman', tagline: 'Independent, level-headed, healthy in love.', free: false },
+];
+
+export default function OracleDraw() {
+  const reduceMotion = useReducedMotion();
+  const [card, setCard] = useState<Card | null>(null);
+  const [draws, setDraws] = useState(0);
+  const lastIndex = useRef(-1);
+
+  const draw = useCallback(() => {
+    // Avoid repeating the same card twice in a row.
+    let i = Math.floor(Math.random() * CARDS.length);
+    if (CARDS.length > 1) {
+      while (i === lastIndex.current) i = Math.floor(Math.random() * CARDS.length);
+    }
+    lastIndex.current = i;
+    setCard(CARDS[i]);
+    setDraws((d) => d + 1);
+  }, []);
+
+  return (
+    <div className="oracle-frame grain relative overflow-hidden p-6 sm:p-8 text-left w-full max-w-sm mx-auto">
+      <div className="codex-label mb-5 justify-center w-full" aria-hidden="true">
+        The Oracle
+      </div>
+
+      <div className="min-h-[240px] flex flex-col items-center justify-center" aria-live="polite">
+        <AnimatePresence mode="wait">
+          {card ? (
+            <motion.div
+              key={`${card.id}-${draws}`}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: 70, scale: 0.94 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, rotateY: 0, scale: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, rotateY: -70, scale: 0.94 }}
+              transition={{ duration: reduceMotion ? 0.15 : 0.45, ease: 'easeOut' }}
+              className="flex flex-col items-center text-center"
+              style={{ perspective: 800 }}
+            >
+              <div className="text-iris-300 mb-4">
+                <Sigil id={card.id} size={88} title={`${card.name} sigil`} />
+              </div>
+              <div className="font-mono text-[10px] tracking-[0.3em] text-iris-300 mb-2">
+                {card.id}
+              </div>
+              <div className="hero-headline text-2xl text-slate-50 mb-2">{card.name}</div>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-[26ch]">{card.tagline}</p>
+              <div className="mt-4">
+                {card.free ? (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-status-success/10 border border-status-success/20 text-[10px] font-mono tracking-[0.2em] uppercase text-status-success">
+                    Free profile
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-iris-500/10 border border-iris-500/25 text-[10px] font-mono tracking-[0.2em] uppercase text-iris-300">
+                    Strategist unlock
+                  </span>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="empty"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.3 }}
+              className="flex flex-col items-center text-center px-4"
+            >
+              <div className="text-iris-300/60 mb-4">
+                <Sigil id="TDI" size={72} title="Unrevealed sigil" className="opacity-40" />
+              </div>
+              <p className="text-sm text-slate-400 leading-relaxed max-w-[30ch]">
+                Eight archetypes chart the field. Draw a card and meet the first one the
+                stars deal you.
+              </p>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      <div className="mt-6 flex justify-center">
+        <button
+          type="button"
+          onClick={draw}
+          className="oracle-btn inline-flex items-center gap-2 px-6 py-3 rounded-xl accent-gradient text-mystic-950 font-semibold text-sm tracking-wide shadow-xl shadow-accent-primary/15 transition-transform hover:scale-[1.03] active:scale-[0.98]"
+        >
+          {card ? (
+            <>
+              <RotateCcw className="w-4 h-4" aria-hidden="true" />
+              Draw again
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
+              Consult the oracle
+            </>
+          )}
+        </button>
+      </div>
+
+      {draws > 0 && (
+        <p className="mt-4 text-center font-mono text-[10px] tracking-[0.25em] uppercase text-slate-500">
+          {draws} {draws === 1 ? 'reading' : 'readings'} cast
+        </p>
+      )}
+    </div>
+  );
+}

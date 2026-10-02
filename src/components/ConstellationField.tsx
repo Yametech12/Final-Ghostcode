@@ -1,1 +1,214 @@
-aW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VSZWYgfSBmcm9tICdyZWFjdCc7CgovKioKICogQ29uc3RlbGxhdGlvbkZpZWxkIOKAlCB0aGUgIk9ic2VydmF0b3J5IiBzaWduYXR1cmUgYmFja2dyb3VuZC4KICoKICogQW4gYW5pbWF0ZWQgY2FudmFzIG9mIGRyaWZ0aW5nIHN0YXJzIHdpdGggdHdpbmtsZSwgZmFpbnQgY29uc3RlbGxhdGlvbgogKiBsaW5lcyBqb2luaW5nIG5lYXIgbmVpZ2hib3JzLCBhbmQgYSBzbG93IG1vdXNlIHBhcmFsbGF4LiBQdXJlbHkKICogZGVjb3JhdGl2ZSAoYXJpYS1oaWRkZW4sIHBvaW50ZXItZXZlbnRzOiBub25lKS4KICoKICogQWNjZXNzaWJpbGl0eSArIHBlcmY6CiAqIC0gSG9ub3JzIHByZWZlcnMtcmVkdWNlZC1tb3Rpb246IHJlbmRlcnMgb25lIHN0YXRpYyBmcmFtZSwgbm8gckFGIGxvb3AuCiAqIC0gUGF1c2VzIHdoZW4gdGhlIHRhYiBpcyBoaWRkZW4gb3IgdGhlIGNhbnZhcyBzY3JvbGxzIG91dCBvZiB2aWV3CiAqICAgKEludGVyc2VjdGlvbk9ic2VydmVyICsgdmlzaWJpbGl0eWNoYW5nZSkuCiAqIC0gRFBSLWF3YXJlLCBjYXBwZWQgYXQgMng7IHN0YXIgY291bnQgc2NhbGVzIHdpdGggYXJlYS4KICogLSBDbGVhbnVwIG9uIHVubW91bnQ6IGNhbmNlbHMgckFGLCByZW1vdmVzIGxpc3RlbmVycy4KICovCgppbnRlcmZhY2UgU3RhciB7CiAgeDogbnVtYmVyOyAvLyAwLi4xIG5vcm1hbGl6ZWQKICB5OiBudW1iZXI7IC8vIDAuLjEgbm9ybWFsaXplZAogIHI6IG51bWJlcjsgLy8gcmFkaXVzIHB4IGF0IDF4CiAgYmFzZUFscGhhOiBudW1iZXI7CiAgdHdpbmtsZVNwZWVkOiBudW1iZXI7CiAgdHdpbmtsZVBoYXNlOiBudW1iZXI7CiAgZHJpZnRYOiBudW1iZXI7IC8vIG5vcm1hbGl6ZWQgdW5pdHMgcGVyIHNlY29uZAogIGRyaWZ0WTogbnVtYmVyOwogIGlyaXM6IGJvb2xlYW47IC8vIGlyaXMtdGludGVkIHZzIHdhcm0td2hpdGUgc3Rhcgp9CgppbnRlcmZhY2UgQ29uc3RlbGxhdGlvbkZpZWxkUHJvcHMgewogIGNsYXNzTmFtZT86IHN0cmluZzsKICAvKiogMC4uMSDigJQgb3ZlcmFsbCBzdGFyIGRlbnNpdHkgbXVsdGlwbGllciAqLwogIGRlbnNpdHk/OiBudW1iZXI7CiAgLyoqIDAuLjEg4oCUIG1heCBkaXN0YW5jZSAobm9ybWFsaXplZCkgZm9yIGNvbnN0ZWxsYXRpb24gbGluZXMgKi8KICBsaW5rRGlzdGFuY2U/OiBudW1iZXI7Cn0KCmZ1bmN0aW9uIGJ1aWxkU3RhcnMoY291bnQ6IG51bWJlcik6IFN0YXJbXSB7CiAgY29uc3Qgc3RhcnM6IFN0YXJbXSA9IFtdOwogIGZvciAobGV0IGkgPSAwOyBpIDwgY291bnQ7IGkrKykgewogICAgY29uc3QgYmlnID0gTWF0aC5yYW5kb20oKSA8IDAuMTI7CiAgICBzdGFycy5wdXNoKHsKICAgICAgeDogTWF0aC5yYW5kb20oKSwKICAgICAgeTogTWF0aC5yYW5kb20oKSwKICAgICAgcjogYmlnID8gMS4xICsgTWF0aC5yYW5kb20oKSAqIDEuMiA6IDAuNCArIE1hdGgucmFuZG9tKCkgKiAwLjksCiAgICAgIGJhc2VBbHBoYTogMC4yNSArIE1hdGgucmFuZG9tKCkgKiAwLjU1LAogICAgICB0d2lua2xlU3BlZWQ6IDAuNCArIE1hdGgucmFuZG9tKCkgKiAxLjYsCiAgICAgIHR3aW5rbGVQaGFzZTogTWF0aC5yYW5kb20oKSAqIE1hdGguUEkgKiAyLAogICAgICBkcmlmdFg6IChNYXRoLnJhbmRvbSgpIC0gMC41KSAqIDAuMDA4LAogICAgICBkcmlmdFk6IChNYXRoLnJhbmRvbSgpIC0gMC41KSAqIDAuMDA2LAogICAgICBpcmlzOiBNYXRoLnJhbmRvbSgpIDwgMC4yOCwKICAgIH0pOwogIH0KICByZXR1cm4gc3RhcnM7Cn0KCmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIENvbnN0ZWxsYXRpb25GaWVsZCh7CiAgY2xhc3NOYW1lID0gJycsCiAgZGVuc2l0eSA9IDEsCiAgbGlua0Rpc3RhbmNlID0gMC4xNCwKfTogQ29uc3RlbGxhdGlvbkZpZWxkUHJvcHMpIHsKICBjb25zdCBjYW52YXNSZWYgPSB1c2VSZWY8SFRNTENhbnZhc0VsZW1lbnQ+KG51bGwpOwoKICB1c2VFZmZlY3QoKCkgPT4gewogICAgY29uc3QgY2FudmFzID0gY2FudmFzUmVmLmN1cnJlbnQ7CiAgICBpZiAoIWNhbnZhcykgcmV0dXJuOwogICAgY29uc3QgY3R4ID0gY2FudmFzLmdldENvbnRleHQoJzJkJyk7CiAgICBpZiAoIWN0eCkgcmV0dXJuOwoKICAgIGxldCByYWYgPSAwOwogICAgbGV0IHJ1bm5pbmcgPSBmYWxzZTsKICAgIGxldCB2aXNpYmxlID0gdHJ1ZTsKICAgIGxldCBzdGFyczogU3RhcltdID0gW107CiAgICBsZXQgdyA9IDA7CiAgICBsZXQgaCA9IDA7CiAgICBsZXQgbW91c2VYID0gMC41OwogICAgbGV0IG1vdXNlWSA9IDAuNTsKICAgIGxldCBwYXJhbGxheFggPSAwOwogICAgbGV0IHBhcmFsbGF4WSA9IDA7CgogICAgY29uc3QgcmVkdWNlZE1vdGlvbiA9CiAgICAgIHR5cGVvZiB3aW5kb3cgIT09ICd1bmRlZmluZWQnICYmCiAgICAgIHdpbmRvdy5tYXRjaE1lZGlhKCcocHJlZmVycy1yZWR1Y2VkLW1vdGlvbjogcmVkdWNlKScpLm1hdGNoZXM7CgogICAgY29uc3QgcmVzaXplID0gKCkgPT4gewogICAgICBjb25zdCByZWN0ID0gY2FudmFzLmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpOwogICAgICBjb25zdCBkcHIgPSBNYXRoLm1pbih3aW5kb3cuZGV2aWNlUGl4ZWxSYXRpbyB8fCAxLCAyKTsKICAgICAgdyA9IE1hdGgubWF4KDEsIE1hdGguZmxvb3IocmVjdC53aWR0aCAqIGRwcikpOwogICAgICBoID0gTWF0aC5tYXgoMSwgTWF0aC5mbG9vcihyZWN0LmhlaWdodCAqIGRwcikpOwogICAgICBjYW52YXMud2lkdGggPSB3OwogICAgICBjYW52YXMuaGVpZ2h0ID0gaDsKICAgICAgY29uc3QgYXJlYSA9IHJlY3Qud2lkdGggKiByZWN0LmhlaWdodDsKICAgICAgY29uc3QgY291bnQgPSBNYXRoLnJvdW5kKE1hdGgubWluKDIyMCwgTWF0aC5tYXgoNDAsIChhcmVhIC8gOTAwMCkgKiBkZW5zaXR5KSkpOwogICAgICBzdGFycyA9IGJ1aWxkU3RhcnMoY291bnQpOwogICAgfTsKCiAgICBjb25zdCBkcmF3ID0gKHQ6IG51bWJlcikgPT4gewogICAgICBjdHguY2xlYXJSZWN0KDAsIDAsIHcsIGgpOwogICAgICBjb25zdCB0aW1lID0gdCAvIDEwMDA7CgogICAgICAvLyBFYXNlIHBhcmFsbGF4IHRvd2FyZCB0aGUgbW91c2UgdGFyZ2V0IGZvciBhIHNsb3cgb2JzZXJ2YXRvcnkgZHJpZnQuCiAgICAgIHBhcmFsbGF4WCArPSAobW91c2VYIC0gMC41IC0gcGFyYWxsYXhYKSAqIDAuMDI7CiAgICAgIHBhcmFsbGF4WSArPSAobW91c2VZIC0gMC41IC0gcGFyYWxsYXhZKSAqIDAuMDI7CiAgICAgIGNvbnN0IHB4ID0gcGFyYWxsYXhYICogMTQ7CiAgICAgIGNvbnN0IHB5ID0gcGFyYWxsYXhZICogMTA7CgogICAgICAvLyBDb25zdGVsbGF0aW9uIGxpbmVzIOKAlCBqb2luIG5lYXIgbmVpZ2hib3JzIHdpdGggZmFpbnQgaXJpcyBzdHJva2VzLgogICAgICBjdHgubGluZVdpZHRoID0gTWF0aC5tYXgoMC41LCB3IC8gMTYwMCk7CiAgICAgIGZvciAobGV0IGkgPSAwOyBpIDwgc3RhcnMubGVuZ3RoOyBpKyspIHsKICAgICAgICBjb25zdCBhID0gc3RhcnNbaV07CiAgICAgICAgZm9yIChsZXQgaiA9IGkgKyAxOyBqIDwgc3RhcnMubGVuZ3RoOyBqKyspIHsKICAgICAgICAgIGNvbnN0IGIgPSBzdGFyc1tqXTsKICAgICAgICAgIGNvbnN0IGR4ID0gYS54IC0gYi54OwogICAgICAgICAgY29uc3QgZHkgPSBhLnkgLSBiLnk7CiAgICAgICAgICBjb25zdCBkaXN0ID0gTWF0aC5oeXBvdChkeCwgZHkpOwogICAgICAgICAgaWYgKGRpc3QgPCBsaW5rRGlzdGFuY2UpIHsKICAgICAgICAgICAgY29uc3QgYWxwaGEgPSAoMSAtIGRpc3QgLyBsaW5rRGlzdGFuY2UpICogMC4xNjsKICAgICAgICAgICAgY3R4LnN0cm9rZVN0eWxlID0gYHJnYmEoMTM5LCAxMjQsIDI0NiwgJHthbHBoYS50b0ZpeGVkKDMpfSlgOwogICAgICAgICAgICBjdHguYmVnaW5QYXRoKCk7CiAgICAgICAgICAgIGN0eC5tb3ZlVG8oYS54ICogdyArIHB4ICogYS5yLCBhLnkgKiBoICsgcHkgKiBhLnIpOwogICAgICAgICAgICBjdHgubGluZVRvKGIueCAqIHcgKyBweCAqIGIuciwgYi55ICogaCArIHB5ICogYi5yKTsKICAgICAgICAgICAgY3R4LnN0cm9rZSgpOwogICAgICAgICAgfQogICAgICAgIH0KICAgICAgfQoKICAgICAgLy8gU3RhcnMuCiAgICAgIGZvciAoY29uc3QgcyBvZiBzdGFycykgewogICAgICAgIGNvbnN0IHR3ID0gcmVkdWNlZE1vdGlvbgogICAgICAgICAgPyAxCiAgICAgICAgICA6IDAuNjUgKyAwLjM1ICogTWF0aC5zaW4odGltZSAqIHMudHdpbmtsZVNwZWVkICsgcy50d2lua2xlUGhhc2UpOwogICAgICAgIGNvbnN0IGFscGhhID0gTWF0aC5taW4oMSwgcy5iYXNlQWxwaGEgKiB0dyk7CiAgICAgICAgY29uc3Qgc3ggPSBzLnggKiB3ICsgcHggKiBzLnI7CiAgICAgICAgY29uc3Qgc3kgPSBzLnkgKiBoICsgcHkgKiBzLnI7CiAgICAgICAgY3R4LmZpbGxTdHlsZSA9IHMuaXJpcwogICAgICAgICAgPyBgcmdiYSgxODMsIDE2NiwgMjU1LCAke2FscGhhLnRvRml4ZWQoMyl9KWAKICAgICAgICAgIDogYHJnYmEoMjQwLCAyMzUsIDIyNywgJHsoYWxwaGEgKiAwLjkpLnRvRml4ZWQoMyl9KWA7CiAgICAgICAgY3R4LmJlZ2luUGF0aCgpOwogICAgICAgIGN0eC5hcmMoc3gsIHN5LCBzLnIgKiAodyAvIDE0MDAgKyAwLjYpLCAwLCBNYXRoLlBJICogMik7CiAgICAgICAgY3R4LmZpbGwoKTsKICAgICAgfQogICAgfTsKCiAgICBjb25zdCB0aWNrID0gKHQ6IG51bWJlcikgPT4gewogICAgICBpZiAoIXJ1bm5pbmcpIHJldHVybjsKICAgICAgaWYgKCFyZWR1Y2VkTW90aW9uKSB7CiAgICAgICAgZm9yIChjb25zdCBzIG9mIHN0YXJzKSB7CiAgICAgICAgICBzLnggPSAocy54ICsgcy5kcmlmdFggLyA2MCArIDEpICUgMTsKICAgICAgICAgIHMueSA9IChzLnkgKyBzLmRyaWZ0WSAvIDYwICsgMSkgJSAxOwogICAgICAgIH0KICAgICAgfQogICAgICBkcmF3KHQpOwogICAgICBpZiAoIXJlZHVjZWRNb3Rpb24pIHJhZiA9IHJlcXVlc3RBbmltYXRpb25GcmFtZSh0aWNrKTsKICAgIH07CgogICAgY29uc3Qgc3RhcnQgPSAoKSA9PiB7CiAgICAgIGlmIChydW5uaW5nIHx8ICF2aXNpYmxlIHx8IGRvY3VtZW50LmhpZGRlbikgcmV0dXJuOwogICAgICBydW5uaW5nID0gdHJ1ZTsKICAgICAgaWYgKHJlZHVjZWRNb3Rpb24pIHsKICAgICAgICBkcmF3KHBlcmZvcm1hbmNlLm5vdygpKTsgLy8gc2luZ2xlIHN0YXRpYyBmcmFtZQogICAgICAgIHJ1bm5pbmcgPSBmYWxzZTsKICAgICAgfSBlbHNlIHsKICAgICAgICByYWYgPSByZXF1ZXN0QW5pbWF0aW9uRnJhbWUodGljayk7CiAgICAgIH0KICAgIH07CiAgICBjb25zdCBzdG9wID0gKCkgPT4gewogICAgICBydW5uaW5nID0gZmFsc2U7CiAgICAgIGNhbmNlbEFuaW1hdGlvbkZyYW1lKHJhZik7CiAgICB9OwoKICAgIGNvbnN0IG9uTW91c2UgPSAoZTogTW91c2VFdmVudCkgPT4gewogICAgICBjb25zdCByZWN0ID0gY2FudmFzLmdldEJvdW5kaW5nQ2xpZW50UmVjdCgpOwogICAgICBpZiAocmVjdC53aWR0aCA9PT0gMCkgcmV0dXJuOwogICAgICBtb3VzZVggPSAoZS5jbGllbnRYIC0gcmVjdC5sZWZ0KSAvIHJlY3Qud2lkdGg7CiAgICAgIG1vdXNlWSA9IChlLmNsaWVudFkgLSByZWN0LnRvcCkgLyByZWN0LmhlaWdodDsKICAgIH07CiAgICBjb25zdCBvblZpcyA9ICgpID0+IHsKICAgICAgaWYgKGRvY3VtZW50LmhpZGRlbikgc3RvcCgpOwogICAgICBlbHNlIHN0YXJ0KCk7CiAgICB9OwoKICAgIGNvbnN0IGlvID0gbmV3IEludGVyc2VjdGlvbk9ic2VydmVyKAogICAgICAoZW50cmllcykgPT4gewogICAgICAgIHZpc2libGUgPSBlbnRyaWVzWzBdPy5pc0ludGVyc2VjdGluZyA/PyB0cnVlOwogICAgICAgIGlmICh2aXNpYmxlKSBzdGFydCgpOwogICAgICAgIGVsc2Ugc3RvcCgpOwogICAgICB9LAogICAgICB7IHRocmVzaG9sZDogMCB9CiAgICApOwoKICAgIHJlc2l6ZSgpOwogICAgd2luZG93LmFkZEV2ZW50TGlzdGVuZXIoJ3Jlc2l6ZScsIHJlc2l6ZSk7CiAgICB3aW5kb3cuYWRkRXZlbnRMaXN0ZW5lcignbW91c2Vtb3ZlJywgb25Nb3VzZSwgeyBwYXNzaXZlOiB0cnVlIH0pOwogICAgZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcigndmlzaWJpbGl0eWNoYW5nZScsIG9uVmlzKTsKICAgIGlvLm9ic2VydmUoY2FudmFzKTsKICAgIHN0YXJ0KCk7CgogICAgcmV0dXJuICgpID0+IHsKICAgICAgc3RvcCgpOwogICAgICBpby5kaXNjb25uZWN0KCk7CiAgICAgIHdpbmRvdy5yZW1vdmVFdmVudExpc3RlbmVyKCdyZXNpemUnLCByZXNpemUpOwogICAgICB3aW5kb3cucmVtb3ZlRXZlbnRMaXN0ZW5lcignbW91c2Vtb3ZlJywgb25Nb3VzZSk7CiAgICAgIGRvY3VtZW50LnJlbW92ZUV2ZW50TGlzdGVuZXIoJ3Zpc2liaWxpdHljaGFuZ2UnLCBvblZpcyk7CiAgICB9OwogIH0sIFtkZW5zaXR5LCBsaW5rRGlzdGFuY2VdKTsKCiAgcmV0dXJuICgKICAgIDxjYW52YXMKICAgICAgcmVmPXtjYW52YXNSZWZ9CiAgICAgIGNsYXNzTmFtZT17YGNvbnN0ZWxsYXRpb24tZmllbGQgJHtjbGFzc05hbWV9YH0KICAgICAgYXJpYS1oaWRkZW49InRydWUiCiAgICAvPgogICk7Cn0K
+import { useEffect, useRef } from 'react';
+
+/**
+ * ConstellationField — the "Observatory" signature background.
+ *
+ * An animated canvas of drifting stars with twinkle, faint constellation
+ * lines joining near neighbors, and a slow mouse parallax. Purely
+ * decorative (aria-hidden, pointer-events: none).
+ *
+ * Accessibility + perf:
+ * - Honors prefers-reduced-motion: renders one static frame, no rAF loop.
+ * - Pauses when the tab is hidden or the canvas scrolls out of view
+ *   (IntersectionObserver + visibilitychange).
+ * - DPR-aware, capped at 2x; star count scales with area.
+ * - Cleanup on unmount: cancels rAF, removes listeners.
+ */
+
+interface Star {
+  x: number; // 0..1 normalized
+  y: number; // 0..1 normalized
+  r: number; // radius px at 1x
+  baseAlpha: number;
+  twinkleSpeed: number;
+  twinklePhase: number;
+  driftX: number; // normalized units per second
+  driftY: number;
+  iris: boolean; // iris-tinted vs warm-white star
+}
+
+interface ConstellationFieldProps {
+  className?: string;
+  /** 0..1 — overall star density multiplier */
+  density?: number;
+  /** 0..1 — max distance (normalized) for constellation lines */
+  linkDistance?: number;
+}
+
+function buildStars(count: number): Star[] {
+  const stars: Star[] = [];
+  for (let i = 0; i < count; i++) {
+    const big = Math.random() < 0.12;
+    stars.push({
+      x: Math.random(),
+      y: Math.random(),
+      r: big ? 1.1 + Math.random() * 1.2 : 0.4 + Math.random() * 0.9,
+      baseAlpha: 0.25 + Math.random() * 0.55,
+      twinkleSpeed: 0.4 + Math.random() * 1.6,
+      twinklePhase: Math.random() * Math.PI * 2,
+      driftX: (Math.random() - 0.5) * 0.008,
+      driftY: (Math.random() - 0.5) * 0.006,
+      iris: Math.random() < 0.28,
+    });
+  }
+  return stars;
+}
+
+export default function ConstellationField({
+  className = '',
+  density = 1,
+  linkDistance = 0.14,
+}: ConstellationFieldProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let raf = 0;
+    let running = false;
+    let visible = true;
+    let stars: Star[] = [];
+    let w = 0;
+    let h = 0;
+    let mouseX = 0.5;
+    let mouseY = 0.5;
+    let parallaxX = 0;
+    let parallaxY = 0;
+
+    const reducedMotion =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = Math.max(1, Math.floor(rect.width * dpr));
+      h = Math.max(1, Math.floor(rect.height * dpr));
+      canvas.width = w;
+      canvas.height = h;
+      const area = rect.width * rect.height;
+      const count = Math.round(Math.min(220, Math.max(40, (area / 9000) * density)));
+      stars = buildStars(count);
+    };
+
+    const draw = (t: number) => {
+      ctx.clearRect(0, 0, w, h);
+      const time = t / 1000;
+
+      // Ease parallax toward the mouse target for a slow observatory drift.
+      parallaxX += (mouseX - 0.5 - parallaxX) * 0.02;
+      parallaxY += (mouseY - 0.5 - parallaxY) * 0.02;
+      const px = parallaxX * 14;
+      const py = parallaxY * 10;
+
+      // Constellation lines — join near neighbors with faint iris strokes.
+      ctx.lineWidth = Math.max(0.5, w / 1600);
+      for (let i = 0; i < stars.length; i++) {
+        const a = stars[i];
+        for (let j = i + 1; j < stars.length; j++) {
+          const b = stars[j];
+          const dx = a.x - b.x;
+          const dy = a.y - b.y;
+          const dist = Math.hypot(dx, dy);
+          if (dist < linkDistance) {
+            const alpha = (1 - dist / linkDistance) * 0.16;
+            ctx.strokeStyle = `rgba(139, 124, 246, ${alpha.toFixed(3)})`;
+            ctx.beginPath();
+            ctx.moveTo(a.x * w + px * a.r, a.y * h + py * a.r);
+            ctx.lineTo(b.x * w + px * b.r, b.y * h + py * b.r);
+            ctx.stroke();
+          }
+        }
+      }
+
+      // Stars.
+      for (const s of stars) {
+        const tw = reducedMotion
+          ? 1
+          : 0.65 + 0.35 * Math.sin(time * s.twinkleSpeed + s.twinklePhase);
+        const alpha = Math.min(1, s.baseAlpha * tw);
+        const sx = s.x * w + px * s.r;
+        const sy = s.y * h + py * s.r;
+        ctx.fillStyle = s.iris
+          ? `rgba(183, 166, 255, ${alpha.toFixed(3)})`
+          : `rgba(240, 235, 227, ${(alpha * 0.9).toFixed(3)})`;
+        ctx.beginPath();
+        ctx.arc(sx, sy, s.r * (w / 1400 + 0.6), 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+
+    const tick = (t: number) => {
+      if (!running) return;
+      if (!reducedMotion) {
+        for (const s of stars) {
+          s.x = (s.x + s.driftX / 60 + 1) % 1;
+          s.y = (s.y + s.driftY / 60 + 1) % 1;
+        }
+      }
+      draw(t);
+      if (!reducedMotion) raf = requestAnimationFrame(tick);
+    };
+
+    const start = () => {
+      if (running || !visible || document.hidden) return;
+      running = true;
+      if (reducedMotion) {
+        draw(performance.now()); // single static frame
+        running = false;
+      } else {
+        raf = requestAnimationFrame(tick);
+      }
+    };
+    const stop = () => {
+      running = false;
+      cancelAnimationFrame(raf);
+    };
+
+    const onMouse = (e: MouseEvent) => {
+      const rect = canvas.getBoundingClientRect();
+      if (rect.width === 0) return;
+      mouseX = (e.clientX - rect.left) / rect.width;
+      mouseY = (e.clientY - rect.top) / rect.height;
+    };
+    const onVis = () => {
+      if (document.hidden) stop();
+      else start();
+    };
+
+    const io = new IntersectionObserver(
+      (entries) => {
+        visible = entries[0]?.isIntersecting ?? true;
+        if (visible) start();
+        else stop();
+      },
+      { threshold: 0 }
+    );
+
+    resize();
+    window.addEventListener('resize', resize);
+    window.addEventListener('mousemove', onMouse, { passive: true });
+    document.addEventListener('visibilitychange', onVis);
+    io.observe(canvas);
+    start();
+
+    return () => {
+      stop();
+      io.disconnect();
+      window.removeEventListener('resize', resize);
+      window.removeEventListener('mousemove', onMouse);
+      document.removeEventListener('visibilitychange', onVis);
+    };
+  }, [density, linkDistance]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      className={`constellation-field ${className}`}
+      aria-hidden="true"
+    />
+  );
+}
