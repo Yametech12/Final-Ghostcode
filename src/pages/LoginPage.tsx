@@ -153,14 +153,14 @@ export default function LoginPage() {
                 onBlur={() => {
                   if (email && !isValidEmail(email)) setEmailError('Please enter a valid email address');
                 }}
-                className={`w-full bg-white/5 border rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
-                  emailError ? 'border-red-500/50' : 'border-white/10'
+                className={`w-full bg-mystic-800/50 border rounded-xl py-3 pl-10 pr-4 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all ${
+                  emailError ? 'border-red-500/50' : 'border-mystic-700'
                 }`}
                 placeholder="you@example.com"
                 required
               />
             </div>
-            {emailError && <div className="text-xs text-red-400">{emailError}</div>}
+            {emailError && <div className="text-xs text-status-error">{emailError}</div>}
           </div>
 
           {/* Password field */}
@@ -173,7 +173,7 @@ export default function LoginPage() {
                 type={showPassword ? 'text' : 'password'}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
+                className="w-full bg-mystic-800/50 border border-mystic-700 rounded-xl py-3 pl-10 pr-10 text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-accent-primary/50 transition-all"
                 placeholder="••••••••"
                 autoComplete="current-password"
                 required
@@ -182,7 +182,7 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
-                className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 text-slate-500 hover:text-white min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="absolute right-1 top-1/2 -translate-y-1/2 p-2.5 text-slate-500 hover:text-slate-100 min-w-[44px] min-h-[44px] flex items-center justify-center"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
@@ -203,7 +203,7 @@ export default function LoginPage() {
           
           {/* Attempts warning */}
           {loginAttempts > 0 && !isLocked && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-yellow-400 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-yellow-500/10 border border-yellow-500/20 text-status-warning text-sm">
               <Fingerprint className="w-4 h-4" />
               <span>{MAX_LOGIN_ATTEMPTS - loginAttempts} attempts remaining</span>
             </div>
@@ -211,7 +211,7 @@ export default function LoginPage() {
 
           {/* Lockout timer */}
           {isLocked && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-status-error text-sm">
               <Clock className="w-4 h-4" />
               <span>Locked. Try again in {formatTime(timeRemaining)}</span>
             </div>
@@ -219,7 +219,7 @@ export default function LoginPage() {
 
           {/* Error display */}
           {error && (
-            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-status-error text-sm">
               <AlertCircle className="w-4 h-4" />
               <span>{error}</span>
             </div>
@@ -228,7 +228,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading || !isFormValid || isLocked}
-            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-white font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? (
               <>
@@ -246,10 +246,10 @@ export default function LoginPage() {
           <div className="mt-6">
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-white/10"></div>
+                <div className="w-full border-t border-mystic-700"></div>
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-[#1a0f15] text-slate-500">Or continue with</span>
+                <span className="px-2 bg-mystic-900 text-slate-500">Or continue with</span>
               </div>
             </div>
 
