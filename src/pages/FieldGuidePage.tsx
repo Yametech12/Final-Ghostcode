@@ -459,7 +459,7 @@ export default function FieldGuidePage() {
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-accent-primary uppercase">{item.label}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-500 italic">{item.note}</span>
+                          <span className="text-[11px] text-slate-500 italic">{item.note}</span>
                           <button 
                             onClick={() => copyToClipboard(item.line)}
                             className={cn(
@@ -493,7 +493,7 @@ export default function FieldGuidePage() {
                       <div className="flex justify-between items-center">
                         <span className="text-[10px] font-bold text-accent-primary uppercase">{item.label}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] text-slate-500 italic">{item.note}</span>
+                          <span className="text-[11px] text-slate-500 italic">{item.note}</span>
                           <button 
                             onClick={() => copyToClipboard(item.line)}
                             className={cn(
@@ -689,7 +689,7 @@ export default function FieldGuidePage() {
                             <div key={comment.id} className="bg-white/5 rounded-xl p-3 space-y-1">
                               <div className="flex items-center justify-between">
                                 <span className="text-xs font-bold text-accent-primary">{comment.author}</span>
-                                <span className="text-[10px] text-slate-500">{comment.date}</span>
+                                <span className="text-[11px] text-slate-500">{comment.date}</span>
                               </div>
                               <p className="text-sm text-slate-300">{comment.content}</p>
                             </div>

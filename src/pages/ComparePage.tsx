@@ -99,7 +99,7 @@ export default function ComparePage() {
                 {p.combination}
               </div>
               <div className="space-y-2">
-                <h2 className="text-5xl font-display font-bold tracking-tight">{p.name}</h2>
+                <h2 className="text-4xl sm:text-5xl font-display font-bold tracking-tight">{p.name}</h2>
                 <p className={cn(
                   "italic text-lg font-medium",
                   idx === 0 ? "text-accent-primary/80" : "text-accent-secondary/80"
