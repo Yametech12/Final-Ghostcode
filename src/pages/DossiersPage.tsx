@@ -466,7 +466,7 @@ export default function DossiersPage() {
                     <select id="dossier-type"
                       value={typeId}
                       onChange={(e) => setTypeId(e.target.value as any)}
-                      className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
+                      className="custom-select w-full"
                     >
                       {personalityTypes.map((pt) => (
                         <option key={pt.id} value={pt.id}>
@@ -480,7 +480,7 @@ export default function DossiersPage() {
                     <select id="dossier-phase"
                       value={phase}
                       onChange={(e) => setPhase(e.target.value as Dossier['phase'])}
-                      className="custom-select w-full bg-mystic-950/50 border border-slate-700/30 text-slate-100"
+                      className="custom-select w-full"
                     >
                       <option value="Intrigue">Intrigue</option>
                       <option value="Arousal">Arousal</option>
