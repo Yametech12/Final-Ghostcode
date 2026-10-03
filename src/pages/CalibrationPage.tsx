@@ -4,7 +4,7 @@ import {
   MessageSquare, UserCheck, Brain, Info,
   CheckCircle2, Zap, Shield, HandMetal,
   History, PlayCircle, ChevronRight, ArrowRight, RotateCcw,
-  Clock, Filter, ArrowUpDown, CheckSquare, Square, ListTodo, Copy, Check
+  Clock, Filter, ArrowUpDown, CheckSquare, Square, ListTodo, Copy, Check, X
 } from 'lucide-react';
 import { safeParseJSON } from '../utils/json';
 import { LogoIcon } from '../components/Logo';
@@ -445,7 +445,10 @@ export default function CalibrationPage() {
       // Dynamic import keeps html2canvas out of the main bundle.
       const html2canvas = (await import('html2canvas')).default;
       const canvas = await html2canvas(analysisRef.current, {
-        backgroundColor: '#0a0508',
+        // Resolve the live mystic-950 token so the export matches the current theme
+        // (dark: #0E0B12, light: #FAF7F2) instead of a hardcoded legacy color.
+        backgroundColor:
+          getComputedStyle(document.documentElement).getPropertyValue('--color-mystic-950').trim() || '#0E0B12',
         scale: 2,
         logging: false,
         useCORS: true,
@@ -927,6 +930,7 @@ export default function CalibrationPage() {
       <div className="flex flex-wrap justify-center gap-4">
         <button type="button"
           onClick={() => setMode('ai')}
+          aria-pressed={mode === 'ai'}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'ai' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
@@ -936,6 +940,7 @@ export default function CalibrationPage() {
         </button>
         <button type="button"
           onClick={() => setMode('manual')}
+          aria-pressed={mode === 'manual'}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'manual' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
@@ -945,6 +950,7 @@ export default function CalibrationPage() {
         </button>
         <button type="button"
           onClick={() => setMode('practice')}
+          aria-pressed={mode === 'practice'}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'practice' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
@@ -954,6 +960,7 @@ export default function CalibrationPage() {
         </button>
         <button type="button"
           onClick={() => setMode('history')}
+          aria-pressed={mode === 'history'}
           className={cn(
             "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
             mode === 'history' ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
@@ -1101,7 +1108,7 @@ export default function CalibrationPage() {
               {isLoading ? (
                 <>
                   <Loader2 className="w-5 h-5 animate-spin" />
-                  Extracting Behavioral Matrix...
+                  Reading scenario...
                 </>
               ) : (
                 <>
@@ -1158,6 +1165,7 @@ export default function CalibrationPage() {
 
           {analysis && !isLoading && (
             <div
+              aria-live="polite"
               className="space-y-8"
             >
               <div className="flex flex-wrap justify-between items-center gap-4">
@@ -1235,7 +1243,8 @@ export default function CalibrationPage() {
                         </p>
                         <button type="button"
                           onClick={() => handleCopy(analysis.coldReader)}
-                          className="absolute right-0 top-0 p-2 text-slate-500 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100"
+                          className="absolute right-0 top-0 p-2 text-slate-500 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 reveal-on-touch"
+                          aria-label="Copy insight to clipboard"
                           title="Copy to clipboard"
                         >
                           {copiedText === analysis.coldReader ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -1257,7 +1266,8 @@ export default function CalibrationPage() {
                                   </p>
                                   <button type="button"
                                     onClick={() => handleCopy(read)}
-                                    className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100"
+                                    className="absolute right-0 top-1/2 -translate-y-1/2 p-1.5 text-slate-600 hover:text-accent-primary transition-colors opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100 reveal-on-touch"
+                                    aria-label="Copy read to clipboard"
                                     title="Copy to clipboard"
                                   >
                                     {copiedText === read ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
@@ -1309,7 +1319,7 @@ export default function CalibrationPage() {
                       <div className="w-full h-1 bg-white/5 rounded-full overflow-hidden">
                         <div
                           style={{ width: `${(analysis.tasks.filter(t => t.completed).length / analysis.tasks.length) * 100}%` }}
-                          className="h-full bg-accent-primary shadow-[0_0_10px_rgba(0,242,255,0.5)]"
+                          className="h-full bg-accent-primary shadow-[0_0_10px_rgba(232,199,126,0.5)]"
                         />
                       </div>
                     )}
@@ -1383,9 +1393,18 @@ export default function CalibrationPage() {
                       filteredTasks.map((task) => (
                         <div
                           key={task.id}
+                          role="checkbox"
+                          aria-checked={task.completed}
+                          tabIndex={0}
                           onClick={() => toggleTask(task.id)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              toggleTask(task.id);
+                            }
+                          }}
                           className={cn(
-                            "group flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer",
+                            "group flex items-start gap-4 p-4 rounded-xl border transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-primary/60",
                             task.completed
                               ? "bg-emerald-500/5 border-emerald-500/10 opacity-60"
                               : "bg-white/5 border-white/10 hover:bg-white/10"
@@ -1640,7 +1659,7 @@ export default function CalibrationPage() {
                           <ul className="space-y-2">
                             {typeData.redFlags.map((flag, i) => (
                               <li key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                                <span className="text-status-error mt-0.5 shrink-0">✗</span>
+                                <X className="w-3.5 h-3.5 text-status-error mt-1 shrink-0" aria-hidden="true" />
                                 {flag}
                               </li>
                             ))}
@@ -1838,6 +1857,7 @@ aria-label="Search history"
                 setShowPracticeResult(false);
                 setSelectedType('');
               }}
+              aria-pressed={!dynamicScenario}
               className={cn(
                 "px-6 py-2 rounded-full font-bold transition-all border",
                 !dynamicScenario ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
@@ -1848,6 +1868,7 @@ aria-label="Search history"
             <button type="button"
               onClick={generateDynamicScenario}
               disabled={isGeneratingScenario}
+              aria-pressed={!!dynamicScenario}
               className={cn(
                 "px-6 py-2 rounded-full font-bold transition-all border flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed",
                 dynamicScenario ? "accent-gradient text-mystic-950 border-transparent" : "bg-white/5 text-slate-400 border-white/10"
