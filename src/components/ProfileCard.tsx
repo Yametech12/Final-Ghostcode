@@ -33,7 +33,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
 
   return (
     <motion.div
-      className="max-w-md mx-auto bg-mystic-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-accent-primary/5 overflow-hidden cursor-pointer group"
+      className="max-w-md mx-auto bg-mystic-900/80 backdrop-blur-xl border border-white/10 rounded-3xl shadow-2xl shadow-accent-primary/5 overflow-hidden group"
       style={{
         transform: isHovering 
           ? `perspective(1000px) rotateX(${-mousePosition.y}deg) rotateY(${mousePosition.x}deg) translateY(-8px)`
@@ -143,7 +143,7 @@ const ProfileCard: React.FC<ProfileCardProps> = ({ onEditProfile }) => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-mystic-800 to-mystic-900">
-                        <UserIcon size={56} className="text-mystic-600" />
+                        <UserIcon size={56} className="text-mystic-600" aria-hidden="true" />
                       </div>
                     )}
                   </div>

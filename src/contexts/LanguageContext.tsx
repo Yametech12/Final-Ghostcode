@@ -69,7 +69,7 @@ const translations: Record<Language, Record<string, string>> = {
     'calibration.scenarioParams': 'Scenario Parameters',
     'calibration.clearForm': 'Clear Form',
     'calibration.extractProfile': 'Extract Profile',
-    'calibration.extracting': 'Extracting Behavioral Matrix...',
+    'calibration.extracting': 'Reading scenario...',
     'calibration.newAnalysis': 'New Analysis',
     'calibration.saveImage': 'Save Analysis as Image',
 
