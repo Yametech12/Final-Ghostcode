@@ -19,6 +19,7 @@ const PrivacyPage = lazy(() => import('../../pages/PrivacyPage'));
 // Marketing pages - public, no auth required
 const LandingPage = lazy(() => import('../../pages/LandingPage'));
 const PricingPage = lazy(() => import('../../pages/PricingPage'));
+const CheckoutPage = lazy(() => import('../../pages/CheckoutPage'));
 
 // Paywall screen — shown when free user hits paid content
 const PaywallScreen = lazy(() => import('../../components/PaywallScreen'));
@@ -269,6 +270,13 @@ export default function AnimatedRoutes() {
             <Suspense fallback={FallbackSkeleton}>
               <PricingPage />
             </Suspense>
+          } />
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <Suspense fallback={FallbackSkeleton}>
+                <CheckoutPage />
+              </Suspense>
+            </ProtectedRoute>
           } />
           <Route path="/calibration" element={
             <ProtectedRoute
