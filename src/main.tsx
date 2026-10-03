@@ -18,8 +18,8 @@ initAnalytics();
 // Global unhandled promise rejection handler. We deliberately do NOT call
 // preventDefault() unconditionally — Sentry's beforeSend already filters
 // AbortError noise, and silencing every rejection hides real crashes.
-// Only suppress the well-known "transient noise" patterns; let everything
-// else surface so we can fix it.
+// Only suppress the well-known "transient noise" patterns; report
+// everything else to Sentry (no console spam in production).
 window.addEventListener('unhandledrejection', (event) => {
   const reason: any = event.reason;
   const msg: string =
@@ -37,16 +37,25 @@ window.addEventListener('unhandledrejection', (event) => {
     return;
   }
 
-  console.error('Unhandled Promise Rejection:', reason);
+  // Report to Sentry instead of console.error — keeps production consoles
+  // clean while preserving full diagnostics for debugging.
+  import('./lib/sentry').then(({ captureException }) => {
+    captureException(
+      reason instanceof Error ? reason : new Error(`Unhandled rejection: ${msg.slice(0, 200)}`),
+    );
+  }).catch(() => { /* ignore */ });
 });
 
 // Validate environment on startup
 try {
   validateEnvironment();
 } catch (err) {
-  console.error('Environment validation failed:', err);
-  // Show error to user in development
+  // Fatal startup error — report to Sentry (no console spam in production).
+  import('./lib/sentry').then(({ captureException }) => {
+    captureException(err instanceof Error ? err : new Error('Environment validation failed'));
+  }).catch(() => { /* ignore */ });
   if (import.meta.env.DEV) {
+    console.error('Environment validation failed:', err);
     // Escape the error message to prevent HTML injection (defense in depth,
     // even though this path is dev-only and err.message is developer-controlled).
     const safeMsg = String(err instanceof Error ? err.message : 'Missing environment variables')
@@ -85,8 +94,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker
       .register('/sw.js')
       .then((registration) => {
-        console.log('[SW] Registered:', registration.scope);
-
         // Force an update check on every load so newly deployed SWs are
         // discovered without a cold reload.
         registration.update().catch(() => undefined);

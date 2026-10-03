@@ -1,137 +1,100 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
 import { AlertTriangle, RotateCcw, Home } from 'lucide-react';
-import { isAppError } from '../lib/errors';
+
+/**
+ * Generic React error boundary for route-level and component-level crashes.
+ *
+ * Design principles:
+ * - Users see a clear, jargon-free message — never raw error text, stack
+ *   traces, or internal operation details.
+ * - The full technical error goes to Sentry (via lib/sentry) for debugging.
+ * - A retry path is always offered; the boundary resets cleanly.
+ */
 
 interface Props {
   children: ReactNode;
+  /** Optional label shown in Sentry context (e.g. route name). */
+  label?: string;
 }
 
 interface State {
   hasError: boolean;
-  error: Error | null;
 }
 
 class ErrorBoundary extends Component<Props, State> {
   public state: State = {
     hasError: false,
-    error: null
   };
 
-  public static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+  public static getDerivedStateFromError(): State {
+    return { hasError: true };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('Uncaught error:', error, errorInfo);
-    // Forward to Sentry (no-op if not configured)
+    // Report the full technical details to Sentry — never to the UI.
     import('../lib/sentry').then(({ captureException }) => {
       captureException(error, {
         componentStack: errorInfo.componentStack,
+        boundaryLabel: this.props.label ?? 'generic',
       });
     }).catch(() => {
-      // Sentry unavailable — already logged to console
+      // Sentry unavailable — error is still captured by the global
+      // unhandled-rejection / window.onerror handlers as a fallback.
     });
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null });
-    window.location.reload();
+    this.setState({ hasError: false });
   };
 
   private handleGoHome = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false });
     window.location.href = '/';
+  };
+
+  private handleReload = () => {
+    window.location.reload();
   };
 
   public render() {
     if (this.state.hasError) {
-      let errorMessage = "An unexpected error occurred.";
-      let isFirestoreError = false;
-      let firestoreDetails = null;
-
-      try {
-        if (this.state.error?.message) {
-          if (this.state.error.message.includes('Failed to fetch dynamically imported module')) {
-            errorMessage = "A new version of the application is available. Please refresh the page to update.";
-          } else if (isAppError(this.state.error)) {
-            // Structured AppError — pull fields directly instead of JSON-parsing
-            // the message string.
-            const ae = this.state.error;
-            if (ae.operationType) {
-              isFirestoreError = true;
-              firestoreDetails = {
-                error: ae.message,
-                operationType: ae.operationType,
-                path: ae.path,
-              };
-              errorMessage = `Database Error: ${ae.message}`;
-            } else {
-              errorMessage = ae.message;
-            }
-          } else {
-            // Legacy path: some old code stringified JSON into Error.message.
-            // Try to parse, fall through silently if it isn't JSON.
-            try {
-              const parsed = JSON.parse(this.state.error.message);
-              if (parsed.error && parsed.operationType) {
-                isFirestoreError = true;
-                firestoreDetails = parsed;
-                errorMessage = `Database Error: ${parsed.error}`;
-              } else {
-                errorMessage = this.state.error.message;
-              }
-            } catch {
-              errorMessage = this.state.error.message;
-            }
-          }
-        }
-      } catch {
-        errorMessage = this.state.error?.message || errorMessage;
-      }
-
       return (
         <div className="min-h-screen bg-mystic-950 flex items-center justify-center p-4">
           <div className="max-w-md w-full glass-card p-8 space-y-6 text-center">
             <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mx-auto border border-red-500/30">
-              <AlertTriangle className="w-10 h-10 text-red-500" />
-            </div>
-            
-            <div className="space-y-2">
-              <h2 className="text-2xl font-bold text-slate-50">System Malfunction</h2>
-              <p className="text-slate-400">
-                {isFirestoreError 
-                  ? "We encountered an issue communicating with the secure database."
-                  : "Something went wrong while processing the application state."}
-              </p>
+              <AlertTriangle className="w-10 h-10 text-red-500" aria-hidden />
             </div>
 
-            <div className="p-4 rounded-xl bg-black/40 border border-white/5 text-left overflow-hidden">
-              <p className="text-xs font-mono text-status-error break-words">
-                {errorMessage}
+            <div className="space-y-2">
+              <h2 className="text-2xl font-bold text-slate-50">Something went wrong</h2>
+              <p className="text-slate-400">
+                This part of the app ran into a problem. Your data is safe —
+                try again, or head home and come back.
               </p>
-              {isFirestoreError && firestoreDetails && (
-                <div className="mt-2 pt-2 border-t border-white/5 text-[10px] font-mono text-slate-500">
-                  Operation: {firestoreDetails.operationType} | Path: {firestoreDetails.path}
-                </div>
-              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <button type="button"
-                onClick={this.handleReset}
+              <button
+                type="button"
+                onClick={this.handleReload}
                 className="flex items-center justify-center gap-2 py-3 rounded-xl bg-white/5 border border-white/10 text-slate-100 font-bold hover:bg-white/10 transition-all"
               >
-                <RotateCcw className="w-4 h-4" />
-                Retry
+                <RotateCcw className="w-4 h-4" aria-hidden />
+                Try again
               </button>
-              <button type="button"
+              <button
+                type="button"
                 onClick={this.handleGoHome}
                 className="flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-mystic-950 font-bold hover:scale-[1.02] transition-all"
               >
-                <Home className="w-4 h-4" />
+                <Home className="w-4 h-4" aria-hidden />
                 Home
               </button>
             </div>
+
+            <p className="text-xs text-slate-500">
+              If this keeps happening, please contact support.
+            </p>
           </div>
         </div>
       );

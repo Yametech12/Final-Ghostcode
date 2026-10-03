@@ -48,18 +48,20 @@ export default class SessionErrorBoundary extends Component<Props, State> {
     // cleared in its `finally` block. We still log so the error is
     // visible in Sentry.
     if (typeof window !== 'undefined' && (window as any).__epimetheus_critical_flow_in_flight) {
-      console.error(
-        'SessionErrorBoundary suppressed during critical flow:',
-        error,
-        errorInfo,
-      );
       // Reset our own state so the boundary doesn't render the error UI
       // — let the critical flow finish (or fail) and surface its own
-      // message instead.
+      // message instead. Still report to Sentry for diagnostics.
+      import('../lib/sentry').then(({ captureException }) => {
+        captureException(error, { suppressedDuringCriticalFlow: true });
+      }).catch(() => { /* ignore */ });
       this.setState({ hasError: false, errorMessage: 'Something went wrong.', errorDetails: undefined });
       return;
     }
-    console.error('SessionErrorBoundary caught an error:', error, errorInfo);
+    // Report to Sentry instead of console.error — keeps production consoles
+    // clean while preserving full diagnostics.
+    import('../lib/sentry').then(({ captureException }) => {
+      captureException(error, { componentStack: errorInfo.componentStack });
+    }).catch(() => { /* ignore */ });
     // Analytics: fatal crash (error message only — no stack, no PII).
     trackErrorEvent(error?.message || 'Unknown error', true);
   }

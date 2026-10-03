@@ -51,6 +51,9 @@ const DossiersPage = lazy(() => import('../../pages/DossiersPage'));
 const InsightsPage = lazy(() => import('../../pages/InsightsPage'));
 const AdminDashboard = lazy(() => import('../../pages/AdminDashboard'));
 
+// 404 page - shown for unmatched routes
+const NotFoundPage = lazy(() => import('../../pages/NotFoundPage'));
+
 const pageVariants = {
   initial: { opacity: 0, y: 15, scale: 0.99 },
   in: { opacity: 1, y: 0, scale: 1 },
@@ -442,7 +445,11 @@ export default function AnimatedRoutes() {
               </Suspense>
             </ProtectedRoute>
           } />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={
+            <Suspense fallback={FallbackSkeleton}>
+              <NotFoundPage />
+            </Suspense>
+          } />
         </Routes>
       </AnimatePresence>
     </Suspense>

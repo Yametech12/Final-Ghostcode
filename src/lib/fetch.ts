@@ -129,6 +129,23 @@ function mark401Handled(): void {
   }
 }
 
+/**
+ * User-friendly error messages for common fetch failures.
+ * Never expose raw status codes, URLs, or response bodies to the user —
+ * those go to Sentry via the caller's error handler.
+ */
+function friendlyFetchError(status: number): string {
+  if (status === 400) return 'That request wasn\u2019t quite right. Please check and try again.';
+  if (status === 401) return 'Please sign in to continue.';
+  if (status === 403) return 'You don\u2019t have access to that right now.';
+  if (status === 404) return 'We couldn\u2019t find what you were looking for.';
+  if (status === 409) return 'That conflicts with something that already exists.';
+  if (status === 422) return 'Please check the highlighted fields and try again.';
+  if (status === 429) return 'You\u2019re going a bit fast. Please wait a moment and try again.';
+  if (status >= 500) return 'Something went wrong on our end. Please try again in a moment.';
+  return 'Something went wrong. Please try again.';
+}
+
 export async function fetchWithErrorHandling<T>(
   url: string,
   options: FetchOptions = {}
@@ -149,29 +166,38 @@ export async function fetchWithErrorHandling<T>(
     const responseClone = response.clone();
 
     if (!response.ok) {
-      let errorData: any;
+      // Capture the raw server error for diagnostics (Sentry), but throw
+      // a user-friendly message for the UI.
+      let serverMessage = '';
       try {
-        errorData = await response.json();
-        throw new Error(errorData.error || errorData.message || `Request failed with status ${response.status}`);
+        const errorData = await response.json();
+        serverMessage = errorData.error || errorData.message || '';
       } catch {
-        const text = await responseClone.text();
-        console.error(`[Fetch Error] ${response.status} ${url}:`, text);
-        throw new Error(`Request failed with status ${response.status}`);
+        /* body wasn't JSON — fall through to friendly message */
       }
+      // Report technical details to Sentry without console spam.
+      import('./sentry').then(({ captureException }) => {
+        captureException(new Error(`API ${response.status} ${url}: ${serverMessage.slice(0, 200)}`));
+      }).catch(() => { /* ignore */ });
+      void responseClone;
+      throw new Error(serverMessage || friendlyFetchError(response.status));
     }
 
     try {
       return (await response.json()) as T;
     } catch {
-      const text = await responseClone.text();
-      console.error(`[JSON Parse Error] ${url}:`, text);
-      throw new Error(`Invalid JSON response: ${text.slice(0, 100)}`);
+      // Report the parse failure for diagnostics, show a friendly message.
+      import('./sentry').then(({ captureException }) => {
+        captureException(new Error(`JSON parse failed for ${url}`));
+      }).catch(() => { /* ignore */ });
+      void responseClone;
+      throw new Error('We had trouble reading the response. Please try again.');
     }
   } catch (error) {
     clearTimeout(timeoutId);
 
     if (error instanceof Error && error.name === 'AbortError') {
-      throw new Error(`Request timed out after ${timeout}ms`);
+      throw new Error('That took too long. Please check your connection and try again.');
     }
 
     throw error;

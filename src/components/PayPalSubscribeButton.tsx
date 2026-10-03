@@ -98,8 +98,13 @@ export default function PayPalSubscribeButton({
           },
           onCancel: () => callbacksRef.current.onCancel(),
           onError: (err) => {
-            // eslint-disable-next-line no-console
-            console.error('[PayPal] button error:', err);
+            // Report technical details to Sentry; show a friendly message.
+            import('../lib/sentry').then(({ captureException }) => {
+              captureException(
+                err instanceof Error ? err : new Error('PayPal button error'),
+                { component: 'PayPalSubscribeButton' },
+              );
+            }).catch(() => { /* ignore */ });
             callbacksRef.current.onError('The PayPal checkout ran into a problem. Please try again.');
           },
         });
