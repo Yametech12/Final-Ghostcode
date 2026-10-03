@@ -286,7 +286,7 @@ export default function FieldGuidePage() {
           onClick={() => setActiveTab('scenarios')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-            activeTab === 'scenarios' ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
+            activeTab === 'scenarios' ? "accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98]" : "bg-white/5 text-slate-400 hover:bg-white/10"
           )}
         >
           <BookOpen className="w-5 h-5" />
@@ -296,7 +296,7 @@ export default function FieldGuidePage() {
           onClick={() => setActiveTab('reports')}
           className={cn(
             "flex items-center gap-2 px-6 py-3 rounded-xl font-bold transition-all",
-            activeTab === 'reports' ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20" : "bg-white/5 text-slate-400 hover:bg-white/10"
+            activeTab === 'reports' ? "accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98]" : "bg-white/5 text-slate-400 hover:bg-white/10"
           )}
         >
           <Users className="w-5 h-5" />
@@ -314,6 +314,7 @@ export default function FieldGuidePage() {
               </div>
               <input
                 type="text"
+                aria-label="Search scenarios, stages, or types"
                 placeholder="Search scenarios, stages, or types..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -372,6 +373,7 @@ export default function FieldGuidePage() {
                           : "bg-white/5 text-slate-500 hover:text-accent-primary hover:bg-white/10"
                       )}
                       title="Copy example line"
+                      aria-label="Copy example line"
                     >
                       {copiedText === s.example ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                     </button>
@@ -393,10 +395,10 @@ export default function FieldGuidePage() {
           {/* Quick Tips Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 pt-12 border-t border-white/5">
             <section className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2 text-accent-primary">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-accent-primary">
                 <Zap className="w-5 h-5" />
                 Quick Wins
-              </h3>
+              </h2>
               <div className="space-y-2">
                 {personalityTypes.slice(0, 4).map(type => (
                   <div key={type.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -408,10 +410,10 @@ export default function FieldGuidePage() {
             </section>
 
             <section className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2 text-status-error">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-status-error">
                 <AlertCircle className="w-5 h-5" />
                 Critical Avoids
-              </h3>
+              </h2>
               <div className="space-y-2">
                 {personalityTypes.slice(4, 8).map(type => (
                   <div key={type.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -423,10 +425,10 @@ export default function FieldGuidePage() {
             </section>
 
             <section className="space-y-4">
-              <h3 className="text-xl font-bold flex items-center gap-2 text-accent-secondary">
+              <h2 className="text-xl font-bold flex items-center gap-2 text-accent-secondary">
                 <Shield className="w-5 h-5" />
                 Cold Reads
-              </h3>
+              </h2>
               <div className="space-y-2">
                 {personalityTypes.slice(2, 6).map(type => (
                   <div key={type.id} className="p-3 rounded-xl bg-white/5 border border-white/10">
@@ -466,9 +468,10 @@ export default function FieldGuidePage() {
                               "p-1 rounded transition-all",
                               copiedText === item.line
                                 ? "bg-emerald-500/20 text-status-success opacity-100"
-                                : "opacity-0 group-hover/line:opacity-100 bg-white/5 text-slate-500 hover:text-accent-primary"
+                                : "bg-white/5 text-slate-500 hover:text-accent-primary"
                             )}
                             title="Copy line"
+                            aria-label="Copy line"
                           >
                             {copiedText === item.line ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                           </button>
@@ -500,9 +503,10 @@ export default function FieldGuidePage() {
                               "p-1 rounded transition-all",
                               copiedText === item.line
                                 ? "bg-emerald-500/20 text-status-success opacity-100"
-                                : "opacity-0 group-hover/line:opacity-100 bg-white/5 text-slate-500 hover:text-accent-primary"
+                                : "bg-white/5 text-slate-500 hover:text-accent-primary"
                             )}
                             title="Copy line"
+                            aria-label="Copy line"
                           >
                             {copiedText === item.line ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
                           </button>
@@ -561,6 +565,7 @@ export default function FieldGuidePage() {
                 </div>
                 <input 
                   type="text"
+                  aria-label="Search field reports"
                   placeholder="Search reports..."
                   value={reportSearch}
                   onChange={e => setReportSearch(e.target.value)}
@@ -569,6 +574,7 @@ export default function FieldGuidePage() {
               </div>
               <select 
                 value={reportSort}
+                aria-label="Sort field reports"
                 onChange={e => setReportSort(e.target.value as any)}
                 className="bg-white/5 border border-white/10 rounded-xl py-2 px-4 text-sm text-slate-200 focus:outline-none focus:border-accent-primary/50 transition-colors"
               >
@@ -577,7 +583,7 @@ export default function FieldGuidePage() {
               </select>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-xl bg-accent-primary text-mystic-950 hover:bg-accent-primary/80 transition-colors font-bold text-sm shadow-lg shadow-accent-primary/20"
+                className="flex items-center gap-2 px-4 py-2 rounded-xl accent-gradient text-mystic-950 transition-all hover:scale-[1.02] active:scale-[0.98] font-bold text-sm shadow-lg shadow-accent-primary/20"
               >
                 <Plus className="w-4 h-4" />
                 Submit Report
@@ -703,6 +709,7 @@ export default function FieldGuidePage() {
                          <input
                            type="text"
                            value={newComment}
+                           aria-label="Add a comment"
                            onChange={(e) => setNewComment(e.target.value)}
                            placeholder="Add a comment..."
                            className="flex-1 bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm text-slate-200 focus:outline-none focus:border-accent-primary/50 transition-colors"
@@ -716,13 +723,14 @@ export default function FieldGuidePage() {
                            }}
                          />
                          <button
+                           aria-label="Post comment"
                            onClick={() => {
                              handleSubmitComment(report.id).catch(err => {
                                console.error("Comment submission failed:", err);
                              });
                            }}
                            disabled={isSubmittingComment || !newComment.trim()}
-                           className="p-2 rounded-xl bg-accent-primary text-mystic-950 hover:bg-accent-primary/80 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                           className="p-2 rounded-xl accent-gradient text-mystic-950 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                          >
                            {isSubmittingComment ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
                          </button>
@@ -745,7 +753,7 @@ export default function FieldGuidePage() {
               </div>
               <button 
                 onClick={() => setIsModalOpen(true)}
-                className="px-8 py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20"
+                className="px-8 py-4 rounded-xl accent-gradient text-mystic-950 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent-primary/20"
               >
                 Submit First Report
               </button>
@@ -762,6 +770,7 @@ export default function FieldGuidePage() {
           >
             <button 
               onClick={() => setIsModalOpen(false)}
+              aria-label="Close dialog"
               className="absolute top-6 right-6 p-2 rounded-full bg-white/5 hover:bg-white/10 text-slate-400 transition-colors"
             >
               <X className="w-5 h-5" />
@@ -793,8 +802,9 @@ export default function FieldGuidePage() {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Target Type</label>
+                    <label htmlFor="report-target-type" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Target Type</label>
                     <select 
+                      id="report-target-type"
                       required
                       value={newReport.type}
                       onChange={e => setNewReport({...newReport, type: e.target.value})}
@@ -809,8 +819,9 @@ export default function FieldGuidePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Scenario</label>
+                  <label htmlFor="report-scenario" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Scenario</label>
                   <textarea 
+                    id="report-scenario"
                     required
                     placeholder="Describe the setting and the initial interaction..."
                     value={newReport.scenario}
@@ -820,8 +831,9 @@ export default function FieldGuidePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Action Taken</label>
+                  <label htmlFor="report-action" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Action Taken</label>
                   <textarea 
+                    id="report-action"
                     required
                     placeholder="What specific techniques or calibration did you use?"
                     value={newReport.action}
@@ -831,8 +843,9 @@ export default function FieldGuidePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Result</label>
+                  <label htmlFor="report-result" className="text-[10px] font-bold text-slate-500 uppercase tracking-widest ml-1">Result</label>
                   <textarea 
+                    id="report-result"
                     required
                     placeholder="What was the outcome of the interaction?"
                     value={newReport.result}
@@ -844,7 +857,7 @@ export default function FieldGuidePage() {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 rounded-xl bg-accent-primary text-mystic-950 font-bold hover:bg-accent-primary/80 transition-all shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full py-4 rounded-xl accent-gradient text-mystic-950 font-bold transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-accent-primary/20 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                 >
                   {isSubmitting ? (
                     <>
