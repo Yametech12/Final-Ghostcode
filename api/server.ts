@@ -12,6 +12,11 @@ import {
 } from './lib/sentryNode.js';
 import { applyCorsHeaders, applySecurityHeaders } from './lib/http.js';
 import {
+  handlePayPalConfig,
+  handlePayPalConfirm,
+  handlePayPalWebhook,
+} from './lib/paypal.js';
+import {
   handleHealth,
   handleTestKey,
   handleSecurityLog,
@@ -337,6 +342,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // DELETE /api/users/me  → self-serve account deletion
+    // PayPal Subscriptions checkout
+    if (pathname === 'paypal/config' && req.method === 'GET') {
+      const r = await handlePayPalConfig(normReq);
+      res.status(r.status).json(r.body);
+      return;
+    }
+    if (pathname === 'paypal/subscriptions/confirm' && req.method === 'POST') {
+      const r = await handlePayPalConfirm(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
+    // PayPal webhook delivery — no user auth; the event signature is
+    // verified with PayPal inside the handler before any state changes.
+    if (pathname === 'paypal/webhook' && req.method === 'POST') {
+      const r = await handlePayPalWebhook(normReq, supabase);
+      res.status(r.status).json(r.body);
+      return;
+    }
     if (pathname === 'users/me' && req.method === 'DELETE') {
       const r = await handleDeleteMyAccount(normReq, supabase);
       res.status(r.status).json(r.body);
