@@ -15,7 +15,7 @@ import MarketingNav, { type MarketingNavLink } from '../components/layout/Market
 import MarketingFooter from '../components/layout/MarketingFooter';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { useSubscription, type SubscriptionTier } from '../hooks/useSubscription';
-import { trackPlanCtaClick, trackWaitlistJoin } from '../utils/analytics';
+import { trackPlanCtaClick } from '../utils/analytics';
 import { toast } from 'sonner';
 
 /**
@@ -136,11 +136,11 @@ const FAQ = [
   },
   {
     q: 'When can I upgrade?',
-    a: 'Paid checkout is rolling out soon. In the meantime you can sign up free, take the assessment, and join the waitlist for Strategist and Oracle.',
+    a: 'Paid plans are live now. Choose a plan above to check out securely with PayPal.',
   },
   {
-    q: 'What payment methods will you accept?',
-    a: 'All major credit cards via Stripe. Apple Pay and Google Pay on supported devices.',
+    q: 'What payment methods do you accept?',
+    a: 'PayPal — pay with your PayPal balance, bank account, or any major credit card through PayPal\u2019s secure checkout.',
   },
   {
     q: 'Will you offer refunds?',
@@ -207,9 +207,8 @@ export default function PricingPage() {
   /**
    * Decide what action a tier card's CTA should do, given the viewer's state.
    *
-   * Stripe checkout is not wired yet (Phase 2 work-in-progress). Until it is,
-   * paid CTAs from logged-in users surface a "coming soon" toast instead of
-   * silently routing them somewhere meaningless.
+   * Paid checkout runs through PayPal Subscriptions: signed-in users go to
+   * /checkout for the selected plan and billing cycle.
    */
   const handleCTA = (plan: Plan) => {
     // Funnel: pricing CTA clicked (anonymous params only).
@@ -246,9 +245,8 @@ export default function PricingPage() {
       return;
     }
 
-    // Upgrade path — Stripe checkout not yet live.
-    trackWaitlistJoin(plan.tier);
-    toast.info('Paid checkout is launching soon. We will email you when it goes live.');
+    // Upgrade path — PayPal subscription checkout.
+    navigate(`/checkout?plan=${plan.tier}&cycle=${cycle}`);
   };
 
   /** Given the viewer's state, return the label and disabled-ness for a card CTA. */
@@ -506,7 +504,7 @@ export default function PricingPage() {
         </div>
 
         <p className="mt-8 sm:mt-10 text-center font-mono text-[10px] sm:text-[11px] tracking-[0.2em] sm:tracking-[0.25em] uppercase text-slate-500">
-          USD · Paid plans rolling out soon · 14-day money-back guarantee
+          USD · Secure checkout via PayPal · 14-day money-back guarantee
         </p>
       </section>
 
