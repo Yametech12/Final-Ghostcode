@@ -141,7 +141,7 @@ export default function InsightsPage() {
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/15 mb-4 glow-accent">
           <Activity aria-hidden="true" className="w-8 h-8" strokeWidth={1.5} />
         </div>
-        <span className="eyebrow">Analytics</span>
+        <span className="codex-label">Analytics</span>
         <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">Your Insights</h1>
         <p className="text-slate-400 max-w-2xl mx-auto">
           Visualize your calibration history and recognize patterns in your interactions.
@@ -243,19 +243,19 @@ export default function InsightsPage() {
           <div className="lg:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="glass-card p-6 flex flex-col items-center justify-center text-center space-y-2">
               <span className="text-4xl font-semibold text-slate-50 tabular-nums">{calibrations.length}</span>
-              <span className="eyebrow">Total Calibrations</span>
+              <span className="codex-label">Total Calibrations</span>
             </div>
             <div className="glass-card p-6 flex flex-col items-center justify-center text-center space-y-2">
               <span className="text-4xl font-semibold text-accent-primary">
                 {radarData.length > 0 ? radarData.reduce((prev, current) => (prev.A > current.A) ? prev : current).subject : '—'}
               </span>
-              <span className="eyebrow">Most Common Type</span>
+              <span className="codex-label">Most Common Type</span>
             </div>
             <div className="glass-card p-6 flex flex-col items-center justify-center text-center space-y-2">
               <span className="text-4xl font-semibold text-accent-secondary tabular-nums">
                 {new Set(calibrations.map(c => c.type_id)).size}
               </span>
-              <span className="eyebrow">Unique Types Found</span>
+              <span className="codex-label">Unique Types Found</span>
             </div>
           </div>
         </div>

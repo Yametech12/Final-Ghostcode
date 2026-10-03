@@ -66,7 +66,7 @@ export default function GuidePage() {
                 className={cn(
                   "w-full flex items-center gap-4 p-4 rounded-xl transition-all group text-left border",
                   activeTab === section.id
-                    ? "bg-accent-primary/10 border-accent-primary/50 text-accent-primary shadow-[0_0_15px_rgba(139,92,246,0.15)]"
+                    ? "bg-accent-primary/10 border-accent-primary/50 text-accent-primary shadow-[0_0_15px_rgba(232,199,126,0.15)]"
                     : isCompleted
                       ? "bg-emerald-500/5 border-emerald-500/20 text-status-success hover:bg-emerald-500/10"
                       : "border-transparent text-slate-400 hover:bg-white/5 hover:text-slate-200"
