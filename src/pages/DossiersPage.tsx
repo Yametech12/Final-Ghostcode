@@ -353,7 +353,7 @@ export default function DossiersPage() {
                 key={dossier.id}
                 className="glass-card p-6 relative group hover:border-accent-primary/25 transition-colors"
               >
-                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 pointer-coarse:opacity-60 transition-opacity">
                   <button
                     onClick={() => handleEdit(dossier)}
                     aria-label={`Edit ${dossier.name}`}

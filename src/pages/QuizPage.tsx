@@ -279,15 +279,15 @@ export default function QuizPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl mx-auto">
             <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
               <Target className="w-6 h-6 text-accent-primary mx-auto mb-3" strokeWidth={1.5} />
-              <h2 className="eyebrow">10 Questions</h2>
+              <h2 className="codex-label">10 Questions</h2>
             </div>
             <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
               <Timer className="w-6 h-6 text-accent-secondary mx-auto mb-3" strokeWidth={1.5} />
-              <h3 className="eyebrow">Timed Session</h3>
+              <h3 className="codex-label">Timed Session</h3>
             </div>
             <div className="p-6 rounded-2xl bg-white/5 border border-slate-700/30">
               <Star className="w-6 h-6 text-accent-primary mx-auto mb-3" strokeWidth={1.5} />
-              <h3 className="eyebrow">Randomized</h3>
+              <h3 className="codex-label">Randomized</h3>
             </div>
           </div>
 

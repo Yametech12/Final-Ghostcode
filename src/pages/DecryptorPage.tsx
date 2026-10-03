@@ -46,13 +46,13 @@ What She Wants: ${selectedType.whatSheWants}
 What to Avoid: ${(selectedType.whatToAvoid || []).join(', ')}
 
 RESPONSE FORMAT (follow exactly):
-### 🔍 Subtext Analysis
+### Subtext Analysis
 [Explain what she actually means vs what she said. Be specific and evidence-based.]
 
-### 🧠 Emotional State
+### Emotional State
 [Analyze her current mood and ETS stage. Explain confidence level.]
 
-### 🎯 Tactical Responses
+### Tactical Responses
 **1. The Push (High Tension):** [Response that creates intrigue/mystery]
 **2. The Pull (Comfort Building):** [Response that provides value/connection]
 **3. The Pivot (Direction Change):** [Response that shifts dynamics]
@@ -118,7 +118,7 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" aria-hidden="true" />
-            <span className="eyebrow text-accent-primary">Signal Decryptor</span>
+            <span className="codex-label text-accent-primary">Signal Decryptor</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">
             Text Analysis
@@ -128,7 +128,7 @@ Write like a sharp human analyst: no sycophantic openers ("Great question!"), no
           </p>
         </div>
         <div className="text-left md:text-right mt-4 md:mt-0">
-          <span className="eyebrow">Subtext Extraction Engine</span>
+          <span className="codex-label">Subtext Extraction Engine</span>
           <p className="text-xs text-slate-600 mt-1">
             v2.1 • Enhanced AI Analysis
           </p>
