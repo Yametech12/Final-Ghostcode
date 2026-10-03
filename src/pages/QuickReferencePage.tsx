@@ -104,6 +104,7 @@ export default function QuickReferencePage() {
               {/* Intrigue */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
                 <button type="button" 
+                  aria-expanded={activeEts === 'I'}
                   onClick={() => toggleEts('I')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -134,6 +135,7 @@ export default function QuickReferencePage() {
               {/* Arousal */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
                 <button type="button" 
+                  aria-expanded={activeEts === 'A'}
                   onClick={() => toggleEts('A')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -164,6 +166,7 @@ export default function QuickReferencePage() {
               {/* Comfort */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
                 <button type="button" 
+                  aria-expanded={activeEts === 'C'}
                   onClick={() => toggleEts('C')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
@@ -194,6 +197,7 @@ export default function QuickReferencePage() {
               {/* Devotion */}
               <li className="bg-white/5 rounded-lg overflow-hidden transition-all">
                 <button type="button" 
+                  aria-expanded={activeEts === 'D'}
                   onClick={() => toggleEts('D')}
                   className="w-full flex items-center justify-between p-3 hover:bg-white/5 transition-colors text-left"
                 >
