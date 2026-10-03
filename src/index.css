@@ -1085,3 +1085,13 @@ h1, h2, h3, h4, h5, h6 {
   opacity: 0.05;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.6'/%3E%3C/svg%3E");
 }
+
+/* ── Touch reveal ────────────────────────────────────────────────────
+   Hover-only reveals (copy buttons, edit affordances) must stay
+   reachable on touch devices, which have no hover. Elements tagged
+   .reveal-on-touch stay visible when hover is unavailable. */
+@media (hover: none) {
+  .reveal-on-touch {
+    opacity: 1;
+  }
+}

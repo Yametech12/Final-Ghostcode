@@ -4,6 +4,7 @@ import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 import { Mail, Lock, ArrowRight, Loader2, AlertCircle, User, Eye, EyeOff, CheckCircle, Shield, Sparkles } from 'lucide-react';
 import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
+import Button from '../components/ui/Button';
 
 import { toast } from 'sonner';
 import { getSupabaseErrorMessage } from '../utils/errorHandling';
@@ -328,14 +329,15 @@ export default function RegisterPage() {
 
            </div>
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading || !isFormValid}
-            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 disabled:bg-slate-500 disabled:cursor-not-allowed text-mystic-950 font-bold py-3 rounded-xl transition-all"
+            className="oracle-btn w-full py-3"
           >
             {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create Account'}
             {!loading && <ArrowRight className="w-5 h-5" />}
-          </button>
+          </Button>
 
           <p className="text-xs text-slate-500 text-center leading-relaxed">
             By creating an account, you agree to our{' '}

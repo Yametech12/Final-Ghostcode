@@ -7,6 +7,7 @@ import { getSupabaseErrorMessage, isValidEmail } from '../utils/errorHandling';
 import { sanitizeInput } from '../utils/validation';
 import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
+import Button from '../components/ui/Button';
 
 const MAX_LOGIN_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
@@ -122,7 +123,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-[#0a0508] to-[#1a0f15] p-4 overflow-hidden">
+    <div className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-mystic-950 to-mystic-900 p-4 overflow-hidden">
       <ConstellationField density={0.7} />
       <div className="relative z-10 w-full max-w-md oracle-frame grain backdrop-blur-xl p-8 shadow-2xl">
         <div className="flex justify-center mb-4">
@@ -225,10 +226,11 @@ export default function LoginPage() {
             </div>
           )}
 
-          <button
+          <Button
             type="submit"
+            variant="primary"
             disabled={loading || !isFormValid || isLocked}
-            className="oracle-btn w-full flex items-center justify-center gap-2 bg-accent-primary hover:bg-accent-primary/90 text-mystic-950 font-bold py-3 rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="oracle-btn w-full py-3"
           >
             {loading ? (
               <>
@@ -241,7 +243,7 @@ export default function LoginPage() {
                 <ArrowRight className="w-5 h-5" />
               </>
             )}
-          </button>
+          </Button>
 
           <div className="mt-6">
             <div className="relative">
@@ -268,7 +270,7 @@ export default function LoginPage() {
                 }
               }}
               disabled={loading}
-              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-[#0a0508] font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
+              className="w-full mt-6 flex items-center justify-center gap-2 bg-white text-mystic-950 font-bold py-3 rounded-xl hover:bg-slate-100 transition-all disabled:opacity-50"
             >
               <svg className="w-5 h-5" viewBox="0 0 24 24">
                 <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />

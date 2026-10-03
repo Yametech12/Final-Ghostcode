@@ -82,7 +82,7 @@ STARTING SCENARIO: You're on a dating app (Tinder/Bumble) and just matched with 
         { role: 'user', content: 'Start the conversation as a typical opening message from your personality type.' }
       ], undefined, { max_tokens: 200 });
 
-      const aiResponse = stripThinking(response.choices?.[0]?.message?.content) || 'Hey there! 😊';
+      const aiResponse = stripThinking(response.choices?.[0]?.message?.content) || 'Hey there!';
 
       setMessages([
         initialMessage,
@@ -184,18 +184,18 @@ ${conversationHistory}
 
 PROVIDE A COMPREHENSIVE EVALUATION:
 
-### 📊 Performance Analysis
+### Performance Analysis
 [Summarize how the user handled the interaction]
 
-### ✅ What You Did Well
+### What You Did Well
 - [Specific strengths in communication/timing]
 - [Good use of EPIMETHEUS principles]
 
-### ❌ Areas for Improvement
+### Areas for Improvement
 - [Specific mistakes or missed opportunities]
 - [ETS stage management issues]
 
-### 🎯 Tactical Recommendations
+### Tactical Recommendations
 [Specific advice for handling this personality type]
 [Recommended approaches for each ETS stage]
 [What to avoid based on her type]
@@ -251,7 +251,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
         <div>
           <div className="flex items-center gap-3 mb-2">
             <div className="w-2 h-2 bg-accent-primary rounded-full animate-pulse" aria-hidden="true" />
-            <span className="eyebrow text-accent-primary">Tactical Training</span>
+            <span className="codex-label text-accent-primary">Tactical Training</span>
           </div>
           <h1 className="text-4xl md:text-5xl font-semibold tracking-tight text-slate-50">
             Simulation Matrix
@@ -261,7 +261,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
           </p>
         </div>
         <div className="text-left md:text-right mt-4 md:mt-0">
-          <span className="eyebrow">Roleplay Training System</span>
+          <span className="codex-label">Roleplay Training System</span>
           <p className="text-xs text-slate-600 mt-1">
             v2.0 • Enhanced AI Simulation
           </p>
@@ -350,7 +350,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
                 <button type="button"
                   onClick={resetSimulation}
                   disabled={isLoading}
-                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mystic-700 transition-all text-sm"hover:text-slate-100 w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 
+                  className="w-full flex items-center justify-center gap-2 py-2 rounded-xl bg-mystic-800 text-slate-400 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-mystic-700 hover:text-slate-100 transition-all text-sm"
                 >
                   <RefreshCw className="w-4 h-4" />
                   Reset
@@ -584,6 +584,7 @@ Keep it actionable, professional, and focused on EPIMETHEUS framework principles
 
                   <button
                     type="submit"
+                    aria-label="Send message"
                     disabled={isLoading || !input.trim()}
                     className={cn(
                       "px-4 py-3 rounded-xl font-bold transition-all flex items-center gap-2",

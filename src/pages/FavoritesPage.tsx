@@ -17,10 +17,10 @@ export default function FavoritesPage() {
 
   const getIcon = (type: string) => {
     switch (type) {
-      case 'type': return <BookOpen className="w-5 h-5" strokeWidth={1.5} />;
-      case 'guide': return <Compass className="w-5 h-5" strokeWidth={1.5} />;
-      case 'calibration': return <Activity className="w-5 h-5" strokeWidth={1.5} />;
-      default: return <Star className="w-5 h-5" strokeWidth={1.5} />;
+      case 'type': return <BookOpen aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />;
+      case 'guide': return <Compass aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />;
+      case 'calibration': return <Activity aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />;
+      default: return <Star aria-hidden="true" className="w-5 h-5" strokeWidth={1.5} />;
     }
   };
 

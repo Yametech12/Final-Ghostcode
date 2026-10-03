@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'motion/react';
 import {
@@ -14,15 +13,13 @@ import {
   Eye,
   Zap,
   TrendingUp,
-  Star,
-  Menu,
-  X,
 } from 'lucide-react';
-import Logo from '../components/Logo';
 import ConstellationField from '../components/ConstellationField';
 import OracleDraw from '../components/OracleDraw';
 import EmblemCanvas from '../components/EmblemCanvas';
 import ExitIntentModal from '../components/ExitIntentModal';
+import MarketingNav from '../components/layout/MarketingNav';
+import MarketingFooter from '../components/layout/MarketingFooter';
 import { useEnhancedAuth } from '../contexts/EnhancedAuthContext';
 
 /**
@@ -121,12 +118,20 @@ export default function LandingPage() {
   const auth = useEnhancedAuth();
   const isSignedIn = !!auth?.user;
   const reduceMotion = useReducedMotion();
-  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // Primary nav links for the shared MarketingNav — same set as the
+  // in-page sections (anchors) plus the pricing route.
 
   // Pick variants once. Doing it inline at every motion.* site would bloat
   // the JSX without changing behavior.
   const cVar = reduceMotion ? noMotionContainer : containerVariants;
   const iVar = reduceMotion ? noMotionItem : itemVariants;
+
+  const navLinks = [
+    { label: 'Features', href: '#features' },
+    { label: 'Archetypes', href: '#archetypes' },
+    { label: 'Pricing', to: '/pricing' },
+  ];
 
   return (
     <div className="min-h-screen bg-mystic-950 text-slate-200 overflow-x-hidden">
@@ -142,162 +147,8 @@ export default function LandingPage() {
       {/* Atmospheric background bloom — gold + copper, blurred */}
       <div className="atmosphere" aria-hidden="true" />
 
-      {/* ───────────────────────── Top nav ───────────────────────── */}
-      <header className="sticky top-0 z-30 border-b border-white/5 bg-mystic-950/80 backdrop-blur-xl safe-area-x">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between gap-3">
-          <Link
-            to={isSignedIn ? '/' : '/welcome'}
-            className="flex items-center gap-2 sm:gap-3 group min-w-0"
-            aria-label="Epimetheus home"
-          >
-            <Logo size="md" />
-            {/* Brand wordmark hides below 360px to make room for CTAs on
-                tiny phones (iPhone SE 1st gen, old Android). The logo
-                glyph alone keeps the brand visible. */}
-            <span className="hidden xs:inline hero-headline text-base sm:text-xl text-slate-50 tracking-tight group-hover:text-accent-primary transition-colors truncate">
-              EPIMETHEUS
-            </span>
-          </Link>
-
-          <nav className="hidden md:flex items-center gap-8 text-sm text-slate-400" aria-label="Primary">
-            <a href="#features" className="hover:text-slate-100 transition-colors">
-              Features
-            </a>
-            <a href="#archetypes" className="hover:text-slate-100 transition-colors">
-              Archetypes
-            </a>
-            <Link to="/pricing" className="hover:text-slate-100 transition-colors">
-              Pricing
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-2">
-            {isSignedIn ? (
-              <>
-                <Link
-                  to="/profile"
-                  className="hidden sm:inline-block text-sm text-slate-300 hover:text-slate-50 px-3 py-2 transition-colors"
-                >
-                  Profile
-                </Link>
-                <Link
-                  to="/"
-                  className="text-sm font-semibold text-mystic-950 accent-gradient px-3 sm:px-4 py-2 rounded-xl shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform whitespace-nowrap"
-                >
-                  Dashboard
-                </Link>
-              </>
-            ) : (
-              <>
-                <Link
-                  to="/login"
-                  className="hidden sm:inline-block text-sm text-slate-300 hover:text-slate-50 px-3 py-2 transition-colors"
-                >
-                  Sign in
-                </Link>
-                <Link
-                  to="/register"
-                  className="text-sm font-semibold text-mystic-950 accent-gradient px-3 sm:px-4 py-2 rounded-xl shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform whitespace-nowrap"
-                >
-                  Get Started
-                </Link>
-              </>
-            )}
-            {/* Mobile nav trigger — only visible below md. Toggles a
-                full-screen overlay panel since this page is the marketing
-                surface (no Layout chrome). */}
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(true)}
-              aria-label="Open navigation"
-              aria-expanded={mobileNavOpen}
-              aria-controls="landing-mobile-nav"
-              className="md:hidden p-2 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors"
-            >
-              <Menu className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      </header>
-
-      {/* ───────────────────────── Mobile nav overlay ───────────────────────── */}
-      {mobileNavOpen && (
-        <div
-          id="landing-mobile-nav"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Navigation"
-          className="fixed inset-0 z-50 md:hidden bg-mystic-950/95 backdrop-blur-xl flex flex-col safe-area-top safe-area-bottom safe-area-x"
-        >
-          <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
-            <Link
-              to={isSignedIn ? '/' : '/welcome'}
-              onClick={() => setMobileNavOpen(false)}
-              className="flex items-center gap-2"
-            >
-              <Logo size="md" />
-              <span className="hero-headline text-lg text-slate-50">EPIMETHEUS</span>
-            </Link>
-            <button
-              type="button"
-              onClick={() => setMobileNavOpen(false)}
-              aria-label="Close navigation"
-              className="p-2 rounded-xl text-slate-300 hover:text-slate-100 hover:bg-white/5 transition-colors"
-            >
-              <X className="w-5 h-5" aria-hidden="true" />
-            </button>
-          </div>
-          <nav className="flex-1 overflow-y-auto px-4 py-6 space-y-2 text-base" aria-label="Mobile primary">
-            <a
-              href="#features"
-              onClick={() => setMobileNavOpen(false)}
-              className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
-            >
-              Features
-            </a>
-            <a
-              href="#archetypes"
-              onClick={() => setMobileNavOpen(false)}
-              className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
-            >
-              Archetypes
-            </a>
-            <Link
-              to="/pricing"
-              onClick={() => setMobileNavOpen(false)}
-              className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
-            >
-              Pricing
-            </Link>
-            {isSignedIn ? (
-              <Link
-                to="/profile"
-                onClick={() => setMobileNavOpen(false)}
-                className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
-              >
-                Profile
-              </Link>
-            ) : (
-              <Link
-                to="/login"
-                onClick={() => setMobileNavOpen(false)}
-                className="block px-4 py-3 rounded-xl text-slate-200 hover:bg-white/5 transition-colors"
-              >
-                Sign in
-              </Link>
-            )}
-          </nav>
-          <div className="px-4 py-4 border-t border-white/5">
-            <Link
-              to={isSignedIn ? '/' : '/register'}
-              onClick={() => setMobileNavOpen(false)}
-              className="block w-full text-center px-6 py-3 rounded-xl accent-gradient text-mystic-950 font-semibold shadow-lg shadow-accent-primary/15"
-            >
-              {isSignedIn ? 'Open dashboard' : 'Create free account'}
-            </Link>
-          </div>
-        </div>
-      )}
+      {/* Shared marketing nav — extracted to components/layout/MarketingNav.tsx */}
+      <MarketingNav links={navLinks} isSignedIn={isSignedIn} />
 
       {/* ───────────────────────── Hero ───────────────────────── */}
       {/* The Observatory: a living constellation field behind the hero,
@@ -631,16 +482,8 @@ export default function LandingPage() {
               variants={iVar}
               className="glass-card p-6 sm:p-7 flex flex-col"
             >
-              <div className="flex gap-0.5 mb-4 text-accent-primary/50">
-                {[...Array(5)].map((_, idx) => (
-                  <Star
-                    key={idx}
-                    className="w-3.5 h-3.5"
-                    fill="currentColor"
-                    aria-hidden="true"
-                  />
-                ))}
-              </div>
+              {/* No star ratings: these are illustrative examples of what the
+                  framework targets, not real member reviews. */}
               <blockquote className="hero-headline-italic text-base text-slate-200 leading-relaxed flex-1">
                 “{t.quote}”
               </blockquote>
@@ -774,35 +617,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ───────────────────────── Footer ───────────────────────── */}
-      <footer className="border-t border-white/5 mt-12">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 text-sm text-slate-500">
-          <div className="flex items-center gap-3">
-            <Logo size="sm" />
-            <span>© {new Date().getFullYear()} Yame Coaching · EPIMETHEUS</span>
-          </div>
-          <div className="flex items-center gap-6">
-            <Link to="/pricing" className="hover:text-slate-200 transition-colors">
-              Pricing
-            </Link>
-            <Link to="/terms" className="hover:text-slate-200 transition-colors">
-              Terms
-            </Link>
-            <Link to="/privacy" className="hover:text-slate-200 transition-colors">
-              Privacy
-            </Link>
-            <Link to="/login" className="hover:text-slate-200 transition-colors">
-              Sign in
-            </Link>
-            <a
-              href="mailto:epimetheus.support@gmail.com?subject=Question%20about%20Epimetheus"
-              className="hover:text-slate-200 transition-colors"
-            >
-              Contact
-            </a>
-          </div>
-        </div>
-      </footer>
+      {/* Shared marketing footer — extracted to components/layout/MarketingFooter.tsx */}
+      <MarketingFooter />
 
       {/* Exit-intent recovery — desktop visitors only, once per session,
           never for signed-in users (handled inside the component). */}

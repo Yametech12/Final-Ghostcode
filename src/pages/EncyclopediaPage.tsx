@@ -174,15 +174,28 @@ export default function EncyclopediaPage() {
           </div>
 
           {/* Tab Navigation */}
-          <div className="flex flex-wrap gap-2 border-b border-white/5 pb-4">
+          <div
+            className="flex flex-wrap gap-2 border-b border-white/5 pb-4"
+            role="tablist"
+            aria-label="Profile sections"
+          >
             {tabs.map((tab) => (
               <button type="button"
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
+                id={`profile-tab-${tab.id}`}
+                role="tab"
+                aria-selected={activeTab === tab.id}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  // Match the type-change handler: on mobile, scroll to top when changing tab
+                  if (window.innerWidth < 1024) {
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }
+                }}
                 className={cn(
                   "flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all",
                   activeTab === tab.id
-                    ? "bg-accent-primary text-mystic-950 shadow-lg shadow-accent-primary/20"
+                    ? "accent-gradient text-mystic-950 shadow-lg shadow-accent-primary/20"
                     : "text-slate-400 hover:text-slate-100 hover:bg-white/5",
                 )}
               >
@@ -193,7 +206,13 @@ export default function EncyclopediaPage() {
           </div>
 
           {/* Tab Content */}
-          <div key={activeTab + profile.id} className="space-y-8 min-h-[400px]">
+          <div
+            key={activeTab + profile.id}
+            className="space-y-8 min-h-[400px]"
+            role="tabpanel"
+            aria-labelledby={`profile-tab-${activeTab}`}
+          >
+            <h2 className="sr-only">{tabs.find((t) => t.id === activeTab)?.label}</h2>
             {activeTab === "overview" && (
               <div className="space-y-8">
                 <div className="space-y-8">
@@ -371,7 +390,8 @@ export default function EncyclopediaPage() {
                     content: profile.strategy.ignition,
                     example: profile.strategy.ignitionExample,
                     scenario: profile.strategy.ignitionScenario,
-                    color: "from-blue-500 to-cyan-500",
+                    color: "from-iris-500 to-iris-400",
+                    textColor: "text-mystic-950",
                   },
                   {
                     label: "Momentum",
@@ -379,32 +399,36 @@ export default function EncyclopediaPage() {
                     example: profile.strategy.momentumExample,
                     scenario: profile.strategy.momentumScenario,
                     color: "from-accent-primary to-accent-secondary",
+                    textColor: "text-mystic-950",
                   },
                   {
                     label: "Connection",
                     content: profile.strategy.connection,
                     example: profile.strategy.connectionExample,
                     scenario: profile.strategy.connectionScenario,
-                    color: "from-amber-500 to-orange-500",
+                    color: "from-iris-300 to-accent-primary",
+                    textColor: "text-mystic-950",
                   },
                   {
                     label: "Bonding",
                     content: profile.strategy.bonding,
                     example: profile.strategy.bondingExample,
                     scenario: profile.strategy.bondingScenario,
-                    color: "from-purple-500 to-pink-500",
+                    color: "from-iris-700 to-iris-500",
+                    textColor: "text-white",
                   },
                 ].map((s, i) => (
                   <div key={i} className="space-y-6">
                     <div className="flex items-center gap-4">
-                      <div
+                      <h3
                         className={cn(
-                          "px-3 py-1 rounded-lg text-white text-xs font-bold uppercase tracking-widest bg-gradient-to-r",
+                          "px-3 py-1 rounded-lg text-xs font-bold uppercase tracking-widest bg-gradient-to-r",
                           s.color,
+                          s.textColor,
                         )}
                       >
                         {s.label}
-                      </div>
+                      </h3>
                       <div className="h-px flex-1 bg-white/5" />
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -419,9 +443,9 @@ export default function EncyclopediaPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                           Detailed Scenario
-                        </h5>
+                        </h4>
                         <div className="text-sm text-slate-400 leading-relaxed">
                           <div className="markdown-body">
                             <ReactMarkdown>{s.scenario}</ReactMarkdown>
@@ -460,10 +484,10 @@ export default function EncyclopediaPage() {
                   },
                 ].map((p, i) => (
                   <div key={i} className="space-y-6">
-                    <h4 className="font-bold text-2xl flex items-center gap-3">
+                    <h3 className="font-bold text-2xl flex items-center gap-3">
                       <p.icon className="w-6 h-6 text-accent-primary" />
                       {p.label}
-                    </h4>
+                    </h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                       <div className="space-y-4">
                         <div className="text-lg text-slate-200 leading-relaxed">
@@ -476,9 +500,9 @@ export default function EncyclopediaPage() {
                         </div>
                       </div>
                       <div className="space-y-2">
-                        <h5 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
+                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-widest">
                           Practical Application
-                        </h5>
+                        </h4>
                         <div className="text-sm text-slate-400 leading-relaxed">
                           <div className="markdown-body">
                             <ReactMarkdown>{p.scenario}</ReactMarkdown>
@@ -495,10 +519,10 @@ export default function EncyclopediaPage() {
               <div className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div className="p-6 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-status-success">
+                    <h3 className="font-bold text-lg flex items-center gap-2 text-status-success">
                       <Trophy className="w-5 h-5" />
                       Quick Wins
-                    </h4>
+                    </h3>
                     <ul className="space-y-2">
                       {profile.quickWins.map((win, i) => (
                         <li
@@ -512,10 +536,10 @@ export default function EncyclopediaPage() {
                     </ul>
                   </div>
                   <div className="p-6 rounded-2xl bg-accent-primary/5 border border-accent-primary/10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-accent-primary">
+                    <h3 className="font-bold text-lg flex items-center gap-2 text-accent-primary">
                       <Zap className="w-5 h-5" />
                       Devotion Triggers
-                    </h4>
+                    </h3>
                     <ul className="space-y-2">
                       {profile.devotionTriggers.map((trigger, i) => (
                         <li
@@ -529,10 +553,10 @@ export default function EncyclopediaPage() {
                     </ul>
                   </div>
                   <div className="p-6 rounded-2xl bg-red-500/5 border border-red-500/10 space-y-4">
-                    <h4 className="font-bold text-lg flex items-center gap-2 text-status-error">
+                    <h3 className="font-bold text-lg flex items-center gap-2 text-status-error">
                       <Flag className="w-5 h-5" />
                       Red Flags
-                    </h4>
+                    </h3>
                     <ul className="space-y-2">
                       {profile.redFlags.map((flag, i) => (
                         <li
@@ -676,9 +700,8 @@ export default function EncyclopediaPage() {
 
                 <div className="p-6 rounded-2xl bg-teal-500/5 border border-teal-500/10">
                   <p className="text-slate-400 text-sm italic text-center">
-                    "Total Devotion is not about control, but about becoming the
-                    most important person in her world through understanding and
-                    vision."
+                    "Devotion follows understanding. Learn what she values most,
+                    then become essential to it."
                   </p>
                 </div>
               </div>
@@ -733,8 +756,8 @@ export default function EncyclopediaPage() {
 
                 <div className="p-6 rounded-2xl bg-purple-500/5 border border-purple-500/10">
                   <p className="text-slate-400 text-sm italic text-center">
-                    "Every woman has a 'freak' side. Your job is to create a
-                    space safe enough for her to express it without judgment."
+                    "Desire surfaces where it feels safe. Build trust first —
+                    exploration follows."
                   </p>
                 </div>
               </div>

@@ -31,25 +31,25 @@ const steps: OnboardingStep[] = [
   },
   {
     title: "Target Assessment",
-    icon: <Target className="w-12 h-12 text-blue-500" />,
+    icon: <Target className="w-12 h-12 text-iris-400" />,
     description: "Six quick questions about her behavior across three axes: Time (Tester vs Investor), Sex (Denier vs Justifier), and Relationship (Idealist vs Realist).",
     tips: [
       "Questions are drawn from a larger bank, so retakes stay fresh",
       "Results save to your profile automatically",
       "Retake anytime — your latest result is the one that counts"
     ],
-    color: "from-blue-500 to-indigo-500"
+    color: "from-iris-500 to-iris-400"
   },
   {
     title: "The Calibration Oracle",
-    icon: <Brain className="w-12 h-12 text-purple-500" />,
+    icon: <Brain className="w-12 h-12 text-iris-300" />,
     description: "The deepest read in the toolkit. Describe a real scenario — eye contact, body language, venue — and get a full personality profile with a clear strategy.",
     tips: [
       "More detail means a sharper read",
       "Practice Mode trains your eye",
       "Every analysis is saved to your history"
     ],
-    color: "from-purple-500 to-pink-500"
+    color: "from-iris-700 to-iris-500"
   },
   {
     title: "AI Advisor Chat",

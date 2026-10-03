@@ -176,11 +176,11 @@ export default function ProfilePage() {
               const totalXP = assessments.length * 100 + fieldReports.length * 50;
               const ranks = [
                 { rank: 'E', title: 'E-Rank Hunter', desc: 'Barely stronger than a civilian', minXP: 0, color: 'text-slate-400', bg: 'bg-slate-400/10 border-slate-400/30', glow: '', barColor: 'bg-slate-400' },
-                { rank: 'D', title: 'D-Rank Hunter', desc: 'Low-tier, learning the basics', minXP: 100, color: 'text-sky-400', bg: 'bg-sky-400/10 border-sky-400/30', glow: '', barColor: 'bg-sky-400' },
+                { rank: 'D', title: 'D-Rank Hunter', desc: 'Low-tier, learning the basics', minXP: 100, color: 'text-iris-400', bg: 'bg-iris-400/10 border-iris-400/30', glow: '', barColor: 'bg-iris-400' },
                 { rank: 'C', title: 'C-Rank Hunter', desc: 'Average, can handle basic dungeons', minXP: 300, color: 'text-status-success', bg: 'bg-emerald-400/10 border-emerald-400/30', glow: 'drop-shadow-[0_0_6px_rgba(52,211,153,0.3)]', barColor: 'bg-emerald-400' },
                 { rank: 'B', title: 'B-Rank Hunter', desc: 'Above average, reliable fighter', minXP: 600, color: 'text-accent-primary', bg: 'bg-accent-primary/10 border-accent-primary/30', glow: 'drop-shadow-[0_0_10px_rgba(232,199,126,0.5)]', barColor: 'accent-gradient' },
                 { rank: 'A', title: 'A-Rank Hunter', desc: 'Elite with strong abilities', minXP: 1000, color: 'text-orange-400', bg: 'bg-orange-400/10 border-orange-400/30', glow: 'drop-shadow-[0_0_14px_rgba(251,146,60,0.6)]', barColor: 'bg-gradient-to-r from-orange-400 to-red-400' },
-                { rank: 'S', title: 'S-Rank Hunter', desc: 'The strongest — extremely rare', minXP: 1500, color: 'text-status-error', bg: 'bg-red-400/10 border-red-400/40', glow: 'drop-shadow-[0_0_20px_rgba(248,113,113,0.7)]', barColor: 'bg-gradient-to-r from-red-400 via-purple-500 to-accent-primary' },
+                { rank: 'S', title: 'S-Rank Hunter', desc: 'The strongest — extremely rare', minXP: 1500, color: 'text-status-error', bg: 'bg-red-400/10 border-red-400/40', glow: 'drop-shadow-[0_0_20px_rgba(248,113,113,0.7)]', barColor: 'bg-gradient-to-r from-red-400 via-iris-500 to-accent-primary' },
               ];
               const currentRankIdx = ranks.reduce((acc, r, i) => totalXP >= r.minXP ? i : acc, 0);
               const currentRank = ranks[currentRankIdx];
@@ -235,15 +235,15 @@ export default function ProfilePage() {
                   <div className="grid grid-cols-3 gap-2 sm:gap-3">
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-accent-primary tabular-nums">{assessments.length}</div>
-                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Gates Cleared</div>
+                      <div className="text-[11px] text-slate-500 uppercase tracking-[0.04em] mt-0.5">Gates Cleared</div>
                     </div>
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-accent-secondary tabular-nums">{fieldReports.length}</div>
-                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Reports Filed</div>
+                      <div className="text-[11px] text-slate-500 uppercase tracking-[0.04em] mt-0.5">Reports Filed</div>
                     </div>
                     <div className="p-3 rounded-xl bg-mystic-800/50 border border-slate-700/30 text-center">
                       <div className="text-lg sm:text-2xl font-semibold text-slate-100 tabular-nums">{achievements.length}</div>
-                      <div className="text-[10px] sm:text-[10px] text-slate-500 uppercase tracking-[0.08em] mt-0.5">Titles</div>
+                      <div className="text-[11px] text-slate-500 uppercase tracking-[0.04em] mt-0.5">Titles</div>
                     </div>
                   </div>
                 </>
@@ -263,7 +263,7 @@ export default function ProfilePage() {
                 className="flex-1 inline-flex items-center justify-center gap-2 px-5 py-3 rounded-xl accent-gradient text-mystic-950 text-sm font-semibold tracking-wide shadow-lg shadow-accent-primary/15 hover:scale-[1.02] active:scale-[0.98] transition-transform"
               >
                 <Plus aria-hidden="true" className="w-4 h-4" strokeWidth={1.5} />
-                Enter Gate
+                Start Calibration
               </Link>
             </div>
           </div>
@@ -308,7 +308,7 @@ export default function ProfilePage() {
           ))}
         </div>
       ) : (
-        <>
+        <div aria-live="polite">
           {/* Assessments Tab */}
           {activeTab === 'assessments' && (
             <div>
@@ -368,7 +368,7 @@ export default function ProfilePage() {
                   </div>
                   <div>
                     <h3 className="text-xl font-semibold text-slate-100">No Field Reports</h3>
-                    <p className="text-slate-400">Your field reports will appear here after you've created some.</p>
+                    <p className="text-slate-400">No reports yet. After each interaction, file a field report — what you observed, what worked, what didn't.</p>
                   </div>
                 </div>
               ) : (
@@ -432,7 +432,7 @@ export default function ProfilePage() {
               )}
             </div>
           )}
-        </>
+        </div>
       )}
 
       <EditProfileModal isOpen={isEditModalOpen} onClose={() => setIsEditModalOpen(false)} />

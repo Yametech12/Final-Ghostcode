@@ -304,7 +304,7 @@ export default function ProfilerPage() {
                 
                 <Link 
                   to={`/encyclopedia?type=${matchedType.id}`}
-                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] transition-transform mt-8"
+                  className="w-full flex items-center justify-center gap-2 py-3 rounded-xl accent-gradient text-mystic-950 font-bold shadow-lg shadow-accent-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-transform mt-8"
                 >
                   View Full Encyclopedia Entry <ArrowRight className="w-4 h-4" />
                 </Link>
